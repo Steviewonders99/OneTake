@@ -89,13 +89,46 @@ export default function IntakeDetailPage({
         // Pipeline data may not exist yet
       }
 
-      // For now, brief/actors/assets come from the pipeline data or are empty
-      // In production, there would be separate API endpoints
+      // Fetch brief, actors, and assets from their respective endpoints
+      let brief = null;
+      let actors: ActorProfile[] = [];
+      let assets: GeneratedAsset[] = [];
+
+      try {
+        const briefRes = await fetch(`/api/generate/${id}/brief`);
+        if (briefRes.ok) {
+          const briefData = await briefRes.json();
+          brief = briefData.brief || null;
+        }
+      } catch {
+        // Brief may not exist yet
+      }
+
+      try {
+        const actorsRes = await fetch(`/api/generate/${id}/actors`);
+        if (actorsRes.ok) {
+          const actorsData = await actorsRes.json();
+          actors = actorsData.actors || [];
+        }
+      } catch {
+        // Actors may not exist yet
+      }
+
+      try {
+        const assetsRes = await fetch(`/api/generate/${id}/images`);
+        if (assetsRes.ok) {
+          const assetsData = await assetsRes.json();
+          assets = assetsData.assets || [];
+        }
+      } catch {
+        // Assets may not exist yet
+      }
+
       setData({
         request,
-        brief: null,
-        actors: [],
-        assets: [],
+        brief,
+        actors,
+        assets,
         pipelineRuns,
       });
     } catch (err) {

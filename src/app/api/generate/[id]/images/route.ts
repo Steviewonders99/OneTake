@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getIntakeRequest } from '@/lib/db/intake';
 import { createPipelineRun, updatePipelineRun } from '@/lib/db/pipeline-runs';
 import { runStage2 } from '@/lib/pipeline/stage2-images';
+import { getAssetsByRequestId } from '@/lib/db/assets';
 
 export async function POST(
   _request: Request,
@@ -72,6 +73,28 @@ export async function POST(
     console.error('[api/generate/[id]/images] Failed:', error);
     return Response.json(
       { error: 'Failed to run Stage 2b+2c' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const assets = await getAssetsByRequestId(id);
+    return Response.json({ assets });
+  } catch (error) {
+    console.error('[api/generate/[id]/images] GET failed:', error);
+    return Response.json(
+      { error: 'Failed to fetch assets' },
       { status: 500 }
     );
   }

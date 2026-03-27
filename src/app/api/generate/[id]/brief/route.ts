@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getIntakeRequest } from '@/lib/db/intake';
 import { createPipelineRun, updatePipelineRun } from '@/lib/db/pipeline-runs';
 import { runStage1 } from '@/lib/pipeline/stage1-intelligence';
+import { getBriefByRequestId } from '@/lib/db/briefs';
 
 export async function POST(
   _request: Request,
@@ -72,6 +73,28 @@ export async function POST(
     console.error('[api/generate/[id]/brief] Failed:', error);
     return Response.json(
       { error: 'Failed to run Stage 1' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const brief = await getBriefByRequestId(id);
+    return Response.json({ brief });
+  } catch (error) {
+    console.error('[api/generate/[id]/brief] GET failed:', error);
+    return Response.json(
+      { error: 'Failed to fetch brief' },
       { status: 500 }
     );
   }
