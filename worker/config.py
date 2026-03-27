@@ -21,14 +21,10 @@ VERCEL_BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
 VERCEL_BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 
 # ---------------------------------------------------------------------------
-# Seedream 4.5 (Volcengine API)
+# Image Generation via OpenRouter (Seedream 4.5 or alternatives)
 # ---------------------------------------------------------------------------
-SEEDREAM_API_KEY = os.environ.get("SEEDREAM_API_KEY", "")
-SEEDREAM_API_ENDPOINT = os.environ.get(
-    "SEEDREAM_API_ENDPOINT",
-    "https://operator.las.cn-beijing.volces.com/api/v1",
-)
-SEEDREAM_MODEL = os.environ.get("SEEDREAM_MODEL", "doubao-seedream-4-5")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "doubao/seedream-4-5")
 
 # ---------------------------------------------------------------------------
 # Teams Webhook

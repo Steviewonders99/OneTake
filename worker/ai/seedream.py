@@ -1,14 +1,14 @@
-"""Seedream 4.5 image generation via the Volcengine API.
+"""Image generation via OpenRouter API.
 
+Routes to Seedream 4.5 or other image models through OpenRouter's unified API.
 Generates photorealistic hero images for recruitment creatives.
-Supports multiple output dimensions keyed by platform name.
 """
 import base64
 import logging
 
 import httpx
 
-from config import SEEDREAM_API_ENDPOINT, SEEDREAM_API_KEY, SEEDREAM_MODEL
+from config import OPENROUTER_API_KEY, IMAGE_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def generate_image(
     dimension_key: str = "square",
     negative_prompt: str = "",
 ) -> bytes:
-    """Generate an image via Seedream 4.5 and return raw PNG bytes.
+    """Generate an image via OpenRouter and return raw PNG bytes.
 
     Parameters
     ----------
@@ -56,34 +56,36 @@ async def generate_image(
     )
     neg = negative_prompt or default_negative
 
+    # Build the prompt with dimension hints and negative prompt
+    full_prompt = f"{prompt}\n\nImage dimensions: {width}x{height}px.\nAvoid: {neg}"
+
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{SEEDREAM_API_ENDPOINT}/images/generations",
+            "https://openrouter.ai/api/v1/images/generations",
             headers={
-                "Authorization": f"Bearer {SEEDREAM_API_KEY}",
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": SEEDREAM_MODEL,
-                "prompt": prompt,
-                "negative_prompt": neg,
-                "width": width,
-                "height": height,
-                "num_images": 1,
+                "model": IMAGE_MODEL,
+                "prompt": full_prompt,
+                "n": 1,
+                "size": f"{width}x{height}",
             },
         )
         response.raise_for_status()
         data = response.json()
 
-        # Handle both URL-based and base64-based responses.
-        image_entry = data["images"][0]
+        image_entry = data["data"][0]
 
-        if "url" in image_entry:
+        # Handle URL-based response
+        if "url" in image_entry and image_entry["url"]:
             img_resp = await client.get(image_entry["url"])
             img_resp.raise_for_status()
             return img_resp.content
 
-        if "b64_json" in image_entry:
+        # Handle base64 response
+        if "b64_json" in image_entry and image_entry["b64_json"]:
             return base64.b64decode(image_entry["b64_json"])
 
-        raise ValueError("Seedream response contained neither url nor b64_json.")
+        raise ValueError("Image response contained neither url nor b64_json.")
