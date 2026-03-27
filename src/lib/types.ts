@@ -1,0 +1,336 @@
+// ============================================================
+// FIELD DEFINITION TYPES (Schema-driven forms)
+// ============================================================
+
+export type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'multi_select'
+  | 'button_group'
+  | 'checkbox_group'
+  | 'toggle'
+  | 'toggle_with_text'
+  | 'tags'
+  | 'file'
+  | 'range'
+  | 'date'
+  | 'divider'
+  | 'heading';
+
+export interface FieldOption {
+  value: string;
+  label: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface ShowWhenCondition {
+  field: string;
+  equals?: unknown;
+  contains?: string;
+  not_equals?: unknown;
+  greater_than?: number;
+  is_truthy?: boolean;
+}
+
+export interface FieldValidation {
+  min_length?: number;
+  max_length?: number;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  custom_message?: string;
+}
+
+export interface FieldDefinition {
+  key: string;
+  label: string;
+  type: FieldType;
+  required?: boolean;
+  placeholder?: string;
+  description?: string;
+  default_value?: unknown;
+  options?: FieldOption[];
+  options_source?: string;
+  show_when?: ShowWhenCondition;
+  validation?: FieldValidation;
+  width?: 'full' | 'half';
+  group?: string;
+  toggle_label?: string;
+  text_placeholder?: string;
+}
+
+export interface TaskTypeSchema {
+  id: string;
+  task_type: string;
+  display_name: string;
+  icon: string;
+  description: string;
+  schema: {
+    base_fields: FieldDefinition[];
+    task_fields: FieldDefinition[];
+    conditional_fields: FieldDefinition[];
+    common_fields: FieldDefinition[];
+  };
+  version: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface OptionRegistryItem {
+  id: string;
+  registry_name: string;
+  option_value: string;
+  option_label: string;
+  metadata?: Record<string, unknown>;
+  sort_order: number;
+  is_active: boolean;
+}
+
+// ============================================================
+// INTAKE REQUEST TYPES
+// ============================================================
+
+export type Status = 'draft' | 'generating' | 'review' | 'approved' | 'sent' | 'rejected';
+export type Urgency = 'urgent' | 'standard' | 'pipeline';
+
+export interface IntakeRequest {
+  id: string;
+  title: string;
+  task_type: string;
+  urgency: Urgency;
+  target_languages: string[];
+  target_regions: string[];
+  volume_needed: number | null;
+  status: Status;
+  created_by: string;
+  form_data: Record<string, unknown>;
+  schema_version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
+// ATTACHMENT TYPES
+// ============================================================
+
+export interface Attachment {
+  id: string;
+  request_id: string;
+  file_name: string;
+  file_type: string;
+  blob_url: string;
+  extracted_text: string | null;
+  extraction_data: Record<string, unknown> | null;
+  is_rfp: boolean;
+  created_at: string;
+}
+
+// ============================================================
+// CREATIVE BRIEF TYPES
+// ============================================================
+
+export interface CreativeBrief {
+  id: string;
+  request_id: string;
+  brief_data: Record<string, unknown>;
+  channel_research: Record<string, unknown> | null;
+  design_direction: Record<string, unknown> | null;
+  content_languages: string[];
+  evaluation_score: number | null;
+  evaluation_data: Record<string, unknown> | null;
+  version: number;
+  created_at: string;
+}
+
+// ============================================================
+// ACTOR PROFILE TYPES
+// ============================================================
+
+export interface ActorProfile {
+  id: string;
+  request_id: string;
+  name: string;
+  face_lock: Record<string, unknown>;
+  prompt_seed: string;
+  outfit_variations: Record<string, unknown> | null;
+  signature_accessory: string | null;
+  backdrops: string[];
+  created_at: string;
+}
+
+// ============================================================
+// GENERATED ASSET TYPES
+// ============================================================
+
+export type AssetType = 'base_image' | 'composed_creative' | 'carousel_panel';
+
+export interface GeneratedAsset {
+  id: string;
+  request_id: string;
+  actor_id: string | null;
+  asset_type: AssetType;
+  platform: string;
+  format: string;
+  language: string;
+  content: Record<string, unknown> | null;
+  copy_data: Record<string, unknown> | null;
+  blob_url: string | null;
+  evaluation_score: number | null;
+  evaluation_data: Record<string, unknown> | null;
+  evaluation_passed: boolean;
+  stage: number;
+  version: number;
+  created_at: string;
+}
+
+// ============================================================
+// APPROVAL TYPES
+// ============================================================
+
+export type ApprovalStatus = 'approved' | 'changes_requested' | 'rejected';
+
+export interface Approval {
+  id: string;
+  request_id: string;
+  approved_by: string;
+  status: ApprovalStatus;
+  notes: string | null;
+  created_at: string;
+}
+
+// ============================================================
+// MAGIC LINK TYPES
+// ============================================================
+
+export interface MagicLink {
+  id: string;
+  request_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}
+
+// ============================================================
+// NOTIFICATION TYPES
+// ============================================================
+
+export type NotificationChannel = 'slack' | 'outlook';
+export type NotificationStatus = 'sent' | 'delivered' | 'failed';
+
+export interface Notification {
+  id: string;
+  request_id: string;
+  channel: NotificationChannel;
+  recipient: string;
+  status: NotificationStatus;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+}
+
+// ============================================================
+// PIPELINE RUN TYPES
+// ============================================================
+
+export type PipelineStageStatus = 'running' | 'passed' | 'failed' | 'retrying';
+
+export interface PipelineRun {
+  id: string;
+  request_id: string;
+  stage: number;
+  stage_name: string;
+  status: PipelineStageStatus;
+  attempt: number;
+  input_data: Record<string, unknown> | null;
+  output_data: Record<string, unknown> | null;
+  evaluation_data: Record<string, unknown> | null;
+  duration_ms: number | null;
+  error_message: string | null;
+  started_at: string;
+  completed_at: string | null;
+}
+
+// ============================================================
+// RFP EXTRACTION TYPES
+// ============================================================
+
+export interface ExtractionResult {
+  detected_task_type: string;
+  base_fields: Record<string, unknown>;
+  task_fields: Record<string, unknown>;
+  confidence_flags: {
+    fields_confidently_extracted: string[];
+    fields_inferred: string[];
+    fields_missing: string[];
+    notes: string;
+  };
+  extracted_details?: {
+    client_name?: string;
+    project_deadline?: string;
+    quality_requirements?: string;
+    training_required?: string;
+    equipment_needed?: string;
+    data_sensitivity?: string;
+  };
+}
+
+// ============================================================
+// VYRA API TYPES
+// ============================================================
+
+export interface VyraGenerateRequest {
+  platform: string;
+  campaign_name: string;
+  product: string;
+  target_audience: string;
+  goals: string;
+  cta_text?: string;
+  hero_image_url?: string;
+  headline?: string;
+  num_variants?: number;
+  client_dna?: Record<string, unknown>;
+}
+
+export interface VyraGenerateResponse {
+  success: boolean;
+  variants: Array<{
+    image_url: string;
+    html: string;
+    headline: string;
+    cta_text: string;
+    template: string;
+    platform: string;
+    evaluation_score: number;
+    evaluation_passed: boolean;
+  }>;
+  seedream_image_url: string;
+  errors: string[];
+}
+
+export interface VyraCarouselRequest {
+  platform: string;
+  panels: Array<{
+    panel_type: string;
+    headline: string;
+    subheadline?: string;
+    cta_text?: string;
+    proof_badge?: string;
+  }>;
+  seedream_image_url: string;
+}
+
+// ============================================================
+// FORM VALIDATION TYPES
+// ============================================================
+
+export interface FieldError {
+  field: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: FieldError[];
+}
