@@ -1,7 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { getIntakeRequest } from '@/lib/db/intake';
-import { createPipelineRun, updatePipelineRun } from '@/lib/db/pipeline-runs';
-import { runStage2 } from '@/lib/pipeline/stage2-images';
+import { createComputeJob } from '@/lib/db/compute-jobs';
 import { getActorsByRequestId } from '@/lib/db/actors';
 
 export async function POST(
@@ -9,73 +8,26 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { userId } = await auth();
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  if (!userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const intakeRequest = await getIntakeRequest(id);
+
+  if (!intakeRequest) {
+    return Response.json({ error: 'Intake request not found' }, { status: 404 });
   }
 
-  try {
-    const { id } = await params;
-    const intakeRequest = await getIntakeRequest(id);
+  // Create compute job for local worker to pick up
+  const job = await createComputeJob({
+    request_id: id,
+    job_type: 'regenerate_stage',
+    stage_target: 2,
+  });
 
-    if (!intakeRequest) {
-      return Response.json(
-        { error: 'Intake request not found' },
-        { status: 404 }
-      );
-    }
-
-    // Create pipeline run record
-    const run = await createPipelineRun({
-      request_id: id,
-      stage: 2,
-      stage_name: 'Character-Driven Image Generation (Actors)',
-      status: 'running',
-    });
-
-    const startTime = Date.now();
-
-    try {
-      const result = await runStage2(id);
-      const durationMs = Date.now() - startTime;
-
-      await updatePipelineRun(run.id, {
-        status: 'passed',
-        output_data: result,
-        duration_ms: durationMs,
-        completed_at: new Date().toISOString(),
-      });
-
-      return Response.json({
-        pipeline_run_id: run.id,
-        stage: 2,
-        status: 'passed',
-        duration_ms: durationMs,
-        result,
-      });
-    } catch (stageError) {
-      const durationMs = Date.now() - startTime;
-      const errorMessage = stageError instanceof Error ? stageError.message : String(stageError);
-
-      await updatePipelineRun(run.id, {
-        status: 'failed',
-        error_message: errorMessage,
-        duration_ms: durationMs,
-        completed_at: new Date().toISOString(),
-      });
-
-      return Response.json(
-        { error: 'Stage 2a failed', details: errorMessage, pipeline_run_id: run.id },
-        { status: 500 }
-      );
-    }
-  } catch (error) {
-    console.error('[api/generate/[id]/actors] Failed:', error);
-    return Response.json(
-      { error: 'Failed to run Stage 2a' },
-      { status: 500 }
-    );
-  }
+  return Response.json(
+    { message: 'Stage 2 regeneration job queued', job_id: job.id, status: 'pending' },
+    { status: 202 }
+  );
 }
 
 export async function GET(
