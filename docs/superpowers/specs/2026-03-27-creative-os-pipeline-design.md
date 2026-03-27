@@ -6,9 +6,47 @@
 
 ## Overview
 
-A 5-stage AI creative generation pipeline for OneForma/Centific recruitment marketing. Recruiter submits an intake form, the pipeline generates a complete multi-platform ad package with culturally authentic imagery, evaluated copy, and platform-specific layouts — all gated by verification at every stage.
+A 5-stage AI creative generation pipeline for OneForma/Centific **contributor recruitment** marketing. OneForma is a data annotation company — their clients (OpenAI, Anthropic, etc.) need high-quality training data, and OneForma recruits global contributors to annotate, transcribe, segment, and create curated verified data. The "jobs" are contributor tasks (voice segmentation, image annotation, text labeling, data collection), NOT traditional corporate roles.
+
+Recruiting team submits an intake form describing a project/task → the pipeline generates a complete multi-platform ad package with culturally authentic imagery of relatable contributors, evaluated copy in the target language, and platform-specific layouts — all gated by verification at every stage.
 
 **Architecture:** Option C — Vercel frontend (Next.js 16) + local VYRA Creative API sidecar (FastAPI on Mac, MLX models on Apple Silicon). Kimi K2.5 channel research via OpenRouter API.
+
+## OneForma Business Model (Critical Context)
+
+**What OneForma does:**
+1. AI companies (OpenAI, Anthropic, Google, etc.) need high-quality training data
+2. OneForma/Centific finds people worldwide to annotate, transcribe, segment, and verify data
+3. Contributors work remotely, flexible hours, paid per hour/task
+4. Tasks span 35+ languages across every continent
+
+**What the ads recruit for (examples):**
+- "Cosmos — Voice Assistance Interaction Segmentation" (listen to voice assistant conversations, segment into exchanges, label speaker turns, transcribe)
+- Image annotation tasks (label objects, bounding boxes, quality assessment)
+- Text labeling (sentiment, intent, entity extraction)
+- Data collection (photos, voice recordings, handwriting samples)
+- Guided feedback for AI models (RLHF-style evaluation)
+
+**Target contributors (NOT traditional job seekers):**
+- Gig workers, students, stay-at-home parents, freelancers
+- Multilingual people in 35+ countries
+- Looking for: flexible remote work, extra income, meaningful AI work
+- Demographics: diverse ages (18-55), often younger (20-35), tech-comfortable
+- Motivations: earn from home, flexible schedule, contribute to AI, use language skills
+
+**Value propositions for ads:**
+- "Earn money from home using your language skills"
+- "Shape the future of AI — one annotation at a time"
+- "Flexible hours, work when you want"
+- "Join 500K+ contributors worldwide"
+- "No degree required — just your language and attention to detail"
+- "Get paid to listen, label, and improve AI"
+
+**This changes the creative approach:**
+- Actor imagery = regular people at home with laptops, headphones, coffee — NOT corporate offices
+- Copy tone = accessible, inviting, opportunity-focused — NOT corporate/professional
+- CTA = "Start earning" / "Join now" / "Sign up as a contributor" — NOT "Apply for this role"
+- Channels = social media, messaging apps, freelancer communities — NOT just LinkedIn/Indeed
 
 ## Architecture
 
@@ -67,27 +105,41 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
 #### Stage 1a: Creative Brief Generation (Qwen3.5-9B)
 
-**Input:** Intake form data (role title, department, location, urgency, requirements, budget notes, special instructions)
+**Input:** Intake form data (project/task name, task type, target languages/regions, urgency, task description, skills needed, commitment level, compensation model, special instructions)
 
 **Output:**
 ```json
 {
-  "campaign_objective": "Fill Senior AI Engineer role in Casablanca office",
+  "campaign_objective": "Recruit French/Arabic-speaking contributors in Morocco for Cosmos Voice Segmentation project",
+  "project_context": {
+    "project_name": "Cosmos — Voice Assistance Interaction Segmentation",
+    "task_type": "audio_annotation",
+    "task_description": "Listen to voice assistant conversations, segment into exchanges, label speaker turns, transcribe user speech",
+    "skills_needed": ["Active listening", "Attention to detail", "Language fluency", "Transcription"],
+    "commitment": "4-5 hours/day minimum, flexible scheduling",
+    "compensation": "Fixed rate per hour"
+  },
   "messaging_strategy": {
-    "primary_message": "Build AI that impacts 300+ languages",
+    "primary_message": "Earn money from home by helping shape the future of AI",
     "value_propositions": [
-      "Work on cutting-edge AI/ML projects",
-      "Remote-first, global team across 50+ countries",
-      "Career growth in AI-first company",
-      "Competitive compensation + benefits"
+      "Flexible hours — work when it suits you",
+      "Work from home, no commute needed",
+      "Help build the AI systems millions of people use",
+      "Use your language skills to earn extra income",
+      "Join 500K+ contributors worldwide"
     ],
-    "tone": "Professional but approachable, tech-forward, inclusive"
+    "tone": "Friendly, inviting, opportunity-focused — NOT corporate"
   },
   "target_audience": {
-    "persona": "Young IT professional, 24-32, Morocco-based",
-    "experience_level": "3-5 years in ML/AI or full-stack",
-    "motivations": ["Career growth", "Meaningful AI work", "International exposure"],
-    "pain_points": ["Limited local AI opportunities", "Stagnant roles", "Lack of remote options"]
+    "persona": "Young multilingual Moroccan, 20-35, tech-comfortable",
+    "profile_types": [
+      "University student looking for flexible side income",
+      "Stay-at-home parent wanting remote work",
+      "Freelancer between gigs",
+      "Recent graduate exploring opportunities"
+    ],
+    "motivations": ["Extra income", "Flexible schedule", "Work from home", "Meaningful work in AI"],
+    "pain_points": ["Limited local job opportunities", "Need flexible hours", "Want remote work", "Underemployed despite language skills"]
   },
   "content_language": {
     "primary": "fr",
@@ -242,16 +294,17 @@ The evaluation agent reviews the complete Stage 1 output:
       },
       "prompt_seed": "Young proud Moroccan man, 26, warm brown skin tone #8B6914, short dark curly fade haircut, defined jawline, broad nose bridge, light stubble, warm confident smile, natural confident expression, slight asymmetry in smile, real skin texture with visible pores on nose and forehead",
       "outfit_variations": {
-        "casual_office": "smart casual polo shirt, laptop messenger bag, silver wristwatch",
-        "working": "dark hoodie, dual monitor setup, focused expression, slight lean forward",
-        "celebrating": "button-up shirt sleeves rolled, team lunch setting, laughing genuinely, Moroccan cafe background",
-        "professional": "crisp button-up shirt, conference or meeting room, presenting"
+        "at_home_working": "casual t-shirt, headphones on, laptop on kitchen table, focused on screen, mint tea beside laptop",
+        "at_home_relaxed": "comfortable hoodie, sitting on couch with laptop, afternoon light through window",
+        "cafe_working": "casual button-up, Moroccan cafe with mosaic tiles, laptop and earbuds, mint tea",
+        "celebrating_earnings": "casual outfit, phone in hand showing notification, genuine smile of satisfaction"
       },
-      "signature_accessory": "silver wristwatch (always visible)",
+      "signature_accessory": "over-ear headphones (key tool for audio annotation work)",
       "backdrops": [
-        "Casablanca coworking space with large windows, natural light",
-        "Home office with dual monitors, coffee cup, sticky notes on wall",
-        "Moroccan cafe with mosaic tiles, laptop open, mint tea"
+        "Moroccan home — kitchen table with laptop, tea, charger cable, lived-in feel",
+        "Bedroom desk setup — single monitor, headphones, warm lamp, window with Casablanca cityscape",
+        "Moroccan cafe — mosaic tiles, laptop open, earbuds, mint tea glass",
+        "Living room couch — laptop on lap, afternoon sunlight, comfortable blanket"
       ]
     },
     {
@@ -267,16 +320,17 @@ The evaluation agent reviews the complete Stage 1 output:
       },
       "prompt_seed": "Young Moroccan woman, 27, warm olive-brown skin tone #A0784C, dark wavy hair, oval face, expressive dark brown eyes, small beauty mark near left eye, genuine warm expression, real skin texture, natural under-eye shadows",
       "outfit_variations": {
-        "casual_office": "modern blazer over simple top, minimal jewelry, tote bag",
-        "working": "comfortable sweater, headphones around neck, code on screen behind",
-        "celebrating": "colorful top, team setting, animated hand gestures",
-        "professional": "tailored suit jacket, speaking at whiteboard, confident posture"
+        "at_home_working": "comfortable sweater, headphones on, sitting at desk with laptop, annotation interface on screen",
+        "at_home_relaxed": "casual top with hijab, laptop on dining table, morning light, tea and snack nearby",
+        "studying_and_working": "university hoodie, library or study room, laptop with earbuds, textbooks nearby",
+        "celebrating_earnings": "colorful casual outfit, phone showing payment notification, happy expression"
       },
-      "signature_accessory": "delicate gold necklace",
+      "signature_accessory": "wireless earbuds (practical for audio tasks)",
       "backdrops": [
-        "Modern Casablanca tech office, glass walls, collaborative space",
-        "Home setup with plants, organized desk, warm lighting",
-        "Conference room presenting to diverse team"
+        "Moroccan home — clean dining table with laptop, plants, natural light, family photos on wall",
+        "Student room — desk with laptop, textbooks stacked, warm lamp, tea",
+        "Balcony workspace — laptop on small table, Moroccan cityscape behind, morning light",
+        "Living room — comfortable chair with laptop, headphones, cozy setting"
       ]
     }
   ]
@@ -358,26 +412,35 @@ Qwen3-VL reviews each generated image against three rubrics:
 #### Output (per channel × language)
 ```json
 {
-  "channel": "linkedin",
+  "channel": "facebook",
   "language": "fr",
   "variants": [
     {
-      "headline": "L'IA qui parle 300+ langues",
-      "description": "Rejoignez OneForma et construisez l'avenir de l'IA multilingue",
-      "primary_text": "Youssef a trouve son role de reve en IA. Et vous?",
-      "cta": "Postuler maintenant",
-      "rationale": "Aspirational hook using actor narrative + key differentiator (300+ languages)"
+      "headline": "Gagnez de chez vous avec l'IA",
+      "description": "Utilisez vos competences linguistiques. Horaires flexibles. Paiement a l'heure.",
+      "primary_text": "Youssef gagne un revenu supplementaire depuis son salon a Casablanca. Il ecoute, il annote, il aide a construire l'IA de demain.",
+      "cta": "Commencer maintenant",
+      "rationale": "Relatable narrative (Youssef at home) + concrete benefit (earn from home) + aspirational (build AI)"
+    },
+    {
+      "headline": "Vos langues valent de l'or",
+      "description": "Transcrivez, annotez, gagnez. Rejoignez 500K+ contributeurs OneForma.",
+      "primary_text": "Amina utilise son francais et son arabe pour aider l'IA a mieux comprendre. Flexible, depuis chez elle, a son rythme.",
+      "cta": "S'inscrire gratuitement",
+      "rationale": "Language skills = value hook + social proof (500K contributors) + flexibility"
     }
   ]
 }
 ```
 
-**Copy constraints (recruitment-adapted):**
-- Headlines: max 30 chars, speak to candidate aspirations not company needs
-- Descriptions: max 90 chars, highlight ONE differentiator
-- Primary text: 125 chars, open with candidate's dream scenario
-- CTA: "Apply Now" / "Learn More" / "Join Our Team" (localized)
-- AVOID: corporate jargon, "we are looking for", passive voice
+**Copy constraints (contributor recruitment):**
+- Headlines: max 30 chars, speak to the BENEFIT (earn, flexibility, skills) not the company
+- Descriptions: max 90 chars, highlight ONE concrete benefit
+- Primary text: 125 chars, open with relatable scenario using actor name
+- CTA: "Start earning" / "Sign up free" / "Join now" (localized) — NOT "Apply for this role"
+- TONE: Friendly, accessible, opportunity-focused — like talking to a friend about a side gig
+- AVOID: corporate jargon, "we are seeking", passive voice, degree requirements, intimidating language
+- MUST INCLUDE: at least one of: flexibility, work-from-home, language skills, earning potential
 
 #### Stage 3 Gate: Copy Evaluation (Qwen3.5-9B)
 
@@ -430,12 +493,12 @@ The format matrix is NOT hardcoded — it's determined by Stage 1 channel resear
 
 #### Carousel Panel Sequence (Recruitment-Adapted)
 
-Default 5-panel sequence:
-1. **COVER** — Actor (Youssef) at desk, role title + OneForma branding
-2. **STAT** — "300+ languages" / "50+ countries" / key differentiator
-3. **FEATURE** — Benefits: remote-first, AI projects, career growth
-4. **TESTIMONIAL** — Actor (Amina) quote about working at OneForma
-5. **CTA** — "Apply Now" + role link + OneForma logo
+Default 5-panel sequence (contributor recruitment):
+1. **COVER** — Actor (Youssef) with headphones at home, "Earn from home with AI" + OneForma branding
+2. **STAT** — "500K+ contributors" / "35+ languages" / "Flexible hours"
+3. **FEATURE** — How it works: "Listen. Label. Earn." / "Use your language skills" / "No degree needed"
+4. **TESTIMONIAL** — Actor (Amina) quote: "I earn extra income between classes using my French and Arabic"
+5. **CTA** — "Start earning today" + sign-up link + OneForma logo
 
 #### Composition Props
 
@@ -532,15 +595,19 @@ On final approval after designer refinement:
 ## Database Schema
 
 ```sql
--- Intake requests from recruiting team
+-- Intake requests from recruiting team (contributor recruitment)
 CREATE TABLE intake_requests (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title           TEXT NOT NULL,
-  department      TEXT,
-  location        TEXT,
+  task_type       TEXT CHECK (task_type IN ('audio_annotation', 'image_annotation', 'text_labeling', 'data_collection', 'guided_feedback', 'transcription', 'other')),
+  task_description TEXT,
+  target_languages TEXT[],
+  target_regions  TEXT[],
+  skills_needed   TEXT[],
+  commitment_level TEXT CHECK (commitment_level IN ('part_time', 'full_time', 'flexible')),
+  compensation_model TEXT CHECK (compensation_model IN ('fixed_hourly', 'per_task', 'per_unit')),
   urgency         TEXT CHECK (urgency IN ('urgent', 'standard', 'pipeline')),
-  requirements    TEXT,
-  budget_notes    TEXT,
+  volume_needed   INT,
   special_notes   TEXT,
   status          TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'generating', 'review', 'approved', 'sent', 'rejected')),
   created_by      TEXT NOT NULL,
@@ -778,15 +845,34 @@ Files copied from `/Users/stevenjunop/vyra/` (NEVER modified in VYRA repo):
 
 ---
 
+## Intake Form Fields (Updated for Contributor Recruitment)
+
+The intake form reflects OneForma's actual workflow — recruiting contributors for data annotation projects:
+
+| Field | Type | Example |
+|-------|------|---------|
+| Project/Task Name | text | "Cosmos — Voice Assistance Interaction Segmentation" |
+| Task Type | select | audio_annotation, image_annotation, text_labeling, data_collection, guided_feedback, transcription |
+| Task Description | textarea | "Listen to voice assistant conversations, segment into exchanges, label speaker turns, transcribe" |
+| Target Languages | multi-select | French, Arabic, English, Spanish, etc. (35+ options) |
+| Target Regions | multi-select | Morocco, Egypt, Brazil, India, etc. |
+| Skills Needed | tags | Active listening, Attention to detail, Language fluency, Typing speed |
+| Commitment Level | select | part_time (4-5hr/day), full_time (8hr/day), flexible (no minimum) |
+| Compensation Model | select | fixed_hourly, per_task, per_unit |
+| Urgency | button_group | urgent (need contributors THIS WEEK), standard (2 weeks), pipeline (building pool) |
+| Volume Needed | number | "200 contributors needed" |
+| Special Instructions | textarea | Any specific requirements, cultural notes, equipment needs |
+
 ## Success Criteria
 
-1. Recruiter fills form (< 5 minutes)
-2. Pipeline generates complete multi-platform package (< 10 minutes)
+1. Recruiting team fills intake form (< 5 minutes)
+2. Pipeline generates complete multi-platform ad package (< 10 minutes)
 3. Steven reviews with evaluation scores and approves (< 5 minutes)
 4. Designer gets notified and downloads package (< 1 minute)
 5. Agency receives ZIP with all assets (< 1 minute)
 6. **Total: 30 minutes, down from 3-5 days**
 7. Every generated asset has a quality score with dimensional breakdown
-8. Characters are culturally authentic for the target region
-9. Copy is in the correct language for the target market
-10. Channel recommendations are region-specific with cited sources
+8. Characters are culturally authentic for the target region — relatable contributors, NOT corporate stock photos
+9. Copy is in the correct language for the target market, using accessible/inviting tone
+10. Channel recommendations are region-specific with cited sources (Telegram in Russia, WeChat in China, etc.)
+11. Ads speak to contributor motivations (earn from home, flexible, meaningful AI work) — NOT traditional job seeker language
