@@ -95,6 +95,162 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
 ## The 5-Stage Pipeline
 
+### Stage 0: Intake (Dual-Mode Entry)
+
+**Purpose:** Two ways to start the pipeline — manual form entry or AI-powered RFP extraction. Both converge on the same editable form before triggering Stage 1.
+
+#### Mode A: Manual Form Input + Attachments
+
+Standard form entry. Recruiter fills out fields manually and optionally attaches supporting files (task guidelines, client briefs, example screenshots).
+
+```
+/intake/new → Form with fields → [Attach files] → Submit → Stage 1
+```
+
+**Attachment support:**
+- File types: PDF, DOCX, XLSX, PNG, JPG, TXT
+- Stored in Vercel Blob
+- Attached to the intake request record
+- Available for reference during approval/designer stages
+- Max 10 files, 25MB each
+
+#### Mode B: RFP Upload + AI Extraction (Kimi K2.5)
+
+Recruiter uploads a client RFP document (the brief from OpenAI, Anthropic, etc. describing what data they need). Kimi K2.5 reads the document and extracts all relevant fields into an editable form.
+
+```
+/intake/new → [Upload RFP] → Kimi K2.5 extracts → Pre-filled editable form → Recruiter reviews/edits → Submit → Stage 1
+```
+
+**RFP extraction flow:**
+
+1. **Upload:** Recruiter drags/drops or selects RFP file (PDF, DOCX, or image)
+2. **File processing:** Upload to Vercel Blob, extract text content:
+   - PDF: parse with pdf-parse or similar
+   - DOCX: parse with mammoth
+   - Image: OCR via Qwen3-VL (send to VYRA API)
+3. **AI extraction (Kimi K2.5 via OpenRouter):**
+
+```typescript
+const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'moonshotai/kimi-k2.5',
+    messages: [{
+      role: 'system',
+      content: `You are an expert at extracting structured recruitment information from client RFP documents for OneForma, a data annotation company. OneForma recruits contributors worldwide to annotate, transcribe, segment, and verify data for AI companies.
+
+Extract all relevant information and return as JSON matching this schema:
+{
+  "title": "project/task name",
+  "task_type": "audio_annotation|image_annotation|text_labeling|data_collection|guided_feedback|transcription|other",
+  "task_description": "what contributors will actually do",
+  "target_languages": ["language1", "language2"],
+  "target_regions": ["region1", "region2"],
+  "skills_needed": ["skill1", "skill2"],
+  "commitment_level": "part_time|full_time|flexible",
+  "compensation_model": "fixed_hourly|per_task|per_unit",
+  "urgency": "urgent|standard|pipeline",
+  "volume_needed": number_of_contributors,
+  "special_notes": "any additional requirements, equipment needs, cultural notes",
+  "extracted_details": {
+    "client_name": "if mentioned (may be anonymized)",
+    "project_deadline": "if mentioned",
+    "quality_requirements": "accuracy thresholds, QA process",
+    "training_required": "any calibration or onboarding mentioned",
+    "equipment_needed": "headphones, microphone, specific OS, etc.",
+    "data_sensitivity": "NDA required, data handling restrictions"
+  },
+  "confidence_flags": {
+    "fields_confidently_extracted": ["title", "task_type", ...],
+    "fields_inferred": ["urgency", ...],
+    "fields_missing": ["compensation_model", ...],
+    "notes": "any ambiguities or assumptions made"
+  }
+}`
+    }, {
+      role: 'user',
+      content: `Extract structured intake information from this client RFP document:\n\n${extractedText}`
+    }]
+  })
+});
+```
+
+4. **Pre-fill form:** Parse Kimi K2.5 response, populate all form fields
+5. **Confidence indicators:** Show visual indicators on each field:
+   - Green border = confidently extracted from document
+   - Yellow border = inferred (Kimi made an assumption)
+   - Red border/empty = missing from document, recruiter must fill
+6. **Recruiter review:** Recruiter sees the pre-filled form, edits any fields, fills missing ones
+7. **Original RFP attached:** The uploaded RFP is stored as an attachment for reference
+8. **Submit:** Same as manual mode — goes to Stage 1
+
+**UI for Mode B:**
+```
+┌─────────────────────────────────────────────────────┐
+│  New Intake Request                                  │
+│                                                      │
+│  ┌─────────────────┐  ┌──────────────────────────┐  │
+│  │  Fill Manually   │  │  Upload Client RFP  ▲   │  │
+│  │                  │  │                          │  │
+│  │  Start with an   │  │  Drop PDF, DOCX, or     │  │
+│  │  empty form      │  │  image here. AI will     │  │
+│  │                  │  │  extract all fields.     │  │
+│  └─────────────────┘  └──────────────────────────┘  │
+│                                                      │
+│  ─── OR paste RFP text directly ───                  │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  Paste client brief text here...              │   │
+│  │                                               │   │
+│  └──────────────────────────────────────────────┘   │
+│                          [Extract with AI]           │
+└─────────────────────────────────────────────────────┘
+```
+
+After extraction:
+```
+┌─────────────────────────────────────────────────────┐
+│  New Intake Request — Extracted from RFP             │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ 📄 client-rfp-cosmos-q2.pdf (attached)        │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  Project Name ✅                                     │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ Cosmos — Voice Assistance Interaction Segm... │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  Task Type ✅                    Urgency ⚠️ (inferred)│
+│  ┌─────────────────┐           ┌────────────────┐   │
+│  │ Audio Annotation │           │ Standard ▼     │   │
+│  └─────────────────┘           └────────────────┘   │
+│                                                      │
+│  Target Languages ✅                                  │
+│  [French] [Arabic] [English (US)] [+ add more]      │
+│                                                      │
+│  Compensation Model ❌ (not in RFP — please select)  │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ Select compensation model...          ▼       │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  ... (all other fields with confidence indicators)   │
+│                                                      │
+│                    [Submit Intake Request]            │
+└─────────────────────────────────────────────────────┘
+
+Legend: ✅ Extracted  ⚠️ Inferred  ❌ Missing (required)
+```
+
+#### Paste Mode (Lightweight Alternative)
+
+For quick entries, recruiter can paste raw text from an email or Slack message. Same Kimi K2.5 extraction pipeline, but from pasted text instead of a file upload.
+
+---
+
 ### Stage 1: Strategic Intelligence
 
 **Purpose:** Generate creative brief, messaging strategy, target audience definition, channel research with regional intelligence, and design direction — all verified before any creative work begins.
@@ -105,7 +261,7 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
 #### Stage 1a: Creative Brief Generation (Qwen3.5-9B)
 
-**Input:** Intake form data (project/task name, task type, target languages/regions, urgency, task description, skills needed, commitment level, compensation model, special instructions)
+**Input:** Intake form data (project/task name, task type, target languages/regions, urgency, task description, skills needed, commitment level, compensation model, special instructions) + any attached RFP for additional context
 
 **Output:**
 ```json
@@ -615,6 +771,19 @@ CREATE TABLE intake_requests (
   updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Attachments (RFP uploads, supporting docs)
+CREATE TABLE attachments (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id      UUID REFERENCES intake_requests(id) ON DELETE CASCADE,
+  file_name       TEXT NOT NULL,
+  file_type       TEXT NOT NULL,
+  blob_url        TEXT NOT NULL,
+  extracted_text  TEXT,
+  extraction_data JSONB,
+  is_rfp          BOOLEAN DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Stage 1 output: strategic intelligence
 CREATE TABLE creative_briefs (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -753,6 +922,11 @@ CREATE TABLE pipeline_runs (
   GET    /api/intake/[id]         → Get request detail
   PATCH  /api/intake/[id]         → Update request (status, notes)
   DELETE /api/intake/[id]         → Delete request
+
+/api/extract
+  POST   /api/extract/rfp         → Upload RFP file → extract text → Kimi K2.5 → return structured fields
+  POST   /api/extract/paste       → Paste raw text → Kimi K2.5 → return structured fields
+  POST   /api/extract/upload      → Upload attachment to Vercel Blob → return blob URL
 
 /api/generate
   POST   /api/generate/[id]       → Trigger full pipeline for request
