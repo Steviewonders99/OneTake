@@ -23,7 +23,11 @@ BRIEF_SYSTEM_PROMPT = (
 )
 
 
-def build_brief_prompt(request: dict, feedback: list | None = None) -> str:
+def build_brief_prompt(
+    request: dict,
+    feedback: list | None = None,
+    persona_context: str | None = None,
+) -> str:
     """Build the prompt for creative brief generation.
 
     Parameters
@@ -32,6 +36,9 @@ def build_brief_prompt(request: dict, feedback: list | None = None) -> str:
         The intake request dict from Neon.
     feedback:
         Optional list of improvement suggestions from a failed evaluation.
+    persona_context:
+        Pre-built persona + cultural research context block. When provided,
+        the brief is generated FROM persona psychology — not generic.
     """
     feedback_section = ""
     if feedback:
@@ -47,6 +54,27 @@ def build_brief_prompt(request: dict, feedback: list | None = None) -> str:
         else str(form_data)
     )
 
+    # Persona-first: if we have persona + cultural data, the brief
+    # must be built FROM their psychology, not bolted on after.
+    persona_section = ""
+    if persona_context:
+        persona_section = f"""
+
+===================================================================
+TARGET PERSONAS & CULTURAL INTELLIGENCE (the brief MUST serve these)
+===================================================================
+{persona_context}
+
+CRITICAL: The brief above is NOT generic. Every value proposition,
+every messaging angle, every channel choice MUST be traceable to a
+specific persona's pain point, motivation, or psychology hook.
+- Persona 1's pain point → becomes value prop #1
+- Persona 2's motivation → becomes messaging angle #2
+- Persona 3's psychology hook → determines the emotional tone
+- Cultural research findings → determine what to AVOID and what to LEAN INTO
+===================================================================
+"""
+
     return f"""Generate a recruitment marketing creative brief for this OneForma project.
 
 PROJECT TITLE: {request.get("title", "")}
@@ -55,44 +83,74 @@ TARGET LANGUAGES: {", ".join(request.get("target_languages", []))}
 TARGET REGIONS: {", ".join(request.get("target_regions", []))}
 VOLUME NEEDED: {request.get("volume_needed", "Not specified")} contributors
 TASK DETAILS: {task_description}
-
+{persona_section}
 Return ONLY valid JSON (no markdown, no explanation):
 {{
-  "campaign_objective": "One sentence describing the recruitment goal",
+  "campaign_objective": "One sentence — must reference the specific persona needs",
   "messaging_strategy": {{
-    "primary_message": "The single most important thing a potential contributor should know",
+    "primary_message": "The single most compelling message for the PRIMARY persona",
+    "per_persona_hooks": {{
+      "persona_1": "Specific hook for persona 1 based on their psychology",
+      "persona_2": "Specific hook for persona 2 based on their psychology",
+      "persona_3": "Specific hook for persona 3 based on their psychology"
+    }},
     "value_propositions": [
-      "Earn from home on your own schedule",
-      "Use your language skills to shape AI",
-      "No experience needed — we train you",
-      "Get paid weekly via your preferred method",
-      "Join a global community of 500,000+ contributors"
+      "Each value prop must map to a specific persona pain point",
+      "Include the psychology hook that works for that persona",
+      "Use trigger words from the persona profile",
+      "Reference cultural research findings where relevant",
+      "At least 5 value props — covering all 3 personas"
     ],
-    "tone": "friendly, inviting, opportunity-focused"
+    "tone": "Derived from persona psychology — not generic 'friendly'"
   }},
   "target_audience": {{
-    "persona": "A short description of the ideal contributor",
-    "profile_types": ["students", "freelancers", "stay-at-home parents", "multilingual professionals"],
-    "motivations": ["extra income", "flexible schedule", "meaningful work in AI", "use language skills"],
-    "pain_points": ["uncertain gig economy", "limited remote work options", "undervalued language skills"]
+    "personas_summary": "Brief summary of all 3 personas and why they were chosen",
+    "profile_types": ["The 3 archetype names"],
+    "motivations_by_persona": {{
+      "persona_1": ["motivation1", "motivation2"],
+      "persona_2": ["motivation1", "motivation2"],
+      "persona_3": ["motivation1", "motivation2"]
+    }},
+    "pain_points_by_persona": {{
+      "persona_1": ["pain1", "pain2"],
+      "persona_2": ["pain1", "pain2"],
+      "persona_3": ["pain1", "pain2"]
+    }},
+    "psychology_hooks_by_persona": {{
+      "persona_1": "primary_bias + messaging_angle",
+      "persona_2": "primary_bias + messaging_angle",
+      "persona_3": "primary_bias + messaging_angle"
+    }}
   }},
   "content_language": {{
-    "primary": "The primary language for ad copy",
-    "secondary": "Optional secondary language",
-    "rationale": "Why these languages were chosen for the target regions"
+    "primary": "Language code",
+    "secondary": "Optional",
+    "dialect_notes": "From cultural research — e.g. 'Moroccan Darija + Standard French'",
+    "formality": "From cultural research — e.g. 'Semi-formal French for ads, Darija for social'"
   }},
   "channels": {{
-    "primary": ["linkedin_feed", "facebook_feed"],
-    "secondary": ["telegram_card", "indeed_banner"],
-    "rationale": "Why these channels reach the target audience"
+    "per_persona": {{
+      "persona_1": ["their best channels from cultural research"],
+      "persona_2": ["their best channels"],
+      "persona_3": ["their best channels"]
+    }},
+    "primary": ["Top 3 channels across all personas"],
+    "secondary": ["Additional reach channels"],
+    "rationale": "Why — referencing cultural research platform_reality data"
+  }},
+  "cultural_guardrails": {{
+    "things_to_avoid": ["From cultural research — imagery, phrases, topics to avoid"],
+    "things_to_lean_into": ["What resonates culturally — from research findings"],
+    "trust_signals": ["How to build credibility in this region"]
   }}
 }}
 
 RULES:
-- Value propositions must focus on CONTRIBUTOR benefits, not company benefits.
-- Think 'Earn $X/hour from home' NOT 'We are hiring annotators'.
-- Persona must be specific to the target region and language.
-- Channels must be relevant to the target region (e.g. Telegram for CIS, LINE for Japan).{feedback_section}"""
+- Every value proposition MUST map to a specific persona's pain point or motivation.
+- Channels MUST come from cultural research platform_reality data — NOT assumptions.
+- Tone MUST be derived from persona psychology — NOT generic 'friendly, inviting'.
+- Include cultural_guardrails to prevent offensive/ineffective messaging.
+- Think persona-first: 'What would make Fatima (student) stop scrolling?' not 'What headline works?'{feedback_section}"""
 
 
 def build_eval_prompt(brief: dict, request: dict) -> str:

@@ -1,11 +1,15 @@
-"""Stage 1: Strategic Intelligence.
+"""Stage 1: Strategic Intelligence (Persona-First Architecture).
 
+The brief, messaging, psychology, and positioning are all DERIVED FROM
+the personas and cultural research — not the other way around.
+
+Pipeline order:
 1. Load intake request from Neon.
-2. Generate creative brief using Qwen3.5-9B.
-3. Evaluate brief (gate -- threshold 0.85, max 3 retries).
-4. Cultural research per region via Kimi K2.5.
-5. Generate 3 target personas (informed by cultural research).
-6. Generate design direction.
+2. Cultural research per region via Kimi K2.5 (understand the PEOPLE first).
+3. Generate 3 target personas (informed by cultural research).
+4. Generate creative brief FROM personas + research (messaging built ON their psychology).
+5. Evaluate brief against persona needs (gate — 0.85 threshold).
+6. Generate design direction (visual world for THESE personas).
 7. Save to Neon creative_briefs table.
 """
 from __future__ import annotations
@@ -38,108 +42,122 @@ PASS_THRESHOLD = 0.85
 
 
 async def run_stage1(context: dict) -> dict:
-    """Run Strategic Intelligence stage and return enriched context."""
+    """Run Strategic Intelligence stage — persona-first architecture.
+
+    The brief, psychology, and positioning are all DERIVED FROM the
+    personas and cultural research. We understand the people before
+    we write a single word of messaging.
+    """
     request_id: str = context["request_id"]
     request = await get_intake_request(request_id)
     context["request_title"] = request.get("title", "Untitled")
 
-    # ------------------------------------------------------------------
-    # Generate brief
-    # ------------------------------------------------------------------
-    brief_prompt = build_brief_prompt(request)
-    brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
-    brief_data = _parse_json(brief_text)
-
-    # ------------------------------------------------------------------
-    # Evaluate brief with retry gate
-    # ------------------------------------------------------------------
-    score = 0.0
-    eval_data: dict = {}
-    for attempt in range(MAX_RETRIES):
-        eval_prompt = build_eval_prompt(brief_data, request)
-        eval_text = await generate_text(
-            BRIEF_SYSTEM_PROMPT, eval_prompt, temperature=0.2,
-        )
-        eval_data = _parse_json(eval_text)
-        score = float(eval_data.get("overall_score", 0))
-
-        if score >= PASS_THRESHOLD:
-            logger.info(
-                "Brief passed evaluation (score=%.2f, attempt=%d)",
-                score,
-                attempt + 1,
-            )
-            break
-
-        logger.info("Brief score %.2f below %.2f -- retrying...", score, PASS_THRESHOLD)
-        feedback = eval_data.get("improvement_suggestions", [])
-        brief_prompt = build_brief_prompt(request, feedback=feedback)
-        brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
-        brief_data = _parse_json(brief_text)
-
-    # ------------------------------------------------------------------
-    # Cultural research per region via Kimi K2.5
-    # ------------------------------------------------------------------
     target_regions: list[str] = request.get("target_regions", [])
     target_languages: list[str] = request.get("target_languages", [])
     form_data: dict = request.get("form_data", {})
     task_type: str = request.get("task_type", "data annotation")
 
+    # ==================================================================
+    # STEP 1: CULTURAL RESEARCH (understand the people FIRST)
+    # Kimi K2.5 researches 8 dimensions per region: AI fatigue, gig work
+    # perception, trust level, platform reality, economic context,
+    # cultural sensitivities, tech literacy, language nuance.
+    # ==================================================================
     cultural_research: dict = {}
     if target_regions:
-        logger.info("Running cultural research for %d regions ...", len(target_regions))
+        logger.info("Step 1: Cultural research for %d regions ...", len(target_regions))
         cultural_research = await research_all_regions(
             regions=target_regions,
             languages=target_languages,
             demographic=form_data.get("demographic", "young adults 18-35"),
             task_type=task_type,
         )
-        brief_data["cultural_research"] = cultural_research
-        logger.info("Cultural research complete for regions: %s", list(cultural_research.keys()))
+        logger.info("Cultural research complete: %s", list(cultural_research.keys()))
     else:
-        logger.info("No target regions — skipping cultural research.")
+        logger.info("Step 1: No target regions — skipping cultural research.")
 
-    # ------------------------------------------------------------------
-    # Generate 3 target personas from intake requirements
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # STEP 2: GENERATE PERSONAS (WHO are we talking to?)
+    # 3 personas selected from 8 archetypes, scored against task
+    # requirements, then enriched with cultural research findings.
+    # These personas are the FOUNDATION for everything else.
+    # ==================================================================
+    logger.info("Step 2: Generating personas...")
     personas = generate_personas(request)
 
-    # Enrich personas with cultural research findings before further use.
     if cultural_research:
         personas = apply_research_to_personas(personas, cultural_research)
-        logger.info(
-            "Personas enriched with cultural research for %d regions.",
-            len(cultural_research),
-        )
+        logger.info("Personas enriched with cultural research.")
 
-    persona_context = build_persona_brief_prompt(personas, brief_data)
+    logger.info(
+        "3 personas: %s",
+        [f"{p['archetype_key']} ({p.get('persona_name', '?')})" for p in personas],
+    )
 
-    # Append cultural research summary to persona context so design
-    # direction accounts for real cultural data.
+    # ==================================================================
+    # STEP 3: GENERATE BRIEF FROM PERSONAS (messaging built ON their psychology)
+    # The brief is NOT generic — it's built specifically for these
+    # 3 personas, their pain points, motivations, psychology hooks,
+    # cultural context, and channel preferences.
+    # ==================================================================
+    logger.info("Step 3: Generating persona-driven creative brief...")
+
+    # Build persona + research context that feeds into the brief prompt
+    persona_context = build_persona_brief_prompt(personas, {})
     if cultural_research:
         persona_context += "\n\n" + build_research_summary(cultural_research)
 
-    logger.info(
-        "Generated %d personas: %s",
-        len(personas),
-        [p["archetype_key"] for p in personas],
-    )
+    brief_prompt = build_brief_prompt(request, persona_context=persona_context)
+    brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
+    brief_data = _parse_json(brief_text)
 
-    # Inject personas into brief_data so downstream stages can access them.
+    # ==================================================================
+    # STEP 4: EVALUATE BRIEF (does it serve the personas?)
+    # The evaluation now checks whether the brief addresses each
+    # persona's specific needs, not just generic quality.
+    # ==================================================================
+    logger.info("Step 4: Evaluating brief against persona needs...")
+    score = 0.0
+    eval_data: dict = {}
+    for attempt in range(MAX_RETRIES):
+        eval_prompt = build_eval_prompt(brief_data, request)
+        # Inject persona context so evaluator checks persona fit
+        eval_prompt += f"\n\nPERSONA FIT CHECK — the brief must serve ALL 3 personas:\n{persona_context}"
+        eval_text = await generate_text(
+            BRIEF_SYSTEM_PROMPT, eval_prompt, temperature=0.2, thinking=False,
+        )
+        eval_data = _parse_json(eval_text)
+        score = float(eval_data.get("overall_score", 0))
+
+        if score >= PASS_THRESHOLD:
+            logger.info("Brief passed (score=%.2f, attempt=%d)", score, attempt + 1)
+            break
+
+        logger.info("Brief score %.2f < %.2f — retrying with feedback...", score, PASS_THRESHOLD)
+        feedback = eval_data.get("improvement_suggestions", [])
+        brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
+        brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
+        brief_data = _parse_json(brief_text)
+
+    # Inject personas + research into brief for downstream stages
     brief_data["personas"] = personas
+    brief_data["cultural_research"] = cultural_research
 
-    # ------------------------------------------------------------------
-    # Generate design direction (now informed by personas)
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # STEP 5: DESIGN DIRECTION (visual world for THESE personas)
+    # The design direction is informed by who the personas are,
+    # where they live, what their homes/cafes look like, and
+    # what cultural considerations affect visual choices.
+    # ==================================================================
+    logger.info("Step 5: Generating persona-driven design direction...")
     design_prompt = build_design_direction_prompt(brief_data, request)
-    # Append persona context so design direction accounts for persona lifestyles.
     design_prompt += "\n\n" + persona_context
     design_text = await generate_text(BRIEF_SYSTEM_PROMPT, design_prompt)
     design_data = _parse_json(design_text)
 
-    # ------------------------------------------------------------------
-    # Persist to Neon
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # STEP 6: PERSIST TO NEON
+    # ==================================================================
     await save_brief(
         request_id,
         {
@@ -149,18 +167,20 @@ async def run_stage1(context: dict) -> dict:
             "evaluation_data": eval_data,
             "personas": personas,
             "cultural_research": cultural_research,
-            "content_languages": request.get("target_languages", []),
+            "content_languages": target_languages,
         },
     )
+
+    logger.info("Stage 1 complete: brief + %d personas + cultural research saved.", len(personas))
 
     return {
         "brief": brief_data,
         "design_direction": design_data,
         "personas": personas,
         "cultural_research": cultural_research,
-        "target_languages": request.get("target_languages", []),
-        "target_regions": request.get("target_regions", []),
-        "form_data": request.get("form_data", {}),
+        "target_languages": target_languages,
+        "target_regions": target_regions,
+        "form_data": form_data,
     }
 
 
