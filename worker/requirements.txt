@@ -13,3 +13,4 @@ playwright>=1.48.0
 
 # Image processing
 Pillow>=10.0.0
+rembg>=2.0.0
