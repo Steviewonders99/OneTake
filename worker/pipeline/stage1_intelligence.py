@@ -8,7 +8,7 @@ Pipeline order:
 2. Cultural research per region via Kimi K2.5 (understand the PEOPLE first).
 3. Generate 3 target personas (informed by cultural research).
 4. Generate creative brief FROM personas + research (messaging built ON their psychology).
-5. Evaluate brief against persona needs (gate — 0.85 threshold).
+5. Evaluate brief with 8-dimension rubric (Neurogen-style gate).
 6. Generate design direction (visual world for THESE personas).
 7. Save to Neon creative_briefs table.
 """
@@ -24,6 +24,7 @@ from prompts.cultural_research import (
     build_research_summary,
     research_all_regions,
 )
+from prompts.eval_registry import evaluate as run_evaluator
 from prompts.persona_engine import (
     build_persona_brief_prompt,
     generate_personas,
@@ -32,7 +33,6 @@ from prompts.recruitment_brief import (
     BRIEF_SYSTEM_PROMPT,
     build_brief_prompt,
     build_design_direction_prompt,
-    build_eval_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,29 +112,51 @@ async def run_stage1(context: dict) -> dict:
     brief_data = _parse_json(brief_text)
 
     # ==================================================================
-    # STEP 4: EVALUATE BRIEF (does it serve the personas?)
-    # The evaluation now checks whether the brief addresses each
-    # persona's specific needs, not just generic quality.
+    # STEP 4: EVALUATE BRIEF (8-dimension Neurogen-style rubric)
+    # Replaces the thin 5-dimension eval with a production-grade
+    # rubric: rfp_traceability, persona_specificity, cultural_integration,
+    # oneforma_brand_fit, psychology_depth, channel_evidence,
+    # ethical_compliance, actionability.
+    # Verdicts: accept (>= 8.0), revise (retry), reject (hard fail).
     # ==================================================================
-    logger.info("Step 4: Evaluating brief against persona needs...")
+    logger.info("Step 4: Evaluating brief (8-dimension rubric)...")
     score = 0.0
     eval_data: dict = {}
     for attempt in range(MAX_RETRIES):
-        eval_prompt = build_eval_prompt(brief_data, request)
-        # Inject persona context so evaluator checks persona fit
-        eval_prompt += f"\n\nPERSONA FIT CHECK — the brief must serve ALL 3 personas:\n{persona_context}"
-        eval_text = await generate_text(
-            BRIEF_SYSTEM_PROMPT, eval_prompt, temperature=0.2, thinking=False,
+        eval_result = await run_evaluator(
+            "brief",
+            context={
+                "brief": brief_data,
+                "request": request,
+                "personas": personas,
+                "cultural_research": cultural_research,
+            },
+            llm_fn=generate_text,
         )
-        eval_data = _parse_json(eval_text)
-        score = float(eval_data.get("overall_score", 0))
+        eval_data = eval_result.get("raw_response", {})
+        # Use normalized 0-1 score for backward compatibility with PASS_THRESHOLD
+        score = float(eval_result.get("overall_score", 0))
+        verdict = eval_result.get("verdict", "revise")
 
-        if score >= PASS_THRESHOLD:
-            logger.info("Brief passed (score=%.2f, attempt=%d)", score, attempt + 1)
+        if verdict == "accept" or score >= PASS_THRESHOLD:
+            logger.info(
+                "Brief passed (verdict=%s, score=%.2f, weighted=%.1f/10, attempt=%d)",
+                verdict, score, eval_result.get("weighted_score", 0), attempt + 1,
+            )
             break
 
-        logger.info("Brief score %.2f < %.2f — retrying with feedback...", score, PASS_THRESHOLD)
-        feedback = eval_data.get("improvement_suggestions", [])
+        if verdict == "reject":
+            logger.warning(
+                "Brief REJECTED: %s (attempt %d)",
+                eval_result.get("hard_gate_failures", []),
+                attempt + 1,
+            )
+
+        logger.info(
+            "Brief %s (score=%.2f, weighted=%.1f/10) — retrying with feedback...",
+            verdict, score, eval_result.get("weighted_score", 0),
+        )
+        feedback = eval_result.get("improvement_suggestions", [])
         brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
         brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
         brief_data = _parse_json(brief_text)
@@ -165,6 +187,7 @@ async def run_stage1(context: dict) -> dict:
             "design_direction": design_data,
             "evaluation_score": score,
             "evaluation_data": eval_data,
+            "evaluation_result": eval_result,
             "personas": personas,
             "cultural_research": cultural_research,
             "content_languages": target_languages,
