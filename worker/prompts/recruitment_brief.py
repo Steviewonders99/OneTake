@@ -152,21 +152,49 @@ BRAND GUIDELINES:
 TARGET REGIONS: {request.get("target_regions")}
 TARGET LANGUAGES: {request.get("target_languages")}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON following this structured ART DIRECTION format
+(inspired by professional art direction workflows):
 {{
   "visual_style": "light_clean",
-  "photography_direction": "Describe the photography style, setting, people, mood",
-  "color_overrides": {{
+  "palette": {{
     "primary_bg": "#FFFFFF",
     "primary_text": "#32373C",
     "cta_bg": "#32373C",
     "cta_text": "#FFFFFF",
-    "accent": "Optional accent color for the campaign"
+    "accent": "One campaign-specific accent color hex"
   }},
+  "mood": "One sentence — the FEELING this campaign should evoke",
+  "lighting": {{
+    "type": "Be SPECIFIC: 'warm golden hour from camera left at 45 degrees' or 'overhead fluorescent mixed with window daylight'",
+    "color_temperature": "warm (3200K) / neutral (5000K) / cool (6500K) / mixed",
+    "shadows": "soft and diffused / hard directional / mixed (window + lamp)"
+  }},
+  "photography_direction": {{
+    "style": "UGC candid / editorial lifestyle / documentary / intimate portrait",
+    "lens": "35mm equivalent (environmental) / 50mm (natural) / 85mm (portrait/bokeh)",
+    "depth_of_field": "shallow f/1.8 (person sharp, background blurred) / medium f/4 (both visible) / deep f/8 (everything sharp)",
+    "film_stock": "iPhone 15 Pro sensor look — slight grain, warm cast, natural contrast"
+  }},
+  "environment": {{
+    "setting_type": "Specific location type for this region and audience",
+    "surface_textures": "MUST specify: wall finish (paint strokes/cracks/tiles), furniture material (wood grain/plastic/metal), floor type",
+    "lived_in_details": "List 5+ specific real objects that should be visible (charger cable, sticky notes, water bottle, etc.)",
+    "lighting_on_environment": "How light hits surfaces — warm pool on desk, cool wash on wall, hard shadow from object"
+  }},
+  "texture": {{
+    "skin": "Natural with visible pores, slight oiliness, under-eye shadows — NOT airbrushed",
+    "fabric": "Visible weave, wrinkles at joints, slight pilling on worn items",
+    "surfaces": "Wood grain on desk, scuff marks on floor, fingerprints on screen edge",
+    "film_grain": "Subtle sensor noise, stronger in shadow areas — iPhone aesthetic"
+  }},
+  "do_not": [
+    "List 5+ specific things to AVOID for this campaign — e.g. 'no corporate office', 'no studio lighting', 'no stock photo poses'"
+  ],
   "template_preferences": {{
-    "linkedin_feed": "HERO_HEADLINE",
-    "facebook_feed": "BOTTOM_BAND",
-    "telegram_card": "CENTERED_OVERLAY"
+    "linkedin_feed": "HERO_HEADLINE or BOTTOM_BAND",
+    "facebook_feed": "HERO_HEADLINE or CENTERED_OVERLAY",
+    "facebook_stories": "CENTERED_OVERLAY",
+    "telegram_card": "MINIMAL_CTA"
   }},
   "format_matrix": {{
     "linkedin_feed": ["1200x627"],

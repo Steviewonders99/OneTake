@@ -39,15 +39,24 @@ REALISM_ANCHORS = [
 
 # Anti-gloss prompt addition — appended to every Seedream prompt
 ANTI_GLOSS_INSTRUCTION = """
-ANTI-AI-GLOSS (CRITICAL — the image MUST NOT look AI-generated):
-- NO smooth plastic skin. Real skin has pores, texture, micro-bumps, slight roughness.
-- NO uniform lighting. Real photos have mixed warm/cool light sources, slight shadows.
-- NO perfect hair. Real hair has flyaways, slight frizz, natural texture.
-- NO pristine clothing. Real clothes have wrinkles, fabric texture, slight wear.
-- NO oversaturation. Real iPhone photos are slightly muted compared to AI output.
-- The image should look like it has slight film grain from a phone camera sensor.
+ANTI-AI-GLOSS — SUBJECT (the person MUST NOT look AI-generated):
+- NO smooth plastic skin. Visible pores, micro-bumps, T-zone oiliness, under-eye texture.
+- NO perfect hair. Flyaways, baby hairs, natural frizz, texture visible.
+- NO pristine clothing. Wrinkles at elbows/waist, fabric weave visible, slight wear/pilling.
+- NO uniform lighting on face. Mixed warm/cool sources = slight shadows under chin, nose shadow.
+- NO oversaturation. Slightly muted like real iPhone — not AI-vibrant.
+- Film grain from camera sensor. Not clean digital — slight noise especially in shadows.
+
+ANTI-AI-GLOSS — BACKGROUND & ENVIRONMENT (just as important as the person):
+- WALLS: Must have texture — paint brush strokes, slight scuff marks, nail holes, light switch plates, power outlets visible. NOT smooth gradients. Real walls have imperfections.
+- FURNITURE: Visible wood grain on tables/desks, slight scratches, ring marks from cups, wear on chair edges. NOT pristine showroom furniture.
+- FLOORS: Visible tile grout, carpet texture/flattening, slight dust in corners, scuff marks. NOT perfectly clean.
+- SURFACES: Real items have shadows and dust. Laptop has fingerprints on screen edge. Phone has a case with slight wear. Coffee cup has a drip stain.
+- LIGHTING ON ENVIRONMENT: Different color temperature on different surfaces — warm lamp on desk, cool daylight on wall near window. Hard shadows from objects (not soft AI ambient).
+- WINDOW: If visible, slight overexposure (blown highlights), curtain/blind with uneven folds, real view outside (not AI-gradient sky).
+- CLUTTER: Real spaces have clutter — visible wires, a charger cable, a water bottle, sticky notes, an open notebook, crumbs, a pen. NOT minimalist showroom.
+- DEPTH: Background objects should be at different distances — some sharp, some blurred. Not everything at the same focal plane.
 - Slight lens vignette at corners (real lenses darken at edges).
-- If the person is near a window, slight overexposure on the window side.
 """
 
 REALISM_ANCHORS_TEXT = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(REALISM_ANCHORS))
@@ -222,21 +231,57 @@ def build_image_prompt(
     backdrop = backdrops[backdrop_index % len(backdrops)] if backdrops else "home office"
     accessory = actor.get("signature_accessory", "headphones")
 
-    photography_dir = (design or {}).get("photography_direction", "candid, natural, UGC-style")
+    # Extract structured art direction (koda-stack-inspired)
+    d = design or {}
+    photo_dir = d.get("photography_direction", {})
+    if isinstance(photo_dir, str):
+        photo_dir = {"style": photo_dir}
+    environment = d.get("environment", {})
+    texture = d.get("texture", {})
+    lighting = d.get("lighting", {})
+    do_not = d.get("do_not", [])
 
-    # Select composition based on content intent (outfit_key maps to intent)
+    # Select composition based on content intent
     composition_block, composition_key = build_composition_block(
         intent=outfit_key,
         image_index=image_index,
         used=used_compositions,
     )
 
+    # Build do-not block
+    do_not_block = ""
+    if do_not:
+        do_not_block = "\nDO NOT (banned for this campaign):\n" + "\n".join(f"- {x}" for x in do_not)
+
     prompt = f"""{prompt_seed}
 
 OUTFIT FOR THIS SHOT: {outfit}
 SIGNATURE ACCESSORY (MUST be visible): {accessory}
 BACKDROP: {backdrop}
-STYLE: {photography_dir}
+
+ART DIRECTION:
+- Style: {photo_dir.get("style", "UGC candid")}
+- Lens: {photo_dir.get("lens", "50mm equivalent")}
+- Depth of field: {photo_dir.get("depth_of_field", "shallow f/1.8")}
+- Film stock: {photo_dir.get("film_stock", "iPhone 15 Pro sensor look")}
+- Mood: {d.get("mood", "Approachable, authentic, opportunity-focused")}
+
+LIGHTING:
+- Type: {lighting.get("type", "Natural mixed — window daylight + warm lamp")}
+- Color temperature: {lighting.get("color_temperature", "mixed warm/cool")}
+- Shadows: {lighting.get("shadows", "mixed — soft from window, hard from objects")}
+
+ENVIRONMENT TEXTURE (backgrounds must NOT look AI-generated):
+- Setting: {environment.get("setting_type", backdrop)}
+- Surface textures: {environment.get("surface_textures", "paint strokes on walls, wood grain on furniture, visible floor texture")}
+- Lived-in details: {environment.get("lived_in_details", "charger cable, water bottle, sticky notes, open notebook, pen")}
+- Light on surfaces: {environment.get("lighting_on_environment", "warm pool on desk, cool wash on wall")}
+
+TEXTURE REQUIREMENTS:
+- Skin: {texture.get("skin", "Natural pores, micro-bumps, slight oiliness — NOT airbrushed")}
+- Fabric: {texture.get("fabric", "Visible weave, wrinkles at joints, slight pilling")}
+- Surfaces: {texture.get("surfaces", "Wood grain, scuff marks, fingerprints on screens")}
+- Film grain: {texture.get("film_grain", "Subtle sensor noise, stronger in shadows")}
 
 FACE LOCK (these features MUST match the identity above):
 - Skin tone: {face_lock.get("skin_tone_hex", "natural")}
@@ -250,6 +295,7 @@ FACE LOCK (these features MUST match the identity above):
 REALISM ANCHORS (MANDATORY — the image MUST exhibit ALL of these):
 {REALISM_ANCHORS_TEXT}
 {ANTI_GLOSS_INSTRUCTION}
+{do_not_block}
 
 The final image should look like it was taken by a friend with an iPhone,
 not by a professional photographer in a studio. This is for a recruitment
