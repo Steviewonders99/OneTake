@@ -550,7 +550,16 @@ async def research_region(
         result = await _call_kimi(query, dimension["output_keys"])
         research[dimension_key] = result
 
-    logger.info("Cultural research complete for %s — %d dimensions.", region, len(RESEARCH_DIMENSIONS))
+    # Validate live research against our hardcoded priors
+    validation = validate_research_against_priors(region, research)
+    research["_validation"] = validation
+    logger.info(
+        "Cultural research complete for %s — %d dimensions. Validation: %s",
+        region,
+        len(RESEARCH_DIMENSIONS),
+        validation["summary"],
+    )
+
     return research
 
 
@@ -871,6 +880,122 @@ def apply_research_to_personas(
     )
 
     return enriched
+
+
+# ---------------------------------------------------------------------------
+# validate_research_against_priors — compare live Kimi data vs hardcoded
+# ---------------------------------------------------------------------------
+
+def validate_research_against_priors(
+    region: str,
+    research: dict[str, Any],
+) -> dict[str, Any]:
+    """Compare Kimi K2.5 live research against our hardcoded priors.
+
+    Returns a validation report with:
+    - confirmed: priors that Kimi's data agrees with
+    - corrected: priors that Kimi's data contradicts (Kimi wins)
+    - new_intel: data Kimi found that we didn't have in priors
+    - warnings: things that seem suspicious (possible Kimi hallucination)
+
+    This is logged for transparency and used to improve priors over time.
+    """
+    priors = get_platform_priors(region)
+    platform_research = research.get("platform_reality", {})
+    demographic_research = research.get("demographic_channel_map", {})
+
+    confirmed: list[str] = []
+    corrected: list[str] = []
+    new_intel: list[str] = []
+    warnings: list[str] = []
+
+    # Check platform data from research against priors
+    research_text = json.dumps(platform_research, ensure_ascii=False).lower()
+    demo_text = json.dumps(demographic_research, ensure_ascii=False).lower()
+
+    for platform, prior_data in priors.items():
+        prior_youth = prior_data.get("youth_usage", "unknown")
+
+        if prior_youth == "blocked":
+            # Check if Kimi confirms the block
+            if platform in research_text and "blocked" not in research_text:
+                warnings.append(
+                    f"{platform}: our priors say BLOCKED in {region}, "
+                    f"but Kimi's research doesn't mention a block. Verify manually."
+                )
+            else:
+                confirmed.append(f"{platform}: confirmed blocked in {region}")
+            continue
+
+        # Check if Kimi mentions this platform
+        if platform not in research_text and platform not in demo_text:
+            # Kimi didn't mention it — could mean it's irrelevant or Kimi missed it
+            if prior_youth in ("very_high", "high"):
+                warnings.append(
+                    f"{platform}: priors say {prior_youth} usage in {region}, "
+                    f"but Kimi didn't mention it. May need manual verification."
+                )
+        else:
+            # Kimi mentioned it — check for agreement
+            dominant_age = prior_data.get("dominant_age", "")
+
+            # Simple heuristic: if Kimi mentions "declining" for a platform
+            # we thought was "high", flag as correction
+            if "declining" in research_text and platform in research_text:
+                if prior_youth in ("very_high", "high"):
+                    corrected.append(
+                        f"{platform}: priors said {prior_youth} in {region}, "
+                        f"but Kimi says it's DECLINING. Update priors."
+                    )
+            elif prior_youth == "very_high":
+                confirmed.append(f"{platform}: confirmed {prior_youth} in {region}")
+
+    # Check if Kimi found platforms we don't have in priors
+    known_platforms = set(priors.keys())
+    # Simple extraction of platform names from research
+    all_platform_names = {
+        "whatsapp", "telegram", "facebook", "instagram", "tiktok",
+        "linkedin", "reddit", "pinterest", "youtube", "twitter",
+        "wechat", "weibo", "douyin", "line", "kakao", "vk",
+        "snapchat", "discord", "viber", "signal",
+    }
+    for p in all_platform_names - known_platforms:
+        if p in research_text or p in demo_text:
+            new_intel.append(
+                f"{p}: Kimi mentions this platform for {region} but "
+                f"we don't have it in our priors. Consider adding."
+            )
+
+    report = {
+        "region": region,
+        "confirmed": confirmed,
+        "corrected": corrected,
+        "new_intel": new_intel,
+        "warnings": warnings,
+        "summary": (
+            f"{len(confirmed)} confirmed, {len(corrected)} corrected, "
+            f"{len(new_intel)} new, {len(warnings)} warnings"
+        ),
+    }
+
+    # Log the report
+    if corrected:
+        logger.warning(
+            "PRIOR CORRECTIONS for %s: %s",
+            region, "; ".join(corrected),
+        )
+    if warnings:
+        logger.warning(
+            "VALIDATION WARNINGS for %s: %s",
+            region, "; ".join(warnings),
+        )
+    if new_intel:
+        logger.info(
+            "NEW INTEL for %s: %s",
+            region, "; ".join(new_intel),
+        )
+
+    return report
 
 
 # ---------------------------------------------------------------------------
