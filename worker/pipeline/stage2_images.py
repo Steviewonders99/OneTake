@@ -22,6 +22,7 @@ import os
 import tempfile
 import uuid
 
+from ai.deglosser import degloss
 from ai.local_llm import generate_text
 from ai.local_vlm import analyze_image
 from ai.seedream import generate_image
@@ -196,7 +197,15 @@ async def _generate_validated_image(
             tag, actor_data.get("name", "?"), attempt + 1, max_retries,
         )
 
-        image_bytes = await generate_image(image_prompt_text, dimension_key="square")
+        raw_bytes = await generate_image(image_prompt_text, dimension_key="square")
+
+        # DEGLOSSER: Remove AI gloss — add grain, skin texture, vignette,
+        # chromatic aberration, compression artifacts. Runs locally via
+        # Pillow + NumPy. This is the free alternative to paid skin
+        # enhancers like Higgsfield or Enhancor.
+        deglosser_intensity = "heavy" if attempt == 0 else "medium"  # First try = max roughness
+        image_bytes = degloss(raw_bytes, intensity=deglosser_intensity)
+        logger.info("Deglosser applied (%s intensity)", deglosser_intensity)
 
         # Write to temp file for VLM analysis
         tmp_path = os.path.join(tempfile.gettempdir(), f"centric_{uuid.uuid4().hex}.png")

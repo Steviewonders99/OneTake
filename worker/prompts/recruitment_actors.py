@@ -25,17 +25,30 @@ ACTOR_SYSTEM_PROMPT = (
 # polished studio photography.
 
 REALISM_ANCHORS = [
-    "Shot on iPhone 15 Pro, natural lighting, no studio setup",
-    "Slight asymmetry in facial features — real face, not AI-perfected",
-    "Visible skin texture: pores, minor blemishes, natural skin tone variation",
-    "Hair with natural flyaways, not salon-styled — real everyday hair",
-    "Clothing with natural wrinkles and wear — not freshly pressed",
-    "Environment with lived-in details: coffee cup, notebooks, phone charger",
-    "Natural body posture — slightly leaning, relaxed, not model-posed",
-    "Ambient background blur (shallow depth of field, f/1.8 equivalent)",
-    "Warm indoor lighting with slight color cast from window or lamp",
-    "Candid expression — mid-conversation smile or focused concentration, not posed grin",
+    "Shot on iPhone 15 Pro, natural lighting, no studio setup, slight camera sensor grain visible",
+    "Slight asymmetry in facial features — real face, not AI-perfected, not symmetrical",
+    "SKIN TEXTURE IS CRITICAL: visible pores on nose and forehead, slight under-eye shadows, natural skin roughness — NOT smooth, NOT airbrushed, NOT glossy. Real skin has micro-bumps, tiny imperfections, slight oiliness on T-zone, visible follicles",
+    "Hair with natural flyaways, baby hairs at temples catching backlight, not salon-styled",
+    "Clothing with visible FABRIC TEXTURE: weave pattern, slight pilling, natural wrinkles at elbow/waist bends, not freshly pressed or digitally smooth",
+    "Environment with lived-in details: coffee cup with slight stain, notebooks with bent corners, phone charger cable, sticky notes, real clutter",
+    "Natural body posture — slightly leaning, weight on one side, relaxed, not model-posed or AI-stiff",
+    "Ambient background blur (shallow depth of field, f/1.8) with slight chromatic aberration at edges",
+    "Mixed color temperature lighting: warm lamp + cool window = slight color cast variation across the frame, not uniform color",
+    "Candid expression — mid-conversation or focused concentration, real muscle tension in face, not AI-smooth plastic expression",
 ]
+
+# Anti-gloss prompt addition — appended to every Seedream prompt
+ANTI_GLOSS_INSTRUCTION = """
+ANTI-AI-GLOSS (CRITICAL — the image MUST NOT look AI-generated):
+- NO smooth plastic skin. Real skin has pores, texture, micro-bumps, slight roughness.
+- NO uniform lighting. Real photos have mixed warm/cool light sources, slight shadows.
+- NO perfect hair. Real hair has flyaways, slight frizz, natural texture.
+- NO pristine clothing. Real clothes have wrinkles, fabric texture, slight wear.
+- NO oversaturation. Real iPhone photos are slightly muted compared to AI output.
+- The image should look like it has slight film grain from a phone camera sensor.
+- Slight lens vignette at corners (real lenses darken at edges).
+- If the person is near a window, slight overexposure on the window side.
+"""
 
 REALISM_ANCHORS_TEXT = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(REALISM_ANCHORS))
 
@@ -236,6 +249,7 @@ FACE LOCK (these features MUST match the identity above):
 
 REALISM ANCHORS (MANDATORY — the image MUST exhibit ALL of these):
 {REALISM_ANCHORS_TEXT}
+{ANTI_GLOSS_INSTRUCTION}
 
 The final image should look like it was taken by a friend with an iPhone,
 not by a professional photographer in a studio. This is for a recruitment
