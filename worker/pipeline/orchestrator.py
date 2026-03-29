@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import logging
 
-from neon_client import update_request_status
+from neon_client import get_actors, update_request_status
 from pipeline.stage1_intelligence import run_stage1
 from pipeline.stage2_images import run_stage2
 from pipeline.stage3_copy import run_stage3
 from pipeline.stage4_compose_v2 import run_stage4
+from pipeline.stage_video import run_video_stage
 from teams_notify import notify_generation_complete, notify_generation_failed
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ async def run_pipeline(job: dict) -> None:
         (2, "Character-Driven Image Generation", run_stage2),
         (3, "Copy Generation", run_stage3),
         (4, "Layout Composition", run_stage4),
+        (5, "Video Generation", run_video_stage),
     ]
 
     # If regenerating a specific stage, only run that one.
@@ -79,6 +81,17 @@ async def run_pipeline(job: dict) -> None:
 
     for stage_num, stage_name, stage_fn in stages:
         logger.info("Running Stage %d: %s", stage_num, stage_name)
+
+        # Stage 5 (Video) needs actors in context — load from Neon
+        if stage_num == 5 and "actors" not in context:
+            try:
+                actors = await get_actors(request_id)
+                context["actors"] = actors
+                logger.info("Loaded %d actors from Neon for video stage", len(actors))
+            except Exception as e:
+                logger.warning("Could not load actors for video: %s", e)
+                context["actors"] = []
+
         try:
             result = await stage_fn(context)
             context.update(result)  # each stage can pass data to the next

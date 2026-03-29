@@ -237,17 +237,30 @@ async def _submit_task(endpoint: str, payload: dict) -> str:
         resp.raise_for_status()
         data = resp.json()
 
-    task_id = data.get("task_id", data.get("id", ""))
+    # Kling V3 API wraps task info in data.task_id
+    task_data = data.get("data", data)
+    task_id = task_data.get("task_id", task_data.get("id", ""))
     if not task_id:
         raise ValueError(f"Kling API returned no task_id: {data}")
 
-    logger.info("Kling task submitted: %s", task_id)
+    logger.info("Kling task submitted: %s (status=%s)", task_id, task_data.get("task_status", "?"))
     return task_id
 
 
-async def _poll_task(task_id: str) -> dict:
-    """Poll a Kling task until completion, failure, or timeout."""
-    url = f"{KLING_API_BASE}/tasks/{task_id}"
+async def _poll_task(task_id: str, endpoint: str = "videos/text2video") -> dict:
+    """Poll a Kling task until completion, failure, or timeout.
+
+    Kling V3 API response format:
+    {
+        "code": 0,
+        "data": {
+            "task_id": "...",
+            "task_status": "submitted|processing|succeed|failed",
+            "task_result": { "videos": [{"url": "...", "duration": "..."}] }
+        }
+    }
+    """
+    url = f"{KLING_API_BASE}/{endpoint}/{task_id}"
 
     for attempt in range(MAX_POLL_ATTEMPTS):
         async with httpx.AsyncClient(timeout=30) as client:
@@ -256,23 +269,27 @@ async def _poll_task(task_id: str) -> dict:
                 headers={"Authorization": f"Bearer {_get_kling_token()}"},
             )
             resp.raise_for_status()
-            data = resp.json()
+            raw = resp.json()
 
-        status = data.get("status", "unknown")
+        # Kling V3 wraps everything in "data"
+        data = raw.get("data", raw)
+        status = data.get("task_status", data.get("status", "unknown"))
 
-        if status in ("completed", "succeeded", "done"):
+        if status in ("succeed", "completed", "succeeded", "done"):
             logger.info("Kling task %s completed after %d polls", task_id, attempt + 1)
             return data
 
         if status in ("failed", "error", "cancelled"):
-            error_msg = data.get("error", data.get("message", "Unknown error"))
+            error_msg = data.get("task_status_msg", data.get("error", "Unknown error"))
             raise RuntimeError(f"Kling task {task_id} failed: {error_msg}")
 
-        if status in ("pending", "processing", "running", "queued"):
-            logger.debug(
-                "Kling task %s: %s (poll %d/%d)",
-                task_id, status, attempt + 1, MAX_POLL_ATTEMPTS,
-            )
+        if status in ("submitted", "pending", "processing", "running", "queued"):
+            if attempt % 6 == 0:  # Log every 30s
+                logger.info(
+                    "Kling task %s: %s (poll %d/%d, ~%ds)",
+                    task_id, status, attempt + 1, MAX_POLL_ATTEMPTS,
+                    attempt * POLL_INTERVAL_S,
+                )
             await asyncio.sleep(POLL_INTERVAL_S)
             continue
 
