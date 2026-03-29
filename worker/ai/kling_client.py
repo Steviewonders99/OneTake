@@ -98,23 +98,30 @@ async def generate_video(
     """
     resolved_ratio = ASPECT_RATIOS.get(aspect_ratio, "9:16")
 
+    # Map resolution to Kling mode
+    mode = "pro" if resolution == "1080p" else "std"
+
     payload: dict[str, Any] = {
-        "model": KLING_MODEL,
+        "model_name": KLING_MODEL,
         "prompt": prompt,
-        "duration": min(duration_s, 15),
-        "resolution": resolution,
+        "duration": str(min(duration_s, 15)),
+        "mode": mode,
         "aspect_ratio": resolved_ratio,
     }
 
-    # Image-to-video mode
+    # Image-to-video mode — use image_list with first_frame/end_frame
     if start_frame:
-        payload["start_frame"] = start_frame
-    if end_frame:
-        payload["end_frame"] = end_frame
+        image_list = [{"image_url": start_frame, "type": "first_frame"}]
+        if end_frame:
+            image_list.append({"image_url": end_frame, "type": "end_frame"})
+        payload["image_list"] = image_list
 
-    # Character/environment references
+    # Character/environment references — use element_list or image_list
     if references:
-        payload["references"] = [{"url": ref} for ref in references[:7]]
+        ref_images = payload.get("image_list", [])
+        for ref_url in references[:7]:
+            ref_images.append({"image_url": ref_url})
+        payload["image_list"] = ref_images
 
     logger.info(
         "Kling generate_video: duration=%ds, resolution=%s, ratio=%s, "
@@ -125,13 +132,15 @@ async def generate_video(
     )
 
     # Submit generation task
-    task_id = await _submit_task("video/generate", payload)
+    task_id = await _submit_task("videos/text2video", payload)
 
     # Poll for completion
-    result = await _poll_task(task_id)
+    result = await _poll_task(task_id, endpoint="videos/text2video")
 
-    # Download the video
-    video_url = result.get("video_url", "")
+    # Download the video — Kling V3: data.task_result.videos[0].url
+    task_result = result.get("task_result", {})
+    videos = task_result.get("videos", [])
+    video_url = videos[0].get("url", "") if videos else result.get("video_url", "")
     if not video_url:
         raise ValueError(f"Kling task {task_id} completed but returned no video URL")
 
@@ -203,10 +212,13 @@ async def generate_multishot_video(
         len(shots), total_duration, len(references or []),
     )
 
-    task_id = await _submit_task("video/multishot", payload)
-    result = await _poll_task(task_id)
+    task_id = await _submit_task("videos/text2video", payload)
+    result = await _poll_task(task_id, endpoint="videos/text2video")
 
-    video_url = result.get("video_url", "")
+    # Kling V3: data.task_result.videos[0].url
+    task_result = result.get("task_result", {})
+    videos = task_result.get("videos", [])
+    video_url = videos[0].get("url", "") if videos else result.get("video_url", "")
     if not video_url:
         raise ValueError(f"Kling multishot task {task_id} completed but returned no video URL")
 
@@ -225,6 +237,8 @@ async def _submit_task(endpoint: str, payload: dict) -> str:
     """Submit a generation task to the Kling API and return the task ID."""
     url = f"{KLING_API_BASE}/{endpoint}"
 
+    logger.info("Kling API request: POST %s payload_keys=%s", url, list(payload.keys()))
+
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             url,
@@ -234,6 +248,8 @@ async def _submit_task(endpoint: str, payload: dict) -> str:
             },
             json=payload,
         )
+        if resp.status_code >= 400:
+            logger.error("Kling API error %d: %s", resp.status_code, resp.text[:500])
         resp.raise_for_status()
         data = resp.json()
 

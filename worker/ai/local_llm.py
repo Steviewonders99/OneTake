@@ -108,7 +108,7 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=180) as client:
         resp = await client.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
