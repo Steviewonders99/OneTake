@@ -98,13 +98,13 @@ You are designing a recruitment ad creative for OneForma as a single self-contai
 9. The HTML must render correctly in a headless Chromium browser.
 10. NO gold or yellow colors. ONLY purple, pink, white, dark gray. Stay on-brand.
 
-### MINIMAL DESIGN (CRITICAL):
-- MAXIMUM 3-4 elements per creative: headline + photo + CTA + ONE decorative shape.
-- At least 30% of the canvas must be WHITESPACE or clean background.
-- Do NOT fill every corner with shapes, dots, and badges. Less is more.
-- ONE blob shape maximum. ONE dot pattern area maximum. Not both.
-- The photo should be the visual anchor — text supports it, doesn't compete.
-- Clean, breathable, premium feel. Think Apple, not Canva.
+### DESIGN BALANCE (CRITICAL):
+- Use 2-3 organic blob shapes (purple-pink gradient) — they ARE the OneForma brand identity.
+- Keep at least 20% whitespace — let the design breathe.
+- Maximum 5 elements total: headline + photo + CTA + 2-3 blobs/dots.
+- Blobs should frame the photo or anchor corners — NOT cover the photo.
+- The photo is the visual anchor. Blobs are supporting decoration.
+- Clean, premium, intentional feel. Every element has a purpose.
 
 ### OVERLAY COPY RULES:
 - Headline: 3-7 words MAXIMUM. Short. Punchy. Scroll-stopping.

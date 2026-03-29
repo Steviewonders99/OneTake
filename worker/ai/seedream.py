@@ -59,7 +59,15 @@ async def generate_image(
     default_negative = (
         "cartoon, anime, illustration, 3d render, painting, watermark, "
         "text overlay, blurry, distorted hands, extra fingers, "
-        "corporate stock photo, stiff pose, oversaturated"
+        "corporate stock photo, stiff pose, oversaturated, "
+        # Dignity anchors — prevent stereotypical poverty imagery
+        "dirty room, messy room, cracked walls, peeling paint, trash, debris, "
+        "slum, poverty, rundown, dilapidated, broken furniture, "
+        # Prevent nonsensical luxury
+        "swimming pool, mansion, luxury car, yacht, penthouse, "
+        # Prevent AI screen artifacts
+        "hex code on screen, debug text, placeholder text, gibberish text on device, "
+        "fake money, fake currency, fake UI, fake app screenshot"
     )
     neg = negative_prompt or default_negative
 
@@ -76,24 +84,34 @@ async def generate_image(
 
     # Seedream on OpenRouter uses chat/completions, NOT images/generations
     # Response has message.images[] with base64 or URL entries
-    # Timeout needs to be long — image gen takes 30-90 seconds
+    # Timeout needs to be long — image gen can take 30-180+ seconds
     async with httpx.AsyncClient(timeout=httpx.Timeout(
-        connect=30.0, read=180.0, write=30.0, pool=30.0
+        connect=30.0, read=300.0, write=30.0, pool=30.0
     )) as client:
-        resp = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": IMAGE_MODEL,
-                "messages": [
-                    {"role": "user", "content": full_prompt},
-                ],
-            },
-        )
-        resp.raise_for_status()
+        # Retry up to 2 times on timeout
+        resp = None
+        for attempt in range(2):
+            try:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": IMAGE_MODEL,
+                        "messages": [
+                            {"role": "user", "content": full_prompt},
+                        ],
+                    },
+                )
+                resp.raise_for_status()
+                break
+            except httpx.ReadTimeout:
+                if attempt == 0:
+                    logger.warning("Seedream read timeout — retrying...")
+                    continue
+                raise
         data = resp.json()
 
         msg = data.get("choices", [{}])[0].get("message", {})
@@ -116,30 +134,52 @@ async def generate_image(
 
         img = images[0]
 
-        # Handle dict with url or b64_json
+        # Handle dict formats
         if isinstance(img, dict):
+            # OpenAI vision format: {"type": "image_url", "image_url": {"url": "data:..."}}
+            if img.get("type") == "image_url" and "image_url" in img:
+                image_url_data = img["image_url"]
+                if isinstance(image_url_data, dict):
+                    url = image_url_data.get("url", "")
+                else:
+                    url = str(image_url_data)
+
+                if url.startswith("data:image"):
+                    # Base64 data URI — extract the base64 part
+                    b64_part = url.split(",", 1)[-1] if "," in url else url
+                    img_bytes = base64.b64decode(b64_part)
+                    logger.info("Image decoded from data URI: %d bytes", len(img_bytes))
+                    return img_bytes
+                elif url.startswith("http"):
+                    img_resp = await client.get(url)
+                    img_resp.raise_for_status()
+                    logger.info("Image downloaded from URL: %d bytes", len(img_resp.content))
+                    return img_resp.content
+
+            # Direct URL format: {"url": "https://..."}
             if "url" in img and img["url"]:
-                logger.info("Downloading image from URL...")
-                img_resp = await client.get(img["url"])
+                url = img["url"]
+                if url.startswith("data:image"):
+                    b64_part = url.split(",", 1)[-1]
+                    return base64.b64decode(b64_part)
+                img_resp = await client.get(url)
                 img_resp.raise_for_status()
-                logger.info("Image downloaded: %d bytes", len(img_resp.content))
                 return img_resp.content
 
+            # Direct base64 format: {"b64_json": "..."}
             if "b64_json" in img and img["b64_json"]:
-                img_bytes = base64.b64decode(img["b64_json"])
-                logger.info("Image decoded from b64_json: %d bytes", len(img_bytes))
-                return img_bytes
+                return base64.b64decode(img["b64_json"])
 
         # Handle raw base64 string
         if isinstance(img, str):
             if img.startswith("http"):
-                logger.info("Downloading image from URL string...")
                 img_resp = await client.get(img)
                 img_resp.raise_for_status()
                 return img_resp.content
+            elif img.startswith("data:image"):
+                b64_part = img.split(",", 1)[-1]
+                return base64.b64decode(b64_part)
             else:
-                img_bytes = base64.b64decode(img)
-                logger.info("Image decoded from base64 string: %d bytes", len(img_bytes))
-                return img_bytes
+                return base64.b64decode(img)
 
-        raise ValueError(f"Unexpected image format: {type(img)}")
+        raise ValueError(f"Unexpected image format: {type(img)}, keys: {list(img.keys()) if isinstance(img, dict) else 'N/A'}")

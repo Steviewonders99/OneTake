@@ -165,10 +165,10 @@ Return ONLY valid JSON matching this EXACT schema:
   }},
   "signature_accessory": "ONE item they ALWAYS have visible (over-ear headphones, wireless earbuds, specific watch, bracelet, hair clip, glasses — pick something relevant to data annotation work)",
   "backdrops": [
-    "A realistic {region} home setting (kitchen table, bedroom desk, etc.)",
-    "A realistic {region} cafe or public workspace",
-    "A realistic {region} outdoor or balcony setting",
-    "A close-up framing for story/portrait format"
+    "A CLEAN, MODERN, well-lit {region} home office — tidy desk, laptop, natural light from window. Middle-class interior, NOT dirty or luxury. No pools, no cracked walls.",
+    "A CLEAN, well-maintained {region} cafe or coworking space — good lighting, modern furniture, coffee on table. Real neighborhood cafe, not a luxury lounge.",
+    "A CLEAN {region} balcony or courtyard — natural greenery, warm light, pleasant outdoor workspace. Dignified residential setting.",
+    "A close-up portrait framing — neutral or softly blurred background, warm lighting, focus entirely on the person's face and expression."
   ]
 }}
 
@@ -340,6 +340,9 @@ Check EACH of these and score 0.0-1.0:
    - Check for: natural skin pores, realistic lighting imperfections, candid pose
    - Check for: fabric texture/wrinkles, environmental noise (real objects)
    - Red flags: plastic skin, perfect symmetry, uncanny valley, studio lighting, extra fingers
+   - AUTO-REJECT (score 0.0): hex codes visible on screens (#XXXXXX), gibberish/debug text on devices,
+     fake money/currency rendered on screens, fake app UIs with placeholder data,
+     any text that looks like code or technical output visible in the scene
 
 3. CULTURAL AUTHENTICITY: Does this person look like they belong in {region}?
    - Check for: appropriate ethnicity, realistic clothing for the region, authentic setting
@@ -352,6 +355,9 @@ Check EACH of these and score 0.0-1.0:
 5. BRAND FIT: Would this work for a OneForma contributor recruitment ad?
    - Check for: approachable, relatable, working-from-home/cafe vibe
    - Red flags: corporate attire, model-like appearance, luxury setting
+   - AUTO-REJECT (score 0.0): swimming pool in background, mansion/luxury interior,
+     dirty/messy/dilapidated room (poverty stereotype), cracked walls, trash visible,
+     environment that doesn't match a middle-class {region} home or cafe
 
 6. TECHNICAL QUALITY: Is the image usable for an ad?
    - Check for: proper framing, no artifacts, face clearly visible, good resolution
