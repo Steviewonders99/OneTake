@@ -50,6 +50,43 @@ class MLXServerManager:
         self._idle_timeout = MLX_SERVER_IDLE_TIMEOUT_S
         self._health_interval = MLX_SERVER_HEALTH_POLL_S
 
+        # Kill any orphaned MLX servers from previous crashed workers
+        self._kill_orphans()
+
+    def _kill_orphans(self) -> None:
+        """Kill any orphaned mlx_lm.server processes from previous crashed workers.
+
+        This prevents the deadly double-model-loading issue where two 5GB+
+        MLX servers run simultaneously, consuming 10GB+ RAM and crashing
+        a 48GB machine.
+        """
+        import os
+
+        try:
+            # Find all mlx_lm.server processes
+            result = subprocess.run(
+                ["pgrep", "-f", "mlx_lm.server"],
+                capture_output=True, text=True, timeout=5,
+            )
+            pids = [int(p) for p in result.stdout.strip().split("\n") if p.strip()]
+
+            if pids:
+                logger.warning(
+                    "Found %d orphaned MLX server(s): %s — killing them",
+                    len(pids), pids,
+                )
+                for pid in pids:
+                    try:
+                        os.kill(pid, signal.SIGKILL)
+                        logger.info("Killed orphaned MLX server PID %d", pid)
+                    except ProcessLookupError:
+                        pass
+                # Wait for cleanup
+                import time
+                time.sleep(2)
+        except Exception as e:
+            logger.debug("Orphan check failed (non-critical): %s", e)
+
     @property
     def base_url(self) -> str:
         return f"http://{self._host}:{self._port}"
