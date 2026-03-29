@@ -107,14 +107,21 @@ EVALUATORS: dict[str, dict[str, Any]] = {
 # =========================================================================
 
 def _parse_json(text: str) -> dict:
-    """Parse JSON from LLM output, handling markdown code fences and preamble."""
+    """Parse JSON from LLM output — handles thinking, code fences, embedded JSON.
+
+    Same robust extractor as stage1: tries direct parse, strips fences,
+    then searches for the LARGEST valid JSON object in the text.
+    """
+    if not text:
+        return {"raw_text": "", "dimensions": {}}
+
     cleaned = text.strip()
 
     # Strip markdown fences
     if cleaned.startswith("```"):
         cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
         cleaned = cleaned.rsplit("```", 1)[0]
-    cleaned = cleaned.strip()
+        cleaned = cleaned.strip()
 
     # Try direct parse
     try:
@@ -122,16 +129,36 @@ def _parse_json(text: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # Try to find JSON object in the text
-    brace_start = cleaned.find("{")
-    brace_end = cleaned.rfind("}")
-    if brace_start != -1 and brace_end != -1 and brace_end > brace_start:
-        try:
-            return json.loads(cleaned[brace_start:brace_end + 1])
-        except json.JSONDecodeError:
-            pass
+    # Search for the LARGEST valid JSON object in the text
+    # (handles reasoning text with JSON embedded at the end)
+    brace_depth = 0
+    json_start = -1
+    best_json = None
+    best_size = 0
 
-    logger.warning("Failed to parse JSON from evaluation response")
+    for i, char in enumerate(cleaned):
+        if char == '{':
+            if brace_depth == 0:
+                json_start = i
+            brace_depth += 1
+        elif char == '}':
+            brace_depth -= 1
+            if brace_depth == 0 and json_start >= 0:
+                candidate = cleaned[json_start:i + 1]
+                try:
+                    parsed = json.loads(candidate)
+                    if isinstance(parsed, dict) and len(candidate) > best_size:
+                        best_json = parsed
+                        best_size = len(candidate)
+                except json.JSONDecodeError:
+                    pass
+                json_start = -1
+
+    if best_json:
+        logger.info("Extracted JSON from text (%d keys, %d chars)", len(best_json), best_size)
+        return best_json
+
+    logger.warning("Failed to parse JSON from evaluation response (%d chars)", len(text))
     return {"raw_text": text, "dimensions": {}}
 
 
@@ -149,8 +176,8 @@ async def evaluate(
     llm_fn: LLMFunction,
     *,
     temperature: float = 0.2,
-    max_tokens: int = 4096,
-    thinking: bool = False,
+    max_tokens: int = 8192,
+    thinking: bool = True,  # Let Qwen think — JSON comes AFTER thinking
 ) -> dict[str, Any]:
     """Run any evaluator by key. Returns standardized result.
 
@@ -235,9 +262,21 @@ async def evaluate(
         len(eval_prompt),
     )
 
+    # Append strict JSON output rules to system prompt
+    json_rules = (
+        "\n\nOUTPUT FORMAT — STRICT:\n"
+        "You MUST output a single valid JSON object.\n"
+        "No markdown code fences. No commentary before or after the JSON.\n"
+        "No trailing commas. No single quotes. No unquoted keys.\n"
+        "The JSON must be complete and parseable by Python json.loads().\n"
+        "Start with { and end with }. Nothing else after the JSON.\n"
+        "Include a 'feedback' key with specific, actionable feedback for EACH dimension.\n"
+        "Include an 'improvement_suggestions' key listing exactly what to change to score higher."
+    )
+
     # Call LLM
     raw_text = await llm_fn(
-        system_prompt,
+        system_prompt + json_rules,
         eval_prompt,
         temperature=temperature,
         max_tokens=max_tokens,

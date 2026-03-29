@@ -166,7 +166,24 @@ async def run_stage1(context: dict) -> dict:
             "Brief %s (score=%.2f, weighted=%.1f/10) — retrying with feedback...",
             verdict, score, eval_result.get("weighted_score", 0),
         )
+        # Build rich feedback from per-dimension scores + suggestions
         feedback = eval_result.get("improvement_suggestions", [])
+        dim_scores = eval_result.get("dimension_scores", {})
+        gate_failures = eval_result.get("hard_gate_failures", [])
+
+        # Add specific dimension feedback so Qwen knows what to fix
+        if dim_scores:
+            for dim_name, dim_data in dim_scores.items():
+                if isinstance(dim_data, dict):
+                    s = dim_data.get("score", 0)
+                    fb = dim_data.get("feedback", "")
+                    if s < 7 and fb:
+                        feedback.append(f"[{dim_name} scored {s}/10]: {fb}")
+
+        if gate_failures:
+            feedback.append(f"HARD GATE FAILURES: {'; '.join(gate_failures)}")
+
+        logger.info("Retrying with %d feedback items", len(feedback))
         brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
         brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt, thinking=True)
         brief_data = _parse_json(brief_text)
