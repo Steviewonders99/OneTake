@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageLoader from "@/components/ui/image-loading";
 import {
   Download,
   ChevronDown,
@@ -103,10 +104,20 @@ export default function DesignerAssetCard({
       {/* Image area */}
       <div className="relative bg-[var(--muted)] aspect-square flex items-center justify-center overflow-hidden">
         {asset.blob_url ? (
-          <img
+          <ImageLoader
             src={asset.blob_url}
             alt={`${asset.platform} ${asset.format}`}
-            className="w-full h-full object-cover"
+            width="500"
+            height="500"
+            gridSize={14}
+            cellGap={4}
+            cellShape="square"
+            cellColor="#e5e5e5"
+            blinkSpeed={1500}
+            transitionDuration={600}
+            fadeOutDuration={500}
+            loadingDelay={600}
+            className="w-full h-full"
           />
         ) : (
           <ImageIcon size={40} className="text-[var(--muted-foreground)] opacity-30" />

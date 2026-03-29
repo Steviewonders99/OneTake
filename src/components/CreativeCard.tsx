@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, RefreshCw, ImageIcon } from "lucide-react";
+import ImageLoader from "@/components/ui/image-loading";
 import type { GeneratedAsset } from "@/lib/types";
 
 interface CreativeCardProps {
@@ -39,10 +40,20 @@ export default function CreativeCard({ asset, onDownload, onRegenerate }: Creati
         style={{ aspectRatio: getAspectRatio(asset.format) }}
       >
         {asset.blob_url ? (
-          <img
+          <ImageLoader
             src={asset.blob_url}
             alt={`${asset.platform} ${asset.format}`}
-            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+            width="400"
+            height="400"
+            gridSize={10}
+            cellGap={3}
+            cellShape="square"
+            cellColor="#e5e5e5"
+            blinkSpeed={1200}
+            transitionDuration={600}
+            fadeOutDuration={400}
+            loadingDelay={500}
+            className="w-full h-full"
           />
         ) : (
           <ImageIcon size={32} className="text-[var(--muted-foreground)] opacity-30" />

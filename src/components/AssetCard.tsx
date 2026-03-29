@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Download, RefreshCw, MessageSquare, Check, Square, CheckSquare, ImageIcon } from 'lucide-react';
+import ImageLoader from '@/components/ui/image-loading';
 
 interface BadgeItem {
   label: string;
@@ -78,10 +79,20 @@ export default function AssetCard({
         {customPreview ? (
           customPreview
         ) : imageUrl ? (
-          <img
+          <ImageLoader
             src={imageUrl}
             alt={title}
-            className="w-full h-full object-cover"
+            width="400"
+            height="400"
+            gridSize={12}
+            cellGap={4}
+            cellShape="square"
+            cellColor="#e5e5e5"
+            blinkSpeed={1500}
+            transitionDuration={500}
+            fadeOutDuration={400}
+            loadingDelay={800}
+            className="w-full h-full"
           />
         ) : (
           <ImageIcon size={32} className="text-[var(--muted-foreground)] opacity-30" />
