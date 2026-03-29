@@ -138,6 +138,13 @@ class MLXServerManager:
 
         logger.info("MLX server process started (PID=%d, PGID=%d)", self._process.pid, os.getpgid(self._process.pid))
 
+        # Register with process manager for clean shutdown
+        try:
+            from process_manager import ProcessManager
+            ProcessManager().register_mlx_server(self._process.pid)
+        except Exception:
+            pass
+
         # Poll for health
         start_time = time.monotonic()
         while time.monotonic() - start_time < self._startup_timeout:
