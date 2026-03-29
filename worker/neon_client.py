@@ -253,8 +253,9 @@ async def get_actors(request_id: str) -> list[dict[str, Any]]:
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             """
-            SELECT id, request_id, actor_name, actor_data,
-                   image_prompt, region, language, created_at
+            SELECT id, request_id, name, face_lock, prompt_seed,
+                   outfit_variations, signature_accessory, backdrops,
+                   created_at
             FROM actor_profiles
             WHERE request_id = $1
             ORDER BY created_at ASC
@@ -271,24 +272,32 @@ async def get_actors(request_id: str) -> list[dict[str, Any]]:
 async def save_asset(request_id: str, data: dict[str, Any]) -> str:
     """Insert a generated asset and return its ID."""
     pool = await _get_pool()
+    metadata = data.get("metadata", {})
+    actor_id = metadata.get("actor_id") or data.get("actor_id")
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
             INSERT INTO generated_assets
-                (request_id, asset_type, platform, format,
-                 language, blob_url, metadata)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+                (request_id, actor_id, asset_type, platform, format,
+                 language, blob_url, content, evaluation_score,
+                 evaluation_data, evaluation_passed, stage)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING id
             """,
             request_id,
+            actor_id,
             data.get("asset_type", "image"),
             data.get("platform", ""),
             data.get("format", ""),
             data.get("language", ""),
             data.get("blob_url", ""),
-            json.dumps(data.get("metadata", {})),
+            json.dumps(metadata, default=str),
+            metadata.get("vqa_score"),
+            json.dumps(metadata.get("vqa_dimensions", {}), default=str),
+            metadata.get("vqa_score", 0) >= 0.75 if metadata.get("vqa_score") else None,
+            data.get("stage", 2),
         )
-    return row["id"]
+    return str(row["id"])
 
 
 async def get_assets(request_id: str, asset_type: str | None = None) -> list[dict[str, Any]]:
@@ -298,8 +307,10 @@ async def get_assets(request_id: str, asset_type: str | None = None) -> list[dic
         if asset_type:
             rows = await conn.fetch(
                 """
-                SELECT id, request_id, asset_type, platform, format,
-                       language, blob_url, metadata, created_at
+                SELECT id, request_id, actor_id, asset_type, platform, format,
+                       language, blob_url, content, copy_data,
+                       evaluation_score, evaluation_data, evaluation_passed,
+                       stage, created_at
                 FROM generated_assets
                 WHERE request_id = $1 AND asset_type = $2
                 ORDER BY created_at ASC
@@ -310,8 +321,10 @@ async def get_assets(request_id: str, asset_type: str | None = None) -> list[dic
         else:
             rows = await conn.fetch(
                 """
-                SELECT id, request_id, asset_type, platform, format,
-                       language, blob_url, metadata, created_at
+                SELECT id, request_id, actor_id, asset_type, platform, format,
+                       language, blob_url, content, copy_data,
+                       evaluation_score, evaluation_data, evaluation_passed,
+                       stage, created_at
                 FROM generated_assets
                 WHERE request_id = $1
                 ORDER BY created_at ASC

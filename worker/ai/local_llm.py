@@ -89,10 +89,40 @@ async def generate_copy(
     user_prompt: str,
     **kwargs: Any,
 ) -> str:
-    """Generate ad copy using Gemma 3 12B.
+    """Generate ad copy using Kimi K2.5 via OpenRouter.
 
-    Convenience wrapper that routes to ``COPY_MODEL``.
+    Local 9B models struggle with the complex copy JSON format.
+    Kimi K2.5 handles it reliably with its 128K context.
     """
-    return await generate_text(
-        system_prompt, user_prompt, model_name=COPY_MODEL, **kwargs,
-    )
+    from config import OPENROUTER_API_KEY
+    import httpx
+
+    if not OPENROUTER_API_KEY:
+        # Fallback to local LLM if no API key
+        kwargs.setdefault("thinking", False)
+        kwargs.setdefault("max_tokens", 4096)
+        return await generate_text(system_prompt, user_prompt, **kwargs)
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "moonshotai/kimi-k2.5",
+                "messages": messages,
+                "max_tokens": kwargs.get("max_tokens", 4096),
+                "temperature": kwargs.get("temperature", 0.7),
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        msg = data["choices"][0]["message"]
+        return msg.get("content") or msg.get("reasoning") or ""

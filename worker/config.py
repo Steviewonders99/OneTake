@@ -67,7 +67,8 @@ COMPOSE_CONCURRENCY = int(os.environ.get("COMPOSE_CONCURRENCY", "5"))
 # ---------------------------------------------------------------------------
 # Kling 3.0 (Video Generation)
 # ---------------------------------------------------------------------------
-KLING_API_KEY = os.environ.get("KLING_API_KEY", "")
+KLING_ACCESS_KEY = os.environ.get("KLING_ACCESS_KEY", "")
+KLING_SECRET_KEY = os.environ.get("KLING_SECRET_KEY", "")
 KLING_MODEL = os.environ.get("KLING_MODEL", "kling-3.0")
 
 # ---------------------------------------------------------------------------

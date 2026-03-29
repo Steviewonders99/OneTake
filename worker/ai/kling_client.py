@@ -17,13 +17,32 @@ import asyncio
 import logging
 from typing import Any
 
-import httpx
+import time
 
-from config import KLING_API_KEY, KLING_MODEL
+import httpx
+import jwt
+
+from config import KLING_ACCESS_KEY, KLING_SECRET_KEY, KLING_MODEL
 
 logger = logging.getLogger(__name__)
 
 KLING_API_BASE = "https://api.klingai.com/v1"
+
+
+def _get_kling_token() -> str:
+    """Generate a JWT token for Kling API authentication.
+
+    Kling requires JWT signed with the secret key, containing
+    the access key as issuer. Token is valid for 30 minutes.
+    """
+    now = int(time.time())
+    payload = {
+        "iss": KLING_ACCESS_KEY,
+        "exp": now + 1800,  # 30 min
+        "nbf": now - 5,
+        "iat": now,
+    }
+    return jwt.encode(payload, KLING_SECRET_KEY, algorithm="HS256")
 
 # Map human-readable aspect ratios to API values
 ASPECT_RATIOS: dict[str, str] = {
@@ -210,7 +229,7 @@ async def _submit_task(endpoint: str, payload: dict) -> str:
         resp = await client.post(
             url,
             headers={
-                "Authorization": f"Bearer {KLING_API_KEY}",
+                "Authorization": f"Bearer {_get_kling_token()}",
                 "Content-Type": "application/json",
             },
             json=payload,
@@ -234,7 +253,7 @@ async def _poll_task(task_id: str) -> dict:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
                 url,
-                headers={"Authorization": f"Bearer {KLING_API_KEY}"},
+                headers={"Authorization": f"Bearer {_get_kling_token()}"},
             )
             resp.raise_for_status()
             data = resp.json()
