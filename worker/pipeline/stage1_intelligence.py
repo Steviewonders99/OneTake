@@ -65,14 +65,21 @@ async def run_stage1(context: dict) -> dict:
     # ==================================================================
     cultural_research: dict = {}
     if target_regions:
-        logger.info("Step 1: Cultural research for %d regions ...", len(target_regions))
-        cultural_research = await research_all_regions(
-            regions=target_regions,
-            languages=target_languages,
-            demographic=form_data.get("demographic", "young adults 18-35"),
-            task_type=task_type,
-        )
-        logger.info("Cultural research complete: %s", list(cultural_research.keys()))
+        # Check for cached research first (saves ~8min of Kimi K2.5 API calls)
+        from prompts.cultural_research import get_platform_priors
+        cached = _load_cached_research(target_regions)
+        if cached:
+            cultural_research = cached
+            logger.info("Step 1: Using CACHED cultural research for %s", list(cached.keys()))
+        else:
+            logger.info("Step 1: Cultural research for %d regions ...", len(target_regions))
+            cultural_research = await research_all_regions(
+                regions=target_regions,
+                languages=target_languages,
+                demographic=form_data.get("demographic", "young adults 18-35"),
+                task_type=task_type,
+            )
+            logger.info("Cultural research complete: %s", list(cultural_research.keys()))
     else:
         logger.info("Step 1: No target regions — skipping cultural research.")
 
@@ -108,7 +115,8 @@ async def run_stage1(context: dict) -> dict:
         persona_context += "\n\n" + build_research_summary(cultural_research)
 
     brief_prompt = build_brief_prompt(request, persona_context=persona_context)
-    brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
+    # no_think mode — we need structured JSON, not reasoning traces
+    brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt, thinking=False)
     brief_data = _parse_json(brief_text)
 
     # ==================================================================
@@ -158,7 +166,7 @@ async def run_stage1(context: dict) -> dict:
         )
         feedback = eval_result.get("improvement_suggestions", [])
         brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
-        brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt)
+        brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt, thinking=False)
         brief_data = _parse_json(brief_text)
 
     # Inject personas + research into brief for downstream stages
@@ -174,7 +182,7 @@ async def run_stage1(context: dict) -> dict:
     logger.info("Step 5: Generating persona-driven design direction...")
     design_prompt = build_design_direction_prompt(brief_data, request)
     design_prompt += "\n\n" + persona_context
-    design_text = await generate_text(BRIEF_SYSTEM_PROMPT, design_prompt)
+    design_text = await generate_text(BRIEF_SYSTEM_PROMPT, design_prompt, thinking=False)
     design_data = _parse_json(design_text)
 
     # ==================================================================
@@ -215,9 +223,7 @@ def _parse_json(text: str) -> dict:
     """Parse JSON from LLM output, handling markdown code fences."""
     cleaned = text.strip()
     if cleaned.startswith("```"):
-        # Strip opening fence line
         cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
-        # Strip closing fence
         cleaned = cleaned.rsplit("```", 1)[0]
     cleaned = cleaned.strip()
     try:
@@ -225,3 +231,49 @@ def _parse_json(text: str) -> dict:
     except json.JSONDecodeError:
         logger.warning("Failed to parse JSON from LLM output; wrapping in raw_text.")
         return {"raw_text": text}
+
+
+# ---------------------------------------------------------------------------
+# Cached cultural research (from previous Kimi K2.5 runs)
+# Saves ~8 minutes of API calls per run. Research doesn't change daily.
+# ---------------------------------------------------------------------------
+
+_CACHED_RESEARCH: dict[str, dict] = {
+    "MA": {
+        "_meta": {"region": "MA", "language": "ar", "demographic": "young adults 18-35", "task_type": "audio_annotation"},
+        "ai_fatigue": {"fatigue_level": "low", "sentiment": "curious but cautious — AI seen as opportunity not threat in Morocco", "recommended_framing": "Frame as AI opportunity. 'Help build AI' resonates. Avoid dystopian/replacement language."},
+        "gig_work_perception": {"perception": "growing acceptance, especially among urban youth", "cultural_framing": "Modern flexible work, not failure. Remote work = aspirational.", "messaging_implication": "Position as professional remote work, not 'gig'. Mention flexibility and autonomy."},
+        "data_annotation_trust": {"trust_level": "medium — online work still associated with scams for many", "scam_associations": "Common concerns about unpaid work, fake platforms. Need strong trust signals.", "trust_builders": "Mention Centific parent company ($200M+), OpenAI/Google clients, payment proof, 500K+ contributors worldwide."},
+        "platform_reality": {"top_platforms_ranked": "WhatsApp (96%), TikTok (76%), Instagram (73%), YouTube (64%), Facebook (52% declining)", "job_platforms": "Emploi.ma, LinkedIn, Facebook Groups ('Offres d'emploi Casablanca')", "messaging_apps": "WhatsApp (#1 universal), Telegram (growing in tech circles)"},
+        "demographic_channel_map": {
+            "age_16_20": "TikTok (85% daily, 2.5hr/day), Instagram (80%), YouTube, Snapchat",
+            "age_21_25": "Instagram (90%), TikTok (75%), WhatsApp, LinkedIn emerging",
+            "age_26_35": "WhatsApp (99%), LinkedIn (55%), Facebook, Instagram",
+            "age_36_50": "WhatsApp (95%), Facebook (70%), YouTube, LinkedIn",
+            "age_50_plus": "WhatsApp (90%), Facebook (55%), YouTube",
+            "blocked_platforms": "None currently blocked in Morocco",
+            "ad_capable_platforms": "Meta (Facebook/Instagram) full self-serve, TikTok Ads launched Morocco, LinkedIn Ads available, Google Ads",
+            "gig_platforms_by_age": "16-20: Facebook Groups, Instagram DM. 21-25: LinkedIn, Upwork. 26+: LinkedIn, professional networks.",
+        },
+        "economic_context": {"avg_remote_hourly": "3-5 USD for general remote work", "minimum_wage": "~1.50 USD/hr (2,970 MAD/month)", "youth_unemployment": "32% for 15-24 age group", "competitive_rate": "8-12 USD/hr would be very attractive (3-4x average)"},
+        "cultural_sensitivities": {"religious_considerations": "Ramadan: mention flexible scheduling, avoid imagery of eating/drinking during daylight. Friday prayer time respected.", "gender_norms": "Women working from home is culturally preferred and aspirational. Show both men and women in ads.", "imagery_taboos": "Avoid alcohol, revealing clothing, pork references. Conservative imagery in rural areas.", "formality_level": "Semi-formal French for professional ads, Darija for social/casual. Mix is natural.", "things_to_avoid": "Don't imply the work is mindless. Respect the skill involved. Avoid stereotyping Morocco."},
+        "tech_literacy": {"smartphone_penetration": "85% smartphone penetration", "primary_device": "Smartphone for most, laptop for professionals and students", "internet_quality": "4G in cities (Casablanca, Rabat, Marrakech), slower in rural. Data costs ~10 MAD/GB ($1).", "data_cost_concern": "Moderate — mention WiFi-compatible work, avoid heavy-download requirements."},
+        "language_nuance": {"dialect": "Moroccan Darija (Arabic dialect) + Standard French. Most educated youth are bilingual.", "formality_preference": "Semi-formal French for LinkedIn/professional. Darija/French mix for Facebook/Instagram. Pure Darija for WhatsApp.", "authentic_slang": "khdma (work), flous (money), khdem (working), bezaf (a lot)", "avoid_phrases": "Metropolitan French slang sounds foreign. Don't use Egyptian Arabic.", "language_mixing": "French/Darija code-switching is natural and authentic. Using ONLY French sounds corporate."},
+    },
+}
+
+
+def _load_cached_research(regions: list[str]) -> dict | None:
+    """Load cached cultural research for the given regions.
+
+    Returns the cached data if ALL requested regions have cached research.
+    Returns None if any region is missing (triggers live research).
+    """
+    result: dict = {}
+    for region in regions:
+        if region in _CACHED_RESEARCH:
+            result[region] = _CACHED_RESEARCH[region]
+        else:
+            logger.info("No cached research for %s — will need live research.", region)
+            return None
+    return result
