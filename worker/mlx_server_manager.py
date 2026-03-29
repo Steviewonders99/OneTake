@@ -242,30 +242,77 @@ class MLXServerManager:
                 for i, m in enumerate(messages)
             ]
 
-        async with httpx.AsyncClient(timeout=180) as client:
-            resp = await client.post(
+        # STREAMING mode — tokens arrive continuously, keeping the connection
+        # alive. Prevents macOS from killing the process during long generations.
+        # The MLX server supports OpenAI-compatible SSE streaming.
+        prompt_chars = sum(len(m.get("content", "")) for m in messages)
+        logger.info(
+            "Sending %d-char prompt to MLX server (thinking=%s, streaming=true)...",
+            prompt_chars, thinking,
+        )
+
+        import json as _json
+
+        collected_content = ""
+        collected_reasoning = ""
+        token_count = 0
+
+        async with httpx.AsyncClient(timeout=httpx.Timeout(
+            connect=30.0, read=600.0, write=30.0, pool=30.0
+        )) as client:
+            async with client.stream(
+                "POST",
                 f"{self.base_url}/v1/chat/completions",
                 json={
                     "model": model or self._model,
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": temperature,
+                    "stream": True,
                 },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+            ) as resp:
+                resp.raise_for_status()
 
-            msg = data["choices"][0]["message"]
-            content = msg.get("content", "")
-            reasoning = msg.get("reasoning", "")
+                async for line in resp.aiter_lines():
+                    self._last_activity = time.monotonic()
 
-            # Qwen3.5 thinking mode: content may be empty while reasoning
-            # has the actual useful output. Return whichever has content.
-            if content and content.strip():
-                return content
-            if reasoning and reasoning.strip():
-                return reasoning
-            return content
+                    if not line.startswith("data: "):
+                        continue
+                    data_str = line[6:].strip()
+                    if data_str == "[DONE]":
+                        break
+
+                    try:
+                        chunk = _json.loads(data_str)
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+
+                        if "content" in delta and delta["content"]:
+                            collected_content += delta["content"]
+                            token_count += 1
+                        if "reasoning" in delta and delta["reasoning"]:
+                            collected_reasoning += delta["reasoning"]
+                            token_count += 1
+
+                        # Log progress every 100 tokens
+                        if token_count % 100 == 0 and token_count > 0:
+                            logger.debug(
+                                "Streaming: %d tokens received (%d content, %d reasoning chars)...",
+                                token_count, len(collected_content), len(collected_reasoning),
+                            )
+                    except _json.JSONDecodeError:
+                        continue
+
+        logger.info(
+            "MLX stream complete: %d tokens, content=%d chars, reasoning=%d chars",
+            token_count, len(collected_content), len(collected_reasoning),
+        )
+
+        # Return content if available, otherwise reasoning
+        if collected_content and collected_content.strip():
+            return collected_content
+        if collected_reasoning and collected_reasoning.strip():
+            return collected_reasoning
+        return collected_content
 
 
 # Singleton instance
