@@ -103,7 +103,6 @@ async def generate_text(
                 tokenizer,
                 prompt=prompt,
                 max_tokens=max_tokens,
-                temp=temperature,
             )
 
     return await asyncio.to_thread(_generate)
