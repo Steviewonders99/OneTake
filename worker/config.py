@@ -60,6 +60,11 @@ MLX_SERVER_STARTUP_TIMEOUT_S = int(os.environ.get("MLX_SERVER_STARTUP_TIMEOUT_S"
 MLX_SERVER_HEALTH_POLL_S = float(os.environ.get("MLX_SERVER_HEALTH_POLL_S", "2.0"))
 
 # ---------------------------------------------------------------------------
+# Stage 4 Composition
+# ---------------------------------------------------------------------------
+COMPOSE_CONCURRENCY = int(os.environ.get("COMPOSE_CONCURRENCY", "5"))
+
+# ---------------------------------------------------------------------------
 # Kling 3.0 (Video Generation)
 # ---------------------------------------------------------------------------
 KLING_API_KEY = os.environ.get("KLING_API_KEY", "")
