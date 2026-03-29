@@ -220,17 +220,61 @@ async def run_stage1(context: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def _parse_json(text: str) -> dict:
-    """Parse JSON from LLM output, handling markdown code fences."""
+    """Parse JSON from LLM output — handles thinking mode, code fences, embedded JSON.
+
+    Qwen3.5-9B often puts the JSON inside reasoning text. This parser:
+    1. Tries direct parse
+    2. Strips markdown fences
+    3. Searches for the LAST JSON object in the text (often at the end of reasoning)
+    """
+    if not text:
+        return {"raw_text": ""}
+
     cleaned = text.strip()
+
+    # Strip markdown fences
     if cleaned.startswith("```"):
         cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
         cleaned = cleaned.rsplit("```", 1)[0]
-    cleaned = cleaned.strip()
+        cleaned = cleaned.strip()
+
+    # Try direct parse
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        logger.warning("Failed to parse JSON from LLM output; wrapping in raw_text.")
-        return {"raw_text": text}
+        pass
+
+    # Try to find JSON object embedded in text (reasoning mode)
+    # Search for the LAST { ... } block that's valid JSON
+    import re
+    # Find all potential JSON blocks (starting with { ending with })
+    brace_depth = 0
+    json_start = -1
+    last_valid_json = None
+
+    for i, char in enumerate(cleaned):
+        if char == '{':
+            if brace_depth == 0:
+                json_start = i
+            brace_depth += 1
+        elif char == '}':
+            brace_depth -= 1
+            if brace_depth == 0 and json_start >= 0:
+                candidate = cleaned[json_start:i+1]
+                try:
+                    parsed = json.loads(candidate)
+                    if isinstance(parsed, dict) and len(parsed) > 1:
+                        last_valid_json = parsed
+                except json.JSONDecodeError:
+                    pass
+                json_start = -1
+
+    if last_valid_json:
+        logger.info("Extracted JSON from reasoning text (%d keys)", len(last_valid_json))
+        return last_valid_json
+
+    logger.warning("Failed to parse JSON from LLM output (%d chars); wrapping in raw_text.", len(text))
+    return {"raw_text": text}
 
 
 # ---------------------------------------------------------------------------
