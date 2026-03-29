@@ -1,164 +1,135 @@
-2026-03-29 18:22:43,137 [INFO] process_manager: ProcessManager: ensuring clean start...
-2026-03-29 18:22:45,208 [INFO] process_manager: ProcessManager: clean start confirmed — zero existing processes
-2026-03-29 18:22:45,209 [INFO] process_manager: ProcessManager: registered worker PID 86628
-2026-03-29 18:22:45,244 [INFO] __main__: Process manager: worker=86628, orphan_mlx=0, orphan_workers=0
-2026-03-29 18:22:45,244 [INFO] __main__: Centric local worker started (PID=86628). Polling every 10s.
-2026-03-29 18:22:45,244 [INFO] __main__: MLX server will auto-start on first generation request.
-2026-03-29 18:22:45,605 [INFO] neon_client: Connection pool created.
-2026-03-29 18:22:45,784 [INFO] __main__: Processing job 3f60cce6-d901-49da-b4fa-22ac89aaf969 (type=regenerate_stage, request=6a2ecbc4-b2f1-4310-b252-704b7fa20b22)
-2026-03-29 18:22:45,899 [INFO] pipeline.orchestrator: Running Stage 5: Video Generation
-2026-03-29 18:22:46,036 [INFO] pipeline.orchestrator: Loaded 3 actors from Neon for video stage
-2026-03-29 18:22:46,036 [INFO] pipeline.stage_video: Video pipeline for actor 'Omar' (persona=unknown, region=Global)
-2026-03-29 18:22:46,036 [INFO] pipeline.stage_video: Selected template: pov_reveal — POV: you're scrolling and find this opportunity
-2026-03-29 18:22:47,855 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-29 18:23:48,859 [INFO] pipeline.stage_video: Script validated: 5 scenes, 12s total, lip sync safe=True (attempt 1)
-2026-03-29 18:23:48,860 [INFO] pipeline.stage_video: Script generated: 5 scenes, 12s estimated, dialogue ends at 10s
-2026-03-29 18:23:48,860 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1185 chars)...
-2026-03-29 18:23:59,074 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-29 18:24:01,992 [INFO] ai.seedream: Image decoded from data URI: 832447 bytes
-2026-03-29 18:24:02,613 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_48d1f28c.png "HTTP/1.1 200 OK"
-2026-03-29 18:24:02,613 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_48d1f28c.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_48d1f28c-zKIKjTQOhDmSDfifvdvLhnwIdm98O1.png
-2026-03-29 18:24:02,614 [INFO] pipeline.stage_video: Reference front generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_48d1f28c-zKIKjTQOhDmSDfifvdvLhnwIdm98O1.png
-2026-03-29 18:24:02,614 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1191 chars)...
-2026-03-29 18:24:12,769 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-29 18:24:13,409 [INFO] ai.seedream: Image decoded from data URI: 794453 bytes
-2026-03-29 18:24:13,786 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_a67b4a52.png "HTTP/1.1 200 OK"
-2026-03-29 18:24:13,786 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_a67b4a52.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_a67b4a52-G1Kc75miHsZF6STODrbXnhhK4KNFFj.png
-2026-03-29 18:24:13,786 [INFO] pipeline.stage_video: Reference side generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_a67b4a52-G1Kc75miHsZF6STODrbXnhhK4KNFFj.png
-2026-03-29 18:24:13,786 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1236 chars)...
-2026-03-29 18:24:24,020 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-29 18:24:25,232 [INFO] ai.seedream: Image decoded from data URI: 857588 bytes
-2026-03-29 18:24:25,654 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_0777732a.png "HTTP/1.1 200 OK"
-2026-03-29 18:24:25,655 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_0777732a.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_0777732a-v4n3EQdZKI2oHS5XRlMqUTiHjF1INn.png
-2026-03-29 18:24:25,656 [INFO] pipeline.stage_video: Reference back generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_0777732a-v4n3EQdZKI2oHS5XRlMqUTiHjF1INn.png
-2026-03-29 18:24:25,656 [INFO] pipeline.stage_video: Character references generated: 3 angles
-2026-03-29 18:24:25,656 [INFO] ai.kling_client: Kling multishot: 5 shots, total 12s, refs=3
-2026-03-29 18:24:25,656 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model', 'mode', 'shots', 'resolution', 'aspect_ratio', 'references']
-2026-03-29 18:24:27,107 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 400 Bad Request"
-2026-03-29 18:24:27,108 [ERROR] ai.kling_client: Kling API error 400: {"code":1201,"message":"mode value 'multishot' is invalid","request_id":"c9a9432e-cc8a-48bc-b806-145e65a7d2c4"}
-2026-03-29 18:24:27,108 [WARNING] pipeline.stage_video: Multishot generation failed (Client error '400 Bad Request' for url 'https://api.klingai.com/v1/videos/text2video'
+2026-03-29 18:33:09,379 [INFO] process_manager: ProcessManager: ensuring clean start...
+2026-03-29 18:33:11,460 [INFO] process_manager: ProcessManager: clean start confirmed — zero existing processes
+2026-03-29 18:33:11,461 [INFO] process_manager: ProcessManager: registered worker PID 88311
+2026-03-29 18:33:11,495 [INFO] __main__: Process manager: worker=88311, orphan_mlx=0, orphan_workers=0
+2026-03-29 18:33:11,496 [INFO] __main__: Centric local worker started (PID=88311). Polling every 10s.
+2026-03-29 18:33:11,496 [INFO] __main__: MLX server will auto-start on first generation request.
+2026-03-29 18:33:11,900 [INFO] neon_client: Connection pool created.
+2026-03-29 18:33:12,020 [INFO] __main__: Processing job 3f60cce6-d901-49da-b4fa-22ac89aaf969 (type=regenerate_stage, request=6a2ecbc4-b2f1-4310-b252-704b7fa20b22)
+2026-03-29 18:33:12,207 [INFO] pipeline.orchestrator: Running Stage 5: Video Generation
+2026-03-29 18:33:12,331 [INFO] pipeline.orchestrator: Loaded 3 actors from Neon for video stage
+2026-03-29 18:33:12,331 [INFO] pipeline.stage_video: Video pipeline for actor 'Omar' (persona=unknown, region=Global)
+2026-03-29 18:33:12,331 [INFO] pipeline.stage_video: Selected template: pov_reveal — POV: you're scrolling and find this opportunity
+2026-03-29 18:33:14,364 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:36:17,541 [INFO] pipeline.stage_video: Script validated: 5 scenes, 12s total, lip sync safe=True (attempt 1)
+2026-03-29 18:36:17,541 [INFO] pipeline.stage_video: Script generated: 5 scenes, 12s estimated, dialogue ends at 8s
+2026-03-29 18:36:17,542 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1185 chars)...
+2026-03-29 18:36:27,796 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:36:28,452 [INFO] ai.seedream: Image decoded from data URI: 843242 bytes
+2026-03-29 18:36:29,033 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_288e2aa9.png "HTTP/1.1 200 OK"
+2026-03-29 18:36:29,034 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_288e2aa9.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_288e2aa9-zNsdE2Q3F8yLXQjYjg8ISlBKz9sDt0.png
+2026-03-29 18:36:29,034 [INFO] pipeline.stage_video: Reference front generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_front_288e2aa9-zNsdE2Q3F8yLXQjYjg8ISlBKz9sDt0.png
+2026-03-29 18:36:29,034 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1191 chars)...
+2026-03-29 18:36:39,224 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:36:40,326 [INFO] ai.seedream: Image decoded from data URI: 888947 bytes
+2026-03-29 18:36:40,723 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_44deaf91.png "HTTP/1.1 200 OK"
+2026-03-29 18:36:40,724 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_44deaf91.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_44deaf91-cHpcV20cmX6mWHxvdzyVbmQj7EGf8o.png
+2026-03-29 18:36:40,724 [INFO] pipeline.stage_video: Reference side generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_side_44deaf91-cHpcV20cmX6mWHxvdzyVbmQj7EGf8o.png
+2026-03-29 18:36:40,724 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=1236 chars)...
+2026-03-29 18:36:50,863 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:36:54,885 [INFO] ai.seedream: Image decoded from data URI: 784941 bytes
+2026-03-29 18:36:55,492 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_6c354bb1.png "HTTP/1.1 200 OK"
+2026-03-29 18:36:55,493 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_6c354bb1.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_6c354bb1-nzKcexj93h1gVuqIzvuLfE0johnrCH.png
+2026-03-29 18:36:55,493 [INFO] pipeline.stage_video: Reference back generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_27e23809-1f9f-41c0-9413-aee9ba0e3e25_back_6c354bb1-nzKcexj93h1gVuqIzvuLfE0johnrCH.png
+2026-03-29 18:36:55,493 [INFO] pipeline.stage_video: Character references generated: 3 angles
+2026-03-29 18:36:55,493 [INFO] ai.kling_client: Kling multishot: 5 shots, total 12s, refs=3
+2026-03-29 18:36:55,493 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model', 'mode', 'shots', 'resolution', 'aspect_ratio', 'references']
+2026-03-29 18:36:56,615 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 400 Bad Request"
+2026-03-29 18:36:56,616 [ERROR] ai.kling_client: Kling API error 400: {"code":1201,"message":"mode value 'multishot' is invalid","request_id":"dc6a71f4-6275-4955-a157-ca4549096e12"}
+2026-03-29 18:36:56,616 [WARNING] pipeline.stage_video: Multishot generation failed (Client error '400 Bad Request' for url 'https://api.klingai.com/v1/videos/text2video'
 For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400), falling back to single-shot
-2026-03-29 18:24:27,108 [INFO] ai.kling_client: Kling generate_video: duration=12s, resolution=1080p, ratio=9:16, start_frame=no, refs=3
-2026-03-29 18:24:27,108 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model_name', 'prompt', 'duration', 'mode', 'aspect_ratio', 'image_list']
-2026-03-29 18:24:28,526 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 200 OK"
-2026-03-29 18:24:28,526 [INFO] ai.kling_client: Kling task submitted: 867359205890596956 (status=submitted)
-2026-03-29 18:24:29,819 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:24:29,827 [INFO] ai.kling_client: Kling task 867359205890596956: submitted (poll 1/120, ~0s)
-2026-03-29 18:24:35,675 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:24:41,526 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:24:47,361 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:24:53,225 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:24:58,913 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:04,598 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:04,598 [INFO] ai.kling_client: Kling task 867359205890596956: processing (poll 7/120, ~30s)
-2026-03-29 18:25:10,566 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:16,246 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:22,184 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:28,127 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:33,963 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:39,916 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:39,916 [INFO] ai.kling_client: Kling task 867359205890596956: processing (poll 13/120, ~60s)
-2026-03-29 18:25:46,339 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:52,217 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:25:58,027 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:03,876 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:09,700 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:15,435 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:15,436 [INFO] ai.kling_client: Kling task 867359205890596956: processing (poll 19/120, ~90s)
-2026-03-29 18:26:21,157 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:27,003 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:32,740 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:38,700 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:44,544 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:51,370 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:26:51,371 [INFO] ai.kling_client: Kling task 867359205890596956: processing (poll 25/120, ~120s)
-2026-03-29 18:26:58,141 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:04,180 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:10,118 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:15,945 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:21,887 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:27,724 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867359205890596956 "HTTP/1.1 200 OK"
-2026-03-29 18:27:27,726 [INFO] ai.kling_client: Kling task 867359205890596956 completed after 31 polls
-2026-03-29 18:27:30,108 [INFO] httpx: HTTP Request: GET https://v16-kling-fdl.klingai.com/bs2/upload-ylab-stunt-sgp/muse/860381236416610375/VIDEO/20260330/5c845ee29edad99c987b85f78d4d428b-86a3631c-9fc6-4af0-89e3-d4a39732190c.mp4?cacheKey=ChtzZWN1cml0eS5rbGluZy5tZXRhX2VuY3J5cHQSsAHQqCkTckaVvpcqdR41ngvdrfpz9pquzHkI-wrp408DiUzZT8UaX-N_jObV5qeyWAcT8QHJD0Pdh9P1qgPrOWa866-_ra0ZAdH5YbNYIKFTWx9PDAdvoFOOtDHflto8kXVGyR4DE57lb3D4K7pTrQVCQAnLBaLesyXVLXLJzBGauE2bC8s_ddfFgOKZRz_118DyKdPVvqwfs8Qo83tlRQdCJsk0Ssz4IeuDqBOK1iB5CBoSoUWhYgsuBTfVWszBdm10UXP1IiAepZ2JX100_tA3nB1uds-rEgwxAt9go3-_P6-h96m-YigFMAE&x-kcdn-pid=112781&ksSecret=daa5488f2474b72d87a87390dda6f1fd&ksTime=69f1344a "HTTP/1.1 200 OK"
-2026-03-29 18:27:36,520 [INFO] ai.kling_client: Video downloaded: 21938793 bytes
-2026-03-29 18:27:36,520 [INFO] pipeline.stage_video: Single-shot video generated: 21938793 bytes
-2026-03-29 18:27:36,520 [INFO] pipeline.stage_video: Silent video generated: 21938793 bytes
-2026-03-29 18:27:36,520 [INFO] pipeline.stage_video: Generating language variant: English
-2026-03-29 18:27:36,520 [INFO] ai.tts_engine: TTS: text=126 chars, language=English (en), provider=xtts
-2026-03-29 18:27:36,528 [WARNING] ai.tts_engine: XTTS server unavailable (All connection attempts failed), falling back to in-process
-2026-03-29 18:27:36,529 [ERROR] pipeline.orchestrator: Stage 5 failed: TTS library not installed. Run: pip install TTS
-Traceback (most recent call last):
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 229, in _generate
-    from TTS.api import TTS
-ModuleNotFoundError: No module named 'TTS'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/stevenjunop/centric-intake/worker/pipeline/orchestrator.py", line 96, in run_pipeline
-    result = await stage_fn(context)
-             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/pipeline/stage_video.py", line 156, in run_video_stage
-    audio_bytes = await generate_speech(
-                  ^^^^^^^^^^^^^^^^^^^^^^
-    ...<2 lines>...
-    )
-    ^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 147, in generate_speech
-    return await generate_speech_xtts(text, language, speaker_wav)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 185, in generate_speech_xtts
-    return await _xtts_inprocess_generate(text, lang_code, speaker_wav)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 256, in _xtts_inprocess_generate
-    return await asyncio.to_thread(_generate)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
-    return await loop.run_in_executor(None, func_call)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 231, in _generate
-    raise RuntimeError(
-        "TTS library not installed. Run: pip install TTS"
-    )
-RuntimeError: TTS library not installed. Run: pip install TTS
-2026-03-29 18:27:36,774 [ERROR] __main__: Job 3f60cce6-d901-49da-b4fa-22ac89aaf969 failed: TTS library not installed. Run: pip install TTS
-Traceback (most recent call last):
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 229, in _generate
-    from TTS.api import TTS
-ModuleNotFoundError: No module named 'TTS'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/stevenjunop/centric-intake/worker/main.py", line 78, in main
-    await run_pipeline(job)
-  File "/Users/stevenjunop/centric-intake/worker/pipeline/orchestrator.py", line 96, in run_pipeline
-    result = await stage_fn(context)
-             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/pipeline/stage_video.py", line 156, in run_video_stage
-    audio_bytes = await generate_speech(
-                  ^^^^^^^^^^^^^^^^^^^^^^
-    ...<2 lines>...
-    )
-    ^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 147, in generate_speech
-    return await generate_speech_xtts(text, language, speaker_wav)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 185, in generate_speech_xtts
-    return await _xtts_inprocess_generate(text, lang_code, speaker_wav)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 256, in _xtts_inprocess_generate
-    return await asyncio.to_thread(_generate)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
-    return await loop.run_in_executor(None, func_call)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "/Users/stevenjunop/centric-intake/worker/ai/tts_engine.py", line 231, in _generate
-    raise RuntimeError(
-        "TTS library not installed. Run: pip install TTS"
-    )
-RuntimeError: TTS library not installed. Run: pip install TTS
+2026-03-29 18:36:56,616 [INFO] ai.kling_client: Kling generate_video: duration=12s, resolution=1080p, ratio=9:16, start_frame=no, refs=3
+2026-03-29 18:36:56,616 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model_name', 'prompt', 'duration', 'mode', 'aspect_ratio', 'image_list']
+2026-03-29 18:36:57,497 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 200 OK"
+2026-03-29 18:36:57,498 [INFO] ai.kling_client: Kling task submitted: 867362347487871046 (status=submitted)
+2026-03-29 18:36:58,419 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:36:58,420 [INFO] ai.kling_client: Kling task 867362347487871046: submitted (poll 1/120, ~0s)
+2026-03-29 18:37:04,278 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:10,237 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:16,116 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:21,935 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:27,906 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:33,645 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:33,646 [INFO] ai.kling_client: Kling task 867362347487871046: processing (poll 7/120, ~30s)
+2026-03-29 18:37:39,482 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:45,216 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:50,951 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:37:56,709 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:02,698 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:08,973 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:08,974 [INFO] ai.kling_client: Kling task 867362347487871046: processing (poll 13/120, ~60s)
+2026-03-29 18:38:14,908 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:20,585 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:26,401 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:32,322 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:38,130 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:44,195 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:44,196 [INFO] ai.kling_client: Kling task 867362347487871046: processing (poll 19/120, ~90s)
+2026-03-29 18:38:50,019 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:38:55,932 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:01,814 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:07,690 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:13,487 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:19,362 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:19,363 [INFO] ai.kling_client: Kling task 867362347487871046: processing (poll 25/120, ~120s)
+2026-03-29 18:39:25,265 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:31,306 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:37,234 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:43,084 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:48,917 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:54,862 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867362347487871046 "HTTP/1.1 200 OK"
+2026-03-29 18:39:54,863 [INFO] ai.kling_client: Kling task 867362347487871046 completed after 31 polls
+2026-03-29 18:39:56,498 [INFO] httpx: HTTP Request: GET https://v16-kling-fdl.klingai.com/bs2/upload-ylab-stunt-sgp/muse/860381236416610375/VIDEO/20260330/b9e7a046449a5d14064ecd36abed9efa-7260a1f0-415e-4a8b-87b8-10846f92d16c.mp4?cacheKey=ChtzZWN1cml0eS5rbGluZy5tZXRhX2VuY3J5cHQSsAFMim9SjbRoUs2i0TYZe_JLtWKVpHW_egyF1zZr4UOhdiFQWq5N_jz9TsF3F9GOMHdSVOOCTAC6_PM13gVsdZhzhv1QfEz2SFkFugR_oXdgcP7eNvy8-5GitQGeGelSkZN8OGVDPSfh96BJXIr6HBuTe0-dofhCO-Vw462m2ZYH8JJEpOIhN3veLyhWbC-oo0760WNm-ixc-TYfSrExOQGr_jaMS6lFLoLNy4lsBJaUvxoSyfxirU_pcpSwYh-JFVmDEt6gIiB_G2tCBuHYxMJ3xQGkMtuCvJhgBKiIjfaM980mtfdgQigFMAE&x-kcdn-pid=112781&ksSecret=930acd187435342f9c256621a31f38ac&ksTime=69f13733 "HTTP/1.1 200 OK"
+2026-03-29 18:40:02,496 [INFO] ai.kling_client: Video downloaded: 24374065 bytes
+2026-03-29 18:40:02,496 [INFO] pipeline.stage_video: Single-shot video generated: 24374065 bytes
+2026-03-29 18:40:02,496 [INFO] pipeline.stage_video: Silent video generated: 24374065 bytes
+2026-03-29 18:40:02,496 [INFO] pipeline.stage_video: Generating language variant: English
+2026-03-29 18:40:02,497 [INFO] ai.tts_engine: TTS: text=102 chars, language=English (en), provider=xtts
+2026-03-29 18:40:02,509 [WARNING] ai.tts_engine: XTTS server unavailable (All connection attempts failed), falling back to in-process
+2026-03-29 18:40:02,511 [WARNING] pipeline.stage_video: TTS/lip sync skipped for English: TTS library not installed. Run: pip install TTS — uploading silent video
+2026-03-29 18:40:04,793 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/videos/video_27e23809-1f9f-41c0-9413-aee9ba0e3e25_pov_reveal_English_c2c4c821.mp4 "HTTP/1.1 200 OK"
+2026-03-29 18:40:04,795 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/videos/video_27e23809-1f9f-41c0-9413-aee9ba0e3e25_pov_reveal_English_c2c4c821.mp4 -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/videos/video_27e23809-1f9f-41c0-9413-aee9ba0e3e25_pov_reveal_English_c2c4c821-AmOPlNEVaJBgOYGTQpU2LIXYhQf3Cl.mp4
+2026-03-29 18:40:04,795 [INFO] pipeline.stage_video: Video uploaded: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/videos/video_27e23809-1f9f-41c0-9413-aee9ba0e3e25_pov_reveal_English_c2c4c821-AmOPlNEVaJBgOYGTQpU2LIXYhQf3Cl.mp4
+2026-03-29 18:40:06,336 [INFO] pipeline.stage_video: Video pipeline for actor 'Contributor-MA' (persona=unknown, region=Global)
+2026-03-29 18:40:06,336 [INFO] pipeline.stage_video: Selected template: pov_reveal — POV: you're scrolling and find this opportunity
+2026-03-29 18:40:07,229 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:40:57,954 [INFO] pipeline.stage_video: Script validated: 5 scenes, 12s total, lip sync safe=True (attempt 1)
+2026-03-29 18:40:57,954 [INFO] pipeline.stage_video: Script generated: 5 scenes, 12s estimated, dialogue ends at 10s
+2026-03-29 18:40:57,954 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=925 chars)...
+2026-03-29 18:41:08,181 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:41:10,433 [INFO] ai.seedream: Image decoded from data URI: 804384 bytes
+2026-03-29 18:41:10,815 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_front_615f596b.png "HTTP/1.1 200 OK"
+2026-03-29 18:41:10,816 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_front_615f596b.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_front_615f596b-V2eP1WZ3hdpIBMjUSulRJsyDdwkNZr.png
+2026-03-29 18:41:10,816 [INFO] pipeline.stage_video: Reference front generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_front_615f596b-V2eP1WZ3hdpIBMjUSulRJsyDdwkNZr.png
+2026-03-29 18:41:10,816 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=931 chars)...
+2026-03-29 18:41:20,775 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:41:20,910 [INFO] ai.seedream: Image decoded from data URI: 833148 bytes
+2026-03-29 18:41:21,357 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_side_56925977.png "HTTP/1.1 200 OK"
+2026-03-29 18:41:21,357 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_side_56925977.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_side_56925977-iiXBHpEMPgeq5M1cg6rI0kIyiGjy7c.png
+2026-03-29 18:41:21,358 [INFO] pipeline.stage_video: Reference side generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_side_56925977-iiXBHpEMPgeq5M1cg6rI0kIyiGjy7c.png
+2026-03-29 18:41:21,358 [INFO] ai.seedream: Generating image via bytedance-seed/seedream-4.5 (1080x1080, prompt=976 chars)...
+2026-03-29 18:41:30,503 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:41:30,645 [INFO] ai.seedream: Image decoded from data URI: 807077 bytes
+2026-03-29 18:41:31,217 [INFO] httpx: HTTP Request: PUT https://blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_back_5749ac66.png "HTTP/1.1 200 OK"
+2026-03-29 18:41:31,218 [INFO] blob_uploader: Uploaded requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_back_5749ac66.png -> https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_back_5749ac66-cOjQ6Nr1ZLLkabBz8E1ZPtQJVawiRC.png
+2026-03-29 18:41:31,218 [INFO] pipeline.stage_video: Reference back generated: https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/6a2ecbc4-b2f1-4310-b252-704b7fa20b22/references/ref_2ef63a4e-74ab-43cd-8445-d4dfbe3d7f57_back_5749ac66-cOjQ6Nr1ZLLkabBz8E1ZPtQJVawiRC.png
+2026-03-29 18:41:31,219 [INFO] pipeline.stage_video: Character references generated: 3 angles
+2026-03-29 18:41:31,219 [INFO] ai.kling_client: Kling multishot: 5 shots, total 12s, refs=3
+2026-03-29 18:41:31,219 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model', 'mode', 'shots', 'resolution', 'aspect_ratio', 'references']
+2026-03-29 18:41:32,038 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 400 Bad Request"
+2026-03-29 18:41:32,038 [ERROR] ai.kling_client: Kling API error 400: {"code":1201,"message":"mode value 'multishot' is invalid","request_id":"de66fd27-81cd-4d4f-8a90-dfb0fc8924cb"}
+2026-03-29 18:41:32,038 [WARNING] pipeline.stage_video: Multishot generation failed (Client error '400 Bad Request' for url 'https://api.klingai.com/v1/videos/text2video'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400), falling back to single-shot
+2026-03-29 18:41:32,038 [INFO] ai.kling_client: Kling generate_video: duration=12s, resolution=1080p, ratio=9:16, start_frame=no, refs=3
+2026-03-29 18:41:32,038 [INFO] ai.kling_client: Kling API request: POST https://api.klingai.com/v1/videos/text2video payload_keys=['model_name', 'prompt', 'duration', 'mode', 'aspect_ratio', 'image_list']
+2026-03-29 18:41:32,954 [INFO] httpx: HTTP Request: POST https://api.klingai.com/v1/videos/text2video "HTTP/1.1 200 OK"
+2026-03-29 18:41:32,956 [INFO] ai.kling_client: Kling task submitted: 867363502757912642 (status=submitted)
+2026-03-29 18:41:33,603 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:41:33,604 [INFO] ai.kling_client: Kling task 867363502757912642: submitted (poll 1/120, ~0s)
+2026-03-29 18:41:39,507 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:41:45,761 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:41:51,497 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:41:57,325 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:42:03,469 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:42:09,416 [INFO] httpx: HTTP Request: GET https://api.klingai.com/v1/videos/text2video/867363502757912642 "HTTP/1.1 200 OK"
+2026-03-29 18:42:09,416 [INFO] ai.kling_client: Kling task 867363502757912642: processing (poll 7/120, ~30s)

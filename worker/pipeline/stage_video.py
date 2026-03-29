@@ -150,25 +150,29 @@ async def run_video_stage(context: dict) -> dict:
         for lang in languages:
             logger.info("Generating language variant: %s", lang)
 
-            # STEP 5: Generate voiceover
-            voiceover_text = _extract_dialogue(script_data, lang, primary_language)
-            if voiceover_text.strip():
-                audio_bytes = await generate_speech(
-                    text=voiceover_text,
-                    language=lang,
-                )
-                logger.info("Voiceover generated: %d bytes (%s)", len(audio_bytes), lang)
+            # STEP 5-6: TTS + Lip sync (optional — skip if not installed)
+            synced_video = silent_video_bytes  # Default: use silent video
+            try:
+                voiceover_text = _extract_dialogue(script_data, lang, primary_language)
+                if voiceover_text.strip():
+                    audio_bytes = await generate_speech(
+                        text=voiceover_text,
+                        language=lang,
+                    )
+                    logger.info("Voiceover generated: %d bytes (%s)", len(audio_bytes), lang)
 
-                # STEP 6: Lip sync (Wav2Lip — free, any language)
-                synced_video = await lip_sync(
-                    video_bytes=silent_video_bytes,
-                    audio_bytes=audio_bytes,
+                    synced_video = await lip_sync(
+                        video_bytes=silent_video_bytes,
+                        audio_bytes=audio_bytes,
+                    )
+                    logger.info("Lip sync complete: %d bytes (%s)", len(synced_video), lang)
+                else:
+                    logger.info("No dialogue for %s — using silent video", lang)
+            except Exception as tts_err:
+                logger.warning(
+                    "TTS/lip sync skipped for %s: %s — uploading silent video",
+                    lang, tts_err,
                 )
-                logger.info("Lip sync complete: %d bytes (%s)", len(synced_video), lang)
-            else:
-                # No dialogue — use silent video directly
-                synced_video = silent_video_bytes
-                logger.info("No dialogue for %s — using silent video", lang)
 
             # STEP 8: Upload to Vercel Blob
             filename = (
