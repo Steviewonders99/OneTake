@@ -33,6 +33,80 @@ logger = logging.getLogger(__name__)
 pm = ProcessManager()
 
 
+async def worker_main(worker_id: str, env_file: str):
+    """Entry point for a supervised worker subprocess.
+
+    Called by supervisor.py via multiprocessing. Each worker:
+    1. Loads its own env file (unique NIM API key)
+    2. Claims jobs atomically (FOR UPDATE SKIP LOCKED)
+    3. Runs pipeline, then tries to claim another job
+    4. Exits cleanly when no more pending jobs (supervisor decides respawn)
+    """
+    import importlib
+
+    os.environ["WORKER_ID"] = worker_id
+    os.environ["ENV_FILE"] = env_file
+
+    # Reload config module with worker-specific env
+    import config as _config
+    importlib.reload(_config)
+
+    # Setup per-worker logging
+    os.makedirs("logs", exist_ok=True)
+    log_file = f"logs/{worker_id}.log"
+    logging.basicConfig(
+        level=logging.INFO,
+        format=f"%(asctime)s [{worker_id}] [%(levelname)s] %(name)s: %(message)s",
+        handlers=[
+            logging.FileHandler(log_file, mode="a"),
+            logging.StreamHandler(sys.stdout),
+        ],
+        force=True,
+    )
+
+    logger.info("Worker %s started (PID=%d, env=%s)", worker_id, os.getpid(), env_file)
+
+    from neon_client import claim_next_job, mark_job_complete, mark_job_failed
+
+    jobs_processed = 0
+
+    try:
+        while True:
+            job = await claim_next_job(worker_id)
+
+            if job is None:
+                logger.info("No pending jobs — worker %s exiting cleanly (%d jobs processed)", worker_id, jobs_processed)
+                break
+
+            logger.info(
+                "Claimed job %s (type=%s, request=%s)",
+                job["id"], job["job_type"], job["request_id"],
+            )
+
+            try:
+                await run_pipeline(job)
+                await mark_job_complete(job["id"])
+                jobs_processed += 1
+                logger.info("Job %s complete. Total processed: %d", job["id"], jobs_processed)
+            except Exception as exc:
+                logger.error("Job %s failed: %s", job["id"], exc, exc_info=True)
+                await mark_job_failed(job["id"], str(exc))
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        logger.info("Worker %s received shutdown signal", worker_id)
+    except Exception as exc:
+        logger.error("Worker %s crashed: %s", worker_id, exc, exc_info=True)
+        raise
+
+
+def run_worker_subprocess(worker_id: str, env_file: str):
+    """Multiprocessing target — runs the async worker_main in a new event loop.
+
+    This is what supervisor.py calls via multiprocessing.Process(target=...).
+    """
+    asyncio.run(worker_main(worker_id, env_file))
+
+
 async def main():
     """Run the polling loop forever."""
 
