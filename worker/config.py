@@ -23,7 +23,14 @@ VERCEL_BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
 VERCEL_BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 
 # ---------------------------------------------------------------------------
-# Image Generation via OpenRouter (Seedream 4.5 or alternatives)
+# NVIDIA NIM (FREE Kimi K2.5 + other models)
+# ---------------------------------------------------------------------------
+NVIDIA_NIM_API_KEY = os.environ.get("NVIDIA_NIM_API_KEY", "")
+NVIDIA_NIM_BASE_URL = os.environ.get("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NVIDIA_NIM_MODEL = os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.5")
+
+# ---------------------------------------------------------------------------
+# OpenRouter (Seedream 4.5 image gen + fallback LLM)
 # ---------------------------------------------------------------------------
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "bytedance-seed/seedream-4.5")

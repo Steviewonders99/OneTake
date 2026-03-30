@@ -89,16 +89,14 @@ async def generate_copy(
     user_prompt: str,
     **kwargs: Any,
 ) -> str:
-    """Generate ad copy using Kimi K2.5 via OpenRouter.
+    """Generate ad copy using Kimi K2.5 — NVIDIA NIM (free) or OpenRouter (paid fallback).
 
-    Local 9B models struggle with the complex copy JSON format.
-    Kimi K2.5 handles it reliably with its 128K context.
+    Tries NVIDIA NIM first (free), falls back to OpenRouter if NIM unavailable.
     """
-    from config import OPENROUTER_API_KEY
+    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, OPENROUTER_API_KEY
     import httpx
 
-    if not OPENROUTER_API_KEY:
-        # Fallback to local LLM if no API key
+    if not NVIDIA_NIM_API_KEY and not OPENROUTER_API_KEY:
         kwargs.setdefault("thinking", False)
         kwargs.setdefault("max_tokens", 4096)
         return await generate_text(system_prompt, user_prompt, **kwargs)
@@ -108,21 +106,40 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    async with httpx.AsyncClient(timeout=180) as client:
-        resp = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "moonshotai/kimi-k2.5",
-                "messages": messages,
-                "max_tokens": kwargs.get("max_tokens", 4096),
-                "temperature": kwargs.get("temperature", 0.7),
-            },
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        msg = data["choices"][0]["message"]
-        return msg.get("content") or msg.get("reasoning") or ""
+    # Try NVIDIA NIM first (FREE), then OpenRouter (paid)
+    providers = []
+    if NVIDIA_NIM_API_KEY:
+        providers.append(("NIM", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY))
+    if OPENROUTER_API_KEY:
+        providers.append(("OpenRouter", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY))
+
+    for provider_name, url, key in providers:
+        try:
+            async with httpx.AsyncClient(timeout=180) as client:
+                payload = {
+                    "model": "moonshotai/kimi-k2.5",
+                    "messages": messages,
+                    "max_tokens": kwargs.get("max_tokens", 4096),
+                    "temperature": kwargs.get("temperature", 0.7),
+                    "stream": False,
+                }
+                if provider_name == "NIM":
+                    payload["chat_template_kwargs"] = {"thinking": False}
+
+                resp = await client.post(url, headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                }, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+
+            msg = data["choices"][0]["message"]
+            result = msg.get("content") or msg.get("reasoning") or ""
+            logger.info("generate_copy via %s (%d chars)", provider_name, len(result))
+            return result
+
+        except Exception as e:
+            logger.warning("generate_copy via %s failed: %s", provider_name, e)
+            continue
+
+    raise RuntimeError("All LLM providers failed for generate_copy")

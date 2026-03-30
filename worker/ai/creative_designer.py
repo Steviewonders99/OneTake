@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from config import OPENROUTER_API_KEY
+from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, OPENROUTER_API_KEY
 from prompts.creative_overlay import (
     BRAND_KIT,
     DESIGN_AUDIT,
@@ -59,8 +59,8 @@ async def design_creatives(
         Each dict has: actor_name, scene, overlay_headline, overlay_sub,
         overlay_cta, image_treatment, html.
     """
-    if not OPENROUTER_API_KEY:
-        logger.warning("No OPENROUTER_API_KEY — returning empty designs")
+    if not NVIDIA_NIM_API_KEY and not OPENROUTER_API_KEY:
+        logger.warning("No LLM API key configured — returning empty designs")
         return []
 
     w = platform_spec["width"]
@@ -141,39 +141,54 @@ async def design_creatives(
         len(system_prompt) + len(user_prompt),
     )
 
-    try:
-        async with httpx.AsyncClient(timeout=120) as client:
-            resp = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+    # Try NVIDIA NIM (free) first, fallback to OpenRouter (paid)
+    providers = []
+    if NVIDIA_NIM_API_KEY:
+        providers.append(("NIM", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY))
+    if OPENROUTER_API_KEY:
+        providers.append(("OpenRouter", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY))
+
+    content = ""
+    for provider_name, url, key in providers:
+        try:
+            payload = {
+                "model": "moonshotai/kimi-k2.5",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "max_tokens": 16384,
+                "temperature": 0.8,
+                "stream": False,
+            }
+            if provider_name == "NIM":
+                payload["chat_template_kwargs"] = {"thinking": False}
+
+            async with httpx.AsyncClient(timeout=180) as client:
+                resp = await client.post(url, headers={
+                    "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
-                },
-                json={
-                    "model": "moonshotai/kimi-k2.5",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "max_tokens": 16384,
-                    "temperature": 0.8,
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["choices"][0]["message"].get("content", "")
+                }, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["choices"][0]["message"].get("content", "")
+                logger.info("Creative designer via %s (%d chars)", provider_name, len(content))
+                break
+        except Exception as e:
+            logger.warning("Creative designer via %s failed: %s", provider_name, e)
+            continue
 
-        # Parse JSON array from response
-        designs = _parse_designs(content)
-        logger.info(
-            "Kimi returned %d creative designs for %s/%s",
-            len(designs), persona.get("archetype_key", "?"), platform,
-        )
-        return designs
-
-    except Exception as e:
-        logger.error("Kimi creative design failed: %s", e)
+    if not content:
+        logger.error("All providers failed for creative design")
         return []
+
+    # Parse JSON array from response
+    designs = _parse_designs(content)
+    logger.info(
+        "Kimi returned %d creative designs for %s/%s",
+        len(designs), persona.get("archetype_key", "?"), platform,
+    )
+    return designs
 
 
 def _parse_designs(text: str) -> list[dict[str, Any]]:
