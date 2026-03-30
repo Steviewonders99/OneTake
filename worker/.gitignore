@@ -3,6 +3,8 @@ __pycache__/
 *.pyo
 .env
 .env.local
+.env.worker*
+!.env.worker*.template
 venv/
 .venv/
 *.egg-info/

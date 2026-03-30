@@ -1,0 +1,15 @@
+{
+  "max_workers": 5,
+  "workers": [
+    {"id": "worker-1", "env_file": ".env.worker1"},
+    {"id": "worker-2", "env_file": ".env.worker2"},
+    {"id": "worker-3", "env_file": ".env.worker3"},
+    {"id": "worker-4", "env_file": ".env.worker4"},
+    {"id": "worker-5", "env_file": ".env.worker5"}
+  ],
+  "poll_interval_s": 10,
+  "health_check_interval_s": 30,
+  "max_restarts_per_worker": 3,
+  "drain_timeout_s": 300,
+  "stale_job_threshold_minutes": 30
+}
