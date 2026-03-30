@@ -169,6 +169,11 @@ async def design_creatives(
                 "stream": False,
             }
 
+            # Rate limit protection: 2s delay for GLM-5 design calls
+            if "GLM" in provider_name:
+                import asyncio
+                await asyncio.sleep(2)
+
             async with httpx.AsyncClient(timeout=180) as client:
                 resp = await client.post(url, headers={
                     "Authorization": f"Bearer {key}",

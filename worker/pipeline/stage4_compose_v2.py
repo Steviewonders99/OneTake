@@ -367,8 +367,16 @@ async def _prepare_images(
                 upload_to_blob(shadow_bytes, shadow_filename, folder=folder),
             )
 
-            # Caption the image via Kimi K2.5 Vision (scene description)
-            scene_description = await _caption_image(image_bytes)
+            # Caption ONLY scene images (seed + outfit variations)
+            # Skip angle reference shots (front, side, back, 3q_left, etc.)
+            angle_keywords = ["front", "side", "back", "3q_", "close_up", "eye_detail", "full_front", "full_back"]
+            is_angle_shot = any(kw in scene.lower() for kw in angle_keywords)
+
+            scene_description = ""
+            if not is_angle_shot:
+                scene_description = await _caption_image(image_bytes)
+            else:
+                logger.debug("Skipping caption for angle shot: %s", scene)
 
             logger.info("Cutout ready: actor=%s scene=%s caption='%s'", actor_id, scene, scene_description[:60])
             return asset_id, {
