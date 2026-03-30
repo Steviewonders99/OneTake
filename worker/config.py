@@ -28,6 +28,7 @@ VERCEL_BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 NVIDIA_NIM_API_KEY = os.environ.get("NVIDIA_NIM_API_KEY", "")
 NVIDIA_NIM_BASE_URL = os.environ.get("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_NIM_MODEL = os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.5")
+NVIDIA_NIM_REASONING_MODEL = os.environ.get("NVIDIA_NIM_REASONING_MODEL", "qwen/qwen3.5-397b-a17b")
 
 # ---------------------------------------------------------------------------
 # OpenRouter (Seedream 4.5 image gen + fallback LLM)

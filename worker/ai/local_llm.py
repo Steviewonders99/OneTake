@@ -28,39 +28,55 @@ async def generate_text(
     temperature: float = 0.7,
     thinking: bool = True,
 ) -> str:
-    """Generate text using MLX. HTTP server first, in-process fallback.
+    """Generate text using NIM Qwen 397B (free) or local MLX (fallback).
 
-    Parameters
-    ----------
-    system_prompt:
-        The system message that sets the AI persona.
-    user_prompt:
-        The user query or task description.
-    model_name:
-        Override the default model. Falls back to ``LLM_MODEL``.
-    max_tokens:
-        Maximum number of tokens to generate.
-    temperature:
-        Sampling temperature (0 = deterministic, 1 = creative).
-    thinking:
-        If True (default), Qwen3.5 uses extended thinking mode —
-        ideal for orchestration (brief, template selection, direction).
-        If False, prepends /no_think for direct JSON output —
-        ideal for evaluations, scores, structured extraction.
-
-    Returns
-    -------
-    str
-        The model's generated text.
+    Tries NVIDIA NIM first with Qwen3.5-397B — handles massive prompts
+    and thinking mode far better than the local 9B model. Falls back
+    to local MLX server if NIM is unavailable.
     """
-    model_name = model_name or LLM_MODEL
+    import httpx
+    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, NVIDIA_NIM_REASONING_MODEL
+
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
 
-    # HTTP server ONLY — no in-process fallback (prevents double model loading
-    # which caused 37GB RAM usage on a 48GB machine).
+    # Try NIM Qwen 397B first (FREE, handles 60K+ prompts easily)
+    if NVIDIA_NIM_API_KEY:
+        try:
+            payload = {
+                "model": NVIDIA_NIM_REASONING_MODEL,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "stream": False,
+            }
+            if thinking:
+                payload["chat_template_kwargs"] = {"enable_thinking": True}
+
+            async with httpx.AsyncClient(timeout=180) as client:
+                resp = await client.post(
+                    f"{NVIDIA_NIM_BASE_URL}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {NVIDIA_NIM_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+
+            msg = data["choices"][0]["message"]
+            content = msg.get("content") or msg.get("reasoning") or ""
+            logger.info("generate_text via NIM Qwen-397B (%d chars)", len(content))
+            return content
+
+        except Exception as e:
+            logger.warning("NIM Qwen-397B failed: %s — falling back to local MLX", e)
+
+    # Fallback: local MLX server (Qwen3.5-9B)
+    model_name = model_name or LLM_MODEL
     from mlx_server_manager import mlx_server
 
     for attempt in range(3):
