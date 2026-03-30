@@ -66,7 +66,7 @@ export async function createTables(): Promise<void> {
       target_languages TEXT[] NOT NULL DEFAULT '{}',
       target_regions TEXT[] NOT NULL DEFAULT '{}',
       volume_needed INT,
-      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'generating', 'review', 'approved', 'sent', 'rejected')),
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'generating', 'review', 'approved', 'sent', 'rejected', 'split')),
       created_by TEXT NOT NULL,
       form_data JSONB NOT NULL DEFAULT '{}',
       schema_version INT NOT NULL DEFAULT 1,
@@ -216,7 +216,8 @@ export async function createTables(): Promise<void> {
     CREATE TABLE IF NOT EXISTS compute_jobs (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       request_id      UUID REFERENCES intake_requests(id) ON DELETE CASCADE,
-      job_type        TEXT NOT NULL CHECK (job_type IN ('generate', 'regenerate', 'regenerate_stage', 'regenerate_asset')),
+      job_type        TEXT NOT NULL CHECK (job_type IN ('generate', 'regenerate', 'regenerate_stage', 'regenerate_asset', 'resume_from')),
+      worker_id       TEXT,
       status          TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'complete', 'failed')),
       stage_target    INT,
       asset_id        UUID,
