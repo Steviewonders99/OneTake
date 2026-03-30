@@ -60,7 +60,7 @@ async def run_stage3(context: dict) -> dict:
                 regions=regions,
                 form_data=form_data,
             )
-            copy_text = await generate_copy(COPY_SYSTEM_PROMPT, copy_prompt)
+            copy_text = await generate_copy(COPY_SYSTEM_PROMPT, copy_prompt, skill_stage="copy")
             copy_data = _parse_json(copy_text)
 
             # Accept Kimi K2.5 output directly — evaluation via local 9B model

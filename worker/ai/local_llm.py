@@ -105,12 +105,26 @@ async def generate_copy(
     user_prompt: str,
     **kwargs: Any,
 ) -> str:
-    """Generate ad copy using Kimi K2.5 — NVIDIA NIM (free) or OpenRouter (paid fallback).
+    """Generate ad copy / scripts / overlay text using Gemma 3 27B (creative writing).
 
-    Tries NVIDIA NIM first (free), falls back to OpenRouter if NIM unavailable.
+    Model routing:
+    - Primary: NIM Gemma 3 27B (free, excellent creative writing)
+    - Fallback: NIM Kimi K2.5 (free, good general purpose)
+    - Last resort: OpenRouter Kimi K2.5 (paid)
+
+    Marketing skills can be injected via the skill_stage kwarg.
     """
-    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, OPENROUTER_API_KEY
+    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, NVIDIA_NIM_CREATIVE_MODEL, OPENROUTER_API_KEY
     import httpx
+
+    # Inject marketing skills if stage specified
+    skill_stage = kwargs.pop("skill_stage", None)
+    if skill_stage:
+        from prompts.marketing_skills import get_skills_for_stage
+        skills = get_skills_for_stage(skill_stage)
+        if skills:
+            system_prompt = f"{system_prompt}\n\n{skills}"
+            logger.info("Injected '%s' marketing skills (%d chars)", skill_stage, len(skills))
 
     if not NVIDIA_NIM_API_KEY and not OPENROUTER_API_KEY:
         kwargs.setdefault("thinking", False)
@@ -122,25 +136,24 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    # Try NVIDIA NIM first (FREE), then OpenRouter (paid)
+    # Model cascade: Gemma 27B (creative) → Kimi K2.5 (general) → OpenRouter (paid)
     providers = []
     if NVIDIA_NIM_API_KEY:
-        providers.append(("NIM", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY))
+        providers.append(("NIM-Gemma27B", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_CREATIVE_MODEL))
+        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.5"))
     if OPENROUTER_API_KEY:
-        providers.append(("OpenRouter", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY))
+        providers.append(("OpenRouter", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY, "moonshotai/kimi-k2.5"))
 
-    for provider_name, url, key in providers:
+    for provider_name, url, key, model in providers:
         try:
             async with httpx.AsyncClient(timeout=180) as client:
                 payload = {
-                    "model": "moonshotai/kimi-k2.5",
+                    "model": model,
                     "messages": messages,
                     "max_tokens": kwargs.get("max_tokens", 4096),
                     "temperature": kwargs.get("temperature", 0.7),
                     "stream": False,
                 }
-                if provider_name == "NIM":
-                    payload["chat_template_kwargs"] = {"thinking": False}
 
                 resp = await client.post(url, headers={
                     "Authorization": f"Bearer {key}",

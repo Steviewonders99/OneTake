@@ -287,12 +287,13 @@ async def _generate_and_validate_script(
             prompt += "\n\nFEEDBACK FROM PREVIOUS ATTEMPT — fix these issues:\n"
             prompt += "\n".join(f"- {f}" for f in feedback)
 
-        # Generate script with Gemma 3 12B
+        # Generate script with Gemma 3 27B + marketing skills
         raw_text = await generate_copy(
             system_prompt=VIDEO_SCRIPT_SYSTEM,
             user_prompt=prompt,
             temperature=0.8,
             max_tokens=4096,
+            skill_stage="video",
         )
 
         # Parse JSON
