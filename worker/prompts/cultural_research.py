@@ -547,17 +547,28 @@ async def research_region(
         },
     }
 
-    for dimension_key, dimension in RESEARCH_DIMENSIONS.items():
-        query = dimension["query_template"].format(
-            region=region,
-            language=language,
-            demographic=demographic,
-            task_type=task_type,
-        )
+    # Research all 9 dimensions IN PARALLEL (they're independent)
+    import asyncio
 
-        logger.info("Researching dimension '%s' for %s ...", dimension_key, region)
-        result = await _call_kimi(query, dimension["output_keys"])
-        research[dimension_key] = result
+    async def _research_one_dimension(dim_key: str, dim: dict) -> tuple[str, dict]:
+        query = dim["query_template"].format(
+            region=region, language=language,
+            demographic=demographic, task_type=task_type,
+        )
+        logger.info("Researching dimension '%s' for %s ...", dim_key, region)
+        result = await _call_kimi(query, dim["output_keys"])
+        return dim_key, result
+
+    dim_results = await asyncio.gather(
+        *[_research_one_dimension(k, v) for k, v in RESEARCH_DIMENSIONS.items()],
+        return_exceptions=True,
+    )
+    for r in dim_results:
+        if isinstance(r, Exception):
+            logger.error("Dimension research failed: %s", r)
+        else:
+            dim_key, result = r
+            research[dim_key] = result
 
     # Validate live research against our hardcoded priors
     validation = validate_research_against_priors(region, research)
