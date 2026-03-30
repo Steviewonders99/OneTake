@@ -217,3 +217,222 @@ def translate_targeting_for_platform(targeting_profile: dict, platform: str) -> 
         "tier_2_method": pmap["lla"],
         "retargeting_method": pmap["retargeting"],
     }
+
+
+# ── Strategy Generation (LLM) ─────────────────────────────────────
+
+STRATEGY_SYSTEM_PROMPT = """You are an elite media buyer designing a Tier 1 campaign for OneForma recruitment.
+
+You receive: personas (with targeting profiles), cultural research, channel strategy, and budget data.
+You output: a complete Tier 1 media plan with campaigns, ad sets, targeting, budget, split test, and rules.
+
+FRAMEWORK (from proven MBA Lead Gen Strategy):
+- Tier 1 = Interest-only cold traffic. NO lookalikes. NO retargeting.
+- 2 campaigns (A/B split test) — test ONE variable (creative treatment OR copy angle)
+- Per campaign: 2-5 ad sets depending on budget
+  - Ad Sets 1-3: Hyper-targeted (1 specific interest each)
+  - Ad Set 4: Hot interests (2-3 stacked)
+  - Ad Set 5: Broad interests (3-5 wider interests)
+- Budget split evenly across ad sets within a persona
+- Kill threshold: 1.5x daily ad set budget with no leads → pause
+- Scale rule: CPA below target after 10 leads → increase 20% every 3 days
+- Progression: after 250 tracked leads → add Tier 2 (1% Lead LLA + retargeting)
+
+RULES:
+1. Every interest must be SPECIFIC to the task type and region — never generic
+2. Demographics must match the persona exactly (age, education, occupation)
+3. Placements must match the channel strategy (only platforms in the brief)
+4. Kill threshold is ALWAYS 1.5x daily ad set budget — calculate it
+5. Split test must change EXACTLY one variable between Campaign A and B
+6. Ad set names must be descriptive: "[Targeting Type] — [Interest Description]"
+7. creative_assignment_rule maps persona + hook_type + treatment to each ad set
+
+Return ONLY valid JSON matching the campaign_strategy schema.
+"""
+
+STRATEGY_USER_PROMPT = """Design a Tier 1 campaign for: {country}
+
+BUDGET DATA:
+{budget_json}
+
+PERSONAS (with targeting):
+{personas_json}
+
+CHANNEL STRATEGY (only use these platforms):
+{channels_json}
+
+CULTURAL RESEARCH SUMMARY:
+{research_summary}
+
+TASK TYPE: {task_type}
+TASK DESCRIPTION: {task_description}
+
+{budget_instruction}
+
+Return a JSON object with this structure:
+{{
+  "tier": 1,
+  "tier_description": "Interest-only cold traffic",
+  "monthly_budget": number or null,
+  "budget_mode": "fixed" or "ratio",
+  "daily_budget_total": number or null,
+  "split_test": {{
+    "variable": "creative" or "copy",
+    "description": "What differs between Campaign A and B",
+    "measurement": "How to measure the winner"
+  }},
+  "campaigns": [
+    {{
+      "name": "Campaign name",
+      "objective": "lead_generation",
+      "optimization": "leads",
+      "daily_budget": number or null,
+      "ad_sets": [
+        {{
+          "name": "Descriptive ad set name",
+          "persona_key": "archetype_key",
+          "targeting_type": "hyper" | "hot" | "broad",
+          "interests": ["specific", "interests"],
+          "demographics": {{"age_min": int, "age_max": int, "gender": "all"}},
+          "placements": ["platform_keys"],
+          "daily_budget": number or null,
+          "kill_threshold": number or null,
+          "kill_rule": "Specific kill rule with number",
+          "scale_rule": "Specific scale rule with numbers",
+          "creative_assignment_rule": {{
+            "persona": "key",
+            "hook_types": ["earnings", "curiosity"],
+            "treatment": "gradient_overlay" | "split_panel" | "shape_overlay"
+          }},
+          "creatives_assigned": []
+        }}
+      ]
+    }}
+  ],
+  "progression_rules": {{
+    "next_tier": 2,
+    "trigger": "250 tracked leads across all ad sets",
+    "adds": ["what Tier 2 adds"],
+    "estimated_timeline": "X weeks at current budget"
+  }},
+  "scaling_rules": {{
+    "winning_ad_set": "specific rule",
+    "losing_ad_set": "specific rule",
+    "winning_creative": "specific rule"
+  }},
+  "deferred_markets": []
+}}
+"""
+
+
+async def generate_campaign_strategy(
+    *,
+    country: str,
+    personas: list[dict],
+    cultural_research: dict,
+    channel_strategy: list[str],
+    budget_data: dict,
+    task_type: str,
+    task_description: str,
+    feedback: list[str] | None = None,
+) -> dict[str, Any]:
+    """Generate a Tier 1 campaign strategy for one country via LLM."""
+    from ai.local_llm import generate_text
+
+    budget_instruction = ""
+    if budget_data.get("budget_mode") == "ratio":
+        budget_instruction = (
+            "No dollar budget specified. Output RATIOS ONLY — percentage allocations, "
+            "no dollar amounts. Ad set daily_budget and kill_threshold should be null. "
+            "Include recommended_ad_sets as '3-5 depending on budget'."
+        )
+    else:
+        budget_instruction = (
+            f"Budget is FIXED at ${budget_data.get('total_monthly', 0):.0f}/mo total. "
+            f"This country gets ${budget_data.get('country_monthly', 0):.0f}/mo. "
+            f"Calculate exact daily budgets and kill thresholds."
+        )
+
+    personas_trimmed = []
+    for p in personas:
+        tp = p.get("targeting_profile", {})
+        personas_trimmed.append({
+            "archetype_key": p.get("archetype_key"),
+            "age_range": p.get("age_range"),
+            "occupation": tp.get("demographics", {}).get("occupation", "unknown"),
+            "interests": tp.get("interests", {}),
+            "budget_weight_pct": tp.get("budget_weight_pct", 33),
+            "estimated_pool_size": tp.get("estimated_pool_size", "medium"),
+            "media_consumption": tp.get("psychographics", {}).get("media_consumption", []),
+        })
+
+    user_prompt = STRATEGY_USER_PROMPT.format(
+        country=country,
+        budget_json=json.dumps(budget_data, indent=2, default=str),
+        personas_json=json.dumps(personas_trimmed, indent=2, default=str),
+        channels_json=json.dumps(channel_strategy, default=str),
+        research_summary=json.dumps(cultural_research, default=str)[:2000],
+        task_type=task_type,
+        task_description=task_description[:500],
+        budget_instruction=budget_instruction,
+    )
+
+    if feedback:
+        user_prompt += (
+            "\n\n⚠️ PREVIOUS STRATEGY FAILED EVALUATION. Fix these issues:\n"
+            + "\n".join(f"- {f}" for f in feedback)
+        )
+
+    # Inject campaign-strategy marketing skill
+    from prompts.marketing_skills import get_skills_for_stage
+    skills = get_skills_for_stage("strategy")
+    system = STRATEGY_SYSTEM_PROMPT
+    if skills:
+        system = f"{system}\n\n{skills}"
+        logger.info("Injected strategy marketing skills (%d chars)", len(skills))
+
+    raw = await generate_text(
+        system,
+        user_prompt,
+        max_tokens=8192,
+        temperature=0.4,
+    )
+
+    return _parse_strategy_json(raw)
+
+
+def _parse_strategy_json(text: str) -> dict:
+    """Parse campaign strategy JSON from LLM output."""
+    if not text:
+        return {}
+
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+        cleaned = cleaned.rsplit("```", 1)[0].strip()
+
+    try:
+        result = json.loads(cleaned)
+        if isinstance(result, dict):
+            return result
+    except json.JSONDecodeError:
+        pass
+
+    brace_depth = 0
+    start = -1
+    for i, char in enumerate(cleaned):
+        if char == '{':
+            if brace_depth == 0:
+                start = i
+            brace_depth += 1
+        elif char == '}':
+            brace_depth -= 1
+            if brace_depth == 0 and start >= 0:
+                try:
+                    return json.loads(cleaned[start:i + 1])
+                except json.JSONDecodeError:
+                    pass
+                start = -1
+
+    logger.warning("Failed to parse campaign strategy JSON (%d chars)", len(text))
+    return {}
