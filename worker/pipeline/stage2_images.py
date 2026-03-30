@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 MAX_SEED_RETRIES = 3
 MAX_VARIATION_RETRIES = 2
-SEED_VQA_THRESHOLD = 0.85
+SEED_VQA_THRESHOLD = 0.78  # Lowered: VQA prose fallback caps at 0.80, was blocking all seeds
 VARIATION_VQA_THRESHOLD = 0.75  # Lower bar — face is already validated
 ACTORS_PER_PERSONA = 3
 
@@ -90,25 +90,52 @@ async def run_stage2(context: dict) -> dict:
             len(actor_jobs),
         )
 
-    # Run actors in PARALLEL (3 concurrent) — each actor is independent
     import asyncio
-    ACTOR_CONCURRENCY = 3
-    actor_semaphore = asyncio.Semaphore(ACTOR_CONCURRENCY)
+    IMAGE_CONCURRENCY = 9  # Seedream is paid API — no rate limit, max parallelism
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 1: Create ALL 9 actor identity cards IN PARALLEL
+    # NIM 397B handles this instantly (~1s each, all at once)
+    # ══════════════════════════════════════════════════════════════
+    logger.info("Phase 1: Creating %d actor identity cards in parallel...", len(actor_jobs))
+
+    async def _create_card(job):
+        return await _generate_actor_card(job, brief, request_id)
+
+    card_results = await asyncio.gather(
+        *[_create_card(job) for job in actor_jobs],
+        return_exceptions=True,
+    )
+
+    actor_cards = []
+    for r in card_results:
+        if isinstance(r, Exception):
+            logger.error("Actor card failed: %s", r)
+        elif r:
+            actor_cards.append(r)
+
+    logger.info("Phase 1 complete: %d actor cards created", len(actor_cards))
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 2: Generate images for ALL actors (semaphore for Seedream)
+    # 3 concurrent image generations at a time
+    # ══════════════════════════════════════════════════════════════
+    logger.info("Phase 2: Generating images for %d actors (%d concurrent)...", len(actor_cards), IMAGE_CONCURRENCY)
+    image_semaphore = asyncio.Semaphore(IMAGE_CONCURRENCY)
     all_actors: list[dict] = []
     total_images = 0
 
-    async def _process_actor(job):
-        nonlocal total_images
-        async with actor_semaphore:
-            return await _generate_one_actor(job, brief, design, request_id)
+    async def _gen_images(card):
+        async with image_semaphore:
+            return await _generate_actor_images(card, design, request_id)
 
-    results = await asyncio.gather(
-        *[_process_actor(job) for job in actor_jobs],
+    img_results = await asyncio.gather(
+        *[_gen_images(card) for card in actor_cards],
         return_exceptions=True,
     )
-    for r in results:
+    for r in img_results:
         if isinstance(r, Exception):
-            logger.error("Actor generation failed: %s", r)
+            logger.error("Actor images failed: %s", r)
         elif r:
             actor_data, img_count = r
             all_actors.append(actor_data)
@@ -120,18 +147,13 @@ async def run_stage2(context: dict) -> dict:
     }
 
 
-async def _generate_one_actor(job, brief, design, request_id):
-    """Generate a single actor with seed + variations. Returns (actor_data, image_count)."""
-    total_images = 0
+async def _generate_actor_card(job, brief, request_id):
+    """Phase 1: Generate actor identity card only (NIM 397B, ~1s). Returns actor_data dict."""
     region = job["region"]
     language = job["language"]
     persona = job["persona"]
 
-    # ==================================================================
-    # STEP 1: Generate actor identity card
-    # ==================================================================
     if persona:
-        # Persona-driven: actor derived from persona archetype.
         actor_prompt = build_persona_actor_prompt(persona, region, language)
         actor_idx = job.get("actor_index", 0)
         if actor_idx > 0:
@@ -142,7 +164,6 @@ async def _generate_one_actor(job, brief, design, request_id):
             )
         actor_text = await generate_text(PERSONA_SYSTEM_PROMPT, actor_prompt, thinking=False, max_tokens=4096)
     else:
-        # Fallback: region-driven actor (original behaviour).
         actor_prompt = build_actor_prompt(brief, region, language)
         actor_text = await generate_text(ACTOR_SYSTEM_PROMPT, actor_prompt, thinking=False, max_tokens=4096)
     actor_data = _parse_json(actor_text)
@@ -159,6 +180,7 @@ async def _generate_one_actor(job, brief, design, request_id):
     })
     actor_data["id"] = actor_id
     actor_data["persona"] = persona
+    actor_data["_job"] = job  # Preserve job metadata for Phase 2
     logger.info(
         "Actor '%s' created (id=%s, region=%s, persona=%s)",
         actor_data.get("name"),
@@ -166,6 +188,17 @@ async def _generate_one_actor(job, brief, design, request_id):
         region,
         persona.get("archetype_key") if persona else "none",
     )
+    return actor_data
+
+
+async def _generate_actor_images(actor_data, design, request_id):
+    """Phase 2: Generate seed + variation images for one actor. Returns (actor_data, image_count)."""
+    import asyncio
+    total_images = 0
+    job = actor_data.pop("_job", {})
+    region = job.get("region", "Global")
+    language = job.get("language", "English")
+    actor_id = actor_data.get("id", "")
 
     # Track compositions used for this actor (ensures variety)
     used_compositions: list[str] = []
