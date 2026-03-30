@@ -115,10 +115,15 @@ async def run_stage1(context: dict) -> dict:
         persona_context += "\n\n" + build_research_summary(cultural_research)
 
     brief_prompt = build_brief_prompt(request, persona_context=persona_context)
-    # THINKING MODE — let Qwen reason over the rich persona + cultural data.
-    # The <think>...</think> tags are parsed by the server manager — JSON
-    # comes AFTER </think> in the output.
-    brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt, thinking=True)
+
+    # Inject marketing skills into system prompt for 397B model
+    from prompts.marketing_skills import get_skills_for_stage
+    skills_context = get_skills_for_stage("brief")
+    enhanced_system = BRIEF_SYSTEM_PROMPT
+    if skills_context:
+        enhanced_system = f"{BRIEF_SYSTEM_PROMPT}\n\n{skills_context}"
+
+    brief_text = await generate_text(enhanced_system, brief_prompt, thinking=True)
     brief_data = _parse_json(brief_text)
 
     # ==================================================================
@@ -185,7 +190,7 @@ async def run_stage1(context: dict) -> dict:
 
         logger.info("Retrying with %d feedback items", len(feedback))
         brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
-        brief_text = await generate_text(BRIEF_SYSTEM_PROMPT, brief_prompt, thinking=True)
+        brief_text = await generate_text(enhanced_system, brief_prompt, thinking=True)
         brief_data = _parse_json(brief_text)
 
     # Inject personas + research into brief for downstream stages
