@@ -107,6 +107,7 @@ async def generate_video(
         "duration": str(min(duration_s, 15)),
         "mode": mode,
         "aspect_ratio": resolved_ratio,
+        "sound": "on",  # Native audio generation
     }
 
     # Image-to-video mode — use image_list with first_frame/end_frame
@@ -185,27 +186,32 @@ async def generate_multishot_video(
     if total_duration > 15:
         raise ValueError(f"Total duration {total_duration}s exceeds 15s limit")
 
-    # Build multishot payload
-    shot_payloads: list[dict[str, Any]] = []
+    # Build Kling V3 multishot payload (per API spec)
+    multi_prompt = []
     for i, shot in enumerate(shots):
-        shot_payload: dict[str, Any] = {
+        multi_prompt.append({
+            "index": i + 1,
             "prompt": shot.get("prompt", ""),
-            "duration": shot.get("duration_s", 2),
-        }
-        if i > 0 and shot.get("transition"):
-            shot_payload["transition"] = shot["transition"]
-        shot_payloads.append(shot_payload)
+            "duration": str(shot.get("duration_s", 2)),
+        })
+
+    mode = "pro" if resolution == "1080p" else "std"
 
     payload: dict[str, Any] = {
-        "model": KLING_MODEL,
-        "mode": "multishot",
-        "shots": shot_payloads,
-        "resolution": resolution,
-        "aspect_ratio": "9:16",  # Multishot is typically vertical
+        "model_name": KLING_MODEL,
+        "multi_shot": True,
+        "shot_type": "customize",
+        "prompt": "",  # Required but empty when multi_shot=true
+        "multi_prompt": multi_prompt,
+        "duration": str(total_duration),
+        "mode": mode,
+        "aspect_ratio": "9:16",
+        "sound": "on",  # Native audio generation
     }
 
+    # References go in image_list
     if references:
-        payload["references"] = [{"url": ref} for ref in references[:7]]
+        payload["image_list"] = [{"image_url": ref} for ref in references[:7]]
 
     logger.info(
         "Kling multishot: %d shots, total %ds, refs=%d",

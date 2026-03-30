@@ -16,14 +16,29 @@ import json
 from typing import Any
 
 VIDEO_SCRIPT_SYSTEM = """You are a short-form video scriptwriter for OneForma recruitment ads.
-You write scripts that feel like REAL UGC creator content, NOT corporate ads.
+You write scripts that feel like REAL influencer/UGC creator content, NOT corporate ads.
+
+STYLE: Influencer talking directly to camera with energy. Rapid cuts between angles.
+Think: TikTok creator sharing a life hack, NOT a corporate explainer.
+
 Rules:
 - Hook MUST grab attention in under 2 seconds
 - Speak in first person as the character/contributor
 - Use the target language naturally (not translated)
-- Keep total duration under 15 seconds for TikTok/Reels, 30s for YouTube Shorts
+- Keep total duration under 15 seconds for TikTok/Reels
 - Include (parenthetical direction) for actions and emotions
 - Mark [CAMERA: direction] for each scene change
+- RAPID CUTS between camera angles every 2-4 seconds to keep engagement
+- Vary between close-up (face), medium (upper body), and wide (full body + environment)
+
+SCREEN RULES (CRITICAL):
+- Laptops, phones, tablets CAN appear as scene decor / props in background or foreground
+- BUT never show READABLE SCREEN CONTENT — no UI, no text, no apps, no fake interfaces
+- The device screen should be angled away, closed, or out of focus
+- NO "looking at screen" or "shows earnings on phone" directions
+- AI video generators CANNOT render readable screens — they always look fake and break immersion
+- Instead of "shows earnings on phone", use "eyes light up, fist pump, celebratory reaction"
+- The PERSON is always the focus, not a device screen
 """
 
 # ---------------------------------------------------------------------------
@@ -32,43 +47,43 @@ Rules:
 
 VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "ugc_talking_head": {
-        "description": "Person talks directly to camera about their experience",
-        "structure": "Hook (face close-up) -> Problem -> Solution -> Earnings reveal -> CTA",
+        "description": "Influencer-style talking head with rapid angle cuts",
+        "structure": "Hook (extreme close-up) -> Problem -> Solution -> Celebration -> CTA",
         "best_for": ["the_student", "the_gig_worker", "the_freelancer"],
         "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
-        "duration_range": (15, 30),
+        "duration_range": (12, 15),
         "scene_blueprint": [
-            {"label": "hook", "duration_s": 3, "camera": "close_up", "direction": "Face fills frame, eye contact, lean in"},
-            {"label": "problem", "duration_s": 3, "camera": "push_in", "direction": "Slight push in as frustration builds"},
-            {"label": "solution", "duration_s": 4, "camera": "static", "direction": "Relaxed, smile begins, show phone/laptop"},
-            {"label": "value_prop", "duration_s": 3, "camera": "tilt_down", "direction": "Tilt to show earnings on screen"},
-            {"label": "cta", "duration_s": 2, "camera": "pull_back", "direction": "Pull back, direct eye contact, point down"},
+            {"label": "hook", "duration_s": 2, "camera": "close_up", "direction": "Extreme close-up, eyes wide, lean into camera with energy"},
+            {"label": "problem", "duration_s": 3, "camera": "medium", "direction": "Cut to medium shot, animated hand gestures, frustrated expression"},
+            {"label": "solution", "duration_s": 3, "camera": "low_angle", "direction": "Low angle looking up, confident smile, pointing at camera"},
+            {"label": "value_prop", "duration_s": 3, "camera": "over_shoulder", "direction": "Over shoulder wide shot, celebrating with fist pump, happy expression"},
+            {"label": "cta", "duration_s": 2, "camera": "close_up", "direction": "Snap back to close-up, direct eye contact, beckoning gesture"},
         ],
     },
     "pov_reveal": {
-        "description": "POV: you're scrolling and find this opportunity",
-        "structure": "Screen recording -> Pause -> 'Wait, what?' -> Explain -> CTA",
+        "description": "POV: person discovers an amazing opportunity and shares it",
+        "structure": "Surprise hook -> Reaction -> Explain -> Energy build -> CTA",
         "best_for": ["the_student", "the_techie"],
         "platforms": ["tiktok", "instagram_reels"],
-        "duration_range": (10, 20),
+        "duration_range": (10, 15),
         "scene_blueprint": [
-            {"label": "hook", "duration_s": 2, "camera": "extreme_close_up", "direction": "Phone screen, scrolling through feed"},
-            {"label": "discovery", "duration_s": 2, "camera": "over_shoulder", "direction": "Thumb pauses on an opportunity post"},
-            {"label": "reaction", "duration_s": 2, "camera": "whip_pan", "direction": "Whip pan to face, surprised expression"},
-            {"label": "explanation", "duration_s": 4, "camera": "close_up", "direction": "Talking to camera, explaining what they found"},
-            {"label": "cta", "duration_s": 2, "camera": "push_in", "direction": "Push in, 'Link in bio' energy"},
+            {"label": "hook", "duration_s": 2, "camera": "extreme_close_up", "direction": "Eyes go wide, mouth drops open in surprise, looking slightly off camera"},
+            {"label": "discovery", "duration_s": 2, "camera": "medium", "direction": "Cut to medium shot, person turns to camera with excited energy"},
+            {"label": "reaction", "duration_s": 2, "camera": "low_angle", "direction": "Low angle, person gesturing enthusiastically, 'you won't believe this'"},
+            {"label": "explanation", "duration_s": 4, "camera": "close_up", "direction": "Close-up talking to camera, explaining the opportunity with hand gestures"},
+            {"label": "cta", "duration_s": 2, "camera": "push_in", "direction": "Push in close, direct eye contact, beckoning gesture"},
         ],
     },
     "earnings_reveal": {
-        "description": "Show earnings/payment notification, then explain how",
-        "structure": "Payment screenshot -> Reaction -> 'Here's how' -> Steps -> CTA",
+        "description": "Person celebrates earnings and explains how they did it",
+        "structure": "Celebration -> Reaction -> 'Here's how' -> Steps -> CTA",
         "best_for": ["the_gig_worker", "the_student", "the_parent"],
         "platforms": ["tiktok", "instagram_reels", "facebook_reels"],
-        "duration_range": (15, 25),
+        "duration_range": (12, 15),
         "scene_blueprint": [
-            {"label": "hook", "duration_s": 2, "camera": "extreme_close_up", "direction": "Payment notification on phone screen"},
-            {"label": "reaction", "duration_s": 2, "camera": "close_up", "direction": "Genuine excited reaction to the amount"},
-            {"label": "how_intro", "duration_s": 2, "camera": "static", "direction": "Lean forward, 'Here is how I did it'"},
+            {"label": "hook", "duration_s": 2, "camera": "close_up", "direction": "Face lights up with genuine excitement, fist pump or happy dance"},
+            {"label": "reaction", "duration_s": 2, "camera": "medium", "direction": "Cut to medium shot, person doing celebratory gesture, big smile"},
+            {"label": "how_intro", "duration_s": 2, "camera": "over_shoulder", "direction": "Over shoulder shot at desk, lean forward conspiratorially, 'Here is how'"},
             {"label": "explanation", "duration_s": 4, "camera": "tracking", "direction": "Walking through the house, explaining casually"},
             {"label": "cta", "duration_s": 2, "camera": "push_in", "direction": "Back to face, push in, direct CTA"},
         ],
@@ -136,8 +151,8 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
         "duration_range": (15, 30),
         "scene_blueprint": [
             {"label": "hook_question", "duration_s": 2, "camera": "close_up", "direction": "Direct eye contact, asks a question"},
-            {"label": "step_1", "duration_s": 3, "camera": "over_shoulder", "direction": "Show signing up on phone/laptop"},
-            {"label": "step_2", "duration_s": 3, "camera": "tilt_down", "direction": "Show choosing tasks on screen"},
+            {"label": "step_1", "duration_s": 3, "camera": "over_shoulder", "direction": "Person sitting at desk, typing confidently, laptop visible but screen away from camera"},
+            {"label": "step_2", "duration_s": 3, "camera": "medium", "direction": "Person gestures explaining, counting on fingers, engaged expression"},
             {"label": "step_3", "duration_s": 3, "camera": "extreme_close_up", "direction": "Show earnings or payment confirmation"},
             {"label": "cta", "duration_s": 2, "camera": "pull_back", "direction": "Pull back, arms out, 'that is it' energy, CTA overlay"},
         ],

@@ -124,13 +124,24 @@ async def run_video_stage(context: dict) -> dict:
         )
 
         # ==================================================================
-        # STEP 3: Generate 3-angle character references (Seedream for Kling)
+        # STEP 3: Use EXISTING actor images as Kling references
+        # These are already VQA-approved from Stage 2 — don't regenerate!
         # ==================================================================
-        reference_urls = await _generate_character_references(
-            actor, request_id,
-        )
+        from neon_client import get_assets
+        actor_id = str(actor.get("id", ""))
+        image_assets = await get_assets(request_id, asset_type="base_image")
+        reference_urls = [
+            a["blob_url"] for a in image_assets
+            if str(a.get("actor_id", "")) == actor_id and a.get("blob_url")
+        ][:3]  # Kling recommends 2-3 references max
+
+        if not reference_urls:
+            # Fallback: generate references if no existing images
+            logger.warning("No existing images for actor %s — generating references", actor_id)
+            reference_urls = await _generate_character_references(actor, request_id)
+
         logger.info(
-            "Character references generated: %d angles",
+            "Using %d existing actor images as Kling references",
             len(reference_urls),
         )
 
