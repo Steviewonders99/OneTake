@@ -286,7 +286,7 @@ export default function SeedreamEditor() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[var(--border)] bg-white">
+      <div className="px-4 pl-14 lg:pl-6 md:pr-6 py-4 border-b border-[var(--border)] bg-white">
         <h1 className="text-lg font-bold text-[var(--foreground)]">Seedream Editor</h1>
         <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
           Drag an asset into the workspace, then describe your edits
@@ -294,9 +294,9 @@ export default function SeedreamEditor() {
       </div>
 
       {/* Two-column layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left: Asset Browser */}
-        <div className="w-[320px] shrink-0 border-r border-[var(--border)] bg-white overflow-hidden">
+        <div className="hidden lg:block w-[320px] shrink-0 border-r border-[var(--border)] bg-white overflow-hidden">
           <AssetBrowser
             assets={allAssets}
             campaigns={campaigns}
@@ -308,10 +308,10 @@ export default function SeedreamEditor() {
         {/* Right: Editor Workspace */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Workspace area */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Image comparison area */}
             <div
-              className="flex-1 p-6 overflow-y-auto"
+              className="flex-1 p-4 md:p-6 overflow-y-auto"
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -459,7 +459,7 @@ export default function SeedreamEditor() {
             </div>
 
             {/* Chat panel */}
-            <div className="w-[340px] shrink-0 border-l border-[var(--border)] bg-white overflow-hidden">
+            <div className="w-full lg:w-[340px] shrink-0 border-t lg:border-t-0 lg:border-l border-[var(--border)] bg-white overflow-hidden h-[300px] lg:h-auto">
               <EditChat
                 messages={messages}
                 onSubmit={handleEditSubmit}
