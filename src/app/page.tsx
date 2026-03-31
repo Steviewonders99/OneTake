@@ -113,7 +113,7 @@ export default function Dashboard() {
             />
           </div>
           {/* Right: preview panel */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-white">
             {selectedId ? (
               <CampaignPreviewPanel requestId={selectedId} />
             ) : (
