@@ -33,6 +33,7 @@ import RefineModal from "@/components/RefineModal";
 import DesignElementPreview from "@/components/DesignElementPreview";
 import MockupPreview from "@/components/MockupPreview";
 import RecruiterDetailView from "@/components/RecruiterDetailView";
+import BriefExecutive from "@/components/BriefExecutive";
 import { extractField, formatLabel } from "@/lib/format";
 import PipelineNav from "@/components/PipelineNav";
 import type { PipelineStage } from "@/components/PipelineNav";
@@ -512,51 +513,25 @@ export default function IntakeDetailPage({
               </section>
             )}
 
-            {/* Creative Brief */}
-            {(summary || messagingStrategy) && (
+            {/* Creative Brief — Executive Format */}
+            {brief && briefData && (
               <LiveSection
                 id="section-brief"
                 title="Creative Brief"
-                subtitle="Campaign strategy and messaging"
+                subtitle="Campaign strategy, messaging, and cultural guardrails"
                 accentColor="#6B21A8"
                 visible={!!brief}
               >
                 <section ref={briefSectionRef}>
-                  {summary && (
-                    <p className="text-sm text-[var(--foreground)] leading-relaxed mb-4">
-                      {summary}
-                    </p>
-                  )}
-                  {messagingStrategy && messagingStrategy.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">
-                        Messaging Strategy
-                      </h3>
-                      <ul className="space-y-2">
-                        {messagingStrategy.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--ring)] shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {valueProps && valueProps.length > 0 && (
-                    <div>
-                      <h3 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">
-                        Value Propositions
-                      </h3>
-                      <ul className="space-y-2">
-                        {valueProps.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--oneforma-gradient-end)] shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <BriefExecutive
+                    briefData={briefData}
+                    channelResearch={brief.channel_research as Record<string, any> | null}
+                    designDirection={brief.design_direction as Record<string, any> | null}
+                    editable={role === "admin"}
+                    onFieldSave={(path, value) => {
+                      toast.success(`Updated ${path.split(".").pop()}`);
+                    }}
+                  />
                 </section>
               </LiveSection>
             )}
