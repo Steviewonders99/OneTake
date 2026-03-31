@@ -431,10 +431,9 @@ export default function IntakeDetailPage({
           <PipelineNav
             stages={[
               { key: "brief", label: "Brief", status: brief ? "passed" : request.status === "generating" ? "running" : "pending" },
-              { key: "research", label: "Research", status: brief?.brief_data?.cultural_research ? "passed" : brief ? "running" : "pending" },
-              { key: "actors", label: "Actors", status: actors.length > 0 ? "passed" : brief ? "running" : "pending" },
-              { key: "images", label: "Images", status: assets.filter(a => a.asset_type === "base_image").length > 0 ? "passed" : actors.length > 0 ? "running" : "pending" },
-              { key: "creatives", label: "Creatives", status: assets.filter(a => a.asset_type === "composed_creative").length > 0 ? "passed" : assets.filter(a => a.asset_type === "base_image").length > 0 ? "running" : "pending" },
+              { key: "images", label: "Images", status: assets.filter(a => a.asset_type === "base_image" || a.asset_type === "composed_creative").length > 0 ? "passed" : actors.length > 0 ? "running" : "pending" },
+              { key: "videos", label: "Videos", status: assets.filter(a => (a.asset_type as string) === "video").length > 0 ? "passed" : assets.filter(a => a.asset_type === "composed_creative").length > 0 ? "running" : "pending" },
+              { key: "details", label: "Details", status: "passed" },
             ]}
             onNavigate={(key) => document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: "smooth" })}
           />
@@ -581,22 +580,7 @@ export default function IntakeDetailPage({
               </section>
             )}
 
-            {/* Actor Profiles */}
-            {actors.length > 0 && (
-              <LiveSection
-                id="section-actors"
-                title="Actor Profiles"
-                subtitle={`${actors.length} character identities generated`}
-                accentColor="#E91E8C"
-                visible={actors.length > 0}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {actors.map((actor) => (
-                    <ActorCard key={actor.id} actor={actor} />
-                  ))}
-                </div>
-              </LiveSection>
-            )}
+            {/* Actor Profiles — shown inside Assets > Actors tab now */}
 
             {/* Evaluation Scores */}
             {evaluationData && Object.keys(evaluationData).length > 0 && (
@@ -625,6 +609,65 @@ export default function IntakeDetailPage({
                   onRefine={(asset) => setRefineAsset(asset)}
                   onRetry={(asset) => handleRetry(asset)}
                 />
+              </LiveSection>
+            )}
+
+            {/* Video Assets */}
+            {assets.filter(a => (a.asset_type as string) === "video").length > 0 && (
+              <LiveSection
+                id="section-videos"
+                title="Video Assets"
+                subtitle={`${assets.filter(a => (a.asset_type as string) === "video").length} videos generated`}
+                accentColor="#E91E8C"
+                visible={assets.filter(a => (a.asset_type as string) === "video").length > 0}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {assets.filter(a => (a.asset_type as string) === "video").map((asset) => {
+                    const content = (asset.content || {}) as Record<string, any>;
+                    return (
+                      <div key={asset.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white group">
+                        <div className="relative aspect-video bg-black">
+                          {asset.blob_url ? (
+                            <video
+                              src={asset.blob_url}
+                              controls
+                              className="absolute inset-0 w-full h-full object-contain"
+                              poster={content.thumbnail_url}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Loader2 size={24} className="text-white/30 animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-4 py-3 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[13px] font-medium text-[var(--foreground)]">
+                              {extractField(asset.content, "actor_name", "Video")}
+                            </p>
+                            {asset.evaluation_score && (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                asset.evaluation_score >= 0.85 ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"
+                              }`}>
+                                {(asset.evaluation_score * 100).toFixed(0)}%
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[var(--muted-foreground)]">
+                            {extractField(asset.content, "template", "").replace(/_/g, " ")}
+                            {asset.language ? ` · ${asset.language}` : ""}
+                            {content.estimated_duration_s ? ` · ${content.estimated_duration_s}s` : ""}
+                          </p>
+                          {content.script_hook && (
+                            <p className="text-[11px] text-[var(--foreground)] italic line-clamp-1">
+                              &ldquo;{content.script_hook}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </LiveSection>
             )}
 

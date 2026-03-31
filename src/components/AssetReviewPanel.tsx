@@ -413,45 +413,7 @@ export default function AssetReviewPanel({
             ]
           : []),
 
-        // Tab 5: Videos
-        ...(videos.length > 0
-          ? [
-              {
-                key: "videos",
-                label: "Videos",
-                count: videos.length,
-                content: (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {videos.map((asset) => (
-                      <div key={asset.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white">
-                        <div className="relative aspect-video bg-black">
-                          {asset.blob_url ? (
-                            <video
-                              src={asset.blob_url}
-                              controls
-                              className="absolute inset-0 w-full h-full object-contain"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Film size={24} className="text-white/30" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="px-3 py-2">
-                          <p className="text-[12px] font-medium text-[var(--foreground)]">
-                            {extractField(asset.content, "actor_name", "Video")}
-                          </p>
-                          <p className="text-[10px] text-[var(--muted-foreground)]">
-                            {extractField(asset.content, "template", "")} · {asset.language || ""}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ),
-              },
-            ]
-          : []),
+        // Videos moved to own parent LiveSection
       ]}
     />
   );
