@@ -6,7 +6,9 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import IntakeCard from "@/components/IntakeCard";
 import FilterTabs from "@/components/FilterTabs";
-import type { IntakeRequest, Status } from "@/lib/types";
+import CampaignList from "@/components/CampaignList";
+import CampaignPreviewPanel from "@/components/CampaignPreviewPanel";
+import type { IntakeRequest, Status, UserRole } from "@/lib/types";
 
 const statusTabs: { value: string; label: string }[] = [
   { value: "all", label: "All" },
@@ -41,6 +43,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.role) setRole(data.role as UserRole); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     async function loadRequests() {
@@ -76,6 +87,36 @@ export default function Dashboard() {
       ? requests
       : requests.filter((r) => r.status === (statusFilter as Status));
 
+  // Admin: two-panel Marketing Command Center
+  if (role === "admin") {
+    return (
+      <AppShell>
+        <div className="flex h-[calc(100vh-64px)]">
+          {/* Left: campaign list */}
+          <div className="w-[340px] flex-shrink-0">
+            <CampaignList
+              requests={requests}
+              loading={loading}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </div>
+          {/* Right: preview panel */}
+          <div className="flex-1 overflow-y-auto">
+            {selectedId ? (
+              <CampaignPreviewPanel requestId={selectedId} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#737373] text-sm">
+                Select a campaign to preview
+              </div>
+            )}
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Recruiter / viewer / loading role: card grid
   return (
     <AppShell>
       <div className="px-6 md:px-10 lg:px-12 xl:px-16 py-6 max-w-[1600px] mx-auto">
