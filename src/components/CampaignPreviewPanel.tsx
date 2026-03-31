@@ -159,22 +159,30 @@ export default function CampaignPreviewPanel({ requestId }: CampaignPreviewPanel
 
       {/* Stats grid */}
       <div className="grid grid-cols-4 gap-px bg-[var(--border)]">
-        {[
-          { label: "Creatives", value: composedAssets.length, icon: Layers, color: "#6B21A8" },
-          { label: "Characters", value: characters.length, icon: Users, color: "#E91E8C" },
-          { label: "Actors", value: actors.length, icon: Target, color: "#0693E3" },
-          { label: "Languages", value: languages.length, icon: Globe, color: "#22c55e" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white px-4 py-3 text-center">
-            <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">
-              {stat.value}
-            </div>
-            <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
-              <stat.icon size={10} style={{ color: stat.color }} />
-              {stat.label}
-            </div>
+        <div className="bg-white px-4 py-3 text-center">
+          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{composedAssets.length}</div>
+          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
+            <Layers size={10} className="text-[#6B21A8]" />Creatives
           </div>
-        ))}
+        </div>
+        <div className="bg-white px-4 py-3 text-center">
+          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{characters.length}</div>
+          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
+            <Users size={10} className="text-[#E91E8C]" />Characters
+          </div>
+        </div>
+        <div className="bg-white px-4 py-3 text-center">
+          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{actors.length}</div>
+          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
+            <Target size={10} className="text-[#0693E3]" />Actors
+          </div>
+        </div>
+        <div className="bg-white px-4 py-3 text-center">
+          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{languages.length}</div>
+          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
+            <Globe size={10} className="text-[#22c55e]" />Languages
+          </div>
+        </div>
       </div>
 
       {/* Content area */}
