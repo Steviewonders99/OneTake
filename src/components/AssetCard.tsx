@@ -79,20 +79,11 @@ export default function AssetCard({
         {customPreview ? (
           customPreview
         ) : imageUrl ? (
-          <ImageLoader
+          <img
             src={imageUrl}
             alt={title}
-            width="400"
-            height="400"
-            gridSize={12}
-            cellGap={4}
-            cellShape="square"
-            cellColor="#e5e5e5"
-            blinkSpeed={1500}
-            transitionDuration={500}
-            fadeOutDuration={400}
-            loadingDelay={800}
-            className="w-full h-full"
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <ImageIcon size={32} className="text-[var(--muted-foreground)] opacity-30" />

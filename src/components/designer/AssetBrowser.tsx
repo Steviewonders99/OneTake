@@ -169,20 +169,11 @@ export default function AssetBrowser({
                 {/* Image */}
                 <div className="aspect-square bg-[var(--muted)] relative">
                   {asset.blob_url ? (
-                    <ImageLoader
+                    <img
                       src={asset.blob_url}
                       alt={`${asset.platform} ${asset.format}`}
-                      width="200"
-                      height="200"
-                      gridSize={8}
-                      cellGap={2}
-                      cellShape="square"
-                      cellColor="#e5e5e5"
-                      blinkSpeed={1200}
-                      transitionDuration={400}
-                      fadeOutDuration={400}
-                      loadingDelay={400}
-                      className="w-full h-full"
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
