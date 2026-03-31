@@ -177,7 +177,7 @@ export default function AssetReviewPanel({
     [assets]
   );
   const videos = useMemo(
-    () => assets.filter((a) => a.asset_type === "video"),
+    () => assets.filter((a) => (a.asset_type as string) === "video"),
     [assets]
   );
 
