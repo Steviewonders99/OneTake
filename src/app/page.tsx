@@ -5,6 +5,7 @@ import { Plus, Inbox } from "lucide-react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import IntakeCard from "@/components/IntakeCard";
+import RecruiterIntakeCard from "@/components/RecruiterIntakeCard";
 import FilterTabs from "@/components/FilterTabs";
 import CampaignList from "@/components/CampaignList";
 import CampaignPreviewPanel from "@/components/CampaignPreviewPanel";
@@ -47,6 +48,11 @@ export default function Dashboard() {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    // Dev-only: ?role=recruiter override for UI testing
+    const params = new URLSearchParams(window.location.search);
+    const roleOverride = params.get("role") as UserRole | null;
+    if (roleOverride) { setRole(roleOverride); return; }
+
     fetch("/api/auth/me")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.role) setRole(data.role as UserRole); })
@@ -102,9 +108,9 @@ export default function Dashboard() {
   if (role === "admin") {
     return (
       <AppShell>
-        <div className="flex h-[calc(100vh-64px)]">
+        <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
           {/* Left: campaign list */}
-          <div className="w-[340px] flex-shrink-0">
+          <div className="w-full lg:w-[340px] flex-shrink-0 lg:h-full h-auto max-h-[50vh] lg:max-h-none overflow-y-auto border-b lg:border-b-0 border-[var(--border)]">
             <CampaignList
               requests={requests}
               loading={loading}
@@ -113,7 +119,7 @@ export default function Dashboard() {
             />
           </div>
           {/* Right: preview panel */}
-          <div className="flex-1 overflow-y-auto bg-white">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white min-h-0">
             {selectedId ? (
               <CampaignPreviewPanel requestId={selectedId} />
             ) : (
@@ -130,16 +136,16 @@ export default function Dashboard() {
   // Recruiter / viewer / loading role: card grid
   return (
     <AppShell>
-      <div className="px-6 md:px-10 lg:px-12 xl:px-16 py-6 max-w-[1600px] mx-auto">
+      <div className="px-4 pl-14 md:pl-14 lg:pl-12 xl:pl-16 md:pr-10 lg:pr-12 xl:pr-16 py-4 md:py-6 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-xl font-semibold text-[var(--foreground)]">Pipeline</h1>
             <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
               Manage recruitment intake requests
             </p>
           </div>
-          <Link href="/intake/new" className="btn-primary cursor-pointer">
+          <Link href="/intake/new" className="btn-primary cursor-pointer shrink-0 self-start sm:self-auto">
             <Plus size={16} />
             New Request
           </Link>
@@ -201,9 +207,13 @@ export default function Dashboard() {
         {/* Grid */}
         {!loading && !error && filtered.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((request) => (
-              <IntakeCard key={request.id} request={request} />
-            ))}
+            {filtered.map((request) =>
+              role === "recruiter" ? (
+                <RecruiterIntakeCard key={request.id} request={request} />
+              ) : (
+                <IntakeCard key={request.id} request={request} />
+              )
+            )}
           </div>
         )}
       </div>

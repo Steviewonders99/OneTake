@@ -97,15 +97,19 @@ export default function IntakeDetailPage({
       setLoading(true);
       setError(null);
 
-      // Fetch current user role (once — safe to re-fetch on reload)
-      try {
-        const meRes = await fetch("/api/auth/me");
-        if (meRes.ok) {
-          const me = await meRes.json();
-          setRole(me.role ?? null);
+      // Dev-only: ?role=recruiter override for UI testing
+      const params = new URLSearchParams(window.location.search);
+      const roleOverride = params.get("role") as UserRole | null;
+      if (roleOverride) { setRole(roleOverride); } else {
+        try {
+          const meRes = await fetch("/api/auth/me");
+          if (meRes.ok) {
+            const me = await meRes.json();
+            setRole(me.role ?? null);
+          }
+        } catch {
+          // Role defaults to null → full view renders as fallback
         }
-      } catch {
-        // Role defaults to null → full view renders as fallback
       }
 
       // Fetch request details
@@ -308,6 +312,7 @@ export default function IntakeDetailPage({
       <AppShell>
         <RecruiterDetailView
           request={request}
+          brief={brief}
           assets={assets}
           pipelineRuns={pipelineRuns}
         />
@@ -390,9 +395,9 @@ export default function IntakeDetailPage({
         <div className="flex-1 overflow-y-auto">
           {/* Status banner */}
           <div className="gradient-accent h-1" />
-          <div className="bg-white border-b border-[var(--border)] px-6 md:px-10 lg:px-12 xl:px-16 py-4">
-            <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-4 min-w-0">
+          <div className="bg-white border-b border-[var(--border)] px-4 pl-14 md:pl-14 lg:pl-12 xl:pl-16 md:pr-10 lg:pr-12 xl:pr-16 py-4">
+            <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <Link
                   href="/"
                   className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer transition-colors shrink-0"
@@ -413,7 +418,7 @@ export default function IntakeDetailPage({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
                 <StatusBadge status={request.status} />
                 <UrgencyBadge urgency={request.urgency} />
                 {hasOutputs && (
@@ -441,7 +446,7 @@ export default function IntakeDetailPage({
             onNavigate={(key) => document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: "smooth" })}
           />
 
-          <div className="px-6 md:px-10 lg:px-12 xl:px-16 py-6 max-w-[1600px] mx-auto space-y-6">
+          <div className="px-4 md:px-10 lg:px-12 xl:px-16 py-4 md:py-6 max-w-[1600px] mx-auto space-y-4 md:space-y-6">
             {/* Compute Job Status Banner */}
             {request.status === "generating" && (
               <div>
