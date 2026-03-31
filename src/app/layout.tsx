@@ -14,7 +14,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={{
+        signIn: {
+          start: {
+            title: "Welcome to OneForma",
+            subtitle: "Sign in to access Creative OS",
+          },
+        },
+        signUp: {
+          start: {
+            title: "Join OneForma",
+            subtitle: "Create your Creative OS account",
+          },
+        },
+      }}
+    >
       <html lang="en" className="h-full">
         <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] antialiased">
           {children}

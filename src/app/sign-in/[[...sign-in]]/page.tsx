@@ -96,14 +96,6 @@ export default function SignInPage() {
         {/* Clerk — clean white card on animated gradient */}
         <SignIn
           signUpUrl="/sign-up"
-          localization={{
-            signIn: {
-              start: {
-                title: "Welcome to OneForma",
-                subtitle: "Sign in to access Creative OS",
-              },
-            },
-          }}
           appearance={{
             layout: {
               socialButtonsPlacement: "top",
