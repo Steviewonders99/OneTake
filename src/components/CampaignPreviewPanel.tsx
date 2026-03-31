@@ -157,36 +157,26 @@ export default function CampaignPreviewPanel({ requestId }: CampaignPreviewPanel
         </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-px bg-[var(--border)]">
-        <div className="bg-white px-4 py-3 text-center">
-          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{composedAssets.length}</div>
-          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
-            <Layers size={10} className="text-[#6B21A8]" />Creatives
-          </div>
-        </div>
-        <div className="bg-white px-4 py-3 text-center">
-          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{characters.length}</div>
-          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
-            <Users size={10} className="text-[#E91E8C]" />Characters
-          </div>
-        </div>
-        <div className="bg-white px-4 py-3 text-center">
-          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{actors.length}</div>
-          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
-            <Target size={10} className="text-[#0693E3]" />Actors
-          </div>
-        </div>
-        <div className="bg-white px-4 py-3 text-center">
-          <div className="text-xl font-bold text-[var(--foreground)] tracking-tight">{languages.length}</div>
-          <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 flex items-center justify-center gap-1">
-            <Globe size={10} className="text-[#22c55e]" />Languages
-          </div>
-        </div>
-      </div>
+      {/* Stats — inline row, no tile borders */}
 
       {/* Content area */}
       <div className="p-6 space-y-5">
+
+        {/* Compact stats row */}
+        <div className="flex gap-4">
+          {[
+            { label: "Creatives", value: composedAssets.length, Icon: Layers, color: "#6B21A8" },
+            { label: "Characters", value: characters.length, Icon: Users, color: "#E91E8C" },
+            { label: "Actors", value: actors.length, Icon: Target, color: "#0693E3" },
+            { label: "Languages", value: languages.length, Icon: Globe, color: "#22c55e" },
+          ].filter(s => s.value > 0 || s.label === "Languages").map((s) => (
+            <div key={s.label} className="flex items-center gap-2">
+              <s.Icon size={13} style={{ color: s.color }} />
+              <span className="text-sm font-semibold text-[var(--foreground)]">{s.value}</span>
+              <span className="text-[11px] text-[var(--muted-foreground)]">{s.label}</span>
+            </div>
+          ))}
+        </div>
 
         {/* Quick info */}
         <div className="grid grid-cols-2 gap-4">
