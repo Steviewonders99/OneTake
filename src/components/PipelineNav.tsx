@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, Loader2, Circle, AlertCircle } from "lucide-react";
+import { motion, type Variants } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export interface PipelineStage {
   key: string;
@@ -14,45 +15,74 @@ interface PipelineNavProps {
   onNavigate?: (key: string) => void;
 }
 
-const statusConfig = {
-  pending: {
-    Icon: Circle,
-    color: "text-[var(--muted-foreground)]",
-    bg: "bg-transparent",
-    border: "border-[var(--border)]",
-    line: "bg-[var(--border)]",
+const shimmerVariants: Variants = {
+  initial: {
+    backgroundPosition: "0% 0",
   },
-  running: {
-    Icon: Loader2,
-    color: "text-[#0693E3]",
-    bg: "bg-[#0693E3]/5",
-    border: "border-[#0693E3]/30",
-    line: "bg-[#0693E3]/30",
-    animate: true,
-  },
-  passed: {
-    Icon: CheckCircle2,
-    color: "text-[#22c55e]",
-    bg: "bg-[#22c55e]/5",
-    border: "border-[#22c55e]/30",
-    line: "bg-[#22c55e]/40",
-  },
-  failed: {
-    Icon: AlertCircle,
-    color: "text-[#ef4444]",
-    bg: "bg-[#ef4444]/5",
-    border: "border-[#ef4444]/30",
-    line: "bg-[#ef4444]/30",
-  },
-  retrying: {
-    Icon: Loader2,
-    color: "text-[#f59e0b]",
-    bg: "bg-[#f59e0b]/5",
-    border: "border-[#f59e0b]/30",
-    line: "bg-[#f59e0b]/30",
-    animate: true,
+  animate: {
+    backgroundPosition: "200% 0",
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "linear",
+    },
   },
 };
+
+function NavLabel({
+  label,
+  status,
+  isActive,
+}: {
+  label: string;
+  status: PipelineStage["status"];
+  isActive: boolean;
+}) {
+  const isReady = status === "passed" || status === "failed";
+  const isLoading = status === "running" || status === "retrying";
+
+  // Ready: solid black text
+  if (isReady) {
+    return (
+      <span
+        className={cn(
+          "text-[13px] font-medium transition-colors",
+          isActive ? "text-[var(--foreground)]" : "text-[var(--foreground)]"
+        )}
+      >
+        {label}
+      </span>
+    );
+  }
+
+  // Loading: animated gradient shimmer
+  if (isLoading) {
+    return (
+      <motion.span
+        className="text-[13px] font-medium"
+        style={{
+          background: "linear-gradient(90deg, #a1a1aa, #d4d4d8, #a1a1aa)",
+          backgroundSize: "200% auto",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+        }}
+        variants={shimmerVariants}
+        initial="initial"
+        animate="animate"
+      >
+        {label}
+      </motion.span>
+    );
+  }
+
+  // Pending: light gray
+  return (
+    <span className="text-[13px] font-medium text-[#d4d4d8]">
+      {label}
+    </span>
+  );
+}
 
 export default function PipelineNav({
   stages,
@@ -60,36 +90,38 @@ export default function PipelineNav({
   onNavigate,
 }: PipelineNavProps) {
   return (
-    <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[var(--border)] px-6 py-3">
+    <div className="sticky top-0 z-30 bg-white border-b border-[var(--border)]">
       <div className="flex items-center gap-0 max-w-4xl mx-auto">
         {stages.map((stage, i) => {
-          const config = statusConfig[stage.status];
           const isActive = activeSection === stage.key;
-          const Icon = config.Icon;
+          const isReady = stage.status === "passed" || stage.status === "failed";
 
           return (
             <div key={stage.key} className="flex items-center flex-1 last:flex-none">
-              {/* Stage indicator */}
               <button
                 onClick={() => onNavigate?.(stage.key)}
-                className={`
-                  flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
-                  transition-all cursor-pointer whitespace-nowrap
-                  border ${config.border} ${config.bg}
-                  ${isActive ? "ring-2 ring-[#6B21A8]/20 shadow-sm" : ""}
-                  ${config.color}
-                `}
+                disabled={stage.status === "pending"}
+                className={cn(
+                  "relative px-4 py-3 cursor-pointer transition-all",
+                  stage.status === "pending" && "cursor-default",
+                  isActive && isReady && "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[var(--foreground)]"
+                )}
               >
-                <Icon
-                  size={14}
-                  className={`flex-shrink-0 ${"animate" in config && config.animate ? "animate-spin" : ""}`}
+                <NavLabel
+                  label={stage.label}
+                  status={stage.status}
+                  isActive={isActive}
                 />
-                <span className="hidden sm:inline">{stage.label}</span>
               </button>
 
-              {/* Connector line */}
+              {/* Connector dot */}
               {i < stages.length - 1 && (
-                <div className={`flex-1 h-[2px] mx-1 rounded-full ${config.line}`} />
+                <div
+                  className={cn(
+                    "w-1 h-1 rounded-full mx-1 flex-shrink-0",
+                    isReady ? "bg-[var(--foreground)]" : "bg-[#e5e5e5]"
+                  )}
+                />
               )}
             </div>
           );
