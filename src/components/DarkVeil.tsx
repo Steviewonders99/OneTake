@@ -66,11 +66,32 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
     fragColor=cppn_fn(uv,0.1*sin(0.3*uTime),0.1*sin(0.69*uTime),0.1*sin(0.44*uTime));
 }
 
+// OneForma brand palette remap
+vec3 oneformaPalette(float t) {
+    // 5-stop gradient: deep navy → indigo → purple → magenta → coral pink
+    vec3 c0 = vec3(0.051, 0.024, 0.141);  // #0D0624 deep navy
+    vec3 c1 = vec3(0.102, 0.063, 0.349);  // #1A1059 indigo
+    vec3 c2 = vec3(0.420, 0.129, 0.659);  // #6B21A8 purple
+    vec3 c3 = vec3(0.914, 0.118, 0.553);  // #E91E8C magenta/hot pink
+    vec3 c4 = vec3(1.000, 0.420, 0.710);  // #FF6BB5 coral pink
+
+    if (t < 0.25) return mix(c0, c1, t / 0.25);
+    if (t < 0.5)  return mix(c1, c2, (t - 0.25) / 0.25);
+    if (t < 0.75) return mix(c2, c3, (t - 0.5) / 0.25);
+    return mix(c3, c4, (t - 0.75) / 0.25);
+}
+
 void main(){
     vec4 col;mainImage(col,gl_FragCoord.xy);
-    col.rgb=hueShiftRGB(col.rgb,uHueShift);
+    // Use luminance to index into the OneForma brand palette
+    float lum = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+    // Apply hue shift to offset the palette sampling
+    float shifted = fract(lum + uHueShift / 360.0);
+    col.rgb = oneformaPalette(shifted);
+    // Subtle scanlines
     float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
+    // Noise grain
     col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
     gl_FragColor=vec4(clamp(col.rgb,0.0,1.0),1.0);
 }
