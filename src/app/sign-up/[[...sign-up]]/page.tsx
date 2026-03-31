@@ -91,6 +91,15 @@ export default function SignUpPage() {
         </div>
 
         <SignUp
+          signInUrl="/sign-in"
+          localization={{
+            signUp: {
+              start: {
+                title: "Join OneForma",
+                subtitle: "Create your Creative OS account",
+              },
+            },
+          }}
           appearance={{
             layout: {
               socialButtonsPlacement: "top",
