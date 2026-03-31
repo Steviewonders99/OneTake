@@ -799,39 +799,31 @@ export default function IntakeDetailPage({
               </LiveSection>
             )}
 
-            {/* Action bar */}
-            {(request.status === "review" || request.status === "generating") && (
-              <div className="card p-4 flex items-center justify-between sticky bottom-4">
-                <div className="flex items-center gap-3 text-sm text-[var(--muted-foreground)]">
-                  <BarChart3 size={16} />
-                  <span>
-                    Status: <span className="font-semibold text-[var(--foreground)] capitalize">{request.status}</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowChangesModal(true)}
-                    disabled={!!actionLoading}
-                    className="btn-warning cursor-pointer"
-                  >
-                    <MessageSquare size={14} />
-                    Request Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleApprove}
-                    disabled={!!actionLoading}
-                    className="btn-success cursor-pointer"
-                  >
-                    {actionLoading === "approve" ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <CheckCircle2 size={14} />
-                    )}
-                    Approve
-                  </button>
-                </div>
+            {/* Action bar — only for review status, not generating */}
+            {request.status === "review" && (
+              <div className="flex items-center justify-end gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChangesModal(true)}
+                  disabled={!!actionLoading}
+                  className="btn-warning cursor-pointer"
+                >
+                  <MessageSquare size={14} />
+                  Request Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={!!actionLoading}
+                  className="btn-success cursor-pointer"
+                >
+                  {actionLoading === "approve" ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <CheckCircle2 size={14} />
+                  )}
+                  Approve
+                </button>
               </div>
             )}
 
