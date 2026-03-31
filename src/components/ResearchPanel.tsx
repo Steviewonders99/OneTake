@@ -28,6 +28,8 @@ function ResearchDimension({
   title,
   data,
   color = "#6B21A8",
+  editable = false,
+  onSave,
 }: {
   icon: React.ComponentType<Record<string, any>>;
   title: string;
