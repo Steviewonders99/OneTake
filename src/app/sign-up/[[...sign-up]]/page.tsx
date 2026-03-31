@@ -3,9 +3,11 @@
 import { SignUp } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 
-const DarkVeil = dynamic(() => import("@/components/DarkVeil"), {
+const Grainient = dynamic(() => import("@/components/Grainient"), {
   ssr: false,
-  loading: () => <div style={{ position: "fixed", inset: 0, background: "#0D0624" }} />,
+  loading: () => (
+    <div style={{ position: "fixed", inset: 0, background: "#1A1059" }} />
+  ),
 });
 
 export default function SignUpPage() {
@@ -16,20 +18,34 @@ export default function SignUpPage() {
           position: "fixed",
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
           width: "100vw",
           height: "100vh",
           zIndex: 0,
-          background: "#0D0624",
         }}
       >
-        <DarkVeil
-          hueShift={0}
-          noiseIntensity={0.012}
-          speed={0.2}
-          warpAmount={0.2}
-          resolutionScale={0.5}
+        <Grainient
+          color1="#E91E8C"
+          color2="#3D1059"
+          color3="#6B21A8"
+          timeSpeed={0.15}
+          colorBalance={0}
+          warpStrength={1}
+          warpFrequency={4}
+          warpSpeed={1.5}
+          warpAmplitude={60}
+          blendAngle={15}
+          blendSoftness={0.08}
+          rotationAmount={400}
+          noiseScale={2}
+          grainAmount={0.05}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.3}
+          gamma={1}
+          saturation={1.1}
+          centerX={0}
+          centerY={0}
+          zoom={0.85}
         />
       </div>
 
@@ -65,7 +81,7 @@ export default function SignUpPage() {
           <p
             style={{
               fontSize: "13px",
-              color: "rgba(255,255,255,0.45)",
+              color: "rgba(255,255,255,0.5)",
               marginTop: "4px",
               fontFamily: "-apple-system, 'Segoe UI', Roboto, sans-serif",
             }}
@@ -99,7 +115,8 @@ export default function SignUpPage() {
                 "border border-[#E5E5E5] rounded-xl h-11 hover:bg-[#F5F5F5] transition-colors",
               formFieldInput:
                 "rounded-[10px] border-[#E5E5E5] h-11 focus:border-[#6B21A8] focus:ring-1 focus:ring-[#6B21A8]/20",
-              footerActionLink: "text-[#6B21A8] hover:text-[#9B51E0] font-medium",
+              footerActionLink:
+                "text-[#6B21A8] hover:text-[#9B51E0] font-medium",
             },
           }}
         />
@@ -107,7 +124,7 @@ export default function SignUpPage() {
         <p
           style={{
             fontSize: "11px",
-            color: "rgba(255,255,255,0.2)",
+            color: "rgba(255,255,255,0.25)",
             fontFamily: "-apple-system, 'Segoe UI', Roboto, sans-serif",
           }}
         >
