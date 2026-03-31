@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+.darkveil-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 :root {
   /* OneForma Brand Colors */
   --background: #ffffff;
