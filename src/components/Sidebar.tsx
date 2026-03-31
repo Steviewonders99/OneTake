@@ -177,6 +177,7 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
+          group/sidebar
           fixed top-0 left-0 z-50 h-full ${sidebarWidth} bg-white border-r border-[var(--border)]
           flex flex-col transition-all duration-200 ease-out
           lg:translate-x-0 lg:static lg:z-auto
@@ -187,44 +188,42 @@ export default function Sidebar() {
         <div className="px-3 py-4 border-b border-[var(--border)]">
           <div className="flex items-center justify-between">
             {!collapsed ? (
-              <Link
-                href="/"
-                className="cursor-pointer flex-1"
-                onClick={() => setMobileOpen(false)}
-              >
-                <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
-                  Nova
-                </span>
-                <span className="block text-[10px] font-medium text-[var(--muted-foreground)] mt-0.5">
-                  OneForma Creative Intelligence
-                </span>
-              </Link>
+              <>
+                <Link
+                  href="/"
+                  className="cursor-pointer flex-1"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
+                    Nova
+                  </span>
+                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)] mt-0.5">
+                    OneForma Creative Intelligence
+                  </span>
+                </Link>
+                {/* Collapse — hidden N that appears on hover */}
+                <button
+                  onClick={toggleCollapsed}
+                  className="hidden lg:flex w-7 h-7 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] cursor-pointer transition-all opacity-0 group-hover/sidebar:opacity-100"
+                  aria-label="Collapse sidebar"
+                  title="Collapse sidebar"
+                >
+                  <PanelLeftClose size={14} />
+                </button>
+              </>
             ) : (
-              <Link
-                href="/"
-                className="cursor-pointer mx-auto"
-                onClick={() => setMobileOpen(false)}
-                title="Nova — OneForma"
+              /* Collapsed: N is the expand button */
+              <button
+                onClick={toggleCollapsed}
+                className="cursor-pointer mx-auto w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--muted)] transition-colors"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
               >
                 <span className="text-[16px] font-bold text-[var(--foreground)]">
                   N
                 </span>
-              </Link>
+              </button>
             )}
-
-            {/* Collapse toggle (desktop only) */}
-            <button
-              onClick={toggleCollapsed}
-              className="hidden lg:flex p-1 rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] cursor-pointer transition-colors"
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <PanelLeftOpen size={16} />
-              ) : (
-                <PanelLeftClose size={16} />
-              )}
-            </button>
 
             {/* Mobile close */}
             <button
