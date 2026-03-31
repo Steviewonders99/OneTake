@@ -85,7 +85,7 @@ export default function SignUpPage() {
               rootBox: "w-full max-w-[400px]",
               card: "rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/20",
               formButtonPrimary:
-                "bg-[#32373C] hover:bg-[#1A1A1A] rounded-full font-semibold text-sm h-11",
+                "bg-gradient-to-r from-[#0693E3] via-[#6B21A8] to-[#9B51E0] hover:from-[#0580CC] hover:via-[#5B1B96] hover:to-[#8B41D0] rounded-full font-semibold text-sm h-11 text-white shadow-lg shadow-purple-500/25 transition-all border-0",
               socialButtonsBlockButton:
                 "border border-[#E5E5E5] rounded-xl h-11 hover:bg-[#F5F5F5] transition-colors",
               formFieldInput:
