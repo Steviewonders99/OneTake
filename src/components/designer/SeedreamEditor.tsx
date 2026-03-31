@@ -131,13 +131,48 @@ export default function SeedreamEditor() {
       setIsGenerating(true);
 
       try {
-        const res = await fetch("/api/designer/edit", {
+        // Step 1: Refine the prompt with best practices
+        let refinedPrompt = prompt;
+        try {
+          const refineRes = await fetch("/api/revise/refine-prompt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_prompt: prompt,
+              revision_type: "image",
+              context: {
+                platform: selectedAsset.platform,
+                actor_name: (selectedAsset.content as Record<string, any>)?.actor_name,
+                format: selectedAsset.format,
+              },
+            }),
+          });
+          if (refineRes.ok) {
+            const refineData = await refineRes.json();
+            if (refineData.refined_prompt && refineData.was_refined) {
+              refinedPrompt = refineData.refined_prompt;
+              // Show the refined prompt in the chat
+              const refineMessage: EditMessage = {
+                id: `refine-${Date.now()}`,
+                role: "system",
+                text: `Optimized prompt: "${refinedPrompt}"`,
+                timestamp: new Date().toISOString(),
+              };
+              setMessages((prev) => [...prev, refineMessage]);
+            }
+          }
+        } catch {
+          // Fallback: use original prompt
+        }
+
+        // Step 2: Call Seedream 4.5 Edit via /api/revise
+        const res = await fetch("/api/revise", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             asset_id: selectedAsset.id,
-            edit_prompt: prompt,
-            image_url: editedImageUrl || selectedAsset.blob_url,
+            revision_type: "image",
+            prompt: refinedPrompt,
           }),
         });
 
@@ -148,20 +183,13 @@ export default function SeedreamEditor() {
 
         const data = await res.json();
 
-        // Extract the result image URL from the response
+        // Extract the result image URL
         let resultImageUrl: string | undefined;
-        if (data.result?.choices?.[0]?.message?.content) {
-          const content = data.result.choices[0].message.content;
-          if (Array.isArray(content)) {
-            const imageContent = content.find(
-              (c: { type: string; image_url?: { url: string } }) => c.type === "image_url"
-            );
-            if (imageContent?.image_url?.url) {
-              resultImageUrl = imageContent.image_url.url;
-            }
-          } else if (typeof content === "string" && content.startsWith("http")) {
-            resultImageUrl = content;
-          }
+        if (data.edited_url) {
+          resultImageUrl = data.edited_url;
+        } else if (data.status === "processing") {
+          // Async — would need polling, for now show message
+          resultImageUrl = undefined;
         }
 
         if (resultImageUrl) {
@@ -172,8 +200,10 @@ export default function SeedreamEditor() {
           id: `system-${Date.now()}`,
           role: "system",
           text: resultImageUrl
-            ? "Edit applied successfully. Review the result in the comparison view."
-            : "Edit request processed. The model response did not include an image — try a different prompt.",
+            ? "Edit applied via Seedream 4.5. Review the result in the comparison view."
+            : data.status === "processing"
+              ? "Image is being processed by Seedream 4.5. This may take a few seconds..."
+              : "Edit request processed. Try a more specific prompt.",
           imageUrl: resultImageUrl,
           timestamp: new Date().toISOString(),
         };
