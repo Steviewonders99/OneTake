@@ -30,8 +30,10 @@ export default function RevisionModal({
   onRevisionComplete,
 }: RevisionModalProps) {
   const [prompt, setPrompt] = useState("");
+  const [refinedPrompt, setRefinedPrompt] = useState<string | null>(null);
   const [revisionType, setRevisionType] = useState<RevisionType>("image");
   const [loading, setLoading] = useState(false);
+  const [refining, setRefining] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,8 +80,46 @@ export default function RevisionModal({
     ],
   };
 
-  async function handleSubmit() {
+  // Step 1: Refine the prompt using best practices
+  async function handleRefine() {
     if (!prompt.trim() || !asset) return;
+
+    setRefining(true);
+    setError(null);
+
+    try {
+      const content = (asset.content || {}) as Record<string, any>;
+      const res = await fetch("/api/revise/refine-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_prompt: prompt.trim(),
+          revision_type: revisionType,
+          context: {
+            platform: asset.platform,
+            actor_name: content.actor_name,
+            headline: content.overlay_headline,
+            format: asset.format,
+            asset_type: asset.asset_type,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      setRefinedPrompt(data.refined_prompt || prompt.trim());
+    } catch {
+      // Fallback: use original prompt
+      setRefinedPrompt(prompt.trim());
+    } finally {
+      setRefining(false);
+    }
+  }
+
+  // Step 2: Execute the revision with the refined prompt
+  async function handleExecute() {
+    if (!asset) return;
+    const finalPrompt = refinedPrompt || prompt.trim();
+    if (!finalPrompt) return;
 
     setLoading(true);
     setError(null);
@@ -92,7 +132,7 @@ export default function RevisionModal({
         body: JSON.stringify({
           asset_id: asset.id,
           revision_type: revisionType,
-          prompt: prompt.trim(),
+          prompt: finalPrompt,
         }),
       });
 
@@ -118,6 +158,45 @@ export default function RevisionModal({
       toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Combined: refine then execute
+  async function handleSubmit() {
+    if (!prompt.trim() || !asset) return;
+
+    // Step 1: Refine
+    setRefining(true);
+    setError(null);
+
+    try {
+      const content = (asset.content || {}) as Record<string, any>;
+      const refineRes = await fetch("/api/revise/refine-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_prompt: prompt.trim(),
+          revision_type: revisionType,
+          context: {
+            platform: asset.platform,
+            actor_name: content.actor_name,
+            headline: content.overlay_headline,
+            format: asset.format,
+          },
+        }),
+      });
+
+      const refineData = await refineRes.json();
+      const refined = refineData.refined_prompt || prompt.trim();
+      setRefinedPrompt(refined);
+      setRefining(false);
+
+      // Show the refined prompt — user can edit or confirm
+      // Don't auto-execute, let them review first
+
+    } catch {
+      setRefinedPrompt(prompt.trim());
+      setRefining(false);
     }
   }
 
@@ -225,7 +304,7 @@ export default function RevisionModal({
           </span>
           <textarea
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => { setPrompt(e.target.value); setRefinedPrompt(null); }}
             placeholder={
               revisionType === "image"
                 ? "Describe what to change in the image..."
@@ -233,8 +312,51 @@ export default function RevisionModal({
                   ? "Describe how the copy should change..."
                   : "Describe what to improve in the creative..."
             }
-            className="w-full h-32 bg-[var(--muted)] border border-[var(--border)] rounded-xl p-3 text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] resize-none focus:outline-none focus:border-[#6B21A8]/30 focus:ring-1 focus:ring-[#6B21A8]/10"
+            className="w-full h-24 bg-[var(--muted)] border border-[var(--border)] rounded-xl p-3 text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] resize-none focus:outline-none focus:border-[#6B21A8]/30 focus:ring-1 focus:ring-[#6B21A8]/10"
           />
+
+          {/* Refined Prompt Preview */}
+          {refining && (
+            <div className="mt-3 p-3 bg-[#6B21A8]/5 border border-[#6B21A8]/10 rounded-xl flex items-center gap-2">
+              <Loader2 size={14} className="text-[#6B21A8] animate-spin" />
+              <span className="text-[12px] text-[#6B21A8]">Optimizing your prompt with best practices...</span>
+            </div>
+          )}
+
+          {refinedPrompt && !refining && !result && (
+            <div className="mt-3 p-3 bg-[#6B21A8]/5 border border-[#6B21A8]/15 rounded-xl">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Wand2 size={12} className="text-[#6B21A8]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B21A8]">Optimized Prompt</span>
+                </div>
+                <button
+                  onClick={() => setRefinedPrompt(null)}
+                  className="text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer"
+                >
+                  Edit
+                </button>
+              </div>
+              <p className="text-[12px] text-[var(--foreground)] leading-relaxed">{refinedPrompt}</p>
+              <button
+                onClick={handleExecute}
+                disabled={loading}
+                className="mt-2 px-4 py-1.5 bg-gradient-to-r from-[#0693E3] via-[#6B21A8] to-[#9B51E0] text-white rounded-full text-[11px] font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-md shadow-purple-500/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={12} />
+                    Confirm & Apply
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Result */}
           {result && (
@@ -281,23 +403,43 @@ export default function RevisionModal({
             >
               Cancel
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!prompt.trim() || loading}
-              className="px-4 py-2 bg-gradient-to-r from-[#0693E3] via-[#6B21A8] to-[#9B51E0] text-white rounded-full text-[12px] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/20"
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={13} className="animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Wand2 size={13} />
-                  Apply Revision
-                </>
-              )}
-            </button>
+            {!refinedPrompt ? (
+              <button
+                onClick={handleSubmit}
+                disabled={!prompt.trim() || refining}
+                className="px-4 py-2 bg-gradient-to-r from-[#0693E3] via-[#6B21A8] to-[#9B51E0] text-white rounded-full text-[12px] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/20"
+              >
+                {refining ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    Optimizing...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 size={13} />
+                    Optimize & Preview
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={handleExecute}
+                disabled={loading}
+                className="px-4 py-2 bg-[#22c55e] text-white rounded-full text-[12px] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-green-500/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={13} />
+                    Apply Revision
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
