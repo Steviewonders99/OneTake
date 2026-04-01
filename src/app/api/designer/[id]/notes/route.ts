@@ -18,29 +18,26 @@ export async function POST(
     const body = await request.json();
     const { asset_id, note_text, token } = body;
 
-    if (!token) {
-      return Response.json(
-        { error: 'Magic link token is required' },
-        { status: 401 }
-      );
+    // Auth: accept either magic link token OR Clerk session
+    let authorized = false;
+
+    if (token) {
+      const magicLink = await validateMagicLink(token);
+      if (magicLink && magicLink.request_id === id) {
+        authorized = true;
+      }
     }
 
-    // Validate magic link
-    const magicLink = await validateMagicLink(token);
-
-    if (!magicLink) {
-      return Response.json(
-        { error: 'Invalid or expired magic link' },
-        { status: 401 }
-      );
+    if (!authorized) {
+      try {
+        const { auth } = await import('@clerk/nextjs/server');
+        const { userId } = await auth();
+        if (userId) authorized = true;
+      } catch {}
     }
 
-    // Ensure the magic link matches this request
-    if (magicLink.request_id !== id) {
-      return Response.json(
-        { error: 'Token does not match this request' },
-        { status: 401 }
-      );
+    if (!authorized) {
+      return Response.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     if (!asset_id || !note_text) {
@@ -88,28 +85,26 @@ export async function GET(
     const url = new URL(request.url);
     const token = url.searchParams.get('token');
 
-    if (!token) {
-      return Response.json(
-        { error: 'Magic link token is required' },
-        { status: 401 }
-      );
+    // Auth: accept either magic link token OR Clerk session
+    let authorized = false;
+
+    if (token) {
+      const magicLink = await validateMagicLink(token);
+      if (magicLink && magicLink.request_id === id) {
+        authorized = true;
+      }
     }
 
-    // Validate magic link
-    const magicLink = await validateMagicLink(token);
-
-    if (!magicLink) {
-      return Response.json(
-        { error: 'Invalid or expired magic link' },
-        { status: 401 }
-      );
+    if (!authorized) {
+      try {
+        const { auth } = await import('@clerk/nextjs/server');
+        const { userId } = await auth();
+        if (userId) authorized = true;
+      } catch {}
     }
 
-    if (magicLink.request_id !== id) {
-      return Response.json(
-        { error: 'Token does not match this request' },
-        { status: 401 }
-      );
+    if (!authorized) {
+      return Response.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const sql = getDb();
