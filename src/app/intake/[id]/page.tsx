@@ -14,7 +14,7 @@ import {
   Loader2,
   RefreshCw,
   PanelRightOpen,
-  Play,
+  Clock,
   Copy,
   AlertCircle,
 } from "lucide-react";
@@ -491,20 +491,20 @@ export default function IntakeDetailPage({
               </div>
             )}
 
-            {/* Start Pipeline CTA for drafts */}
+            {/* Draft status — pipeline auto-triggers on submit, retry if stuck */}
             {request.status === "draft" && (
               <section className="card p-6 text-center">
-                <Play size={28} className="mx-auto text-[var(--muted-foreground)] mb-3" />
+                <Clock size={28} className="mx-auto text-[var(--muted-foreground)] mb-3" />
                 <h2 className="text-base font-semibold text-[var(--foreground)] mb-2">
-                  Ready to Generate
+                  Queued for Generation
                 </h2>
                 <p className="text-sm text-[var(--muted-foreground)] mb-4 max-w-md mx-auto">
-                  This request is in draft status. Start the AI pipeline to generate creative briefs, channel research, and ad creatives.
+                  This request will be automatically picked up by the pipeline. If it appears stuck, you can retry manually.
                 </p>
                 <button
                   onClick={handleStartPipeline}
                   disabled={actionLoading === "pipeline"}
-                  className="btn-primary cursor-pointer"
+                  className="btn-secondary cursor-pointer"
                 >
                   {actionLoading === "pipeline" ? (
                     <>
@@ -513,8 +513,8 @@ export default function IntakeDetailPage({
                     </>
                   ) : (
                     <>
-                      <Play size={16} />
-                      Start Generation Pipeline
+                      <RefreshCw size={16} />
+                      Retry Pipeline
                     </>
                   )}
                 </button>
