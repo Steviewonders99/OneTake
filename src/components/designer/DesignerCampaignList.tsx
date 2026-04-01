@@ -36,9 +36,21 @@ function formatDate(iso: string) {
   });
 }
 
+// ── Props ──────────────────────────────────────────────────────
+
+interface DesignerCampaignListProps {
+  variant?: "full" | "sidebar";
+  selectedId?: string;
+  onSelect?: (id: string) => void;
+}
+
 // ── Component ──────────────────────────────────────────────────
 
-export default function DesignerCampaignList() {
+export default function DesignerCampaignList({
+  variant = "full",
+  selectedId,
+  onSelect,
+}: DesignerCampaignListProps) {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<IntakeRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,12 +74,108 @@ export default function DesignerCampaignList() {
     load();
   }, []);
 
-  const filtered = campaigns.filter((c) =>
-    c.title.toLowerCase().includes(search.toLowerCase()) ||
-    c.task_type.toLowerCase().includes(search.toLowerCase())
+  const filtered = campaigns.filter(
+    (c) =>
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.task_type.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ── Loading ──────────────────────────────────────────────────
+  // ── Sidebar variant ────────────────────────────────────────
+
+  if (variant === "sidebar") {
+    if (loading) {
+      return (
+        <div className="flex flex-col h-full bg-white items-center justify-center">
+          <Loader2 size={20} className="text-[var(--muted-foreground)] animate-spin mb-2" />
+          <p className="text-xs text-[var(--muted-foreground)]">Loading...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col h-full bg-white items-center justify-center px-4 text-center">
+          <AlertCircle size={20} className="text-[var(--muted-foreground)] mb-2" />
+          <p className="text-xs text-[var(--foreground)] font-medium mb-1">Unable to load</p>
+          <p className="text-xs text-[var(--muted-foreground)]">{error}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col h-full bg-white">
+        {/* Sticky header — search + count */}
+        <div className="px-4 pt-4 pb-3 border-b border-[var(--border)] sticky top-0 bg-white z-10">
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
+            />
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-[10px] border border-[var(--border)] bg-white text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--oneforma-charcoal)]/20"
+            />
+          </div>
+          <p className="text-[10px] text-[var(--muted-foreground)] mt-2">
+            {filtered.length} campaign{filtered.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Campaign list */}
+        <div className="flex-1 overflow-y-auto">
+          {filtered.length > 0 ? (
+            filtered.map((campaign) => {
+              const isSelected = campaign.id === selectedId;
+              return (
+                <button
+                  key={campaign.id}
+                  onClick={() => onSelect?.(campaign.id)}
+                  className={`w-full text-left p-3 transition-all cursor-pointer border-l-2 ${
+                    isSelected
+                      ? "border-[var(--foreground)] bg-[var(--muted)]"
+                      : "border-transparent hover:bg-[var(--muted)]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`badge ${statusBadge(campaign.status)}`}>
+                      {campaign.status}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-[var(--foreground)] line-clamp-1 mb-0.5">
+                    {campaign.title}
+                  </p>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">
+                    {campaign.task_type.replace(/_/g, " ")}
+                  </p>
+                  <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                    {formatDate(campaign.created_at)}
+                  </p>
+                </button>
+              );
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+              <Palette size={24} className="text-[var(--muted-foreground)] mb-2 opacity-40" />
+              <p className="text-xs text-[var(--muted-foreground)]">
+                {search ? "No matches" : "No campaigns yet"}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-2 border-t border-[var(--border)] text-[10px] text-[var(--muted-foreground)]">
+          {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""} total
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full variant (original behavior) ──────────────────────
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
@@ -77,7 +185,6 @@ export default function DesignerCampaignList() {
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
