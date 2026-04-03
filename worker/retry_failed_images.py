@@ -25,7 +25,7 @@ VQA_THRESHOLD = 0.75
 async def main():
     import httpx
     from neon_client import _get_pool
-    from ai.gemini_edit import edit_image_gemini
+    from ai.flux_edit import edit_image_flux
     from ai.local_vlm import analyze_image
     from ai.deglosser import degloss
     from blob_uploader import upload_to_blob
@@ -66,27 +66,28 @@ async def main():
                 resp.raise_for_status()
                 original_bytes = resp.content
 
-            # Run Gemini Edit to fix issues (best at artifact removal)
+            # Run Flux.2 Pro Edit ($0.03/edit, best character preservation)
             edit_prompt = (
-                "Edit this photo: Remove ALL text overlays, watermarks, brand logos, "
-                "Chinese characters, stock photo IDs, hashtags, gibberish text on clothing "
-                "or accessories, and any social media UI elements. "
-                "Keep the person, pose, and background the same. "
-                "Output only the cleaned photo."
+                "Remove all text overlays, watermarks, captions, logos, Chinese characters, "
+                "and any gibberish text. Keep the person, pose, and background identical. Clean photo."
             )
-            # Convert AVIF to JPEG for Gemini
+            # Convert AVIF to JPEG for API
             from PIL import Image
             import io
             try:
                 img = Image.open(io.BytesIO(original_bytes))
+                img = img.convert("RGB")
+                img = img.resize((1024, 1024), Image.LANCZOS)
                 jpg_buf = io.BytesIO()
-                img.save(jpg_buf, format="JPEG", quality=90)
+                img.save(jpg_buf, format="JPEG", quality=85)
                 input_bytes = jpg_buf.getvalue()
                 input_mime = "image/jpeg"
-            except Exception:
+                logger.info("Converted to JPEG: %d bytes", len(input_bytes))
+            except Exception as conv_err:
+                logger.warning("AVIF→JPEG conversion failed: %s", conv_err)
                 input_bytes = original_bytes
                 input_mime = "image/png"
-            edited_bytes = await edit_image_gemini(input_bytes, edit_prompt, mime_type=input_mime)
+            edited_bytes = await edit_image_flux(input_bytes, edit_prompt, mime_type=input_mime)
 
             if not edited_bytes or len(edited_bytes) < 10000:
                 logger.warning("Seedream Edit returned empty/tiny result for %s — skipping", actor_name)

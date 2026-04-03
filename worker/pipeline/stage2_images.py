@@ -445,9 +445,9 @@ async def _generate_validated_image(
         edit_succeeded = False
         if image_bytes and len(image_bytes) > 10000:
             try:
-                from ai.gemini_edit import edit_image_gemini
-                edit_prompt = f"Edit this photo: {issues_text}. Remove any watermarks, text overlays, gibberish text, brand names, Chinese characters, or social media UI elements. Keep the person identical. Output the cleaned photo."
-                edited_bytes = await edit_image_gemini(image_bytes, edit_prompt)
+                from ai.flux_edit import edit_image_flux
+                edit_prompt = f"Remove these issues: {issues_text}. Remove any watermarks, text overlays, gibberish text, brand names, Chinese characters. Keep the person and scene identical. Clean photo."
+                edited_bytes = await edit_image_flux(image_bytes, edit_prompt)
                 if edited_bytes and len(edited_bytes) > 10000:
                     # Re-run VQA on the edited image immediately
                     tmp_edit = os.path.join(tempfile.gettempdir(), f"centric_edit_{uuid.uuid4().hex}.png")
