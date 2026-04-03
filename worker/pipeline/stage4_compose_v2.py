@@ -118,10 +118,16 @@ async def run_stage4(context: dict) -> dict:
     }
 
     def _resolve_channels(channel_list: list[str]) -> list[str]:
-        """Convert human-readable channel names to platform keys."""
+        """Convert human-readable channel names to platform keys.
+
+        Handles channels with stats appended like "WhatsApp (98.3% penetração)"
+        by stripping everything after the first parenthesis.
+        """
         resolved = []
         for ch in channel_list:
-            key = CHANNEL_TO_PLATFORM.get(ch.lower().strip(), ch.lower().strip().replace(" ", "_"))
+            # Strip stats/annotations: "WhatsApp (98.3% penetração)" → "whatsapp"
+            clean = ch.split("(")[0].lower().strip()
+            key = CHANNEL_TO_PLATFORM.get(clean, clean.replace(" ", "_"))
             if key not in resolved:
                 resolved.append(key)
         return resolved
