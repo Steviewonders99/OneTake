@@ -441,13 +441,13 @@ async def _generate_validated_image(
         issues = qa_data.get("issues", [])
         issues_text = "; ".join(issues) if issues else "improve realism and remove any artifacts"
 
-        # Try Seedream Edit first (fix in-place, faster + cheaper than full regen)
+        # Try Gemini Edit first (fix in-place — best at artifact removal without character drift)
         edit_succeeded = False
         if image_bytes and len(image_bytes) > 10000:
             try:
-                from ai.seedream import edit_image
-                edit_prompt = f"Fix these issues: {issues_text}. Remove any watermarks, text overlays, gibberish text, brand names, or social media UI elements. Make the image look like a natural iPhone photo."
-                edited_bytes = await edit_image(image_bytes, edit_prompt)
+                from ai.gemini_edit import edit_image_gemini
+                edit_prompt = f"Edit this photo: {issues_text}. Remove any watermarks, text overlays, gibberish text, brand names, Chinese characters, or social media UI elements. Keep the person identical. Output the cleaned photo."
+                edited_bytes = await edit_image_gemini(image_bytes, edit_prompt)
                 if edited_bytes and len(edited_bytes) > 10000:
                     # Re-run VQA on the edited image immediately
                     tmp_edit = os.path.join(tempfile.gettempdir(), f"centric_edit_{uuid.uuid4().hex}.png")
