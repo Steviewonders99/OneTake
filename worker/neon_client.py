@@ -248,10 +248,10 @@ async def save_brief(request_id: str, data: dict[str, Any]) -> str:
             RETURNING id
             """,
             request_id,
-            json.dumps(data.get("brief_data", {})),
-            json.dumps(data.get("design_direction", {})),
+            json.dumps(data.get("brief_data", {}), default=str),
+            json.dumps(data.get("design_direction", {}), default=str),
             data.get("evaluation_score", 0.0),
-            json.dumps(data.get("evaluation_data", {})),
+            json.dumps(data.get("evaluation_data", {}), default=str),
             data.get("content_languages", []),  # TEXT[] — pass list directly, not JSON string
         )
     brief_id: str = row["id"]
@@ -281,9 +281,9 @@ async def save_actor(request_id: str, data: dict[str, Any]) -> str:
             """,
             request_id,
             data.get("name", "Contributor"),
-            json.dumps(data.get("face_lock", {})),
+            json.dumps(data.get("face_lock", {}), default=str),
             data.get("prompt_seed", ""),
-            json.dumps(data.get("outfit_variations", {})),
+            json.dumps(data.get("outfit_variations", {}), default=str),
             data.get("signature_accessory", ""),
             data.get("backdrops", []),
         )
@@ -305,7 +305,7 @@ async def update_actor_seed(actor_id: str, seed_url: str) -> None:
             SET face_lock = face_lock || $1::jsonb
             WHERE id = $2
             """,
-            json.dumps({"validated_seed_url": seed_url}),
+            json.dumps({"validated_seed_url": seed_url}, default=str),
             actor_id,
         )
 
@@ -356,7 +356,7 @@ async def save_asset(request_id: str, data: dict[str, Any]) -> str:
             data.get("blob_url", ""),
             json.dumps(metadata, default=str),
             metadata.get("vqa_score"),
-            json.dumps(metadata.get("vqa_dimensions", {}), default=str),
+            json.dumps(metadata.get("vqa_dimensions", {}), default=str,
             metadata.get("vqa_score", 0) >= 0.75 if metadata.get("vqa_score") else None,
             data.get("stage", 2),
         )
@@ -419,9 +419,9 @@ async def save_campaign_strategy(request_id: str, strategy: dict) -> str:
             str(strategy.get("tier", 1)),
             strategy.get("monthly_budget"),
             strategy.get("budget_mode", "ratio"),
-            json.dumps(strategy.get("strategy_data", {})),
+            json.dumps(strategy.get("strategy_data", {}), default=str),
             strategy.get("evaluation_score"),
-            json.dumps(strategy.get("evaluation_data", {})) if strategy.get("evaluation_data") else None,
+            json.dumps(strategy.get("evaluation_data", {}), default=str) if strategy.get("evaluation_data") else None,
             strategy.get("evaluation_passed"),
         )
     return strategy_id
@@ -433,6 +433,6 @@ async def update_actor_targeting(actor_id: str, targeting_profile: dict) -> None
     async with pool.acquire() as conn:
         await conn.execute(
             "UPDATE actor_profiles SET targeting_profile = $1::jsonb WHERE id = $2::uuid",
-            json.dumps(targeting_profile),
+            json.dumps(targeting_profile, default=str),
             actor_id,
         )
