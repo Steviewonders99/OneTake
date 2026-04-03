@@ -507,7 +507,7 @@ SCENE-BY-SCENE BREAKDOWN (follow this structure exactly):
 {scene_block}
 
 BRIEF CONTEXT:
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 CAMERA DIRECTION VOCABULARY (use these exact terms in [CAMERA:] tags):
 static, push_in, pull_back, tracking, orbit_360, pan_left, pan_right,

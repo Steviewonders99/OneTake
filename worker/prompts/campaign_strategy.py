@@ -402,7 +402,11 @@ async def generate_campaign_strategy(
 
 
 def _parse_strategy_json(text: str) -> dict:
-    """Parse campaign strategy JSON from LLM output."""
+    """Parse campaign strategy JSON from LLM output.
+
+    Handles reasoning-mode output by finding the LAST valid JSON block
+    (reasoning text may contain partial/invalid JSON before the actual answer).
+    """
     if not text:
         return {}
 
@@ -418,8 +422,11 @@ def _parse_strategy_json(text: str) -> dict:
     except json.JSONDecodeError:
         pass
 
+    # Find the LAST valid JSON object (skip reasoning preamble)
     brace_depth = 0
     start = -1
+    last_valid = None
+
     for i, char in enumerate(cleaned):
         if char == '{':
             if brace_depth == 0:
@@ -428,11 +435,18 @@ def _parse_strategy_json(text: str) -> dict:
         elif char == '}':
             brace_depth -= 1
             if brace_depth == 0 and start >= 0:
+                candidate = cleaned[start:i + 1]
                 try:
-                    return json.loads(cleaned[start:i + 1])
+                    parsed = json.loads(candidate)
+                    if isinstance(parsed, dict) and len(parsed) > 1:
+                        last_valid = parsed
                 except json.JSONDecodeError:
                     pass
                 start = -1
+
+    if last_valid:
+        logger.info("Extracted strategy JSON from reasoning text (%d keys)", len(last_valid))
+        return last_valid
 
     logger.warning("Failed to parse campaign strategy JSON (%d chars)", len(text))
     return {}

@@ -697,12 +697,12 @@ def build_persona_brief_prompt(personas: list[dict], brief: dict) -> str:
             f"PERSONA {i}: {p['persona_name']}\n"
             f"  Age: {p['age']} | Language: {p['language']} | Region: {p['region']}\n"
             f"  Lifestyle: {p['lifestyle']}\n"
-            f"  Motivation: {p['customized_motivation']}\n"
-            f"  Pain point: {p['customized_pain']}\n"
-            f"  Messaging hook: {p['messaging_hook']}\n"
+            f"  Motivation: {p.get('customized_motivation', p.get('motivation', ''))}\n"
+            f"  Pain point: {p.get('customized_pain', p.get('pain_point', ''))}\n"
+            f"  Messaging hook: {p.get('messaging_hook', '')}\n"
             f"  Psychology: {', '.join(p.get('psychology_hooks', []))}\n"
             f"  Best channels: {', '.join(p.get('best_channels', []))}\n"
-            f"  Jobs-to-be-done: {json.dumps(p.get('jobs_to_be_done', {}), ensure_ascii=False)}"
+            f"  Jobs-to-be-done: {json.dumps(p.get('jobs_to_be_done', {}), ensure_ascii=False, default=str)}"
         )
         persona_blocks.append(block)
 

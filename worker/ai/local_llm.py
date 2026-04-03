@@ -52,8 +52,7 @@ async def generate_text(
                 "temperature": temperature,
                 "stream": False,
             }
-            if thinking:
-                payload["chat_template_kwargs"] = {"enable_thinking": True}
+            # Note: thinking mode disabled for NIM — returns empty content on some models
 
             async with httpx.AsyncClient(timeout=180) as client:
                 resp = await client.post(
@@ -68,36 +67,31 @@ async def generate_text(
                 data = resp.json()
 
             msg = data["choices"][0]["message"]
-            content = msg.get("content") or msg.get("reasoning") or ""
+            content = msg.get("content") or msg.get("reasoning_content") or msg.get("reasoning") or ""
+            if not content.strip():
+                raise ValueError("NIM returned empty content")
             logger.info("generate_text via NIM Qwen-397B (%d chars)", len(content))
             return content
 
-        except Exception as e:
-            logger.warning("NIM Qwen-397B failed: %s — falling back to local MLX", e)
+        except Exception as nim_error:
+            logger.warning("NIM Qwen-397B failed: %s — trying MLX fallback", nim_error)
 
-    # Fallback: local MLX server (Qwen3.5-9B)
-    model_name = model_name or LLM_MODEL
-    from mlx_server_manager import mlx_server
-
-    for attempt in range(3):
-        try:
-            return await mlx_server.generate(
-                messages=messages,
-                model=model_name,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                thinking=thinking,
-            )
-        except Exception as e:
-            if attempt < 2:
-                logger.warning(
-                    "MLX server call failed (attempt %d/3): %s — retrying in 5s",
-                    attempt + 1, e,
+            # Fallback: local MLX server (Qwen3.5-9B) — only if available
+            try:
+                from mlx_server_manager import mlx_server
+                model_name = model_name or LLM_MODEL
+                return await mlx_server.generate(
+                    messages=messages,
+                    model=model_name,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    thinking=thinking,
                 )
-                await asyncio.sleep(5)
-            else:
-                logger.error("MLX server failed after 3 attempts: %s", e)
-                raise
+            except Exception as mlx_error:
+                logger.error("Both NIM and MLX failed. NIM: %s | MLX: %s", nim_error, mlx_error)
+                raise nim_error  # Surface the NIM error as primary
+
+    raise RuntimeError("No NIM API key configured and MLX fallback unavailable")
 
 
 async def generate_copy(

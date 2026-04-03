@@ -166,7 +166,7 @@ def build_eval_prompt(brief: dict, request: dict) -> str:
     return f"""Evaluate this recruitment marketing brief for OneForma.
 
 BRIEF:
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 ORIGINAL REQUEST:
 Title: {request.get("title")}
@@ -203,7 +203,7 @@ def build_design_direction_prompt(brief: dict, request: dict) -> str:
     return f"""Based on this approved creative brief for OneForma, determine the visual design direction.
 
 BRIEF:
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 BRAND GUIDELINES:
 - OneForma uses a LIGHT theme: white backgrounds, charcoal (#32373C) buttons and text.

@@ -438,7 +438,7 @@ def select_psychology_hooks(
         Each dict contains ``name``, ``description``, ``templates``, and a
         ``relevance`` note explaining why this hook was selected.
     """
-    brief_text = json.dumps(brief, ensure_ascii=False).lower()
+    brief_text = json.dumps(brief, ensure_ascii=False, default=str).lower()
 
     # Score each hook by (a) platform fit and (b) template fillability.
     scored: list[tuple[float, str, dict]] = []
@@ -614,7 +614,7 @@ def build_copy_prompt(
     # --- Task details ---
     task_info = ""
     if form_data:
-        task_info = f"\nTASK DETAILS: {json.dumps(form_data, ensure_ascii=False)}"
+        task_info = f"\nTASK DETAILS: {json.dumps(form_data, ensure_ascii=False, default=str)}"
 
     # --- Ethical positioning: detect sensitive categories and inject framing ---
     sensitivity_input: dict = {**brief}
@@ -666,7 +666,7 @@ def build_copy_prompt(
     return f"""Write recruitment ad copy for OneForma.
 
 BRIEF:
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 PLATFORM: {channel}
 LANGUAGE: {language}
@@ -774,10 +774,10 @@ def build_copy_eval_prompt(
     return f"""Evaluate this recruitment ad copy for OneForma.
 
 COPY:
-{json.dumps(copy_data, indent=2, ensure_ascii=False)}
+{json.dumps(copy_data, indent=2, ensure_ascii=False, default=str)}
 
 BRIEF CONTEXT:
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 PLATFORM: {channel}
 LANGUAGE: {language}

@@ -957,8 +957,8 @@ def validate_research_against_priors(
     warnings: list[str] = []
 
     # Check platform data from research against priors
-    research_text = json.dumps(platform_research, ensure_ascii=False).lower()
-    demo_text = json.dumps(demographic_research, ensure_ascii=False).lower()
+    research_text = json.dumps(platform_research, ensure_ascii=False, default=str).lower()
+    demo_text = json.dumps(demographic_research, ensure_ascii=False, default=str).lower()
 
     for platform, prior_data in priors.items():
         prior_youth = prior_data.get("youth_usage", "unknown")

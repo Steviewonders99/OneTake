@@ -229,7 +229,7 @@ def build_brief_eval_prompt(
     if cultural_research:
         cultural_block = (
             "\n\nCULTURAL RESEARCH FINDINGS (the brief must integrate these):\n"
-            + json.dumps(cultural_research, indent=2, ensure_ascii=False)[:3000]
+            + json.dumps(cultural_research, indent=2, ensure_ascii=False, default=str)[:3000]
         )
 
     # Detect sensitive topics for ethical compliance scoring context
@@ -263,7 +263,7 @@ Task details: {task_description}
 {sensitive_note}
 
 === GENERATED BRIEF TO EVALUATE ===
-{json.dumps(brief, indent=2, ensure_ascii=False)}
+{json.dumps(brief, indent=2, ensure_ascii=False, default=str)}
 
 === SCORING RUBRIC (score 0-10 per dimension) ===
 {rubric_block}

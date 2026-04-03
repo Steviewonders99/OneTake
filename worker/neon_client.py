@@ -416,7 +416,7 @@ async def save_campaign_strategy(request_id: str, strategy: dict) -> str:
             strategy_id,
             request_id,
             strategy.get("country", "global"),
-            strategy.get("tier", 1),
+            str(strategy.get("tier", 1)),
             strategy.get("monthly_budget"),
             strategy.get("budget_mode", "ratio"),
             json.dumps(strategy.get("strategy_data", {})),

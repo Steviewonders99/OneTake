@@ -128,9 +128,8 @@ async def main():
         os.getpid(),
         POLL_INTERVAL_SECONDS,
     )
-    logger.info("MLX server will auto-start on first generation request.")
+    logger.info("Using NIM (NVIDIA) for inference. MLX fallback disabled.")
 
-    from mlx_server_manager import mlx_server
     from neon_client import claim_next_job
 
     try:
@@ -162,8 +161,12 @@ async def main():
     except (KeyboardInterrupt, asyncio.CancelledError):
         logger.info("Shutting down...")
     finally:
-        # Clean shutdown — kill MLX server and clean PID files
-        await mlx_server.shutdown()
+        # Clean shutdown
+        try:
+            from mlx_server_manager import mlx_server
+            await mlx_server.shutdown()
+        except Exception:
+            pass  # MLX may not have been initialized
         pm.shutdown_all()
         logger.info("Worker stopped. All processes cleaned up.")
 
