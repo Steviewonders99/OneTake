@@ -246,6 +246,19 @@ async def run_stage4(context: dict) -> dict:
             asset_count += r
 
     logger.info("Stage 4 v2 complete: %d composed creatives", asset_count)
+
+    # ── Run carousel generation (LinkedIn, IG, TikTok only) ──────
+    try:
+        from pipeline.stage4_carousel import run_carousel_stage
+        carousel_result = await run_carousel_stage(context)
+        carousel_count = carousel_result.get("carousel_count", 0)
+        slide_count = carousel_result.get("slide_count", 0)
+        if carousel_count > 0:
+            logger.info("Carousels complete: %d carousels, %d slides", carousel_count, slide_count)
+            asset_count += slide_count
+    except Exception as e:
+        logger.warning("Carousel generation failed (non-critical): %s", e)
+
     return {"asset_count": asset_count}
 
 

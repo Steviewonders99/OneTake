@@ -308,7 +308,7 @@ async def _generate_carousel(
             }
 
             await save_asset(request_id, {
-                "asset_type": "carousel_slide",
+                "asset_type": "carousel_panel",
                 "platform": platform_key,
                 "format": f"{w}x{h}",
                 "blob_url": blob_url,
