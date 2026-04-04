@@ -235,11 +235,16 @@ C. SHAPE OVERLAY: Solid shape on photo corner. Text inside shape.
     system_prompt = f"{system_prompt}\n\n{CRITICAL_DESIGN_RULES}"
 
     # Model cascade: GLM-5 (design) → Kimi K2.5 (fallback) — NIM only, no paid APIs
-    # If NIM is rate limited (429), retry with backoff instead of falling to OpenRouter
+    # Uses key pool for round-robin rotation (40 RPM per key × N keys)
+    from nim_key_pool import get_nim_key, key_count
+    nim_key = get_nim_key() or NVIDIA_NIM_API_KEY
+
     providers = []
-    if NVIDIA_NIM_API_KEY:
-        providers.append(("NIM-GLM5", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_DESIGN_MODEL))
-        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.5"))
+    if nim_key:
+        providers.append(("NIM-GLM5", f"{NVIDIA_NIM_BASE_URL}/chat/completions", nim_key, NVIDIA_NIM_DESIGN_MODEL))
+        # Get a DIFFERENT key for fallback
+        fallback_key = get_nim_key() or nim_key
+        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", fallback_key, "moonshotai/kimi-k2.5"))
 
     import asyncio
     content = ""

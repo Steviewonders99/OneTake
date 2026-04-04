@@ -237,13 +237,21 @@ async def _generate_carousel(
         icon_block += "\nWrap each icon in a purple circle: <div style='width:56px;height:56px;border-radius:50%;background:#F3E5F5;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>{icon_svg}</div>\n"
         carousel_instructions += icon_block
 
-    # Build actor context (for platforms that use photos)
+    # Build actor context — limit to 1 actor for carousels (keeps prompt lean)
+    # Carousel text slides don't use photos; only hook/reveal slides need 1 actor
     actor_context = []
-    for actor in actors[:3]:
+    if actors:
+        a = actors[0]
+        # Only include first scene to keep prompt small
+        images = a.get("images", {})
+        first_scene = {}
+        if images:
+            first_key = next(iter(images))
+            first_scene = {first_key: images[first_key]}
         actor_context.append({
-            "name": actor.get("name", "Contributor"),
-            "images": actor.get("images", {}),
-            "region": actor.get("region", "Global"),
+            "name": a.get("name", "Contributor"),
+            "images": first_scene,
+            "region": a.get("region", "Global"),
         })
 
     # Build persona (use first available)
