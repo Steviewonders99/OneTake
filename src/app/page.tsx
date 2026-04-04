@@ -110,7 +110,7 @@ export default function Dashboard() {
       <AppShell>
         <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
           {/* Left: campaign list */}
-          <div className="w-full lg:w-[340px] flex-shrink-0 lg:h-full h-auto max-h-[50vh] lg:max-h-none overflow-y-auto border-b lg:border-b-0 border-[var(--border)]">
+          <div className="w-full lg:w-[380px] flex-shrink-0 lg:h-full h-auto max-h-[50vh] lg:max-h-none overflow-y-auto border-b lg:border-b-0 border-[var(--border)]">
             <CampaignList
               requests={requests}
               loading={loading}

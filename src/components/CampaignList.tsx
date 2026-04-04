@@ -40,23 +40,28 @@ function CampaignCard({ request, selected, onSelect }: CampaignCardProps) {
       type="button"
       onClick={() => onSelect(request.id)}
       className={[
-        "w-full text-left p-4 rounded-xl border transition-all duration-150 cursor-pointer",
+        "w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 cursor-pointer",
         selected
-          ? "border-[#2563eb] bg-[#eff6ff] shadow-sm"
+          ? "border-[#2563eb] border-l-[3px] bg-[#eff6ff] shadow-sm"
           : "border-[#e5e5e5] bg-white hover:border-[#d4d4d4] hover:shadow-sm",
       ].join(" ")}
     >
       {/* Title row */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-sm font-semibold text-[#1a1a1a] leading-tight truncate flex-1 min-w-0">
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <p className="text-sm font-semibold text-[#1a1a1a] leading-snug line-clamp-2 flex-1 min-w-0">
           {request.title}
         </p>
         <StatusBadge status={request.status} />
       </div>
 
+      {/* Task type */}
+      <p className="text-[11px] text-[#737373] mb-2">
+        {String(request.task_type || "").replace(/_/g, " ")}
+      </p>
+
       {/* Languages */}
       {request.target_languages.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap mb-1">
+        <div className="flex items-center gap-1 flex-wrap">
           <Globe size={11} className="text-[#737373] shrink-0" />
           {request.target_languages.slice(0, 3).map((lang) => (
             <span key={lang} className="tag-pill">
@@ -149,7 +154,7 @@ export default function CampaignList({
       </div>
 
       {/* Filter pills */}
-      <div className="flex gap-1.5 px-4 py-3 overflow-x-auto border-b border-[#e5e5e5] shrink-0">
+      <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-[#e5e5e5] shrink-0">
         {FILTER_TABS.map((tab) => {
           const count = counts[tab.value] ?? 0;
           const active = activeFilter === tab.value;
