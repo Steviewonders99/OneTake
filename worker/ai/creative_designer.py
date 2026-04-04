@@ -226,19 +226,19 @@ async def design_creatives(
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    "max_tokens": 16384,
+                    "max_tokens": 32768,
                     "temperature": 0.8,
                     "stream": False,
                 }
 
-                async with httpx.AsyncClient(timeout=300) as client:
+                async with httpx.AsyncClient(timeout=600) as client:
                     resp = await client.post(url, headers={
                         "Authorization": f"Bearer {key}",
                         "Content-Type": "application/json",
                     }, json=payload)
 
                     if resp.status_code == 429:
-                        wait = (retry + 1) * 10  # 10s, 20s, 30s backoff
+                        wait = (retry + 1) * 30  # 30s, 60s, 90s backoff — GLM5 needs time
                         logger.info("%s rate limited (429) — waiting %ds (retry %d/3)", provider_name, wait, retry + 1)
                         await asyncio.sleep(wait)
                         continue
@@ -250,7 +250,7 @@ async def design_creatives(
                     break
             except Exception as e:
                 if retry < 2 and "429" in str(e):
-                    wait = (retry + 1) * 10
+                    wait = (retry + 1) * 30
                     logger.info("%s rate limited — waiting %ds (retry %d/3)", provider_name, wait, retry + 1)
                     await asyncio.sleep(wait)
                     continue
