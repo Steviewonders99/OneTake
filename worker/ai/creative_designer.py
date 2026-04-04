@@ -19,6 +19,7 @@ from prompts.creative_overlay import (
     BRAND_KIT,
     CREATIVE_DESIGN_SKILL,
     DESIGN_AUDIT,
+    DESIGN_PSYCHOLOGY,
     OVERLAY_INSTRUCTIONS,
 )
 from prompts.html_reference_templates import get_all_references_for_prompt
@@ -125,8 +126,9 @@ async def design_creatives(
     copy_ref = json.dumps(platform_copy, default=str)[:600] if platform_copy else "None available"
 
     # Build overlay instructions with dimensions injected
+    # pattern_instruction is a future injection point; defaults to empty string
     instructions = OVERLAY_INSTRUCTIONS.format(
-        width=w, height=h, safe_margin=margin,
+        width=w, height=h, safe_margin=margin, pattern_instruction="",
     )
 
     # Assemble the system prompt with concrete HTML reference templates
@@ -135,6 +137,7 @@ async def design_creatives(
         f"{CREATIVE_DESIGN_SKILL}\n\n"
         f"{BRAND_KIT}\n\n"
         f"{DESIGN_AUDIT}\n\n"
+        f"{DESIGN_PSYCHOLOGY}\n\n"
         f"{instructions}\n\n"
         f"## HTML REFERENCE TEMPLATES (study these, adapt for your design):\n"
         f"These are WORKING examples. Use the same techniques — full photo base, "

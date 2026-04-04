@@ -79,6 +79,51 @@ DESIGN_AUDIT = """
 - Variety in composition: not always centered text — use asymmetric layouts, split panels, offset positioning
 """
 
+DESIGN_PSYCHOLOGY = """
+## Design Psychology Principles (Apply These in Every Creative)
+
+### Von Restorff Effect (Isolation Effect)
+ONE element must be visually different from everything else — this is what the eye locks onto.
+CSS: Make the CTA button the ONLY element with the pink-purple gradient. Make the headline the ONLY serif text. The isolated element gets remembered.
+
+### Visual Hierarchy (F-Pattern / Z-Pattern)
+Eyes scan top-left → top-right → down-left → down-right (Z-pattern) or top-left → down the left side (F-pattern).
+CSS: Place headline top-left or center-top. CTA at bottom-left or bottom-center. Never bury the headline at bottom-right.
+
+### Gestalt Proximity
+Elements near each other are perceived as a group. Headline + subheadline should be close together. CTA should have MORE space above it (separating it from the text group).
+CSS: margin-bottom between headline and sub: 8-12px. margin-top above CTA: 24-40px.
+
+### Hick's Law (Reduce Choices)
+ONE headline. ONE subheadline (optional). ONE CTA. Nothing else competing for attention.
+CSS: Remove any element that doesn't serve headline, sub, CTA, or photo. If you added decorative text, stat badge, AND trust badge — that's too many. Pick 1-2.
+
+### Color Psychology for Recruitment Ads
+- Purple (#6B21A8): authority, ambition, creativity — "this is a real company"
+- Pink (#E91E8C): energy, action, urgency — "act now"
+- White: clean, trustworthy, professional — "we're legitimate"
+- Avoid red (scam association in gig economy), avoid yellow (cheap feeling)
+
+### Layering for Depth (3-Layer Minimum)
+Every premium creative has at least 3 visual layers creating depth:
+1. BACK: Background (photo or solid color)
+2. MIDDLE: Semi-transparent shape, gradient, or blur overlay
+3. FRONT: Text + CTA (highest z-index, sharpest contrast)
+CSS: Use z-index: 1/2/3. The middle layer (gradient/shape) at opacity 0.6-0.85 creates the depth illusion.
+
+### Serial Position Effect
+People remember the FIRST and LAST things they see. First = headline (top). Last = CTA (bottom).
+CSS: Headline at top of text zone. CTA at very bottom. Subheadline in the middle (least remembered — keep it short).
+
+### Whitespace as Design Element
+20-30% of canvas should be empty. Whitespace around the headline makes it feel more important.
+CSS: padding: 40-60px around text blocks. Don't fill every pixel. The emptiness IS the design.
+
+### Aesthetic-Usability Effect
+Attractive designs are perceived as more usable and trustworthy. Invest in clean details.
+CSS: Smooth border-radius: 12-20px. Subtle box-shadow: 0 4px 16px rgba(0,0,0,0.08). Consistent spacing. Smooth gradients (not harsh).
+"""
+
 OVERLAY_INSTRUCTIONS = """
 ## Creative Overlay Generation Instructions
 
@@ -123,6 +168,16 @@ Decorative elements:
 - CTA: Bold uppercase in a pill button with gradient bg and box-shadow.
 - Clear hierarchy: headline > sub > CTA, all in the designated text zone.
 - Font sizes: headline 36-56px, sub 16-22px, CTA 14-18px (adjust for canvas size).
+
+### SERIF HEADLINE RULE (MANDATORY for premium feel):
+- Headlines MUST use font-family: Georgia, 'Times New Roman', serif — NOT sans-serif
+- Weight: 700-800, NOT 400
+- Line-height: 1.05-1.15 (tight, dramatic)
+- Letter-spacing: -0.02em (slightly tightened)
+- Break headline into 2-3 WORDS PER LINE, stacked vertically for dramatic effect
+- Example: instead of "Bilingual: Earn From Home" on one line, use line breaks:
+  "Bilingual:\nEarn From\nHome" stacked across 3 lines
+- Subheadline stays in sans-serif (system fonts), creating contrast with the serif headline
 
 ### DESIGN BALANCE:
 - Keep at least 20% whitespace — let the design breathe.
@@ -169,6 +224,9 @@ Return a JSON array. Each element has:
   "image_treatment": "full_background|contained_frame|split_panel",
   "html": "<!DOCTYPE html><html>...</html>"
 }}
+
+### LAYOUT PATTERN CONSTRAINT:
+{pattern_instruction}
 """
 
 # ── Creative Design Skill (refined for recruitment ad creatives) ──
