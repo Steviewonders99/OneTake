@@ -95,3 +95,8 @@ KLING_MODEL = os.environ.get("KLING_MODEL", "kling-v3-omni")
 # ---------------------------------------------------------------------------
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
 ELEVENLABS_DEFAULT_VOICE = os.environ.get("ELEVENLABS_DEFAULT_VOICE", "21m00Tcm4TlvDq8ikWAM")  # Rachel
+
+# Gemma 4 VQA (Creative evaluation)
+NVIDIA_NIM_VQA_KEY = os.environ.get("NVIDIA_NIM_VQA_KEY", os.environ.get("NVIDIA_NIM_API_KEY", ""))
+NVIDIA_NIM_VQA_MODEL = os.environ.get("NVIDIA_NIM_VQA_MODEL", "google/gemma-4-31b-it")
+
