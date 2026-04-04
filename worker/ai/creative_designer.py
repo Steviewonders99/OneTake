@@ -199,13 +199,40 @@ async def design_creatives(
         len(system_prompt) + len(user_prompt),
     )
 
-    # Inject marketing skills — only in legacy mode (Phase 2 has approved copy,
-    # the designer just needs design skills which are already in CREATIVE_DESIGN_SKILL)
-    if not approved_copy:
-        from prompts.marketing_skills import get_skills_for_stage
-        skills = get_skills_for_stage("creative")
-        if skills:
-            system_prompt = f"{system_prompt}\n\n{skills}"
+    # Inject marketing skills — STRIPPED DOWN to critical rules only.
+    # Full 44K skill dump causes 504 timeouts on NIM. Cherry-pick essentials.
+    CRITICAL_DESIGN_RULES = """
+## Critical Design Rules (Condensed)
+
+### Text Readability (#1 Rule)
+- ALL text on solid color, gradient, or semi-transparent shape — NEVER on busy photo
+- Minimum contrast: white text on dark overlay OR dark text on light overlay
+- If text overlaps photo, MUST have backing element (gradient/shape/blur)
+
+### Typography Hierarchy (3 levels only)
+- Headline: 36-64px, weight 700-800, Georgia serif. 3-7 words MAX.
+- Subheadline: 14-20px, weight 400, sans-serif. Optional.
+- CTA: 14-18px, weight 700, uppercase, pill button with gradient + box-shadow.
+- Headline must be 2-3x larger than subheadline.
+
+### Layout Patterns
+A. GRADIENT OVERLAY: Photo fills canvas. Gradient (bottom 40-60%) creates text zone.
+B. SPLIT PANEL: Photo 60%, brand panel 40%. ALL text in brand panel.
+C. SHAPE OVERLAY: Solid shape on photo corner. Text inside shape.
+
+### OneForma Brand
+- Purple: #6B21A8, Pink: #E91E8C, Charcoal: #1A1A1A, White: #FFFFFF
+- CTA: pill (border-radius:9999px), gradient(135deg, #6B21A8, #E91E8C)
+- Avoid: red, yellow, gold. Only purple/pink/white/charcoal.
+
+### What Makes Ads Look Cheap (AVOID)
+- Text floating on busy photo with no backing
+- Everything centered/stacked vertically (template look)
+- CTA blending into background
+- Blobs/shapes covering person's face
+- No whitespace (cramped feeling)
+"""
+    system_prompt = f"{system_prompt}\n\n{CRITICAL_DESIGN_RULES}"
 
     # Model cascade: GLM-5 (design) → Kimi K2.5 (fallback) — NIM only, no paid APIs
     # If NIM is rate limited (429), retry with backoff instead of falling to OpenRouter
