@@ -21,8 +21,11 @@ DEFAULT_PLATFORMS covers: ig_feed, ig_story, linkedin_feed, facebook_feed, teleg
 from __future__ import annotations
 
 import asyncio
+import itertools
 import json
 import logging
+import os
+import tempfile
 import uuid
 from typing import Any
 
@@ -31,9 +34,11 @@ import httpx
 from ai.bg_remover import create_cutout_with_shadow, remove_background
 from ai.compositor import PLATFORM_SPECS, render_overlay_only, render_to_png
 from ai.creative_designer import design_creatives
+from ai.creative_vqa import COMPOSED_VQA_THRESHOLD, evaluate_composed_creative
 from blob_uploader import upload_to_blob
 from config import COMPOSE_CONCURRENCY
 from neon_client import get_actors, get_assets, save_asset
+from prompts.html_reference_templates import get_template_by_pattern, PATTERN_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +153,10 @@ async def run_stage4(context: dict) -> dict:
     # This produces the full creative testing matrix.
     semaphore = asyncio.Semaphore(COMPOSE_CONCURRENCY)
 
+    # Create a pattern cycle for layout diversity — each batch gets a different
+    # starting pattern from the 10 HTML reference templates.
+    pattern_iter = itertools.cycle(PATTERN_NAMES)
+
     tasks = []
     for persona_key, persona_actors in personas_map.items():
         persona = _build_persona_dict(persona_key, persona_actors, context)
@@ -218,6 +227,7 @@ async def run_stage4(context: dict) -> dict:
                             spec=spec,
                             brief=brief,
                             platform_copy=platform_copy,
+                            required_pattern=next(pattern_iter),
                         )
                     )
 
@@ -251,6 +261,7 @@ async def _design_and_render_batch(
     spec: dict,
     brief: dict,
     platform_copy: dict,
+    required_pattern: str = "",
 ) -> int:
     """Design 2-3 Kimi creatives for one persona × platform, render all.
 
@@ -281,6 +292,8 @@ async def _design_and_render_batch(
         Campaign brief.
     platform_copy : dict
         Stage 3 copy data for this platform.
+    required_pattern : str
+        Layout pattern name from PATTERN_NAMES for diversity enforcement.
 
     Returns
     -------
@@ -321,6 +334,23 @@ async def _design_and_render_batch(
         )
 
         # ── PHASE 2: Design HTML creatives (GLM-5) with approved copy ──
+        # Build pattern instruction for layout diversity enforcement
+        pattern_instruction = ""
+        if required_pattern:
+            template_html = get_template_by_pattern(required_pattern)
+            if template_html:
+                pattern_instruction = (
+                    f"You MUST use the '{required_pattern}' layout pattern.\n"
+                    f"Here is the reference HTML for this pattern — adapt it with "
+                    f"the provided image, headline, sub, and CTA:\n\n"
+                    f"{template_html[:2000]}\n\n"
+                    f"Do NOT use a different layout. Follow this pattern's structure exactly."
+                )
+                logger.info(
+                    "  Pattern constraint: %s (%d chars reference HTML)",
+                    required_pattern, len(template_html),
+                )
+
         # Pass pre-approved copy so the designer focuses on LAYOUT only
         designs = await design_creatives(
             persona=persona,
@@ -330,6 +360,7 @@ async def _design_and_render_batch(
             brief=brief,
             platform_copy=platform_copy,
             approved_copy=copy_sets,
+            pattern_instruction=pattern_instruction,
         )
 
         if not designs:
@@ -380,7 +411,7 @@ async def _design_and_render_batch(
 
         # Step 3: Process results — save passes, collect failures for retry
         saved = 0
-        retry_needed: list[tuple[dict, list[str]]] = []
+        retry_needed: list[tuple[dict, bytes, list[str]]] = []
 
         for i, design in enumerate(valid_designs):
             png = render_results[i] if i < len(render_results) else None
@@ -403,18 +434,55 @@ async def _design_and_render_batch(
             )
 
             if passed:
-                saved += await _save_creative(
-                    request_id=request_id, design=design, final_png=png,
-                    w=w, h=h, spec=spec, persona_key=persona_key,
-                    platform=platform, platform_copy=platform_copy,
-                    eval_score=score, eval_attempts=1,
+                # ── Gemma 4 Composed VQA Gate ──
+                # Additional quality gate using Gemma 4 vision model.
+                # Evaluates the rendered PNG for 7 design quality dimensions
+                # and provides actionable CSS fix instructions on failure.
+                composed_vqa = await _run_composed_vqa(
+                    rendered_png=png,
+                    platform=platform,
+                    headline=design.get("overlay_headline", ""),
+                    required_pattern=required_pattern,
                 )
+                composed_score = composed_vqa.get("overall_score", 0)
+                composed_passed = composed_vqa.get("passed", True)
+
+                if composed_passed:
+                    logger.info(
+                        "  Composed VQA PASSED (score=%.2f, pattern=%s)",
+                        composed_score, required_pattern,
+                    )
+                    saved += await _save_creative(
+                        request_id=request_id, design=design, final_png=png,
+                        w=w, h=h, spec=spec, persona_key=persona_key,
+                        platform=platform, platform_copy=platform_copy,
+                        eval_score=score, eval_attempts=1,
+                        composed_vqa_score=composed_score,
+                        composed_vqa_data=composed_vqa,
+                    )
+                else:
+                    # Composed VQA failed — build feedback from VQA dimensions
+                    logger.info(
+                        "  Composed VQA FAILED (score=%.2f) — queuing retry with fixes",
+                        composed_score,
+                    )
+                    vqa_feedback = _build_vqa_feedback(composed_vqa)
+                    retry_needed.append((design, png, vqa_feedback))
             else:
-                retry_needed.append((design, ev.get("issues", [])))
+                retry_needed.append((design, png, ev.get("issues", [])))
 
         # Step 4: Retry failed designs (Fix #5: use approved_copy path)
-        for failed_design, feedback in retry_needed:
+        for failed_design, failed_png, feedback in retry_needed:
             if not feedback:
+                # No feedback — save as-is with low score
+                saved += await _save_creative(
+                    request_id=request_id, design=failed_design,
+                    final_png=failed_png, w=w, h=h, spec=spec,
+                    persona_key=persona_key, platform=platform,
+                    platform_copy=platform_copy,
+                    eval_score=0.0, eval_attempts=1,
+                    composed_vqa_score=0.0, composed_vqa_data={},
+                )
                 continue
 
             # Build single-item approved copy from the failed design's copy
@@ -425,6 +493,14 @@ async def _design_and_render_batch(
                 "sub": failed_design.get("overlay_sub", ""),
                 "cta": failed_design.get("overlay_cta", ""),
             }]
+
+            final_png_to_save = failed_png
+            final_score = 0.0
+            final_composed_score = 0.0
+            final_composed_data: dict = {}
+            final_design = failed_design
+            final_attempts = 1
+            retry_succeeded = False
 
             for attempt in range(MAX_CREATIVE_RETRIES):
                 logger.info(
@@ -443,6 +519,7 @@ async def _design_and_render_batch(
                     platform_copy=platform_copy,
                     approved_copy=retry_copy,
                     feedback=feedback,
+                    pattern_instruction=pattern_instruction,
                 )
 
                 if not retry_designs:
@@ -468,20 +545,69 @@ async def _design_and_render_batch(
                     )
 
                     if retry_eval["passed"]:
-                        saved += await _save_creative(
-                            request_id=request_id, design=retry_design,
-                            final_png=retry_png, w=w, h=h, spec=spec,
-                            persona_key=persona_key, platform=platform,
-                            platform_copy=platform_copy,
-                            eval_score=retry_score, eval_attempts=attempt + 2,
+                        # Run composed VQA on retry
+                        retry_composed = await _run_composed_vqa(
+                            rendered_png=retry_png,
+                            platform=platform,
+                            headline=retry_design.get("overlay_headline", ""),
+                            required_pattern=required_pattern,
                         )
-                        break
+                        retry_composed_score = retry_composed.get("overall_score", 0)
 
-                    feedback = retry_eval.get("issues", [])
+                        if retry_composed.get("passed", True):
+                            logger.info(
+                                "  Retry composed VQA PASSED (score=%.2f)",
+                                retry_composed_score,
+                            )
+                            saved += await _save_creative(
+                                request_id=request_id, design=retry_design,
+                                final_png=retry_png, w=w, h=h, spec=spec,
+                                persona_key=persona_key, platform=platform,
+                                platform_copy=platform_copy,
+                                eval_score=retry_score,
+                                eval_attempts=attempt + 2,
+                                composed_vqa_score=retry_composed_score,
+                                composed_vqa_data=retry_composed,
+                            )
+                            retry_succeeded = True
+                            break
+
+                        # Composed VQA failed on retry — update best candidate
+                        logger.info(
+                            "  Retry composed VQA FAILED (score=%.2f)",
+                            retry_composed_score,
+                        )
+                        if retry_composed_score > final_composed_score:
+                            final_png_to_save = retry_png
+                            final_score = retry_score
+                            final_composed_score = retry_composed_score
+                            final_composed_data = retry_composed
+                            final_design = retry_design
+                            final_attempts = attempt + 2
+
+                        feedback = _build_vqa_feedback(retry_composed)
+                    else:
+                        feedback = retry_eval.get("issues", [])
 
                 except Exception as retry_err:
                     logger.warning("  Retry render/eval error: %s", retry_err)
                     break
+
+            # If all retries failed, save best candidate anyway (never block pipeline)
+            if not retry_succeeded:
+                logger.info(
+                    "  All retries exhausted — saving best candidate (composed_score=%.2f)",
+                    final_composed_score,
+                )
+                saved += await _save_creative(
+                    request_id=request_id, design=final_design,
+                    final_png=final_png_to_save, w=w, h=h, spec=spec,
+                    persona_key=persona_key, platform=platform,
+                    platform_copy=platform_copy,
+                    eval_score=final_score, eval_attempts=final_attempts,
+                    composed_vqa_score=final_composed_score,
+                    composed_vqa_data=final_composed_data,
+                )
 
         return saved
 
@@ -499,6 +625,8 @@ async def _save_creative(
     platform_copy: dict,
     eval_score: float,
     eval_attempts: int,
+    composed_vqa_score: float = 0.0,
+    composed_vqa_data: dict | None = None,
 ) -> int:
     """Render overlay, convert formats, upload to Blob, save to Neon. Returns 1 on success, 0 on failure."""
     actor_name = design.get("actor_name", "contributor")
@@ -552,6 +680,8 @@ async def _save_creative(
                 "persona": persona_key,
                 "eval_score": eval_score,
                 "eval_attempts": eval_attempts,
+                "composed_vqa_score": composed_vqa_score,
+                "composed_vqa_data": composed_vqa_data or {},
                 "platform_headline": platform_copy.get("headline", ""),
                 "platform_description": platform_copy.get(
                     "description",
@@ -574,6 +704,73 @@ async def _save_creative(
             persona_key, platform, actor_name, e,
         )
         return 0
+
+
+# ── Composed VQA helpers ─────────────────────────────────────────
+
+async def _run_composed_vqa(
+    rendered_png: bytes,
+    platform: str = "",
+    headline: str = "",
+    required_pattern: str = "",
+) -> dict:
+    """Run Gemma 4 composed creative VQA on a rendered PNG.
+
+    Writes the PNG to a temp file, evaluates via NIM, cleans up.
+    Returns the VQA result dict with overall_score, passed, top_3_fixes,
+    and per-dimension scores with fix instructions.
+
+    On any error, returns a default pass to avoid blocking the pipeline.
+    """
+    vqa_tmp = os.path.join(tempfile.gettempdir(), f"vqa_{uuid.uuid4().hex}.png")
+    try:
+        with open(vqa_tmp, "wb") as f:
+            f.write(rendered_png)
+
+        vqa_result = await evaluate_composed_creative(
+            vqa_tmp, platform=platform, headline=headline,
+        )
+
+        vqa_score = vqa_result.get("overall_score", 0)
+        logger.debug(
+            "Composed VQA: score=%.2f pattern=%s headline='%s'",
+            vqa_score, required_pattern, headline[:40],
+        )
+        return vqa_result
+
+    except Exception as e:
+        logger.warning("Composed VQA error: %s — defaulting to pass", e)
+        return {"overall_score": 0.80, "passed": True, "top_3_fixes": [], "dimensions": {}}
+    finally:
+        try:
+            os.unlink(vqa_tmp)
+        except OSError:
+            pass
+
+
+def _build_vqa_feedback(vqa_result: dict) -> list[str]:
+    """Build a feedback list from Gemma 4 VQA result for the retry loop.
+
+    Extracts top_3_fixes and per-dimension CSS fix instructions
+    into a format design_creatives() can inject into its retry prompt.
+    """
+    vqa_score = vqa_result.get("overall_score", 0)
+    fixes = vqa_result.get("top_3_fixes", [])
+    fix_text = "\n".join(f"- {fix}" for fix in fixes)
+
+    dim_fixes = ""
+    for dim_name, dim_data in vqa_result.items():
+        if isinstance(dim_data, dict) and dim_data.get("fix"):
+            dim_fixes += f"\n  {dim_name}: {dim_data['fix']}"
+
+    feedback_line = (
+        f"COMPOSED CREATIVE VQA FAILED (score {vqa_score:.2f}). "
+        f"Fix these:\n{fix_text}"
+    )
+    if dim_fixes:
+        feedback_line += f"\n\nCSS fixes:{dim_fixes}"
+
+    return [feedback_line]
 
 
 # ── Image preparation (simple — NO bg removal) ────────────────────

@@ -38,6 +38,7 @@ async def design_creatives(
     feedback: list[str] | None = None,
     carousel_instructions: str | None = None,
     approved_copy: list[dict[str, Any]] | None = None,
+    pattern_instruction: str = "",
 ) -> list[dict[str, Any]]:
     """Call Kimi K2.5 to design creatives for a persona x platform combo.
 
@@ -126,9 +127,10 @@ async def design_creatives(
     copy_ref = json.dumps(platform_copy, default=str)[:600] if platform_copy else "None available"
 
     # Build overlay instructions with dimensions injected
-    # pattern_instruction is a future injection point; defaults to empty string
+    # pattern_instruction constrains layout to a specific HTML reference template
     instructions = OVERLAY_INSTRUCTIONS.format(
-        width=w, height=h, safe_margin=margin, pattern_instruction="",
+        width=w, height=h, safe_margin=margin,
+        pattern_instruction=pattern_instruction or "",
     )
 
     # Assemble the system prompt with concrete HTML reference templates
