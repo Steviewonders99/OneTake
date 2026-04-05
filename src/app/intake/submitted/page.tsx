@@ -67,8 +67,7 @@ export default function IntakeSubmittedPage() {
                   Marketing manager reviews
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)]">
-                  Steven will review the creative package and approve or request
-                  refinements
+                  The marketing team will review the creative package and approve or request refinements
                 </p>
               </div>
             </div>

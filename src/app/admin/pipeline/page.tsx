@@ -80,7 +80,7 @@ export default function PipelinePage() {
 
   const hasProcessing = jobs.some((j) => j.status === 'processing');
   const hasPending = jobs.some((j) => j.status === 'pending');
-  const nothingActive = !hasProcessing && hasPending;
+  const nothingActive = !hasProcessing && !hasPending;
 
   const tabsWithCounts = statusTabs.map((tab) => ({
     ...tab,

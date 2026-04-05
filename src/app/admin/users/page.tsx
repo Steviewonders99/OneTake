@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { UserRole } from '@/lib/types';
 
 interface UserRecord {
@@ -70,7 +71,7 @@ export default function UsersPage() {
       setShowInvite(false);
       await fetchUsers();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to invite user');
+      toast.error(err instanceof Error ? err.message : 'Failed to invite user');
     } finally {
       setInviting(false);
     }
@@ -86,7 +87,7 @@ export default function UsersPage() {
       if (!res.ok) throw new Error('Failed to update role');
       await fetchUsers();
     } catch {
-      alert('Failed to update user role');
+      toast.error('Failed to update user role');
     }
   }
 
@@ -97,7 +98,7 @@ export default function UsersPage() {
       if (!res.ok) throw new Error('Failed to deactivate');
       await fetchUsers();
     } catch {
-      alert('Failed to deactivate user');
+      toast.error('Failed to deactivate user');
     }
   }
 
