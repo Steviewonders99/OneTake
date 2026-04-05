@@ -17,6 +17,7 @@ import {
   Clock,
   Copy,
   AlertCircle,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
@@ -787,19 +788,54 @@ export default function IntakeDetailPage({
             )}
 
             {/* Approved action bar */}
-            {request.status === "approved" && (
+            {(request.status === "approved" || request.status === "sent") && (
               <div className="card p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-green-700">
                   <CheckCircle2 size={16} />
-                  <span className="font-medium">This request has been approved</span>
+                  <span className="font-medium">
+                    {request.status === "sent" ? "Sent to agency" : "Approved — ready for agency"}
+                  </span>
                 </div>
-                <Link
-                  href={`/api/export/${id}`}
-                  target="_blank"
-                  className="btn-primary text-xs px-4 py-2 cursor-pointer"
-                >
-                  Download ZIP
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/api/export/${id}`}
+                    target="_blank"
+                    className="btn-secondary text-xs px-4 py-2 cursor-pointer"
+                  >
+                    Download ZIP
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setActionLoading("agency");
+                        // Generate agency magic link (reuses approve endpoint for token)
+                        const res = await fetch(`/api/approve/${id}`, { method: "POST" });
+                        const result = await res.json();
+                        if (result.magic_link_url) {
+                          const agencyUrl = window.location.origin + result.magic_link_url.replace("/designer/", "/agency/");
+                          await navigator.clipboard.writeText(agencyUrl);
+                          toast.success("Agency link copied! Share with your paid media agency.");
+                          // Update status to sent
+                          await fetch(`/api/intake/${id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: "sent" }),
+                          });
+                          loadData();
+                        }
+                      } catch {
+                        toast.error("Failed to generate agency link");
+                      } finally {
+                        setActionLoading(null);
+                      }
+                    }}
+                    disabled={actionLoading === "agency"}
+                    className="btn-primary text-xs px-4 py-2 cursor-pointer flex items-center gap-1.5"
+                  >
+                    {actionLoading === "agency" ? <Loader2 size={12} className="animate-spin" /> : <Globe size={12} />}
+                    Send to Agency
+                  </button>
+                </div>
               </div>
             )}
 
