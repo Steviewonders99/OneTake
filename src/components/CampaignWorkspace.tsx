@@ -118,14 +118,25 @@ function groupByPersona(
   }
 
   // Assign assets to persona groups
+  const unassigned: GeneratedAsset[] = [];
   for (const asset of assets) {
     if (asset.asset_type === "base_image") continue; // Skip raw photos
     const content = (asset.content || {}) as Record<string, any>;
-    const persona = content.persona || "unassigned";
-    if (!groups.has(persona)) {
-      groups.set(persona, { key: persona, persona: { archetype_key: persona }, actors: [], assets: [], platforms: [] });
+    const persona = content.persona || "";
+    if (persona && groups.has(persona)) {
+      groups.get(persona)!.assets.push(asset);
+    } else {
+      unassigned.push(asset);
     }
-    groups.get(persona)!.assets.push(asset);
+  }
+
+  // Distribute unassigned assets evenly across named personas
+  // so they show up in the persona cards instead of a giant "unassigned" section
+  const namedGroups = Array.from(groups.values());
+  if (namedGroups.length > 0 && unassigned.length > 0) {
+    for (let i = 0; i < unassigned.length; i++) {
+      namedGroups[i % namedGroups.length].assets.push(unassigned[i]);
+    }
   }
 
   // Compute unique platforms per group
@@ -419,7 +430,7 @@ function PersonaSection({
   onDelete?: (asset: GeneratedAsset) => void;
 }) {
   const [activePlatform, setActivePlatform] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const colors = ["#6B21A8", "#0693E3", "#E91E8C", "#22c55e"];
   const color = colors[index % colors.length];
   const p = group.persona;
@@ -486,8 +497,33 @@ function PersonaSection({
         {expanded ? <ChevronDown size={18} className="text-[var(--muted-foreground)]" /> : <ChevronRight size={18} className="text-[var(--muted-foreground)]" />}
       </button>
 
+      {/* Collapsed preview — platform icons + top creative thumbnail */}
+      {!expanded && group.platforms.length > 0 && (
+        <div className="px-5 pb-3 flex items-center gap-3">
+          <div className="flex gap-1.5">
+            {group.platforms.slice(0, 8).map(plat => {
+              const meta = getPlatformMeta(plat);
+              return (
+                <div key={plat} className="w-7 h-7 rounded-md flex items-center justify-center text-[8px] font-black text-white" style={{ backgroundColor: meta.color }} title={meta.label}>
+                  {meta.icon}
+                </div>
+              );
+            })}
+          </div>
+          <span className="text-[11px] text-[var(--muted-foreground)]">{group.assets.length} creatives across {group.platforms.length} platforms</span>
+          {/* Show first 3 thumbnails */}
+          <div className="flex gap-1 ml-auto">
+            {group.assets.filter(a => a.blob_url).slice(0, 3).map(a => (
+              <div key={a.id} className="w-8 h-8 rounded-md overflow-hidden bg-[var(--muted)]">
+                <img src={a.blob_url!} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {expanded && (
-        <div className="px-5 pb-5 space-y-5">
+        <div className="px-5 pb-5 space-y-4">
           {/* Row 1: Demographics + Psychographics + Channels */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Demographics */}
@@ -624,18 +660,18 @@ function PersonaSection({
                 </div>
               </div>
 
-              {/* Creatives grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {/* Creatives grid — capped height with scroll */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 max-h-[360px] overflow-y-auto pr-1">
                 {activePlatformAssets.map(asset => (
-                  <CreativeThumb key={asset.id} asset={asset} onClick={() => onAssetClick(asset)} />
+                  <CreativeThumb key={asset.id} asset={asset} onClick={() => onAssetClick(asset)} onDelete={onDelete} />
                 ))}
               </div>
 
-              {/* Mockups for this platform */}
-              <div className="mt-4">
+              {/* Mockups for this platform — first 4 only */}
+              <div className="mt-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Ad Mockups</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {activePlatformAssets.slice(0, 6).map(asset => (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+                  {activePlatformAssets.slice(0, 4).map(asset => (
                     <button key={`mock-${asset.id}`} onClick={() => onAssetClick(asset)} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white hover:shadow-md transition-shadow cursor-pointer text-left">
                       <div className="bg-[#1a1a1a] p-2">
                         <MockupPreview asset={asset} />
@@ -701,7 +737,7 @@ export default function CampaignWorkspace({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top: Campaign Overview + Regional tabs */}
       <MiniTabs
         defaultTab="campaign"
@@ -738,8 +774,21 @@ export default function CampaignWorkspace({
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Value Propositions</span>
                     <ul className="space-y-1">
-                      {(messaging.value_propositions || briefData.value_props || []).map((vp: any, i: number) => {
-                        const text = typeof vp === "string" ? vp : (vp?.text || vp?.value || vp?.proposition || JSON.stringify(vp));
+                      {(messaging.value_propositions || briefData.value_props || []).slice(0, 6).map((vp: any, i: number) => {
+                        let text = "";
+                        if (typeof vp === "string") {
+                          text = vp;
+                        } else if (vp && typeof vp === "object") {
+                          // Extract the most meaningful string from the object
+                          text = vp.text || vp.value || vp.proposition || vp.description || vp.message || "";
+                          // If none of those keys exist, try to find any string value that isn't a key name
+                          if (!text) {
+                            const vals = Object.values(vp).filter(v => typeof v === "string" && (v as string).length > 10);
+                            text = (vals[0] as string) || "";
+                          }
+                          // Last resort: skip this item rather than showing JSON
+                          if (!text) return null;
+                        }
                         return (
                           <li key={i} className="flex items-start gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] flex-shrink-0 mt-[7px]" />
@@ -861,11 +910,13 @@ export default function CampaignWorkspace({
 
       {/* Persona Sections */}
       {personaGroups.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Users size={16} className="text-[var(--muted-foreground)]" />
-            <h2 className="text-sm font-semibold text-[var(--foreground)]">Personas & Creatives</h2>
-            <span className="text-[11px] text-[var(--muted-foreground)]">{personaGroups.length} personas · {assets.filter(a => a.asset_type !== "base_image").length} creatives</span>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users size={14} className="text-[var(--muted-foreground)]" />
+              <h2 className="text-[13px] font-semibold text-[var(--foreground)]">Personas & Creatives</h2>
+              <span className="text-[11px] text-[var(--muted-foreground)]">{personaGroups.length} personas · {assets.filter(a => a.asset_type !== "base_image").length} creatives</span>
+            </div>
           </div>
           {personaGroups.map((group, i) => (
             <PersonaSection
