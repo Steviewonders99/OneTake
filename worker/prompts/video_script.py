@@ -550,3 +550,105 @@ Return ONLY valid JSON:
   "target_platform": "{template['platforms'][0] if template['platforms'] else 'tiktok'}",
   "dialogue_ends_at_s": <second mark where last dialogue ends — MUST be <= 10>
 }}"""
+
+
+# ── UGC Script Prompt (for Stage 5 multishot pipeline) ───────────────
+
+def build_ugc_script_prompt(
+    persona: dict[str, Any],
+    brief: dict[str, Any],
+    template_key: str,
+    template: dict[str, Any],
+    locations: list[dict[str, Any]],
+    language: str = "English",
+) -> str:
+    """Build the script generation prompt for Stage 5 UGC videos.
+
+    Uses the selected genre template as structure, the persona for content,
+    and locations for setting details. The LLM fills in dialogue, actions,
+    and acting direction per shot.
+    """
+    psychology = persona.get("psychology_profile", {})
+    trigger_words = psychology.get("trigger_words", [])
+
+    # Build beats description
+    beats_block = []
+    for i, beat in enumerate(template["beats"]):
+        loc = locations[i % len(locations)]
+        beats_block.append(
+            f"Shot {i + 1} ({beat['label']}, {beat['duration_s']}s):\n"
+            f"  Camera: {beat['camera']}\n"
+            f"  Direction: {beat['direction']}\n"
+            f"  Energy: {beat['energy']}/10\n"
+            f"  Has dialogue: {beat['has_dialogue']}\n"
+            f"  Setting: {loc['key']} — {', '.join(loc.get('mood_bias', []))}\n"
+            f"  Transition to next: {beat.get('transition', 'hard_cut')}"
+        )
+    beats_text = "\n\n".join(beats_block)
+
+    # Brief context
+    comp = brief.get("compensation", brief.get("form_data", {}).get("compensation", {}))
+    brief_context = (
+        f"Campaign: {brief.get('campaign_objective', 'Recruit contributors')}\n"
+        f"Task type: {brief.get('task_type', 'data annotation')}\n"
+        f"Compensation: {json.dumps(comp, default=str) if comp else 'not specified'}"
+    )
+
+    min_dur, max_dur = template.get("duration_range", (12, 15))
+
+    return f"""Write a UGC video script for OneForma recruitment.
+
+TEMPLATE: {template['name']} — {template['description']}
+TOTAL DURATION: {min_dur}-{max_dur} seconds
+LANGUAGE: {language} (must sound native, not translated)
+
+PERSONA: {persona.get('persona_name', 'unknown')}
+Age: {persona.get('age', '?')} | Region: {persona.get('region', '?')}
+Lifestyle: {persona.get('lifestyle', '')}
+Pain point: {persona.get('customized_pain', '')}
+Motivation: {persona.get('customized_motivation', '')}
+Trigger words: {', '.join(trigger_words[:6])}
+Psychology: {psychology.get('primary_bias', '')} — {psychology.get('messaging_angle', '')}
+
+CAMPAIGN:
+{brief_context}
+
+SHOT STRUCTURE (follow this EXACTLY):
+{beats_text}
+
+RULES:
+- ALL dialogue must end BEFORE the 10-second mark (lip sync safe zone)
+- Last 2-5 seconds should be visual-only (action, expression, no spoken words)
+- "OneForma" must be spoken in the dialogue at least once
+- CTA must be specific with time anchor ("search OneForma, sign up in 2 minutes")
+- Use trigger words naturally in the dialogue
+- Address the persona's #1 pain point in the first 5 seconds
+- Sound like a REAL PERSON sharing with friends — NOT a corporate ad
+- No readable screen content (Kling can't render UIs)
+
+Return ONLY valid JSON:
+{{
+  "template": "{template_key}",
+  "target_platform": "tiktok",
+  "total_duration_s": {min_dur}-{max_dur},
+  "scenes": [
+    {{
+      "index": 1,
+      "label": "beat_label",
+      "duration_s": N,
+      "camera": "camera_key",
+      "action": "what the person is physically doing",
+      "acting_direction": "subtle expression and body language notes",
+      "dialogue": "spoken words in {language} (empty string if no dialogue this shot)",
+      "dialogue_english": "English translation (empty if no dialogue)",
+      "setting": "location_key",
+      "environment": "specific environment description for Kling prompt",
+      "lighting": "lighting_preset_key",
+      "texture": "iphone_ugc",
+      "transition": "transition_type",
+      "energy": N
+    }}
+  ],
+  "hook": "the scroll-stopping opening line",
+  "cta": "the specific call to action"
+}}"""
