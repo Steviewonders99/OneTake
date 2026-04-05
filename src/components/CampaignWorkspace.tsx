@@ -374,153 +374,132 @@ function CreativeEditorModal({
   const score = asset.evaluation_score || 0;
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      {/* Panel slides from right */}
-      <div className="absolute top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl flex flex-col overflow-y-auto slide-in" onClick={e => e.stopPropagation()}>
-        {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-[var(--border)] px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 flex items-center justify-center">
-              <PlatformLogo brand={meta.brand} className="w-6 h-6" />
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      {/* 80vw centered 2-column modal */}
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row" style={{ width: "80vw", maxWidth: "1400px", maxHeight: "90vh" }} onClick={e => e.stopPropagation()}>
+
+        {/* LEFT: Creative Preview */}
+        <div className="flex-1 bg-[#1a1a1a] relative flex items-center justify-center p-8 min-h-[400px]">
+          {/* Close button */}
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition-colors z-10">
+            <X size={18} className="text-white" />
+          </button>
+
+          {asset.blob_url ? (
+            <img src={asset.blob_url} alt="" className="max-w-full max-h-[75vh] rounded-lg shadow-2xl object-contain" />
+          ) : (
+            <div className="w-full max-w-[400px]">
+              <MockupPreview asset={asset} />
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">Creative Details</h2>
-              <span className="text-[12px] text-[var(--muted-foreground)]">{meta.label} · {asset.format}</span>
+          )}
+
+          {/* Bottom bar */}
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PlatformLogo brand={meta.brand} className="w-5 h-5" />
+              <span className="text-[12px] text-white/60">{meta.label} · {asset.format}</span>
             </div>
             {score > 0 && (
-              <span className={`text-[13px] font-bold px-2 py-0.5 rounded ${
-                score >= 0.85 ? "bg-green-50 text-green-700" : score >= 0.70 ? "bg-yellow-50 text-yellow-700" : "bg-red-50 text-red-700"
+              <span className={`text-[12px] font-bold px-2 py-0.5 rounded ${
+                score >= 0.85 ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"
               }`}>
                 {(score * 100).toFixed(0)}% VQA
               </span>
             )}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-[var(--muted)] rounded-lg cursor-pointer transition-colors">
-            <X size={18} className="text-[var(--muted-foreground)]" />
-          </button>
         </div>
 
-        {/* Creative image - full width */}
-        <div className="bg-[#1a1a1a] p-6 flex items-center justify-center min-h-[300px]">
-          {asset.blob_url ? (
-            <img src={asset.blob_url} alt="" className="max-w-full max-h-[60vh] rounded-lg shadow-2xl" />
-          ) : (
-            <div className="bg-[#2a2a2a] rounded-lg overflow-hidden" style={{ maxWidth: "400px", width: "100%" }}>
-              <MockupPreview asset={asset} />
-            </div>
-          )}
-        </div>
-
-        {/* Action bar */}
-        <div className="px-6 py-3 border-b border-[var(--border)] bg-[var(--muted)] flex items-center gap-2 flex-wrap">
-          {onEditHtml && (content.creative_html || content.html) && (
-            <button
-              onClick={() => { onEditHtml(asset); onClose(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6B21A8] hover:bg-[#5B21B6] rounded-lg text-[12px] font-semibold text-white cursor-pointer transition-colors"
-            >
-              <Type size={13} />
-              Edit Live
-            </button>
-          )}
-          {onChangeLayout && (
-            <button
-              onClick={() => onChangeLayout(asset)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] bg-white hover:bg-[var(--muted)] rounded-lg text-[12px] font-medium text-[var(--foreground)] cursor-pointer transition-colors"
-            >
-              <Sparkles size={13} />
-              Change Layout
-            </button>
-          )}
-          {asset.blob_url && (
-            <button
-              onClick={() => window.open(asset.blob_url!, "_blank")}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] bg-white hover:bg-[var(--muted)] rounded-lg text-[12px] font-medium text-[var(--foreground)] cursor-pointer transition-colors"
-            >
-              <Download size={13} />
-              Download
-            </button>
-          )}
-          <div className="flex-1" />
-          {onRefine && (
-            <button
-              onClick={() => { onRefine(asset); onClose(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] bg-white hover:bg-[var(--muted)] rounded-lg text-[12px] font-medium text-[var(--foreground)] cursor-pointer transition-colors"
-            >
-              <Pencil size={13} />
-              Request Revision
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={() => { onDelete(asset); onClose(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 bg-white hover:bg-red-50 rounded-lg text-[12px] font-medium text-red-600 cursor-pointer transition-colors"
-            >
-              <Trash2 size={13} />
-              Delete
-            </button>
-          )}
-        </div>
-
-        {/* Edit fields below */}
-        <div className="p-6 space-y-5">
-          {/* Headline */}
-          <div>
-            <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Headline</label>
-            <EditableField
-              value={content.overlay_headline || copyData.headline || content.slide_headline || ""}
-              editable
-              onSave={(v) => toast.success(`Headline updated`)}
-              textClassName="text-[14px] font-semibold text-[var(--foreground)]"
-            />
+        {/* RIGHT: Edit Fields + Actions */}
+        <div className="w-full md:w-[380px] flex flex-col border-l border-[var(--border)] overflow-y-auto">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--muted)]">
+            <h3 className="text-[14px] font-semibold text-[var(--foreground)]">Creative Details</h3>
+            <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">{content.actor_name ? `${content.actor_name} · ` : ""}{meta.label}</p>
           </div>
 
-          {/* Subheadline */}
-          <div>
-            <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Subheadline</label>
-            <EditableField
-              value={content.overlay_sub || copyData.description || ""}
-              editable
-              onSave={(v) => toast.success(`Subheadline updated`)}
-              textClassName="text-[13px] text-[var(--muted-foreground)] leading-relaxed"
-              multiline
-            />
-          </div>
-
-          {/* CTA */}
-          <div>
-            <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">CTA</label>
-            <EditableField
-              value={content.overlay_cta || copyData.cta || "Apply Now"}
-              editable
-              onSave={(v) => toast.success(`CTA updated`)}
-              textClassName="text-[13px] font-medium text-[#6B21A8]"
-            />
-          </div>
-
-          {/* Caption / Primary Text */}
-          {(copyData.caption || copyData.primary_text) && (
+          {/* Fields */}
+          <div className="p-6 space-y-5 flex-1">
             <div>
-              <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Caption</label>
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Headline</label>
               <EditableField
-                value={copyData.caption || copyData.primary_text || ""}
+                value={content.overlay_headline || copyData.headline || content.slide_headline || ""}
                 editable
-                onSave={(v) => toast.success("Caption updated")}
-                textClassName="text-[12px] text-[var(--muted-foreground)] leading-relaxed"
+                onSave={(v) => toast.success("Headline updated")}
+                textClassName="text-[14px] font-semibold text-[var(--foreground)]"
+              />
+            </div>
+            <div>
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Subheadline</label>
+              <EditableField
+                value={content.overlay_sub || copyData.description || ""}
+                editable
+                onSave={(v) => toast.success("Subheadline updated")}
+                textClassName="text-[13px] text-[var(--muted-foreground)] leading-relaxed"
                 multiline
               />
             </div>
-          )}
-
-          {/* Actor info */}
-          {content.actor_name && (
-            <div className="pt-3 border-t border-[var(--border)]">
-              <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Actor</label>
-              <p className="text-[13px] text-[var(--foreground)]">{content.actor_name}</p>
-              {content.scene && <p className="text-[13px] text-[var(--muted-foreground)]">{content.scene.replace(/_/g, " ")}</p>}
+            <div>
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">CTA</label>
+              <EditableField
+                value={content.overlay_cta || copyData.cta || "Apply Now"}
+                editable
+                onSave={(v) => toast.success("CTA updated")}
+                textClassName="text-[13px] font-medium text-[#6B21A8]"
+              />
             </div>
-          )}
+            {(copyData.caption || copyData.primary_text) && (
+              <div>
+                <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Caption</label>
+                <EditableField
+                  value={copyData.caption || copyData.primary_text || ""}
+                  editable
+                  onSave={(v) => toast.success("Caption updated")}
+                  textClassName="text-[12px] text-[var(--muted-foreground)] leading-relaxed"
+                  multiline
+                />
+              </div>
+            )}
+            {content.actor_name && (
+              <div className="pt-4 border-t border-[var(--border)]">
+                <label className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Actor</label>
+                <p className="text-[13px] text-[var(--foreground)]">{content.actor_name}</p>
+                {content.scene && <p className="text-[12px] text-[var(--muted-foreground)]">{content.scene.replace(/_/g, " ")}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div className="px-6 py-4 border-t border-[var(--border)] bg-[var(--muted)] space-y-2">
+            <div className="flex gap-2">
+              {onEditHtml && (content.creative_html || content.html) && (
+                <button onClick={() => { onEditHtml(asset); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#6B21A8] hover:bg-[#5B21B6] rounded-lg text-[12px] font-semibold text-white cursor-pointer transition-colors">
+                  <Type size={13} /> Edit Live
+                </button>
+              )}
+              {onChangeLayout && (
+                <button onClick={() => onChangeLayout(asset)} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-white hover:bg-white/80 rounded-lg text-[12px] font-medium cursor-pointer transition-colors">
+                  <Sparkles size={13} /> Change Layout
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {asset.blob_url && (
+                <button onClick={() => window.open(asset.blob_url!, "_blank")} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-white rounded-lg text-[12px] font-medium cursor-pointer hover:bg-white/80 transition-colors">
+                  <Download size={13} /> Download
+                </button>
+              )}
+              {onRefine && (
+                <button onClick={() => { onRefine(asset); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-white rounded-lg text-[12px] font-medium cursor-pointer hover:bg-white/80 transition-colors">
+                  <Pencil size={13} /> Revise
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={() => { onDelete(asset); onClose(); }} className="flex items-center justify-center gap-1.5 px-3 py-2 border border-red-200 bg-white rounded-lg text-[12px] font-medium text-red-600 cursor-pointer hover:bg-red-50 transition-colors">
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
