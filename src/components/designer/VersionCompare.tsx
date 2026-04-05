@@ -109,12 +109,12 @@ export default function VersionCompare({
 
         {/* Labels */}
         <div className="absolute bottom-3 left-3 z-10">
-          <span className="text-[10px] font-semibold text-white bg-black/60 px-2 py-0.5 rounded-full">
+          <span className="text-[12px] font-semibold text-white bg-black/60 px-2 py-0.5 rounded-full">
             {originalLabel}
           </span>
         </div>
         <div className="absolute bottom-3 right-3 z-10">
-          <span className="text-[10px] font-semibold text-white bg-black/60 px-2 py-0.5 rounded-full">
+          <span className="text-[12px] font-semibold text-white bg-black/60 px-2 py-0.5 rounded-full">
             {refinedLabel}
           </span>
         </div>

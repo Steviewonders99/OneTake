@@ -119,7 +119,7 @@ export default function DesignerCampaignList({
               className="w-full pl-8 pr-3 py-1.5 text-xs rounded-[10px] border border-[var(--border)] bg-white text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--oneforma-charcoal)]/20"
             />
           </div>
-          <p className="text-[10px] text-[var(--muted-foreground)] mt-2">
+          <p className="text-[12px] text-[var(--muted-foreground)] mt-2">
             {filtered.length} campaign{filtered.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -147,10 +147,10 @@ export default function DesignerCampaignList({
                   <p className="text-xs font-semibold text-[var(--foreground)] line-clamp-1 mb-0.5">
                     {campaign.title}
                   </p>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">
+                  <p className="text-[12px] text-[var(--muted-foreground)]">
                     {campaign.task_type.replace(/_/g, " ")}
                   </p>
-                  <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                  <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">
                     {formatDate(campaign.created_at)}
                   </p>
                 </button>
@@ -167,7 +167,7 @@ export default function DesignerCampaignList({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-[var(--border)] text-[10px] text-[var(--muted-foreground)]">
+        <div className="px-4 py-2 border-t border-[var(--border)] text-[12px] text-[var(--muted-foreground)]">
           {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""} total
         </div>
       </div>

@@ -92,7 +92,7 @@ function CopyLine({ label, value, icon: Icon }: { label: string; value: string; 
     <div className="flex items-start gap-2 group">
       <Icon size={12} className="text-[var(--muted-foreground)] mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-0.5">
+        <p className="text-[12px] font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-0.5">
           {label}
         </p>
         <p className="text-xs text-[var(--foreground)] leading-relaxed">{value}</p>
@@ -218,7 +218,7 @@ export default function PlatformPreviewWithCopy({
               )}
 
               {/* Meta footer */}
-              <div className="px-4 py-2.5 bg-[var(--muted)] text-[10px] text-[var(--muted-foreground)] flex items-center justify-between">
+              <div className="px-4 py-2.5 bg-[var(--muted)] text-[12px] text-[var(--muted-foreground)] flex items-center justify-between">
                 <span>{asset.platform} / {asset.format.replace(/_/g, " ")}</span>
                 <span>{asset.language}</span>
               </div>

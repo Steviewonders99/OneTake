@@ -92,7 +92,7 @@ function AssetCard({ asset }: { asset: GeneratedAsset }) {
         )}
 
         {/* Platform badge overlay */}
-        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wide bg-black/60 text-white px-1.5 py-0.5 rounded-md leading-tight">
+        <span className="absolute top-2 right-2 text-[12px] font-semibold uppercase tracking-wide bg-black/60 text-white px-1.5 py-0.5 rounded-md leading-tight">
           {asset.platform}
         </span>
 
@@ -119,7 +119,7 @@ function AssetCard({ asset }: { asset: GeneratedAsset }) {
             {headline}
           </p>
         )}
-        <p className="text-[10px] text-[#737373] uppercase tracking-wide">
+        <p className="text-[12px] text-[#737373] uppercase tracking-wide">
           {asset.format}
           {asset.language ? ` · ${asset.language}` : ""}
         </p>
@@ -159,7 +159,7 @@ function TabPills({
         >
           {label}
           <span
-            className={`text-[10px] tabular-nums ${
+            className={`text-[12px] tabular-nums ${
               active === key ? "text-white/70" : "text-[#A3A3A3]"
             }`}
           >
@@ -310,7 +310,7 @@ export default function DesignerPreviewPanel({ requestId }: DesignerPreviewPanel
       <div className="space-y-3">
         {/* Section header */}
         <div className="flex items-center justify-between gap-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--muted-foreground)]">
+          <p className="text-[14px] font-bold uppercase tracking-[0.06em] text-[var(--muted-foreground)]">
             Creative Assets
           </p>
           <TabPills active={activeTab} onChange={setActiveTab} counts={counts} />

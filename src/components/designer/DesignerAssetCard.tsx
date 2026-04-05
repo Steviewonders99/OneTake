@@ -125,7 +125,7 @@ export default function DesignerAssetCard({
 
         {/* Platform badge */}
         <span
-          className="absolute top-2.5 right-2.5 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full"
+          className="absolute top-2.5 right-2.5 text-white text-[12px] font-semibold px-2 py-0.5 rounded-full"
           style={{ background: platformColor(asset.platform) }}
         >
           {asset.platform}
@@ -134,7 +134,7 @@ export default function DesignerAssetCard({
         {/* Score badge */}
         {score !== null && score !== undefined && (
           <span
-            className={`absolute top-2.5 left-2.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+            className={`absolute top-2.5 left-2.5 text-[13px] font-bold px-2 py-0.5 rounded-full ${
               score >= 0.8
                 ? "bg-green-50 text-green-700"
                 : score >= 0.6
@@ -175,7 +175,7 @@ export default function DesignerAssetCard({
               <div className="mt-2 p-3 bg-[var(--muted)] rounded-[var(--radius-sm)] space-y-1.5">
                 {Object.entries(designNotes).map(([key, value]) => (
                   <div key={key}>
-                    <span className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                    <span className="text-[12px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
                       {key}
                     </span>
                     <p className="text-xs text-[var(--foreground)] leading-relaxed">
@@ -197,7 +197,7 @@ export default function DesignerAssetCard({
               .map(([key, value]) => (
                 <span
                   key={key}
-                  className="tag-pill text-[10px]"
+                  className="tag-pill text-[12px]"
                   title={`${key}: ${((value as number) * 100).toFixed(0)}%`}
                 >
                   {key.replace(/_/g, " ")}: {((value as number) * 100).toFixed(0)}%

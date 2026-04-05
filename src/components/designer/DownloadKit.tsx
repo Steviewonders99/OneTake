@@ -89,7 +89,7 @@ export default function DownloadKit({ requestId, token, hasAssets }: DownloadKit
             <span className="text-xs font-medium text-[var(--foreground)]">
               {opt.label}
             </span>
-            <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">
+            <span className="text-[12px] text-[var(--muted-foreground)] leading-tight">
               {opt.description}
             </span>
           </button>

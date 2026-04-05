@@ -209,13 +209,13 @@ export default function UploadZone({
                     alt={upload.file_name}
                     className="w-full h-full object-cover"
                   />
-                  <span className="absolute top-2 right-2 text-[10px] font-semibold text-white bg-green-600 px-2 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 text-[12px] font-semibold text-white bg-green-600 px-2 py-0.5 rounded-full">
                     Uploaded
                   </span>
                 </div>
                 <div className="p-2">
                   <p className="text-xs text-[var(--foreground)] truncate">{upload.file_name}</p>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">
+                  <p className="text-[12px] text-[var(--muted-foreground)]">
                     {new Date(upload.created_at).toLocaleDateString()}
                   </p>
                 </div>

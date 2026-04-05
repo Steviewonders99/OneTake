@@ -62,7 +62,7 @@ export default function DesignerNoteInput({
               className="text-xs text-[var(--foreground)] bg-blue-50 border border-blue-100 rounded-[var(--radius-sm)] px-3 py-2"
             >
               <p>{note.note_text}</p>
-              <p className="text-[10px] text-blue-400 mt-1">
+              <p className="text-[12px] text-blue-400 mt-1">
                 {new Date(note.created_at).toLocaleDateString()}
               </p>
             </div>

@@ -119,7 +119,7 @@ export default function EditChat({
                 </div>
               )}
               <p
-                className={`text-[9px] mt-1 ${
+                className={`text-[12px] mt-1 ${
                   msg.role === "user" ? "text-white/50" : "text-[var(--muted-foreground)]"
                 }`}
               >
@@ -162,7 +162,7 @@ export default function EditChat({
               key={action.label}
               onClick={() => handleQuickAction(action.prompt)}
               disabled={isGenerating || disabled}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-white border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)] cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium bg-white border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)] cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <action.icon size={11} />
               {action.label}

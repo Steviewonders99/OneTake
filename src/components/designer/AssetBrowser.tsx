@@ -189,7 +189,7 @@ export default function AssetBrowser({
                   {/* VQA score */}
                   {asset.evaluation_score !== null && asset.evaluation_score !== undefined && (
                     <span
-                      className={`absolute bottom-1 left-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                      className={`absolute bottom-1 left-1 text-[12px] font-bold px-1.5 py-0.5 rounded-full ${
                         asset.evaluation_score >= 0.8
                           ? "bg-green-50 text-green-700"
                           : asset.evaluation_score >= 0.6
@@ -204,10 +204,10 @@ export default function AssetBrowser({
 
                 {/* Label */}
                 <div className="px-2 py-1.5">
-                  <p className="text-[10px] font-medium text-[var(--foreground)] truncate">
+                  <p className="text-[12px] font-medium text-[var(--foreground)] truncate">
                     {asset.platform}
                   </p>
-                  <p className="text-[9px] text-[var(--muted-foreground)] truncate">
+                  <p className="text-[12px] text-[var(--muted-foreground)] truncate">
                     {asset.format.replace(/_/g, " ")}
                   </p>
                 </div>
