@@ -269,6 +269,18 @@ async def save_actor(request_id: str, data: dict[str, Any]) -> str:
     Data keys match the DB schema: name, face_lock, prompt_seed,
     outfit_variations, signature_accessory, backdrops.
     """
+    # Merge persona_key into face_lock so it's always available for grouping
+    face_lock = data.get("face_lock", {})
+    if isinstance(face_lock, str):
+        try:
+            face_lock = json.loads(face_lock)
+        except (json.JSONDecodeError, TypeError):
+            face_lock = {}
+    if data.get("persona_key"):
+        face_lock["persona_key"] = data["persona_key"]
+    if data.get("persona_name"):
+        face_lock["persona_name"] = data["persona_name"]
+
     pool = await _get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -281,7 +293,7 @@ async def save_actor(request_id: str, data: dict[str, Any]) -> str:
             """,
             request_id,
             data.get("name", "Contributor"),
-            json.dumps(data.get("face_lock", {}), default=str),
+            json.dumps(face_lock, default=str),
             data.get("prompt_seed", ""),
             json.dumps(data.get("outfit_variations", {}), default=str),
             data.get("signature_accessory", ""),

@@ -311,6 +311,9 @@ async def _generate_carousel(
             )
 
             # Save to Neon
+            # Get persona key from context
+            _persona_key = persona.get("archetype_key", persona.get("persona_key", "unassigned"))
+
             slide_meta = {
                 "platform": platform_key,
                 "slide_index": slide_idx + 1,
@@ -321,6 +324,7 @@ async def _generate_carousel(
                 "actor_name": slide.get("actor_name", ""),
                 "deterministic_passed": check["passed"],
                 "carousel_total_slides": len(slides_html),
+                "persona": _persona_key,
             }
 
             await save_asset(request_id, {

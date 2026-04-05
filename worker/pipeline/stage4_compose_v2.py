@@ -1145,7 +1145,7 @@ def _group_actors_by_persona(
                 face_lock = json.loads(face_lock)
             except (json.JSONDecodeError, TypeError):
                 face_lock = {}
-        persona_key = face_lock.get("persona_key", "unassigned")
+        persona_key = face_lock.get("persona_key") or face_lock.get("archetype_key") or "unassigned"
 
         # Attach images dict to actor copy
         actor_with_images = dict(actor)
