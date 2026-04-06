@@ -710,7 +710,7 @@ function PersonaSection({
           {group.actors.length > 0 && (
             <div>
               <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Actors</span>
-              <div className="flex gap-3 flex-wrap">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Prioritize actors that have images — compare as strings for UUID safety */}
                 {[...group.actors]
                   .sort((a, b) => {
@@ -725,17 +725,19 @@ function PersonaSection({
                     .sort((a, b) => (b.evaluation_score || 0) - (a.evaluation_score || 0))[0];
                   const imgUrl = actorImage?.blob_url || "";
                   return (
-                    <div key={actor.id} className="flex items-center gap-2.5 border border-[var(--border)] rounded-xl px-3 py-2.5 bg-white">
-                      {imgUrl ? (
-                        <img src={imgUrl} alt={actor.name} className="w-12 h-12 rounded-full object-cover border-2 border-[var(--border)] shadow-sm" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-[var(--muted)] flex items-center justify-center text-[14px] font-bold text-[var(--muted-foreground)]">
-                          {actor.name?.[0]?.toUpperCase() || "?"}
+                    <div key={actor.id} className="border border-[var(--border)] rounded-xl p-3.5 bg-white space-y-2">
+                      <div className="flex items-center gap-3">
+                        {imgUrl ? (
+                          <img src={imgUrl} alt={actor.name} className="w-16 h-16 rounded-xl object-cover border border-[var(--border)] shadow-sm flex-shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-[var(--muted)] flex items-center justify-center text-[18px] font-bold text-[var(--muted-foreground)] flex-shrink-0">
+                            {actor.name?.[0]?.toUpperCase() || "?"}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[14px] font-bold text-[var(--foreground)]">{actor.name}</p>
+                          <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">{actorImage ? `${((actorImage.evaluation_score || 0) * 100).toFixed(0)}% VQA` : "No images"}</p>
                         </div>
-                      )}
-                      <div>
-                        <p className="text-[13px] font-semibold text-[var(--foreground)]">{actor.name}</p>
-                        <p className="text-[12px] text-[var(--muted-foreground)]">{actorImage ? `${((actorImage.evaluation_score || 0) * 100).toFixed(0)}% VQA` : "No images"}</p>
                       </div>
                     </div>
                   );
@@ -1039,26 +1041,69 @@ export default function CampaignWorkspace({
                             </div>
                             {campaigns.map((camp: any, ci: number) => (
                               <div key={ci} className="px-4 py-3 border-t border-[var(--border)]">
-                                <span className="text-[13px] font-semibold block mb-2">{camp.name || `Campaign ${ci + 1}`}</span>
+                                <div className="mb-3 space-y-1">
+                                  <span className="text-[13px] font-semibold block">{camp.name || `Campaign ${ci + 1}`}</span>
+                                  <div className="flex flex-wrap gap-3 text-[12px] text-[var(--muted-foreground)]">
+                                    {camp.objective && <span><span className="font-medium text-[var(--foreground)]">Objective:</span> {camp.objective}</span>}
+                                    {camp.optimization && <span><span className="font-medium text-[var(--foreground)]">Optimization:</span> {camp.optimization}</span>}
+                                    {camp.daily_budget && <span><span className="font-medium text-[var(--foreground)]">Daily Budget:</span> ${Number(camp.daily_budget).toLocaleString()}</span>}
+                                  </div>
+                                </div>
                                 {camp.ad_sets?.length > 0 && (
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {camp.ad_sets.map((adSet: any, ai: number) => (
-                                      <div key={ai} className="border border-[var(--border)] rounded-lg p-2.5 bg-white">
-                                        <span className="text-[12px] font-bold block">{adSet.name || `Ad Set ${ai + 1}`}</span>
-                                        {adSet.targeting_tier && (
-                                          <span className={`inline-block mt-1 px-1.5 py-0.5 rounded text-[11px] font-semibold ${adSet.targeting_tier === "hyper" ? "bg-purple-50 text-purple-700" : adSet.targeting_tier === "hot" ? "bg-yellow-50 text-yellow-700" : "bg-green-50 text-green-700"}`}>
-                                            {adSet.targeting_tier}
-                                          </span>
+                                      <div key={ai} className="border border-[var(--border)] rounded-xl p-3.5 bg-white space-y-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <span className="text-[13px] font-bold text-[var(--foreground)]">{adSet.name || `Ad Set ${ai + 1}`}</span>
+                                          {(adSet.targeting_tier || adSet.targeting_type) && (
+                                            <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold ${(adSet.targeting_tier || adSet.targeting_type) === "hyper" ? "bg-purple-50 text-purple-700" : (adSet.targeting_tier || adSet.targeting_type) === "hot" ? "bg-yellow-50 text-yellow-700" : "bg-green-50 text-green-700"}`}>
+                                              {adSet.targeting_tier || adSet.targeting_type}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {adSet.persona_key && (
+                                          <p className="text-[12px]"><span className="text-[var(--muted-foreground)]">Persona:</span> <span className="font-medium text-[var(--foreground)]">{adSet.persona_key}</span></p>
+                                        )}
+                                        {adSet.daily_budget && (
+                                          <p className="text-[12px]"><span className="text-[var(--muted-foreground)]">Daily Budget:</span> <span className="font-medium text-[var(--foreground)]">${Number(adSet.daily_budget).toLocaleString()}</span></p>
                                         )}
                                         {adSet.interests?.length > 0 && (
-                                          <div className="flex flex-wrap gap-1 mt-1.5">
-                                            {adSet.interests.map((int: string, ii: number) => (
-                                              <span key={ii} className="text-[11px] px-1.5 py-0.5 bg-[var(--muted)] rounded text-[var(--foreground)]">{int}</span>
-                                            ))}
+                                          <div>
+                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Interests</span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {(adSet.interests as string[]).map((int: string, ii: number) => (
+                                                <span key={ii} className="text-[11px] px-1.5 py-0.5 bg-[var(--muted)] rounded text-[var(--foreground)]">{int}</span>
+                                              ))}
+                                            </div>
                                           </div>
                                         )}
                                         {adSet.placements?.length > 0 && (
-                                          <p className="text-[11px] text-[var(--muted-foreground)] mt-1">{adSet.placements.join(", ")}</p>
+                                          <div>
+                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Placements</span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {(adSet.placements as string[]).map((pl: string, pi: number) => (
+                                                <span key={pi} className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{pl}</span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        {adSet.kill_rule && (
+                                          <div>
+                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Kill Rule</span>
+                                            <p className="text-[12px] text-red-600 leading-snug">{adSet.kill_rule}</p>
+                                          </div>
+                                        )}
+                                        {adSet.scale_rule && (
+                                          <div>
+                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Scale Rule</span>
+                                            <p className="text-[12px] text-green-700 leading-snug">{adSet.scale_rule}</p>
+                                          </div>
+                                        )}
+                                        {adSet.creative_assignment_rule && (
+                                          <div>
+                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Creative Assignment</span>
+                                            <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">{adSet.creative_assignment_rule}</p>
+                                          </div>
                                         )}
                                       </div>
                                     ))}
@@ -1067,8 +1112,20 @@ export default function CampaignWorkspace({
                               </div>
                             ))}
                             {sd.scaling_rules && (
-                              <div className="px-4 py-2 bg-[var(--muted)] border-t border-[var(--border)] text-[12px] text-[var(--muted-foreground)]">
-                                <span className="font-semibold">Scaling:</span> {typeof sd.scaling_rules === "string" ? sd.scaling_rules : JSON.stringify(sd.scaling_rules, null, 0).slice(0, 150)}
+                              <div className="px-4 py-3 bg-[var(--muted)] border-t border-[var(--border)]">
+                                <span className="text-[12px] font-semibold text-[var(--foreground)] block mb-1">Scaling Rules</span>
+                                {typeof sd.scaling_rules === "string" ? (
+                                  <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">{sd.scaling_rules}</p>
+                                ) : (
+                                  <div className="space-y-1">
+                                    {Object.entries(sd.scaling_rules as Record<string, any>).map(([k, v]) => (
+                                      <p key={k} className="text-[12px] text-[var(--muted-foreground)]">
+                                        <span className="font-medium text-[var(--foreground)] capitalize">{k.replace(/_/g, " ")}:</span>{" "}
+                                        {typeof v === "string" ? v : JSON.stringify(v)}
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1163,6 +1220,38 @@ export default function CampaignWorkspace({
                             {clean}
                           </span>
                         );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {/* Full Cultural Research */}
+                {briefData.cultural_research && (
+                  <div>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-3">Cultural Research</span>
+                    <div className="space-y-3">
+                      {Object.entries(briefData.cultural_research as Record<string, any>).map(([region, data]) => {
+                        if (typeof data !== "object" || !data) return null;
+                        return Object.entries(data as Record<string, any>).map(([dimension, content]) => {
+                          if (dimension.startsWith("_")) return null;
+                          const text = typeof content === "string" ? content : JSON.stringify(content, null, 2);
+                          return (
+                            <div key={`${region}-${dimension}`} className="border border-[var(--border)] rounded-xl p-4">
+                              <h4 className="text-[13px] font-semibold text-[var(--foreground)] capitalize mb-2">
+                                {dimension.replace(/_/g, " ")}
+                              </h4>
+                              <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">
+                                {typeof content === "object" && content !== null
+                                  ? Object.entries(content as Record<string, unknown>).map(([k, v]) => (
+                                      <span key={k} className="block mb-2">
+                                        <span className="font-semibold text-[var(--foreground)] capitalize">{k.replace(/_/g, " ")}:</span>{" "}
+                                        {String(v).slice(0, 500)}
+                                      </span>
+                                    ))
+                                  : text.slice(0, 1000)}
+                              </p>
+                            </div>
+                          );
+                        });
                       })}
                     </div>
                   </div>
