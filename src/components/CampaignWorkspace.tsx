@@ -725,19 +725,23 @@ function PersonaSection({
                     .sort((a, b) => (b.evaluation_score || 0) - (a.evaluation_score || 0))[0];
                   const imgUrl = actorImage?.blob_url || "";
                   return (
-                    <div key={actor.id} className="border border-[var(--border)] rounded-xl p-3.5 bg-white space-y-2">
-                      <div className="flex items-center gap-3">
-                        {imgUrl ? (
-                          <img src={imgUrl} alt={actor.name} className="w-16 h-16 rounded-xl object-cover border border-[var(--border)] shadow-sm flex-shrink-0" />
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl bg-[var(--muted)] flex items-center justify-center text-[18px] font-bold text-[var(--muted-foreground)] flex-shrink-0">
-                            {actor.name?.[0]?.toUpperCase() || "?"}
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-[14px] font-bold text-[var(--foreground)]">{actor.name}</p>
-                          <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">{actorImage ? `${((actorImage.evaluation_score || 0) * 100).toFixed(0)}% VQA` : "No images"}</p>
+                    <div key={actor.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white">
+                      {imgUrl ? (
+                        <div className="aspect-[4/3] relative bg-[var(--muted)]">
+                          <img src={imgUrl} alt={actor.name} className="absolute inset-0 w-full h-full object-cover" />
+                          {actorImage?.evaluation_score && (
+                            <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[11px] font-bold text-white ${actorImage.evaluation_score >= 0.85 ? "bg-green-500" : "bg-yellow-500"}`}>
+                              {((actorImage.evaluation_score) * 100).toFixed(0)}%
+                            </div>
+                          )}
                         </div>
+                      ) : (
+                        <div className="aspect-[4/3] bg-[var(--muted)] flex items-center justify-center">
+                          <span className="text-[32px] font-bold text-[var(--muted-foreground)]">{actor.name?.[0]?.toUpperCase() || "?"}</span>
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="text-[14px] font-bold text-[var(--foreground)]">{actor.name}</p>
                       </div>
                     </div>
                   );
@@ -995,6 +999,41 @@ export default function CampaignWorkspace({
                     </ul>
                   </div>
                 )}
+                {/* Campaign Strategy Overview */}
+                {briefData.campaign_strategies_summary && (
+                  <div>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Campaign Strategy</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {Object.entries(briefData.campaign_strategies_summary as Record<string, any>).map(([region, s]: [string, any]) => (
+                        <div key={region} className="border border-[var(--border)] rounded-xl p-4" style={{ borderTopColor: "#0693E3", borderTopWidth: "2px" }}>
+                          <span className="text-[14px] font-bold text-[var(--foreground)]">{region}</span>
+                          <div className="mt-2 text-[13px] text-[var(--muted-foreground)] space-y-1">
+                            <p>Tier {s.tier || 1} · {s.ad_set_count || "?"} ad sets</p>
+                            {s.split_test_variable && <p>Split test: <span className="font-medium text-[var(--foreground)] capitalize">{s.split_test_variable}</span></p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Budget Data */}
+                {briefData.budget_data && (
+                  <div>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Budget Allocation</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {Object.entries(briefData.budget_data as Record<string, any>).map(([key, val]: [string, any]) => {
+                        if (typeof val !== "object" || !val) return null;
+                        return (
+                          <div key={key} className="border border-[var(--border)] rounded-xl p-3">
+                            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">{key}</span>
+                            {val.monthly_budget && <span className="text-[16px] font-bold text-[var(--foreground)]">${Number(val.monthly_budget).toLocaleString()}</span>}
+                            {val.weight_pct && <span className="text-[12px] text-[var(--muted-foreground)] block">{val.weight_pct}% of total</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ),
           },
@@ -1113,18 +1152,20 @@ export default function CampaignWorkspace({
                             ))}
                             {sd.scaling_rules && (
                               <div className="px-4 py-3 bg-[var(--muted)] border-t border-[var(--border)]">
-                                <span className="text-[12px] font-semibold text-[var(--foreground)] block mb-1">Scaling Rules</span>
+                                <span className="text-[13px] font-semibold text-[var(--foreground)] block mb-1">Scaling Rules</span>
                                 {typeof sd.scaling_rules === "string" ? (
-                                  <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">{sd.scaling_rules}</p>
-                                ) : (
+                                  <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">{sd.scaling_rules}</p>
+                                ) : typeof sd.scaling_rules === "object" && sd.scaling_rules && !Array.isArray(sd.scaling_rules) ? (
                                   <div className="space-y-1">
-                                    {Object.entries(sd.scaling_rules as Record<string, any>).map(([k, v]) => (
-                                      <p key={k} className="text-[12px] text-[var(--muted-foreground)]">
+                                    {Object.entries(sd.scaling_rules).map(([k, v]) => (
+                                      <p key={k} className="text-[13px] text-[var(--muted-foreground)]">
                                         <span className="font-medium text-[var(--foreground)] capitalize">{k.replace(/_/g, " ")}:</span>{" "}
                                         {typeof v === "string" ? v : JSON.stringify(v)}
                                       </p>
                                     ))}
                                   </div>
+                                ) : (
+                                  <p className="text-[13px] text-[var(--muted-foreground)]">{JSON.stringify(sd.scaling_rules, null, 2)}</p>
                                 )}
                               </div>
                             )}
@@ -1236,19 +1277,19 @@ export default function CampaignWorkspace({
                           const text = typeof content === "string" ? content : JSON.stringify(content, null, 2);
                           return (
                             <div key={`${region}-${dimension}`} className="border border-[var(--border)] rounded-xl p-4">
-                              <h4 className="text-[13px] font-semibold text-[var(--foreground)] capitalize mb-2">
+                              <h4 className="text-[14px] font-semibold text-[var(--foreground)] capitalize mb-2">
                                 {dimension.replace(/_/g, " ")}
                               </h4>
-                              <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">
+                              <div className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
                                 {typeof content === "object" && content !== null
                                   ? Object.entries(content as Record<string, unknown>).map(([k, v]) => (
-                                      <span key={k} className="block mb-2">
-                                        <span className="font-semibold text-[var(--foreground)] capitalize">{k.replace(/_/g, " ")}:</span>{" "}
-                                        {String(v).slice(0, 500)}
-                                      </span>
+                                      <div key={k} className="mb-3">
+                                        <span className="font-semibold text-[var(--foreground)] capitalize block mb-0.5">{k.replace(/_/g, " ")}</span>
+                                        <span className="leading-relaxed">{String(v)}</span>
+                                      </div>
                                     ))
-                                  : text.slice(0, 1000)}
-                              </p>
+                                  : <span className="whitespace-pre-wrap">{text}</span>}
+                              </div>
                             </div>
                           );
                         });
