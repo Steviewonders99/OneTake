@@ -90,22 +90,35 @@ async def generate_text(
             return result
 
         except Exception as nim_error:
-            logger.warning("NIM Qwen-397B failed: %s — trying MLX fallback", nim_error)
+            logger.error("NIM Qwen-397B failed: %s — retrying NIM (no MLX fallback)", nim_error)
 
-            # Fallback: local MLX server (Qwen3.5-9B) — only if available
+            # Retry NIM once with a different key from the pool
             try:
-                from mlx_server_manager import mlx_server
-                model_name = model_name or LLM_MODEL
-                return await mlx_server.generate(
-                    messages=messages,
-                    model=model_name,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    thinking=thinking,
-                )
-            except Exception as mlx_error:
-                logger.error("Both NIM and MLX failed. NIM: %s | MLX: %s", nim_error, mlx_error)
-                raise nim_error  # Surface the NIM error as primary
+                from nim_key_pool import get_nim_key
+                retry_key = get_nim_key() or NVIDIA_NIM_API_KEY
+                payload["temperature"] = min(temperature + 0.1, 1.0)  # Slight temp bump
+                async with httpx.AsyncClient(timeout=300) as client:
+                    resp = await client.post(
+                        f"{NVIDIA_NIM_BASE_URL}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {retry_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json=payload,
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                msg = data["choices"][0]["message"]
+                content = (msg.get("content") or "").strip()
+                reasoning = (msg.get("reasoning_content") or msg.get("reasoning") or "").strip()
+                result = content if content else reasoning
+                if result:
+                    logger.info("NIM retry succeeded (%d chars)", len(result))
+                    return result
+                raise ValueError("NIM retry returned empty")
+            except Exception as retry_error:
+                logger.error("NIM retry also failed: %s", retry_error)
+                raise nim_error
 
     raise RuntimeError("No NIM API key configured and MLX fallback unavailable")
 
