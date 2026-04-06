@@ -1166,67 +1166,98 @@ export default function CampaignWorkspace({
                                   </div>
                                 </div>
                                 {camp.ad_sets?.length > 0 && (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {camp.ad_sets.map((adSet: any, ai: number) => (
-                                      <div key={ai} className="border border-[var(--border)] rounded-xl p-3.5 bg-white space-y-2">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <span className="text-[13px] font-bold text-[var(--foreground)]">{adSet.name || `Ad Set ${ai + 1}`}</span>
-                                          {(adSet.targeting_tier || adSet.targeting_type) && (
-                                            <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold ${(adSet.targeting_tier || adSet.targeting_type) === "hyper" ? "bg-purple-50 text-purple-700" : (adSet.targeting_tier || adSet.targeting_type) === "hot" ? "bg-yellow-50 text-yellow-700" : "bg-green-50 text-green-700"}`}>
-                                              {adSet.targeting_tier || adSet.targeting_type}
-                                            </span>
-                                          )}
+                                  <div className="space-y-3">
+                                    {camp.ad_sets.map((adSet: any, ai: number) => {
+                                      const tier = adSet.targeting_tier || adSet.targeting_type || "";
+                                      const tierColor = tier === "hyper" ? "#6B21A8" : tier === "hot" ? "#f59e0b" : "#22c55e";
+                                      const demo = adSet.demographics || {};
+                                      const creative = adSet.creative_assignment_rule || {};
+                                      return (
+                                        <div key={ai} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white" style={{ borderLeftWidth: "3px", borderLeftColor: tierColor }}>
+                                          {/* Ad Set Header */}
+                                          <div className="px-4 py-3 flex items-center justify-between bg-[var(--muted)]/50">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-[14px] font-bold text-[var(--foreground)]">Ad Set {ai + 1}</span>
+                                              {tier && (
+                                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${tier === "hyper" ? "bg-purple-50 text-purple-700" : tier === "hot" ? "bg-yellow-50 text-yellow-700" : "bg-green-50 text-green-700"}`}>{tier}</span>
+                                              )}
+                                            </div>
+                                            {adSet.daily_budget && <span className="text-[13px] font-bold text-[var(--foreground)]">${Number(adSet.daily_budget).toLocaleString()}/day</span>}
+                                          </div>
+                                          <div className="px-4 py-3 space-y-3">
+                                            {/* Title */}
+                                            <p className="text-[13px] font-semibold text-[var(--foreground)]">{adSet.name || `Ad Set ${ai + 1}`}</p>
+
+                                            {/* Persona + Demographics row */}
+                                            <div className="flex flex-wrap gap-4 text-[13px]">
+                                              {adSet.persona_key && (
+                                                <div><span className="text-[var(--muted-foreground)]">Persona:</span> <span className="font-medium capitalize">{String(adSet.persona_key).replace(/_/g, " ")}</span></div>
+                                              )}
+                                              {(demo.age_min || demo.age_max) && (
+                                                <div><span className="text-[var(--muted-foreground)]">Age:</span> <span className="font-medium">{demo.age_min || "18"}-{demo.age_max || "65"}</span></div>
+                                              )}
+                                              {demo.gender && (
+                                                <div><span className="text-[var(--muted-foreground)]">Gender:</span> <span className="font-medium capitalize">{demo.gender}</span></div>
+                                              )}
+                                            </div>
+
+                                            {/* Interests */}
+                                            {adSet.interests?.length > 0 && (
+                                              <div>
+                                                <span className="text-[12px] font-semibold text-[var(--muted-foreground)] block mb-1">Targeting Interests</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                  {(adSet.interests as unknown[]).map((int: unknown, ii: number) => (
+                                                    <span key={ii} className="text-[12px] px-2 py-0.5 bg-[var(--muted)] rounded-lg text-[var(--foreground)] font-medium">{String(int)}</span>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Placements */}
+                                            {adSet.placements?.length > 0 && (
+                                              <div>
+                                                <span className="text-[12px] font-semibold text-[var(--muted-foreground)] block mb-1">Placements</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                  {(adSet.placements as unknown[]).map((pl: unknown, pi: number) => (
+                                                    <span key={pi} className="text-[12px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded-lg font-medium">{String(pl)}</span>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Creative Assignment */}
+                                            {creative && typeof creative === "object" && Object.keys(creative).length > 0 && (
+                                              <div className="flex flex-wrap gap-4 text-[13px]">
+                                                {creative.hook_types?.length > 0 && (
+                                                  <div><span className="text-[var(--muted-foreground)]">Hook:</span> <span className="font-medium capitalize">{creative.hook_types.join(", ")}</span></div>
+                                                )}
+                                                {creative.treatment && (
+                                                  <div><span className="text-[var(--muted-foreground)]">Treatment:</span> <span className="font-medium capitalize">{String(creative.treatment).replace(/_/g, " ")}</span></div>
+                                                )}
+                                              </div>
+                                            )}
+
+                                            {/* Rules */}
+                                            {(adSet.kill_rule || adSet.scale_rule) && (
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[var(--border)]">
+                                                {adSet.kill_rule && (
+                                                  <div className="text-[12px]">
+                                                    <span className="font-semibold text-red-600 block mb-0.5">Kill Rule</span>
+                                                    <span className="text-[var(--muted-foreground)] leading-snug">{String(adSet.kill_rule)}</span>
+                                                  </div>
+                                                )}
+                                                {adSet.scale_rule && (
+                                                  <div className="text-[12px]">
+                                                    <span className="font-semibold text-green-700 block mb-0.5">Scale Rule</span>
+                                                    <span className="text-[var(--muted-foreground)] leading-snug">{String(adSet.scale_rule)}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
-                                        {adSet.persona_key && (
-                                          <p className="text-[12px]"><span className="text-[var(--muted-foreground)]">Persona:</span> <span className="font-medium text-[var(--foreground)]">{adSet.persona_key}</span></p>
-                                        )}
-                                        {adSet.daily_budget && (
-                                          <p className="text-[12px]"><span className="text-[var(--muted-foreground)]">Daily Budget:</span> <span className="font-medium text-[var(--foreground)]">${Number(adSet.daily_budget).toLocaleString()}</span></p>
-                                        )}
-                                        {adSet.interests?.length > 0 && (
-                                          <div>
-                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Interests</span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {(adSet.interests as unknown[]).map((int: unknown, ii: number) => (
-                                                <span key={ii} className="text-[11px] px-1.5 py-0.5 bg-[var(--muted)] rounded text-[var(--foreground)]">{typeof int === "string" ? int : JSON.stringify(int)}</span>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                        {adSet.placements?.length > 0 && (
-                                          <div>
-                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Placements</span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {(adSet.placements as unknown[]).map((pl: unknown, pi: number) => (
-                                                <span key={pi} className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{typeof pl === "string" ? pl : JSON.stringify(pl)}</span>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                        {adSet.kill_rule && (
-                                          <div>
-                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Kill Rule</span>
-                                            <p className="text-[12px] text-red-600 leading-snug">{typeof adSet.kill_rule === "string" ? adSet.kill_rule : JSON.stringify(adSet.kill_rule)}</p>
-                                          </div>
-                                        )}
-                                        {adSet.scale_rule && (
-                                          <div>
-                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Scale Rule</span>
-                                            <p className="text-[12px] text-green-700 leading-snug">{typeof adSet.scale_rule === "string" ? adSet.scale_rule : JSON.stringify(adSet.scale_rule)}</p>
-                                          </div>
-                                        )}
-                                        {adSet.creative_assignment_rule && (
-                                          <div>
-                                            <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Creative Assignment</span>
-                                            <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">
-                                              {typeof adSet.creative_assignment_rule === "string"
-                                                ? adSet.creative_assignment_rule
-                                                : JSON.stringify(adSet.creative_assignment_rule)}
-                                            </p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
