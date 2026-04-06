@@ -1187,8 +1187,8 @@ export default function CampaignWorkspace({
                                           <div>
                                             <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Interests</span>
                                             <div className="flex flex-wrap gap-1">
-                                              {(adSet.interests as string[]).map((int: string, ii: number) => (
-                                                <span key={ii} className="text-[11px] px-1.5 py-0.5 bg-[var(--muted)] rounded text-[var(--foreground)]">{int}</span>
+                                              {(adSet.interests as unknown[]).map((int: unknown, ii: number) => (
+                                                <span key={ii} className="text-[11px] px-1.5 py-0.5 bg-[var(--muted)] rounded text-[var(--foreground)]">{typeof int === "string" ? int : JSON.stringify(int)}</span>
                                               ))}
                                             </div>
                                           </div>
@@ -1197,8 +1197,8 @@ export default function CampaignWorkspace({
                                           <div>
                                             <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-1">Placements</span>
                                             <div className="flex flex-wrap gap-1">
-                                              {(adSet.placements as string[]).map((pl: string, pi: number) => (
-                                                <span key={pi} className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{pl}</span>
+                                              {(adSet.placements as unknown[]).map((pl: unknown, pi: number) => (
+                                                <span key={pi} className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{typeof pl === "string" ? pl : JSON.stringify(pl)}</span>
                                               ))}
                                             </div>
                                           </div>
@@ -1206,19 +1206,23 @@ export default function CampaignWorkspace({
                                         {adSet.kill_rule && (
                                           <div>
                                             <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Kill Rule</span>
-                                            <p className="text-[12px] text-red-600 leading-snug">{adSet.kill_rule}</p>
+                                            <p className="text-[12px] text-red-600 leading-snug">{typeof adSet.kill_rule === "string" ? adSet.kill_rule : JSON.stringify(adSet.kill_rule)}</p>
                                           </div>
                                         )}
                                         {adSet.scale_rule && (
                                           <div>
                                             <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Scale Rule</span>
-                                            <p className="text-[12px] text-green-700 leading-snug">{adSet.scale_rule}</p>
+                                            <p className="text-[12px] text-green-700 leading-snug">{typeof adSet.scale_rule === "string" ? adSet.scale_rule : JSON.stringify(adSet.scale_rule)}</p>
                                           </div>
                                         )}
                                         {adSet.creative_assignment_rule && (
                                           <div>
                                             <span className="text-[11px] font-semibold uppercase text-[var(--muted-foreground)] block mb-0.5">Creative Assignment</span>
-                                            <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">{adSet.creative_assignment_rule}</p>
+                                            <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">
+                                              {typeof adSet.creative_assignment_rule === "string"
+                                                ? adSet.creative_assignment_rule
+                                                : JSON.stringify(adSet.creative_assignment_rule)}
+                                            </p>
                                           </div>
                                         )}
                                       </div>
