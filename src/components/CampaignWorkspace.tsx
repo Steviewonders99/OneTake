@@ -555,6 +555,7 @@ function PersonaSection({
 }) {
   const [activePlatform, setActivePlatform] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
+  const [showCopy, setShowCopy] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const colors = ["#6B21A8", "#0693E3", "#E91E8C", "#22c55e"];
   const color = colors[index % colors.length];
@@ -819,9 +820,8 @@ function PersonaSection({
             </div>
           )}
 
-          {/* Row 2: Ad Messaging per Platform */}
+          {/* Row 2: Ad Messaging per Platform (collapsible) */}
           {(() => {
-            // Find copy assets for this persona
             const copyAssets = allAssets.filter(a =>
               a.asset_type === "copy" as any &&
               ((a.content as Record<string, any>)?.persona_name?.toLowerCase() === (p.persona_name || p.name || "").toLowerCase() ||
@@ -829,7 +829,6 @@ function PersonaSection({
             );
             if (copyAssets.length === 0) return null;
 
-            // Group by platform
             const copyByPlatform = new Map<string, any[]>();
             for (const asset of copyAssets) {
               const plat = asset.platform || "unknown";
@@ -838,53 +837,60 @@ function PersonaSection({
             }
 
             return (
-              <div>
-                <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-3">Ad Messaging</span>
-                <div className="space-y-3">
-                  {Array.from(copyByPlatform.entries()).map(([plat, assets]) => {
-                    const meta = getPlatformMeta(plat);
-                    return (
-                      <div key={plat} className="border border-[var(--border)] rounded-xl overflow-hidden">
-                        <div className="px-4 py-2 bg-[var(--muted)] flex items-center gap-2">
-                          <PlatformLogo brand={meta.brand} className="w-4 h-4" />
-                          <span className="text-[13px] font-semibold text-[var(--foreground)]">{meta.label || plat.replace(/_/g, " ")}</span>
-                          <span className="text-[12px] text-[var(--muted-foreground)]">{assets.length} variations</span>
-                        </div>
-                        <div className="divide-y divide-[var(--border)]">
-                          {assets.map((asset, ai) => {
-                            const content = (asset.content || {}) as Record<string, any>;
-                            const cd = content.copy_data || {};
-                            const angle = content.copy_angle || "";
-                            const headline = cd.headline || cd.card_headline || cd.tweet_text || "";
-                            const primaryText = cd.primary_text || cd.message_text || cd.introductory_text || "";
-                            const description = cd.description || cd.card_description || "";
-                            const cta = cd.cta || cd.cta_button || cd.cta_text || cd.button_text || "";
-
-                            if (!headline && !primaryText) return null;
-
-                            return (
-                              <div key={asset.id} className="px-4 py-3 space-y-1.5">
-                                <div className="flex items-center gap-2">
+              <div className="border border-[var(--border)] rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setShowCopy(!showCopy)}
+                  className="w-full px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-[var(--muted)]/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Megaphone size={14} className="text-[#6B21A8]" />
+                    <span className="text-[13px] font-semibold text-[var(--foreground)]">Ad Messaging</span>
+                    <span className="text-[12px] text-[var(--muted-foreground)]">{copyAssets.length} variations · {copyByPlatform.size} platforms</span>
+                  </div>
+                  {showCopy ? <ChevronDown size={16} className="text-[var(--muted-foreground)]" /> : <ChevronRight size={16} className="text-[var(--muted-foreground)]" />}
+                </button>
+                {showCopy && (
+                  <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {Array.from(copyByPlatform.entries()).map(([plat, assets]) => {
+                      const meta = getPlatformMeta(plat);
+                      return (
+                        <div key={plat} className="border border-[var(--border)] rounded-xl overflow-hidden">
+                          <div className="px-3 py-2 bg-[var(--muted)] flex items-center gap-2">
+                            <PlatformLogo brand={meta.brand} className="w-4 h-4" />
+                            <span className="text-[13px] font-semibold text-[var(--foreground)]">{meta.label || plat.replace(/_/g, " ")}</span>
+                            <span className="text-[12px] text-[var(--muted-foreground)]">{assets.length}</span>
+                          </div>
+                          <div className="divide-y divide-[var(--border)]">
+                            {assets.map((asset: any) => {
+                              const content = (asset.content || {}) as Record<string, any>;
+                              const cd = content.copy_data || {};
+                              const angle = content.copy_angle || "";
+                              const headline = cd.headline || cd.card_headline || cd.tweet_text || "";
+                              const primaryText = cd.primary_text || cd.message_text || cd.introductory_text || "";
+                              const description = cd.description || cd.card_description || "";
+                              const cta = cd.cta || cd.cta_button || cd.cta_text || cd.button_text || "";
+                              if (!headline && !primaryText) return null;
+                              return (
+                                <div key={asset.id} className="px-3 py-2.5 space-y-1">
                                   {angle && (
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 capitalize">
+                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 capitalize inline-block mb-1">
                                       {angle.replace(/^(primary_|secondary_)/, "").replace(/_/g, " ")}
                                     </span>
                                   )}
+                                  {headline && <p className="text-[13px] font-bold text-[var(--foreground)] leading-snug">{headline}</p>}
+                                  {primaryText && <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed line-clamp-2">{primaryText}</p>}
+                                  {cta && (
+                                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#6B21A8] text-white mt-1">{cta}</span>
+                                  )}
                                 </div>
-                                {headline && <p className="text-[14px] font-bold text-[var(--foreground)]">{headline}</p>}
-                                {primaryText && <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed line-clamp-3">{primaryText}</p>}
-                                {description && <p className="text-[12px] text-[var(--muted-foreground)] italic">{description}</p>}
-                                {cta && (
-                                  <span className="inline-flex px-3 py-1 rounded-full text-[12px] font-semibold bg-[#6B21A8] text-white">{cta}</span>
-                                )}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })()}
