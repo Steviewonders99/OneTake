@@ -819,7 +819,77 @@ function PersonaSection({
             </div>
           )}
 
-          {/* Row 2: Channel Icons (grouped) */}
+          {/* Row 2: Ad Messaging per Platform */}
+          {(() => {
+            // Find copy assets for this persona
+            const copyAssets = allAssets.filter(a =>
+              a.asset_type === "copy" as any &&
+              ((a.content as Record<string, any>)?.persona_name?.toLowerCase() === (p.persona_name || p.name || "").toLowerCase() ||
+               (a.content as Record<string, any>)?.persona_key === group.key)
+            );
+            if (copyAssets.length === 0) return null;
+
+            // Group by platform
+            const copyByPlatform = new Map<string, any[]>();
+            for (const asset of copyAssets) {
+              const plat = asset.platform || "unknown";
+              if (!copyByPlatform.has(plat)) copyByPlatform.set(plat, []);
+              copyByPlatform.get(plat)!.push(asset);
+            }
+
+            return (
+              <div>
+                <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-3">Ad Messaging</span>
+                <div className="space-y-3">
+                  {Array.from(copyByPlatform.entries()).map(([plat, assets]) => {
+                    const meta = getPlatformMeta(plat);
+                    return (
+                      <div key={plat} className="border border-[var(--border)] rounded-xl overflow-hidden">
+                        <div className="px-4 py-2 bg-[var(--muted)] flex items-center gap-2">
+                          <PlatformLogo brand={meta.brand} className="w-4 h-4" />
+                          <span className="text-[13px] font-semibold text-[var(--foreground)]">{meta.label || plat.replace(/_/g, " ")}</span>
+                          <span className="text-[12px] text-[var(--muted-foreground)]">{assets.length} variations</span>
+                        </div>
+                        <div className="divide-y divide-[var(--border)]">
+                          {assets.map((asset, ai) => {
+                            const content = (asset.content || {}) as Record<string, any>;
+                            const cd = content.copy_data || {};
+                            const angle = content.copy_angle || "";
+                            const headline = cd.headline || cd.card_headline || cd.tweet_text || "";
+                            const primaryText = cd.primary_text || cd.message_text || cd.introductory_text || "";
+                            const description = cd.description || cd.card_description || "";
+                            const cta = cd.cta || cd.cta_button || cd.cta_text || cd.button_text || "";
+
+                            if (!headline && !primaryText) return null;
+
+                            return (
+                              <div key={asset.id} className="px-4 py-3 space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  {angle && (
+                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 capitalize">
+                                      {angle.replace(/^(primary_|secondary_)/, "").replace(/_/g, " ")}
+                                    </span>
+                                  )}
+                                </div>
+                                {headline && <p className="text-[14px] font-bold text-[var(--foreground)]">{headline}</p>}
+                                {primaryText && <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed line-clamp-3">{primaryText}</p>}
+                                {description && <p className="text-[12px] text-[var(--muted-foreground)] italic">{description}</p>}
+                                {cta && (
+                                  <span className="inline-flex px-3 py-1 rounded-full text-[12px] font-semibold bg-[#6B21A8] text-white">{cta}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Row 3: Channel Icons (grouped) */}
           <div>
             <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Channels</span>
             <div className="flex flex-wrap gap-2">
