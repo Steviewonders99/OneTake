@@ -853,7 +853,14 @@ def build_persona_copy_prompt(
         A prompt section to prepend to the copy generation prompt.
     """
     psychology = persona.get("psychology_profile", {})
-    jtbd = persona.get("jobs_to_be_done", {})
+    raw_jtbd = persona.get("jobs_to_be_done", {})
+    # Normalize: LLM sometimes returns list instead of dict
+    if isinstance(raw_jtbd, list):
+        jtbd = {"functional": raw_jtbd[0] if raw_jtbd else "", "emotional": raw_jtbd[1] if len(raw_jtbd) > 1 else "", "social": raw_jtbd[2] if len(raw_jtbd) > 2 else ""}
+    elif isinstance(raw_jtbd, dict):
+        jtbd = raw_jtbd
+    else:
+        jtbd = {}
     trigger_words = psychology.get("trigger_words", [])
 
     # Build objection-preemption guidance.
