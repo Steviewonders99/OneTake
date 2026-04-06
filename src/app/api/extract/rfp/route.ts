@@ -41,24 +41,71 @@ async function ocrWithGemma4(imageBase64: string, systemPrompt: string): Promise
   return data.choices?.[0]?.message?.content ?? '';
 }
 
-// Extract readable text from PDF using multiple strategies
+// Extract readable text from PDF using zlib decompression of content streams
 function extractTextFromPdf(buffer: Buffer): string {
-  const raw = buffer.toString('latin1');
+  const zlib = require('zlib');
   const chunks: string[] = [];
 
-  // Strategy 1: Find Unicode text mappings (CMap/ToUnicode)
-  // Strategy 2: Extract readable ASCII runs (>20 chars, not base64)
-  const readable = raw.match(/[\x20-\x7E]{15,}/g) || [];
-  for (const r of readable) {
-    // Skip base64-like, hex, and PDF internal strings
-    if (/^[A-Za-z0-9+/=]+$/.test(r)) continue;
-    if (/^[0-9A-Fa-f]+$/.test(r)) continue;
-    if (r.includes('/Type') || r.includes('/Font') || r.includes('obj')) continue;
-    if (r.includes('endobj') || r.includes('xref') || r.includes('trailer')) continue;
-    chunks.push(r.trim());
+  // Find all stream...endstream blocks and try to decompress
+  let pos = 0;
+  const data = buffer;
+  while (true) {
+    const streamStart = data.indexOf(Buffer.from('stream'), pos);
+    if (streamStart === -1) break;
+
+    // Skip past 'stream' + newline chars
+    let contentStart = streamStart + 6;
+    while (contentStart < data.length && (data[contentStart] === 0x0D || data[contentStart] === 0x0A)) {
+      contentStart++;
+    }
+
+    const streamEnd = data.indexOf(Buffer.from('endstream'), contentStart);
+    if (streamEnd === -1) break;
+
+    const rawStream = data.subarray(contentStart, streamEnd);
+    pos = streamEnd + 9;
+
+    // Try multiple decompression methods
+    let decompressed: Buffer | null = null;
+    try { decompressed = zlib.inflateSync(rawStream); } catch {}
+    if (!decompressed) try { decompressed = zlib.inflateRawSync(rawStream); } catch {}
+    if (!decompressed) try { decompressed = zlib.unzipSync(rawStream); } catch {}
+
+    if (decompressed) {
+      const text = decompressed.toString('latin1');
+      // Extract text from Tj (show string) and TJ (show strings) operators
+      const tjMatches = text.matchAll(/\(([^)]+)\)\s*Tj/g);
+      for (const m of tjMatches) {
+        const clean = m[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+        if (clean.trim().length > 0) chunks.push(clean);
+      }
+      // TJ arrays: [(text) num (text) num ...]
+      const tjArrayMatches = text.matchAll(/\[([^\]]+)\]\s*TJ/g);
+      for (const m of tjArrayMatches) {
+        const parts = m[1].matchAll(/\(([^)]*)\)/g);
+        const line: string[] = [];
+        for (const p of parts) {
+          if (p[1].trim().length > 0) line.push(p[1]);
+        }
+        if (line.length > 0) chunks.push(line.join(''));
+      }
+    }
   }
 
-  return chunks.join('\n');
+  // Fallback: if decompression found nothing, try raw ASCII extraction
+  if (chunks.length < 5) {
+    const raw = buffer.toString('latin1');
+    const readable = raw.match(/[\x20-\x7E]{20,}/g) || [];
+    for (const r of readable) {
+      if (/^[A-Za-z0-9+/=]+$/.test(r)) continue;
+      if (/^[0-9A-Fa-f]+$/.test(r)) continue;
+      if (r.includes('/Type') || r.includes('/Font') || r.includes('obj')) continue;
+      if (r.includes('endobj') || r.includes('xref') || r.includes('trailer')) continue;
+      chunks.push(r.trim());
+    }
+  }
+
+  return chunks.join(' ');
 }
 
 async function extractTextFromFile(file: File, systemPrompt: string): Promise<{ text: string; usedVision: boolean }> {
@@ -66,27 +113,28 @@ async function extractTextFromFile(file: File, systemPrompt: string): Promise<{ 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  // PDF — extract text, then send to K2.5 for structuring
+  // PDF — Gemma 4 vision FIRST (most reliable), text extraction as fallback
   if (fileType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-    console.log(`[extract/rfp] PDF detected: ${file.name} (${buffer.length} bytes)`);
+    console.log(`[extract/rfp] PDF detected: ${file.name} (${buffer.length} bytes) — trying Gemma 4 vision first`);
 
-    // Try text extraction first (fastest, works for text-based PDFs)
-    const pdfText = extractTextFromPdf(buffer);
-    if (pdfText.length > 100) {
-      console.log(`[extract/rfp] PDF text extracted: ${pdfText.length} chars`);
-      return { text: pdfText, usedVision: false };
-    }
-
-    // Fallback: try Gemma 4 vision (for scanned/image PDFs)
+    // PRIMARY: Gemma 4 vision reads the PDF directly
     try {
       const base64 = buffer.toString('base64');
-      const result = await ocrWithGemma4(base64, `${systemPrompt}\n\nThis is a PDF document. Read ALL text and extract structured data as JSON.`);
+      const result = await ocrWithGemma4(base64, `${systemPrompt}\n\nThis is a PDF document. Read ALL text from every page carefully. Extract every field you can identify and return the structured JSON.`);
       if (result && result.length > 50) {
         console.log(`[extract/rfp] Gemma 4 vision extracted: ${result.length} chars`);
         return { text: result, usedVision: true };
       }
+      console.warn('[extract/rfp] Gemma 4 returned too little content, falling back to text extraction');
     } catch (e) {
-      console.error('[extract/rfp] Gemma 4 vision failed:', e);
+      console.error('[extract/rfp] Gemma 4 vision failed:', e, '— falling back to text extraction');
+    }
+
+    // FALLBACK: raw text extraction from PDF streams
+    const pdfText = extractTextFromPdf(buffer);
+    if (pdfText.length > 100) {
+      console.log(`[extract/rfp] PDF text fallback extracted: ${pdfText.length} chars`);
+      return { text: pdfText, usedVision: false };
     }
 
     return { text: `[PDF: ${file.name} — could not extract text. Please use the paste option instead.]`, usedVision: false };
