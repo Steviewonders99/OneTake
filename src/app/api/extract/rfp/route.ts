@@ -113,31 +113,35 @@ async function extractTextFromFile(file: File, systemPrompt: string): Promise<{ 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  // PDF — Gemma 4 vision FIRST (most reliable), text extraction as fallback
+  // PDF — try zlib decompression first, then raw ASCII, then tell user to paste
   if (fileType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-    console.log(`[extract/rfp] PDF detected: ${file.name} (${buffer.length} bytes) — trying Gemma 4 vision first`);
+    console.log(`[extract/rfp] PDF detected: ${file.name} (${buffer.length} bytes)`);
 
-    // PRIMARY: Gemma 4 vision reads the PDF directly
-    try {
-      const base64 = buffer.toString('base64');
-      const result = await ocrWithGemma4(base64, `${systemPrompt}\n\nThis is a PDF document. Read ALL text from every page carefully. Extract every field you can identify and return the structured JSON.`);
-      if (result && result.length > 50) {
-        console.log(`[extract/rfp] Gemma 4 vision extracted: ${result.length} chars`);
-        return { text: result, usedVision: true };
-      }
-      console.warn('[extract/rfp] Gemma 4 returned too little content, falling back to text extraction');
-    } catch (e) {
-      console.error('[extract/rfp] Gemma 4 vision failed:', e, '— falling back to text extraction');
-    }
-
-    // FALLBACK: raw text extraction from PDF streams
+    // Try text extraction from PDF streams
     const pdfText = extractTextFromPdf(buffer);
-    if (pdfText.length > 100) {
-      console.log(`[extract/rfp] PDF text fallback extracted: ${pdfText.length} chars`);
+    console.log(`[extract/rfp] PDF text extraction: ${pdfText.length} chars`);
+
+    if (pdfText.length > 200) {
       return { text: pdfText, usedVision: false };
     }
 
-    return { text: `[PDF: ${file.name} — could not extract text. Please use the paste option instead.]`, usedVision: false };
+    // If text extraction failed, return a helpful message that K2.5 can still reason about
+    // Include the filename and any metadata we can find
+    const metaChunks: string[] = [];
+    const raw = buffer.toString('latin1');
+    // Extract PDF metadata
+    const titleMatch = raw.match(/\/Title\s*\(([^)]+)\)/);
+    if (titleMatch) metaChunks.push(`Title: ${titleMatch[1]}`);
+    const authorMatch = raw.match(/\/Author\s*\(([^)]+)\)/);
+    if (authorMatch) metaChunks.push(`Author: ${authorMatch[1]}`);
+    const subjectMatch = raw.match(/\/Subject\s*\(([^)]+)\)/);
+    if (subjectMatch) metaChunks.push(`Subject: ${subjectMatch[1]}`);
+
+    if (metaChunks.length > 0) {
+      return { text: `PDF metadata: ${metaChunks.join(', ')}. Full text extraction failed — PDF may use compressed streams. File: ${file.name}`, usedVision: false };
+    }
+
+    return { text: `[PDF: ${file.name} — text extraction failed. Please copy-paste the document text using the Paste option instead.]`, usedVision: false };
   }
 
   // Images — send directly to Gemma 4 vision
@@ -264,25 +268,27 @@ export async function POST(request: Request) {
 
     let extraction: ExtractionResult;
 
-    if (usedVision) {
-      // Gemma 4 already returned structured data — try to parse directly
-      try {
-        extraction = parseJsonFromResponse(extractedContent);
-      } catch {
-        // Gemma returned text, not JSON — send to K2.5 to structure it
-        const rawResponse = await callLLMForExtraction(
-          systemPrompt,
-          `Extract structured data from this document content:\n\n${extractedContent}`
-        );
-        extraction = parseJsonFromResponse(rawResponse);
-      }
-    } else {
-      // Text extraction — send to K2.5
-      const rawResponse = await callLLMForExtraction(
-        systemPrompt,
-        `Please analyze the following RFP/project document and extract structured data:\n\n${extractedContent}`
+    // Send extracted content to K2.5 for structuring
+    const rawResponse = await callLLMForExtraction(
+      systemPrompt,
+      `Please analyze the following RFP/project document and extract structured data. Infer and reason about fields that aren't explicitly stated — use context clues from the document to fill in target languages, regions, task type, compensation model, etc.\n\n${extractedContent}`
+    );
+
+    // Check if LLM returned an error instead of JSON
+    if (rawResponse.startsWith('An error') || rawResponse.startsWith('I ') || rawResponse.length < 20) {
+      return Response.json(
+        { error: `AI extraction failed: ${rawResponse.slice(0, 100)}. Try using the Paste option instead.` },
+        { status: 502 }
       );
+    }
+
+    try {
       extraction = parseJsonFromResponse(rawResponse);
+    } catch {
+      return Response.json(
+        { error: `Could not parse AI response. Try the Paste option instead.`, raw_response: rawResponse.slice(0, 300) },
+        { status: 502 }
+      );
     }
 
     return Response.json({
