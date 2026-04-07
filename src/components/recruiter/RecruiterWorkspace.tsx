@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Package, BarChart3, Info } from "lucide-react";
 import { getRecruiterStatus } from "@/lib/format";
 import { RecruiterOverviewTab } from "@/components/RecruiterDetailView";
 import CreativeLibrary from "./CreativeLibrary";
+import PerformanceTab from "./PerformanceTab";
 import type {
   IntakeRequest,
   CreativeBrief,
@@ -105,13 +106,7 @@ export default function RecruiterWorkspace({
           assets={assets}
         />
       )}
-      {activeTab === "performance" && (
-        <div className="px-4 md:px-6 py-6 max-w-[1100px] mx-auto">
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Performance tab — placeholder until Task 17.
-          </p>
-        </div>
-      )}
+      {activeTab === "performance" && <PerformanceTab requestId={request.id} />}
       {activeTab === "overview" && (
         <RecruiterOverviewTab
           request={request}
