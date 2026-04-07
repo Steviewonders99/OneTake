@@ -179,7 +179,7 @@ function StatsStrip({ summary }: { summary: TrackedLinksSummary }) {
       </div>
       <div className="rounded-xl p-4 border border-[var(--border)] bg-white">
         <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold mb-1">
-          Top Creative
+          Top Platform
         </div>
         {summary.top_creative ? (
           <>

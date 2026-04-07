@@ -4,6 +4,7 @@ import { getIntakeRequest } from '@/lib/db/intake';
 import { slugify } from '@/lib/slugify';
 import { buildDestinationUrl } from '@/lib/tracked-links/build-url';
 import { generateSlug } from '@/lib/tracked-links/slug-generator';
+import { isValidSource, isValidContentForSource, UTM_MEDIUM, type UtmSource } from '@/lib/tracked-links/source-options';
 
 const MAX_TERM_LEN = 60;
 const MAX_CONTENT_LEN = 60;
@@ -44,6 +45,15 @@ export async function POST(request: Request) {
 
   if (!body.request_id || !body.base_url || !body.utm_source || !body.utm_term || !body.utm_content) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  // Allowlist validation: utm_source must be one of the 5 categories,
+  // utm_content must belong to that source.
+  if (!isValidSource(body.utm_source)) {
+    return Response.json({ error: 'INVALID_SOURCE', message: 'utm_source must be one of: job_board, social, email, internal, influencer' }, { status: 400 });
+  }
+  if (!isValidContentForSource(body.utm_source as UtmSource, body.utm_content)) {
+    return Response.json({ error: 'INVALID_CONTENT', message: 'utm_content must be a valid platform for the chosen source' }, { status: 400 });
   }
 
   const intake = await getIntakeRequest(body.request_id);
@@ -93,18 +103,16 @@ export async function POST(request: Request) {
 
   // Server-side re-slugify (client state is untrusted)
   const utm_term = slugify(body.utm_term, MAX_TERM_LEN);
-  const utm_content = slugify(body.utm_content, MAX_CONTENT_LEN);
-  if (!utm_term || !utm_content) {
+  const utm_content = body.utm_content; // already validated against allowlist above
+  if (!utm_term) {
     return Response.json(
-      { error: 'utm_term and utm_content must contain at least one alphanumeric character' },
+      { error: 'utm_term must contain at least one alphanumeric character' },
       { status: 400 }
     );
   }
 
-  const utm_medium = (body.utm_medium || 'social').trim();
-  if (!utm_medium) {
-    return Response.json({ error: 'utm_medium must be non-empty' }, { status: 400 });
-  }
+  // utm_medium is locked to "referral" — ignore client input
+  const utm_medium = UTM_MEDIUM;
 
   // Build the destination URL with all UTM params pre-appended
   const destination_url = buildDestinationUrl(body.base_url, {
