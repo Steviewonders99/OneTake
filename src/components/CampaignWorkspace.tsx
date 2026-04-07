@@ -27,6 +27,7 @@ import MiniTabs from "@/components/MiniTabs";
 import MockupPreview from "@/components/MockupPreview";
 import EditableField from "@/components/EditableField";
 import CreativeHtmlEditor from "@/components/CreativeHtmlEditor";
+import MediaStrategyTab from "@/components/MediaStrategyTab";
 import { extractField } from "@/lib/format";
 import { toast } from "sonner";
 import type {
@@ -1058,163 +1059,11 @@ export default function CampaignWorkspace({
             key: "media",
             label: "Media Strategy",
             content: (
-              <div className="space-y-4">
-                {/* Campaign plan details from strategies */}
-                {campaignStrategies.length > 0 && (
-                  <div>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Campaign Plans</span>
-                    <div className="space-y-3">
-                      {campaignStrategies.map((strat: any) => {
-                        const sd = strat.strategy_data || {};
-                        const campaigns: any[] = sd.campaigns || [];
-                        const budget = sd.monthly_budget || strat.monthly_budget;
-                        return (
-                          <div key={strat.id} className="border border-[var(--border)] rounded-xl overflow-hidden" style={{ borderLeftColor: "#0693E3", borderLeftWidth: "3px" }}>
-                            <div className="px-4 py-3 bg-[var(--muted)] flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <span className="text-[14px] font-bold text-[var(--foreground)]">{strat.country}</span>
-                                <span className="text-[12px] font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700">Tier {sd.tier || strat.tier}</span>
-                                <span className="text-[12px] font-medium px-2 py-0.5 rounded bg-purple-50 text-purple-700">{sd.budget_mode || strat.budget_mode}</span>
-                              </div>
-                              {budget && <span className="text-[14px] font-bold text-[var(--foreground)]">${Number(budget).toLocaleString()}/mo</span>}
-                            </div>
-                            {campaigns.map((camp: any, ci: number) => (
-                              <div key={ci} className="px-4 py-3 border-t border-[var(--border)]">
-                                <div className="mb-3 space-y-1">
-                                  <span className="text-[13px] font-semibold block">{camp.name || `Campaign ${ci + 1}`}</span>
-                                  <div className="flex flex-wrap gap-3 text-[12px] text-[var(--muted-foreground)]">
-                                    {camp.objective && <span><span className="font-medium text-[var(--foreground)]">Objective:</span> {camp.objective}</span>}
-                                    {camp.optimization && <span><span className="font-medium text-[var(--foreground)]">Optimization:</span> {camp.optimization}</span>}
-                                    {camp.daily_budget && <span><span className="font-medium text-[var(--foreground)]">Daily Budget:</span> ${Number(camp.daily_budget).toLocaleString()}</span>}
-                                  </div>
-                                </div>
-                                {camp.ad_sets?.length > 0 && (
-                                  <div className="space-y-3">
-                                    {camp.ad_sets.map((adSet: any, ai: number) => {
-                                      const tier = adSet.targeting_tier || adSet.targeting_type || "";
-                                      const tierColor = tier === "hyper" ? "#6B21A8" : tier === "hot" ? "#f59e0b" : "#22c55e";
-                                      const demo = adSet.demographics || {};
-                                      const creative = adSet.creative_assignment_rule || {};
-                                      return (
-                                        <div key={ai} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white" style={{ borderLeftWidth: "3px", borderLeftColor: tierColor }}>
-                                          {/* Ad Set Header */}
-                                          <div className="px-4 py-3 flex items-center justify-between bg-[var(--muted)]/50">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-[14px] font-bold text-[var(--foreground)]">Ad Set {ai + 1}</span>
-                                              {tier && (
-                                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${tier === "hyper" ? "bg-purple-50 text-purple-700" : tier === "hot" ? "bg-yellow-50 text-yellow-700" : "bg-green-50 text-green-700"}`}>{tier}</span>
-                                              )}
-                                            </div>
-                                            {adSet.daily_budget && <span className="text-[13px] font-bold text-[var(--foreground)]">${Number(adSet.daily_budget).toLocaleString()}/day</span>}
-                                          </div>
-                                          <div className="px-4 py-3 space-y-3">
-                                            {/* Title */}
-                                            <p className="text-[13px] font-semibold text-[var(--foreground)]">{adSet.name || `Ad Set ${ai + 1}`}</p>
-
-                                            {/* Persona + Demographics row */}
-                                            <div className="flex flex-wrap gap-4 text-[13px]">
-                                              {adSet.persona_key && (
-                                                <div><span className="text-[var(--muted-foreground)]">Persona:</span> <span className="font-medium capitalize">{String(adSet.persona_key).replace(/_/g, " ")}</span></div>
-                                              )}
-                                              {(demo.age_min || demo.age_max) && (
-                                                <div><span className="text-[var(--muted-foreground)]">Age:</span> <span className="font-medium">{demo.age_min || "18"}-{demo.age_max || "65"}</span></div>
-                                              )}
-                                              {demo.gender && (
-                                                <div><span className="text-[var(--muted-foreground)]">Gender:</span> <span className="font-medium capitalize">{demo.gender}</span></div>
-                                              )}
-                                            </div>
-
-                                            {/* Interests */}
-                                            {adSet.interests?.length > 0 && (
-                                              <div>
-                                                <span className="text-[12px] font-semibold text-[var(--muted-foreground)] block mb-1">Targeting Interests</span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                  {(adSet.interests as unknown[]).map((int: unknown, ii: number) => (
-                                                    <span key={ii} className="text-[12px] px-2 py-0.5 bg-[var(--muted)] rounded-lg text-[var(--foreground)] font-medium">{String(int)}</span>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            )}
-
-                                            {/* Placements */}
-                                            {adSet.placements?.length > 0 && (
-                                              <div>
-                                                <span className="text-[12px] font-semibold text-[var(--muted-foreground)] block mb-1">Placements</span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                  {(adSet.placements as unknown[]).map((pl: unknown, pi: number) => (
-                                                    <span key={pi} className="text-[12px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded-lg font-medium">{String(pl)}</span>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            )}
-
-                                            {/* Creative Assignment */}
-                                            {creative && typeof creative === "object" && Object.keys(creative).length > 0 && (
-                                              <div className="flex flex-wrap gap-4 text-[13px]">
-                                                {creative.hook_types?.length > 0 && (
-                                                  <div><span className="text-[var(--muted-foreground)]">Hook:</span> <span className="font-medium capitalize">{creative.hook_types.join(", ")}</span></div>
-                                                )}
-                                                {creative.treatment && (
-                                                  <div><span className="text-[var(--muted-foreground)]">Treatment:</span> <span className="font-medium capitalize">{String(creative.treatment).replace(/_/g, " ")}</span></div>
-                                                )}
-                                              </div>
-                                            )}
-
-                                            {/* Rules */}
-                                            {(adSet.kill_rule || adSet.scale_rule) && (
-                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[var(--border)]">
-                                                {adSet.kill_rule && (
-                                                  <div className="text-[12px]">
-                                                    <span className="font-semibold text-red-600 block mb-0.5">Kill Rule</span>
-                                                    <span className="text-[var(--muted-foreground)] leading-snug">{String(adSet.kill_rule)}</span>
-                                                  </div>
-                                                )}
-                                                {adSet.scale_rule && (
-                                                  <div className="text-[12px]">
-                                                    <span className="font-semibold text-green-700 block mb-0.5">Scale Rule</span>
-                                                    <span className="text-[var(--muted-foreground)] leading-snug">{String(adSet.scale_rule)}</span>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            {sd.scaling_rules && (
-                              <div className="px-4 py-3 bg-[var(--muted)] border-t border-[var(--border)]">
-                                <span className="text-[13px] font-semibold text-[var(--foreground)] block mb-1">Scaling Rules</span>
-                                {typeof sd.scaling_rules === "string" ? (
-                                  <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">{sd.scaling_rules}</p>
-                                ) : typeof sd.scaling_rules === "object" && sd.scaling_rules && !Array.isArray(sd.scaling_rules) ? (
-                                  <div className="space-y-1">
-                                    {Object.entries(sd.scaling_rules).map(([k, v]) => (
-                                      <p key={k} className="text-[13px] text-[var(--muted-foreground)]">
-                                        <span className="font-medium text-[var(--foreground)] capitalize">{k.replace(/_/g, " ")}:</span>{" "}
-                                        {typeof v === "string" ? v : JSON.stringify(v)}
-                                      </p>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-[13px] text-[var(--muted-foreground)]">{JSON.stringify(sd.scaling_rules, null, 2)}</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {/* Fallback if no data */}
-                {!briefData.campaign_strategies_summary && campaignStrategies.length === 0 && (
-                  <p className="text-[13px] text-[var(--muted-foreground)] italic">No media strategy data available yet.</p>
-                )}
-              </div>
+              <MediaStrategyTab
+                strategies={campaignStrategies as any}
+                assets={assets}
+                briefData={briefData}
+              />
             ),
           },
           {
