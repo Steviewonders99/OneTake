@@ -202,6 +202,23 @@ export interface Approval {
 }
 
 // ============================================================
+// CAMPAIGN LANDING PAGES
+// ============================================================
+
+export interface CampaignLandingPages {
+  id: string;
+  request_id: string;
+  job_posting_url: string | null;
+  landing_page_url: string | null;
+  ada_form_url: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type LandingPageField = 'job_posting_url' | 'landing_page_url' | 'ada_form_url';
+
+// ============================================================
 // MAGIC LINK TYPES
 // ============================================================
 
