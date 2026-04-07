@@ -60,6 +60,130 @@ const ROW_CONFIG: RowConfig[] = [
   },
 ];
 
+// ── Sub-component: LandingPageRow ───────────────────────────────────
+
+interface LandingPageRowProps {
+  config: RowConfig;
+  value: string | null;
+  canEdit: boolean;
+  isSaving: boolean;
+  onFocus: () => void;
+  onBlur: (rawValue: string) => void;
+}
+
+function LandingPageRow({ config, value, canEdit, isSaving, onFocus, onBlur }: LandingPageRowProps) {
+  const { label, placeholder, Icon, accent } = config;
+  const [localValue, setLocalValue] = useState(value ?? "");
+  const [focused, setFocused] = useState(false);
+
+  // If the external value changes while we're NOT focused, sync it in.
+  // If focused, leave the user's in-progress typing alone.
+  useEffect(() => {
+    if (!focused) {
+      setLocalValue(value ?? "");
+    }
+  }, [value, focused]);
+
+  const hasValue = localValue.trim().length > 0;
+  const savedClass = !focused && hasValue
+    ? "bg-[rgba(34,197,94,0.04)] border-[rgba(34,197,94,0.25)]"
+    : "";
+  const focusedClass = focused
+    ? "bg-white border-[rgb(6,147,227)] ring-[3px] ring-[rgb(6,147,227)]/10"
+    : "";
+  const defaultClass = !focused && !hasValue
+    ? "bg-[#FAFAFA] border-[var(--border)] hover:bg-white hover:border-[#ccc]"
+    : "";
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!value) return;
+    navigator.clipboard.writeText(value).catch(() => {});
+    toast.success("Copied");
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-2.5 px-3 py-2.5 border rounded-[10px] mb-2 transition-all ${savedClass} ${focusedClass} ${defaultClass}`}
+    >
+      {/* Icon panel */}
+      <div
+        className="w-[30px] h-[30px] rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{
+          background: `linear-gradient(135deg, rgba(6,147,227,0.1), rgba(155,81,224,0.1))`,
+        }}
+      >
+        <Icon size={14} style={{ color: accent }} strokeWidth={2} />
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#737373] leading-none">
+          {label}
+        </div>
+        <input
+          type="text"
+          className="block w-full pt-0.5 bg-transparent border-none outline-none text-[12px] font-medium font-mono text-[var(--foreground)] placeholder:text-[#c0c0c0] placeholder:italic placeholder:font-sans"
+          placeholder={placeholder}
+          value={localValue}
+          readOnly={!canEdit}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onFocus={() => {
+            setFocused(true);
+            onFocus();
+          }}
+          onBlur={() => {
+            setFocused(false);
+            // Only save if the value actually changed.
+            if ((value ?? "") !== localValue) {
+              onBlur(localValue);
+            }
+          }}
+        />
+      </div>
+
+      {/* Right side — saving indicator OR action buttons */}
+      {focused ? (
+        <div className="flex items-center gap-1 text-[10px] font-bold text-[rgb(6,147,227)] flex-shrink-0">
+          <span
+            className="w-[5px] h-[5px] rounded-full bg-current"
+            style={{ animation: "landingPagePulse 1s ease-in-out infinite" }}
+          />
+          editing
+        </div>
+      ) : isSaving ? (
+        <div className="flex items-center gap-1 text-[10px] font-bold text-[rgb(6,147,227)] flex-shrink-0">
+          <span
+            className="w-[5px] h-[5px] rounded-full bg-current"
+            style={{ animation: "landingPagePulse 1s ease-in-out infinite" }}
+          />
+          saving
+        </div>
+      ) : hasValue && value ? (
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="w-[26px] h-[26px] rounded-md border-none bg-transparent flex items-center justify-center cursor-pointer text-[#737373] hover:bg-[#F0F0F0] hover:text-[var(--foreground)] transition-colors"
+            title="Copy"
+          >
+            <Copy size={13} />
+          </button>
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[#737373] hover:bg-[#F0F0F0] hover:text-[var(--foreground)] transition-colors"
+            title="Open in new tab"
+          >
+            <ExternalLink size={13} />
+          </a>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ── Default export — stub, filled in Task 6 ────────────────────────
 
 export default function LandingPagesCard({ requestId, canEdit }: LandingPagesCardProps) {
