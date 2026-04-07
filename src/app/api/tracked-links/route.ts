@@ -155,3 +155,108 @@ export async function POST(request: Request) {
 
   return Response.json({ error: 'SLUG_COLLISION' }, { status: 500 });
 }
+
+export async function GET(request: Request) {
+  const ctx = await getAuthContext();
+  if (!ctx) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (ctx.role !== 'recruiter' && ctx.role !== 'admin') {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const request_id = url.searchParams.get('request_id');
+  if (!request_id) {
+    return Response.json({ error: 'request_id query param required' }, { status: 400 });
+  }
+
+  const sql = getDb();
+
+  // Admin sees all links for this campaign; recruiter sees only their own.
+  // LEFT JOIN on generated_assets so rows with a NULLed asset_id (from a
+  // deleted creative) still appear in the list with null thumbnails.
+  const rows = ctx.role === 'admin'
+    ? await sql`
+        SELECT
+          tl.*,
+          ga.blob_url AS asset_thumbnail,
+          ga.platform AS asset_platform
+        FROM tracked_links tl
+        LEFT JOIN generated_assets ga ON tl.asset_id = ga.id
+        WHERE tl.request_id = ${request_id}
+        ORDER BY tl.click_count DESC, tl.created_at DESC
+      `
+    : await sql`
+        SELECT
+          tl.*,
+          ga.blob_url AS asset_thumbnail,
+          ga.platform AS asset_platform
+        FROM tracked_links tl
+        LEFT JOIN generated_assets ga ON tl.asset_id = ga.id
+        WHERE tl.request_id = ${request_id}
+          AND tl.recruiter_clerk_id = ${ctx.userId}
+        ORDER BY tl.click_count DESC, tl.created_at DESC
+      `;
+
+  type Row = {
+    id: string;
+    slug: string;
+    request_id: string;
+    asset_id: string | null;
+    recruiter_clerk_id: string;
+    destination_url: string;
+    base_url: string;
+    utm_campaign: string;
+    utm_source: string;
+    utm_medium: string;
+    utm_term: string;
+    utm_content: string;
+    click_count: number;
+    last_clicked_at: string | null;
+    created_at: string;
+    asset_thumbnail: string | null;
+    asset_platform: string | null;
+  };
+  const typedRows = rows as unknown as Row[];
+
+  const appOrigin = getAppOrigin(request);
+  const links = typedRows.map((r) => ({ ...r, short_url: `${appOrigin}/r/${r.slug}` }));
+
+  // Compute summary aggregates
+  const total_clicks = links.reduce((s, l) => s + l.click_count, 0);
+  const total_links = links.length;
+
+  // Best channel: group by utm_source, sum clicks, find max
+  const channelTotals = new Map<string, number>();
+  for (const l of links) {
+    channelTotals.set(l.utm_source, (channelTotals.get(l.utm_source) ?? 0) + l.click_count);
+  }
+  let best_channel: { name: string; clicks: number; pct: number } | null = null;
+  if (channelTotals.size > 0 && total_clicks > 0) {
+    const sortedChannels = [...channelTotals.entries()].sort((a, b) => b[1] - a[1]);
+    const [name, clicks] = sortedChannels[0];
+    best_channel = { name, clicks, pct: Math.round((clicks / total_clicks) * 100) };
+  }
+
+  // Top creative: the link with the highest click count (must be > 0)
+  let top_creative: { name: string; clicks: number; asset_id: string | null } | null = null;
+  const topLink = links[0];
+  if (topLink && topLink.click_count > 0) {
+    top_creative = {
+      name: topLink.utm_content,
+      clicks: topLink.click_count,
+      asset_id: topLink.asset_id,
+    };
+  }
+
+  return Response.json({
+    links,
+    summary: {
+      total_clicks,
+      total_links,
+      best_channel,
+      top_creative,
+    },
+  });
+}
