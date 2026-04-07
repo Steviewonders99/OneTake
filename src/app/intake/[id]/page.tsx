@@ -31,6 +31,7 @@ import RevisionModal from "@/components/RevisionModal";
 import DesignElementPreview from "@/components/DesignElementPreview";
 import MockupPreview from "@/components/MockupPreview";
 import RecruiterDetailView from "@/components/RecruiterDetailView";
+import RecruiterWorkspace from "@/components/recruiter/RecruiterWorkspace";
 import BriefExecutive from "@/components/BriefExecutive";
 import AssetReviewPanel from "@/components/AssetReviewPanel";
 import CampaignWorkspace from "@/components/CampaignWorkspace";
@@ -329,7 +330,7 @@ export default function IntakeDetailPage({
   if (role === "recruiter") {
     return (
       <AppShell>
-        <RecruiterDetailView
+        <RecruiterWorkspace
           request={request}
           brief={brief}
           assets={assets}
