@@ -11,12 +11,13 @@ export async function createIntakeRequest(data: {
   created_by: string;
   form_data: Record<string, unknown>;
   schema_version: number;
+  campaign_slug?: string | null;
 }): Promise<IntakeRequest> {
   const sql = getDb();
   const rows = await sql`
     INSERT INTO intake_requests (
       title, task_type, urgency, target_languages, target_regions,
-      volume_needed, created_by, form_data, schema_version
+      volume_needed, created_by, form_data, schema_version, campaign_slug
     )
     VALUES (
       ${data.title},
@@ -27,7 +28,8 @@ export async function createIntakeRequest(data: {
       ${data.volume_needed ?? null},
       ${data.created_by},
       ${JSON.stringify(data.form_data)},
-      ${data.schema_version}
+      ${data.schema_version},
+      ${data.campaign_slug ?? null}
     )
     RETURNING *
   `;

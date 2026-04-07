@@ -4,6 +4,7 @@ import { listIntakeRequests, createIntakeRequest } from '@/lib/db/intake';
 import { getSchemaByTaskType } from '@/lib/db/schemas';
 import { validateFormData } from '@/lib/validation';
 import type { Status } from '@/lib/types';
+import { slugify } from '@/lib/slugify';
 
 export async function GET(request: Request) {
   const ctx = await getAuthContext();
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
       created_by: userId,
       form_data: formData,
       schema_version: schema.version,
+      campaign_slug: slugify(body.title) || null,
     });
 
     // Auto-queue generation — no manual "Generate" button needed.
