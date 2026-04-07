@@ -2,6 +2,10 @@
 // Platform metadata, logos, and channel normalizer.
 // Extracted from CampaignWorkspace.tsx so MediaStrategyTab can reuse.
 
+import { useId } from "react";
+
+// Used by MediaStrategyTab (Task 2+) — cap the channel mix at the top N channels
+// per country and renormalize so the bar chart isn't diluted by long-tail channels.
 export const TOP_N_CHANNELS = 4;
 
 export const PLATFORM_META: Record<string, { label: string; color: string; brand: string }> = {
@@ -70,12 +74,14 @@ export function toChannel(plat: string): string | null {
 }
 
 export function PlatformLogo({ brand, className = "w-5 h-5" }: { brand: string; className?: string }) {
+  const uid = useId();
+  const igGradId = `ig-grad-${uid}`;
   switch (brand) {
     case "instagram":
       return (
         <svg viewBox="0 0 24 24" className={className}>
-          <defs><linearGradient id="ig-grad" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#FD5" /><stop offset="50%" stopColor="#FF543E" /><stop offset="100%" stopColor="#C837AB" /></linearGradient></defs>
-          <rect width="24" height="24" rx="6" fill="url(#ig-grad)" />
+          <defs><linearGradient id={igGradId} x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#FD5" /><stop offset="50%" stopColor="#FF543E" /><stop offset="100%" stopColor="#C837AB" /></linearGradient></defs>
+          <rect width="24" height="24" rx="6" fill={`url(#${igGradId})`} />
           <rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="white" strokeWidth="1.5" />
           <circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="1.5" />
           <circle cx="17" cy="7" r="1.2" fill="white" />
