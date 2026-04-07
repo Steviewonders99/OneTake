@@ -276,18 +276,55 @@ export default function LandingPagesCard({ requestId, canEdit }: LandingPagesCar
     );
   }
 
-  // Suppress "unused" warnings from TS/eslint — these values are used in Task 6's render.
-  void pages;
-  void savingField;
-  void canEdit;
-  void saveField;
-  void focusedFieldRef;
+  const complete = isComplete(pages);
 
   return (
     <div className="border border-[var(--border)] rounded-[14px] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-      <div className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#737373]">
-        Landing Pages — placeholder (wired in Task 6)
+      {/* Keyframe for the pulse indicator */}
+      <style>{`
+        @keyframes landingPagePulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#737373] m-0">
+          Landing Pages
+        </h3>
+        {complete ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#22c55e]">
+            <CheckCircle2 size={11} strokeWidth={2.5} />
+            complete
+          </span>
+        ) : (
+          <span className="text-[10px] italic text-[#737373]">
+            applies to all countries
+          </span>
+        )}
       </div>
+
+      {/* Rows */}
+      {ROW_CONFIG.map((config) => {
+        const value = pages ? ((pages as unknown as Record<LandingPageField, string | null>)[config.field] ?? null) : null;
+        return (
+          <LandingPageRow
+            key={config.field}
+            config={config}
+            value={value}
+            canEdit={canEdit}
+            isSaving={savingField === config.field}
+            onFocus={() => {
+              focusedFieldRef.current = config.field;
+            }}
+            onBlur={(rawValue) => {
+              focusedFieldRef.current = null;
+              void saveField(config.field, rawValue);
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
