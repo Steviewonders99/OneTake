@@ -234,6 +234,64 @@ function CountryHeader({ strategy, personaCount, adSetCount }: CountryHeaderProp
   );
 }
 
+interface ChannelMixBarProps {
+  mix: ChannelMixEntry[];
+  totalMonthly: number | null;
+  isRatio: boolean;
+}
+
+function ChannelMixBar({ mix, totalMonthly, isRatio }: ChannelMixBarProps) {
+  if (mix.length === 0) {
+    return (
+      <div className="border border-[var(--border)] rounded-xl bg-white px-6 py-5 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Channel Mix</div>
+        <p className="text-[13px] text-[var(--muted-foreground)] italic">
+          No channel mix available — personas don&apos;t have best_channels data.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="border border-[var(--border)] rounded-xl bg-white px-6 py-5 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">Channel Mix</div>
+      {/* Stacked bar */}
+      <div className="flex h-8 rounded-lg overflow-hidden mb-3.5 ring-1 ring-black/5">
+        {mix.map((m) => {
+          const meta = getPlatformMeta(m.channel.toLowerCase() + "_feed");
+          return (
+            <div
+              key={m.channel}
+              className="flex items-center justify-center text-white text-[11px] font-bold"
+              style={{ flex: m.pct, background: meta.color }}
+              title={`${m.channel} ${Math.round(m.pct * 100)}%`}
+            >
+              {Math.round(m.pct * 100)}%
+            </div>
+          );
+        })}
+      </div>
+      {/* 4-up legend */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {mix.map((m) => {
+          const meta = getPlatformMeta(m.channel.toLowerCase() + "_feed");
+          const channelMonthly = !isRatio && totalMonthly ? Math.round(totalMonthly * m.pct) : null;
+          return (
+            <div key={m.channel} className="flex items-center gap-2.5 px-3 py-2 border border-[var(--border)] rounded-lg">
+              <PlatformLogo brand={meta.brand} className="w-8 h-8 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[12px] font-bold text-[var(--foreground)] truncate">{m.channel}</div>
+                <div className="text-[11px] text-[var(--muted-foreground)]">
+                  {channelMonthly !== null ? `$${channelMonthly.toLocaleString()}/mo · ` : ""}{Math.round(m.pct * 100)}%
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Component (stub — filled in later tasks) ────────────────────────
 
 export default function MediaStrategyTab({ strategies, assets, briefData }: MediaStrategyTabProps) {
