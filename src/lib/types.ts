@@ -107,6 +107,7 @@ export interface IntakeRequest {
   status: Status;
   created_by: string;
   form_data: Record<string, unknown>;
+  campaign_slug: string | null;
   schema_version: number;
   created_at: string;
   updated_at: string;
@@ -390,4 +391,42 @@ export interface UserRoleRecord {
   invited_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ─── Tracked Links ────────────────────────────────────────────────────────────
+
+export interface TrackedLink {
+  id: string;
+  slug: string;
+  request_id: string;
+  asset_id: string | null;
+  recruiter_clerk_id: string;
+  destination_url: string;
+  base_url: string;
+  utm_campaign: string;
+  utm_source: string;
+  utm_medium: string;
+  utm_term: string;
+  utm_content: string;
+  click_count: number;
+  last_clicked_at: string | null;
+  created_at: string;
+}
+
+export interface TrackedLinkWithAsset extends TrackedLink {
+  short_url: string;
+  asset_thumbnail: string | null;
+  asset_platform: string | null;
+}
+
+export interface TrackedLinksSummary {
+  total_clicks: number;
+  total_links: number;
+  best_channel: { name: string; clicks: number; pct: number } | null;
+  top_creative: { name: string; clicks: number; asset_id: string | null } | null;
+}
+
+export interface TrackedLinksResponse {
+  links: TrackedLinkWithAsset[];
+  summary: TrackedLinksSummary;
 }
