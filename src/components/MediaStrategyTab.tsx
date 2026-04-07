@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { GeneratedAsset } from "@/lib/types";
 import { getPlatformMeta, PlatformLogo, toChannel, TOP_N_CHANNELS } from "@/lib/platforms";
 
@@ -573,14 +573,106 @@ function ChannelBlock({ block, expanded, onToggle, assets, isRatio, totalMonthly
 // ── Component (stub — filled in later tasks) ────────────────────────
 
 export default function MediaStrategyTab({ strategies, assets, briefData }: MediaStrategyTabProps) {
-  void assets;
-  void briefData;
-  if (!strategies || strategies.length === 0) {
+  const sortedStrategies = useMemo(() => {
+    return [...(strategies ?? [])].sort((a, b) => (b.monthly_budget ?? 0) - (a.monthly_budget ?? 0));
+  }, [strategies]);
+
+  const [activeCountry, setActiveCountry] = useState<string>(sortedStrategies[0]?.country ?? "");
+  const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
+
+  const activeStrategy = useMemo(
+    () => sortedStrategies.find((s) => s.country === activeCountry) ?? sortedStrategies[0],
+    [sortedStrategies, activeCountry],
+  );
+
+  const activePersonas: Persona[] = useMemo(() => {
+    const allPersonas = (briefData?.personas ?? []) as Persona[];
+    if (!activeStrategy) return [];
+    const countryPersonas = (briefData?.personas_by_country as Record<string, Persona[]> | undefined)?.[activeStrategy.country];
+    return countryPersonas && countryPersonas.length > 0 ? countryPersonas : allPersonas;
+  }, [briefData, activeStrategy]);
+
+  const channelMix = useMemo(() => computeChannelMix(activePersonas), [activePersonas]);
+
+  const channelBlocks: ChannelBlockData[] = useMemo(() => {
+    if (!activeStrategy) return [];
+    const campaigns = activeStrategy.strategy_data?.campaigns ?? [];
+    const topChannels = new Set(channelMix.map((m) => m.channel));
+    const grouped = groupAdSetsByChannel(campaigns, topChannels);
+    return channelMix.map((m) => {
+      const adSets = grouped.get(m.channel) ?? [];
+      const objectives = Array.from(
+        new Set(
+          adSets
+            .map((a) => a._campaign.objective ?? "")
+            .filter((o) => o.length > 0),
+        ),
+      );
+      return {
+        channel: m.channel,
+        pct: m.pct,
+        monthly: activeStrategy.monthly_budget,
+        adSets,
+        objectives,
+      };
+    });
+  }, [activeStrategy, channelMix]);
+
+  // Default-expand first channel whenever the active country changes.
+  const firstChannel = channelBlocks[0]?.channel;
+  useEffect(() => {
+    if (firstChannel) {
+      setExpandedChannels(new Set([firstChannel]));
+    }
+  }, [firstChannel]);
+
+  if (!sortedStrategies || sortedStrategies.length === 0) {
     return (
       <p className="text-[13px] text-[var(--muted-foreground)] italic">
         Media strategy hasn&apos;t been generated yet.
       </p>
     );
   }
-  return <div className="space-y-4">{/* Sub-components added in later tasks */}</div>;
+
+  const handleToggle = (channel: string) => {
+    setExpandedChannels((prev: Set<string>) => {
+      const next = new Set(prev);
+      if (next.has(channel)) next.delete(channel);
+      else next.add(channel);
+      return next;
+    });
+  };
+
+  const totalAdSets = channelBlocks.reduce((s, b) => s + b.adSets.length, 0);
+  const isRatio = activeStrategy?.budget_mode === "ratio";
+  const totalMonthly = activeStrategy?.monthly_budget ?? null;
+
+  return (
+    <div>
+      <CountryTabs strategies={sortedStrategies} activeCountry={activeCountry} onChange={setActiveCountry} />
+      {activeStrategy ? (
+        <>
+          <CountryHeader strategy={activeStrategy} personaCount={activePersonas.length} adSetCount={totalAdSets} />
+          <ChannelMixBar mix={channelMix} totalMonthly={totalMonthly} isRatio={isRatio} />
+          {channelBlocks.length === 0 ? (
+            <p className="text-[13px] text-[var(--muted-foreground)] italic">
+              No channels to display for this country.
+            </p>
+          ) : (
+            channelBlocks.map((block) => (
+              <ChannelBlock
+                key={block.channel}
+                block={block}
+                expanded={expandedChannels.has(block.channel)}
+                onToggle={() => handleToggle(block.channel)}
+                assets={assets}
+                isRatio={isRatio}
+                totalMonthly={totalMonthly}
+              />
+            ))
+          )}
+        </>
+      ) : null}
+    </div>
+  );
 }
