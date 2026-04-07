@@ -157,6 +157,83 @@ export function matchCreatives(
     .sort((a, b) => (b.evaluation_score ?? 0) - (a.evaluation_score ?? 0));
 }
 
+// ── Sub-components ───────────────────────────────────────────────────
+
+interface CountryTabsProps {
+  strategies: Strategy[];
+  activeCountry: string;
+  onChange: (country: string) => void;
+}
+
+function CountryTabs({ strategies, activeCountry, onChange }: CountryTabsProps) {
+  return (
+    <div className="flex gap-1.5 border-b border-[var(--border)] mb-4 overflow-x-auto">
+      {strategies.map((s) => {
+        const isActive = s.country === activeCountry;
+        const budgetLabel = s.monthly_budget ? `$${Number(s.monthly_budget).toLocaleString()}/mo` : "ratio";
+        return (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onChange(s.country)}
+            className={`px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap cursor-pointer border-b-2 transition-colors ${
+              isActive
+                ? "text-[var(--foreground)] border-[rgb(6,147,227)]"
+                : "text-[var(--muted-foreground)] border-transparent hover:text-[var(--foreground)]"
+            }`}
+          >
+            {s.country}
+            <span className="ml-2 text-[11px] font-normal text-[var(--muted-foreground)]">· {budgetLabel}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+interface CountryHeaderProps {
+  strategy: Strategy;
+  personaCount: number;
+  adSetCount: number;
+}
+
+function CountryHeader({ strategy, personaCount, adSetCount }: CountryHeaderProps) {
+  const sd = strategy.strategy_data ?? {};
+  const isRatio = strategy.budget_mode === "ratio";
+  const dailyTotal = sd.daily_budget_total ?? (strategy.monthly_budget ? Math.round(strategy.monthly_budget / 30) : null);
+  const splitTest = sd.split_test?.variable;
+  return (
+    <div className="border border-[var(--border)] rounded-xl bg-white px-6 py-5 mb-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div>
+        <h2 className="text-[22px] font-bold text-[var(--foreground)] mb-1">{strategy.country}</h2>
+        <div className="flex items-center gap-3 text-[12px] text-[var(--muted-foreground)]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[rgba(6,147,227,0.1)] text-[rgb(6,147,227)] font-bold text-[11px] uppercase tracking-wider">
+            Tier {strategy.tier} · {sd.tier === 1 ? "Interest-only cold" : "Retargeting"}
+          </span>
+          {splitTest ? <><span className="text-[#ddd]">·</span><span>Split test: <span className="font-semibold text-[var(--foreground)] capitalize">{splitTest}</span></span></> : null}
+          <span className="text-[#ddd]">·</span>
+          <span>{personaCount} personas · {adSetCount} ad sets</span>
+        </div>
+      </div>
+      <div className="text-right">
+        {isRatio ? (
+          <div className="text-[14px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Ratio mode</div>
+        ) : (
+          <>
+            <div className="text-[28px] font-extrabold tracking-tight text-[var(--foreground)]">
+              ${Number(strategy.monthly_budget ?? 0).toLocaleString()}
+              <span className="text-[13px] font-medium text-[var(--muted-foreground)] ml-1">/mo</span>
+            </div>
+            <div className="text-[11px] text-[var(--muted-foreground)]">
+              {dailyTotal ? `$${Number(dailyTotal).toLocaleString()}/day` : ""} · {strategy.budget_mode} mode
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Component (stub — filled in later tasks) ────────────────────────
 
 export default function MediaStrategyTab({ strategies, assets, briefData }: MediaStrategyTabProps) {
