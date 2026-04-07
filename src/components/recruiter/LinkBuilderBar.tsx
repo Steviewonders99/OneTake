@@ -4,6 +4,14 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Copy, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { slugify } from "@/lib/slugify";
+import SearchableDropdown from "./SearchableDropdown";
+import {
+  SOURCE_OPTIONS,
+  getContentOptionsForSource,
+  getDefaultContentForChannel,
+  UTM_MEDIUM,
+  type UtmSource,
+} from "@/lib/tracked-links/source-options";
 import type { GeneratedAsset } from "@/lib/types";
 
 export type LandingPageKey = "job_posting_url" | "landing_page_url" | "ada_form_url";
@@ -28,13 +36,15 @@ interface LinkBuilderBarProps {
   recruiterInitials: string;
 }
 
-/** Derive a human-readable content slug from an asset (e.g. "emily-square-01"). */
-function deriveContentSlug(asset: GeneratedAsset | null): string {
-  if (!asset) return "creative";
-  const actor = slugify(asset.actor_id ?? "creative").slice(0, 20) || "creative";
-  const format = slugify(asset.format ?? "asset").slice(0, 12) || "asset";
-  const idTail = asset.id.replace(/-/g, "").slice(0, 2);
-  return `${actor}-${format}-${idTail}`;
+/** Derive a sensible initial source+content from the active channel. */
+function pickInitialSourceAndContent(channel: string): { source: UtmSource; content: string } {
+  const channelDefault = getDefaultContentForChannel(channel);
+  if (channelDefault) {
+    return { source: channelDefault.source, content: channelDefault.value };
+  }
+  // Fallback: social + first social option
+  const fallback = getContentOptionsForSource("social")[0];
+  return { source: "social", content: fallback?.value ?? "" };
 }
 
 export default function LinkBuilderBar({
@@ -47,9 +57,11 @@ export default function LinkBuilderBar({
   const [landingPages, setLandingPages] = useState<LandingPagesData | null>(null);
   const [selectedUrlKey, setSelectedUrlKey] = useState<LandingPageKey | null>(null);
   const [term, setTerm] = useState(recruiterInitials || "??");
-  const [content, setContent] = useState("");
-  const [medium, setMedium] = useState("social");
   const [submitting, setSubmitting] = useState(false);
+
+  // Source + content dropdowns
+  const [utmSource, setUtmSource] = useState<UtmSource>(() => pickInitialSourceAndContent(activeChannel).source);
+  const [utmContent, setUtmContent] = useState<string>(() => pickInitialSourceAndContent(activeChannel).content);
 
   // Fetch landing pages on mount
   const fetchLandingPages = useCallback(async () => {
@@ -96,7 +108,6 @@ export default function LinkBuilderBar({
       return;
     }
     if (!selectedUrlKey || !availableUrls.some((u) => u.key === selectedUrlKey)) {
-      // Prefer landing_page_url, then job_posting_url, then ada_form_url
       const preference: LandingPageKey[] = ["landing_page_url", "job_posting_url", "ada_form_url"];
       const match = preference.find((p) => availableUrls.some((u) => u.key === p));
       setSelectedUrlKey(match ?? availableUrls[0].key);
@@ -108,10 +119,45 @@ export default function LinkBuilderBar({
     setTerm(recruiterInitials || "??");
   }, [recruiterInitials]);
 
-  // Update content when selected asset changes
+  // When the channel tab changes, update content to the channel-natural default
+  // ONLY if the current source is "social" — non-social workflows shouldn't auto-flip.
   useEffect(() => {
-    setContent(deriveContentSlug(selectedAsset));
-  }, [selectedAsset]);
+    if (utmSource !== "social") return;
+    const channelDefault = getDefaultContentForChannel(activeChannel);
+    if (channelDefault && channelDefault.source === "social") {
+      setUtmContent(channelDefault.value);
+    }
+    // Intentionally only depend on activeChannel — we don't want to fire when
+    // utmSource or utmContent change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChannel]);
+
+  // When the source dropdown changes, ensure content is valid for the new source
+  useEffect(() => {
+    const validOptions = getContentOptionsForSource(utmSource);
+    const isStillValid = validOptions.some((c) => c.value === utmContent);
+    if (isStillValid) return;
+    // Pick a new default
+    if (utmSource === "social") {
+      const channelDefault = getDefaultContentForChannel(activeChannel);
+      if (channelDefault && channelDefault.source === "social") {
+        setUtmContent(channelDefault.value);
+        return;
+      }
+    }
+    setUtmContent(validOptions[0]?.value ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [utmSource]);
+
+  const sourceOptions = useMemo(
+    () => SOURCE_OPTIONS.map((s) => ({ value: s.value, label: s.label })),
+    []
+  );
+
+  const contentOptions = useMemo(
+    () => getContentOptionsForSource(utmSource).map((c) => ({ value: c.value, label: c.label })),
+    [utmSource]
+  );
 
   const selectedUrl = availableUrls.find((u) => u.key === selectedUrlKey)?.url ?? null;
 
@@ -122,7 +168,7 @@ export default function LinkBuilderBar({
     !!selectedUrl &&
     !!selectedAsset &&
     term.trim().length > 0 &&
-    content.trim().length > 0;
+    utmContent.trim().length > 0;
 
   async function handleCopyLink() {
     if (!canSubmit || !selectedUrl) return;
@@ -135,10 +181,10 @@ export default function LinkBuilderBar({
           request_id: requestId,
           asset_id: selectedAsset?.id ?? null,
           base_url: selectedUrl,
-          utm_source: activeChannel,
-          utm_medium: medium,
+          utm_source: utmSource,
+          utm_medium: UTM_MEDIUM,
           utm_term: term,
-          utm_content: content,
+          utm_content: utmContent,
         }),
       });
       const data = await res.json();
@@ -181,18 +227,26 @@ export default function LinkBuilderBar({
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
           <FieldReadonly label="Campaign" value={campaignSlug ?? "—"} />
-          <FieldReadonly label="Posting to" value={activeChannel} />
+          <SearchableDropdown
+            label="Source"
+            value={utmSource}
+            options={sourceOptions}
+            onChange={(v) => setUtmSource(v as UtmSource)}
+            searchable={false}
+          />
+          <SearchableDropdown
+            label="Platform"
+            value={utmContent}
+            options={contentOptions}
+            onChange={setUtmContent}
+            searchable={true}
+            placeholder="Pick a platform…"
+          />
           <FieldEditable
             label="Your tag"
             value={term}
             onChange={setTerm}
             onBlur={() => setTerm(slugify(term) || recruiterInitials || "??")}
-          />
-          <FieldEditable
-            label="Creative"
-            value={content}
-            onChange={setContent}
-            onBlur={() => setContent(slugify(content) || deriveContentSlug(selectedAsset))}
           />
           {availableUrls.length > 1 ? (
             <div>
@@ -236,10 +290,7 @@ function FieldReadonly({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold mb-1">{label}</div>
-      <div
-        className="text-xs px-2 py-1.5 rounded-md bg-[var(--muted)] text-[var(--foreground)] font-medium truncate"
-        title={value}
-      >
+      <div className="text-xs px-2 py-1.5 rounded-md bg-[var(--muted)] text-[var(--foreground)] font-medium truncate" title={value}>
         {value}
       </div>
     </div>
