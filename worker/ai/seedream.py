@@ -61,9 +61,17 @@ async def generate_image(
         "cartoon, anime, illustration, 3d render, painting, watermark, "
         "text overlay, blurry, distorted hands, extra fingers, "
         "corporate stock photo, stiff pose, oversaturated, "
+        # Face defect anchors — prevent scars/cuts/blemishes on actors
+        "scars, cuts, wounds, bruises, scratches on face, scabs, acne, "
+        "blemishes, skin defects, forehead marks, forehead cuts, forehead scars, "
+        "cheek scars, skin lesions, stitches, bandages, band-aid on face, "
+        # Cleanliness anchors — prevent dirty/disheveled actors
+        "unwashed, disheveled, stained clothes, dirty clothes, greasy hair, "
+        "dirty fingernails, grime on skin, sweat stains, "
         # Dignity anchors — prevent stereotypical poverty imagery
         "dirty room, messy room, cracked walls, peeling paint, trash, debris, "
         "slum, poverty, rundown, dilapidated, broken furniture, "
+        "dusty surfaces, grime, stained surfaces, scuff marks, drip stains, "
         # Prevent nonsensical luxury
         "swimming pool, mansion, luxury car, yacht, penthouse, "
         # Prevent AI screen artifacts

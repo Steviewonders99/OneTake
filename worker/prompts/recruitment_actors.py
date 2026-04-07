@@ -27,10 +27,10 @@ ACTOR_SYSTEM_PROMPT = (
 REALISM_ANCHORS = [
     "Shot on iPhone 15 Pro, natural lighting, no studio setup, slight camera sensor grain visible",
     "Slight asymmetry in facial features — real face, not AI-perfected, not symmetrical",
-    "SKIN TEXTURE IS CRITICAL: visible pores on nose and forehead, slight under-eye shadows, natural skin roughness — NOT smooth, NOT airbrushed, NOT glossy. Real skin has micro-bumps, tiny imperfections, slight oiliness on T-zone, visible follicles",
+    "SKIN TEXTURE IS CRITICAL: visible pores, slight under-eye shadows, natural skin texture — NOT smooth, NOT airbrushed, NOT glossy. Real skin has fine pore pattern, slight oiliness on T-zone, visible follicles. CLEAR skin — NO scars, NO cuts, NO wounds, NO blemishes, NO acne, NO marks on forehead or cheeks",
     "Hair with natural flyaways, baby hairs at temples catching backlight, not salon-styled",
     "Clothing with visible FABRIC TEXTURE: weave pattern, slight pilling, natural wrinkles at elbow/waist bends, not freshly pressed or digitally smooth",
-    "Environment with lived-in details: coffee cup with slight stain, notebooks with bent corners, phone charger cable, sticky notes, real clutter",
+    "Organized workspace with personal objects: fresh coffee cup, notebook, phone charger cable, sticky notes, small plant — lived-in but CLEAN, not messy",
     "Natural body posture — slightly leaning, weight on one side, relaxed, not model-posed or AI-stiff",
     "Ambient background blur (shallow depth of field, f/1.8) with slight chromatic aberration at edges",
     "Mixed color temperature lighting: warm lamp + cool window = slight color cast variation across the frame, not uniform color",
@@ -48,13 +48,13 @@ ANTI-AI-GLOSS — SUBJECT (the person MUST NOT look AI-generated):
 - Film grain from camera sensor. Not clean digital — slight noise especially in shadows.
 
 ANTI-AI-GLOSS — BACKGROUND & ENVIRONMENT (just as important as the person):
-- WALLS: Must have texture — paint brush strokes, slight scuff marks, nail holes, light switch plates, power outlets visible. NOT smooth gradients. Real walls have imperfections.
-- FURNITURE: Visible wood grain on tables/desks, slight scratches, ring marks from cups, wear on chair edges. NOT pristine showroom furniture.
-- FLOORS: Visible tile grout, carpet texture/flattening, slight dust in corners, scuff marks. NOT perfectly clean.
-- SURFACES: Real items have shadows and dust. Laptop has fingerprints on screen edge. Phone has a case with slight wear. Coffee cup has a drip stain.
+- WALLS: Must have texture — subtle paint brush strokes, light switch plates, power outlets visible. NOT smooth gradients. Clean walls with gentle natural variation — NOT cracked, NOT peeling, NOT damaged.
+- FURNITURE: Visible wood grain on tables/desks, natural material texture. NOT pristine showroom furniture, but also CLEAN and well-maintained — NO scratches, NO stains, NO wear damage.
+- FLOORS: Visible tile grout or carpet texture. CLEAN and well-kept — NO dust, NO scuff marks, NO stains.
+- SURFACES: Real items have soft shadows. Laptop looks used but CLEAN. Phone has a case. Coffee cup is fresh — NO drip stains, NO fingerprints, NO grime.
 - LIGHTING ON ENVIRONMENT: Different color temperature on different surfaces — warm lamp on desk, cool daylight on wall near window. Hard shadows from objects (not soft AI ambient).
 - WINDOW: If visible, slight overexposure (blown highlights), curtain/blind with uneven folds, real view outside (not AI-gradient sky).
-- CLUTTER: Real spaces have clutter — visible wires, a charger cable, a water bottle, sticky notes, an open notebook, crumbs, a pen. NOT minimalist showroom.
+- PERSONAL OBJECTS: Real spaces have lived-in markers — a charger cable, a water bottle, a notebook, a small plant, a pen. Organized and personal — NOT minimalist showroom, NOT cluttered, NOT dirty.
 - DEPTH: Background objects should be at different distances — some sharp, some blurred. Not everything at the same focal plane.
 - Slight lens vignette at corners (real lenses darken at edges).
 """
@@ -485,7 +485,7 @@ def build_twin_actor_prompt(
 - hair: {source_face.get("hair", "same")} (can be slightly different length/style)
 - nose_shape: {source_face.get("nose_shape", "same")}
 - age_range: {source_face.get("age_range", "same")}
-Only change: distinguishing_marks (different scar/mole/glasses to tell them apart)"""
+Only change: distinguishing_marks (different glasses/hairstyle/accessory to tell them apart — NO scars, NO marks on skin)"""
     else:
         face_instruction = f"""Fraternal twin of {source_name} — same family, different person:
 - skin_tone_hex: SAME as {source_face.get("skin_tone_hex", "source")}
