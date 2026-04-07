@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import LandingPagesCard from "@/components/LandingPagesCard";
 import type { IntakeRequest } from "@/lib/types";
 
 interface ProgressData {
@@ -30,9 +31,10 @@ interface ProgressData {
 
 interface CampaignPreviewPanelProps {
   requestId: string;
+  canEdit?: boolean;
 }
 
-export default function CampaignPreviewPanel({ requestId }: CampaignPreviewPanelProps) {
+export default function CampaignPreviewPanel({ requestId, canEdit = false }: CampaignPreviewPanelProps) {
   const [request, setRequest] = useState<IntakeRequest | null>(null);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -262,6 +264,9 @@ export default function CampaignPreviewPanel({ requestId }: CampaignPreviewPanel
             </div>
           </div>
         )}
+
+        {/* Landing Pages — shared between marketing + designer views */}
+        <LandingPagesCard requestId={request.id} canEdit={canEdit} />
 
         {/* Live creative thumbnails */}
         {composedAssets.length > 0 && (
