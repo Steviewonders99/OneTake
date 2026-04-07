@@ -492,6 +492,84 @@ function AdSetCard({ adSet, channel, assets }: AdSetCardProps) {
   );
 }
 
+interface ChannelBlockProps {
+  block: ChannelBlockData;
+  expanded: boolean;
+  onToggle: () => void;
+  assets: GeneratedAsset[];
+  isRatio: boolean;
+  totalMonthly: number | null;
+}
+
+function ChannelBlock({ block, expanded, onToggle, assets, isRatio, totalMonthly }: ChannelBlockProps) {
+  const meta = getPlatformMeta(block.channel.toLowerCase() + "_feed");
+  const channelMonthly = !isRatio && totalMonthly ? Math.round(totalMonthly * block.pct) : null;
+  const channelDaily = channelMonthly ? Math.round(channelMonthly / 30) : null;
+  const pctLabel = `${Math.round(block.pct * 100)}% of country spend`;
+  const objectivesLabel = block.objectives.length > 0 ? block.objectives.join(" · ") : "—";
+  const creativeCount = block.adSets.reduce((s, a) => s + matchCreatives(a, assets, block.channel).length, 0);
+
+  return (
+    <div className="bg-white border border-[var(--border)] rounded-xl mb-3 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[var(--muted)]/30 transition-colors text-left"
+        style={{ borderLeft: `4px solid ${meta.color}` }}
+      >
+        <div className="flex items-center gap-3.5">
+          <PlatformLogo brand={meta.brand} className="w-10 h-10" />
+          <div>
+            <h3 className="text-[16px] font-bold text-[var(--foreground)] m-0">{block.channel}</h3>
+            <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)] mt-0.5">
+              <span className="px-2 py-0.5 rounded-full bg-[var(--muted)] font-semibold capitalize">
+                {objectivesLabel.replace(/_/g, " ")}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-[var(--muted)] font-semibold">
+                {block.adSets.length} ad set{block.adSets.length === 1 ? "" : "s"}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-[var(--muted)] font-semibold">
+                {creativeCount} creative{creativeCount === 1 ? "" : "s"}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          {isRatio ? (
+            <div className="text-[12px] font-semibold text-[var(--muted-foreground)] uppercase">{Math.round(block.pct * 100)}%</div>
+          ) : (
+            <>
+              <div className="text-[18px] font-extrabold text-[var(--foreground)]">
+                ${Number(channelMonthly ?? 0).toLocaleString()}
+                <span className="text-[11px] font-medium text-[var(--muted-foreground)]">/mo</span>
+              </div>
+              <div className="text-[11px] text-[var(--muted-foreground)]">
+                {channelDaily ? `$${channelDaily}/day · ` : ""}{pctLabel}
+              </div>
+            </>
+          )}
+        </div>
+      </button>
+      {expanded ? (
+        <div className="px-5 pt-3 pb-5 border-t border-[var(--border)] bg-[#FCFCFC]">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-2.5 mt-1">Ad Sets</div>
+          {block.adSets.length === 0 ? (
+            <div className="text-[12px] italic text-[var(--muted-foreground)] py-3">
+              No ad sets assigned to this channel yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {block.adSets.map((as, i) => (
+                <AdSetCard key={`${as.name ?? "adset"}-${i}`} adSet={as} channel={block.channel} assets={assets} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ── Component (stub — filled in later tasks) ────────────────────────
 
 export default function MediaStrategyTab({ strategies, assets, briefData }: MediaStrategyTabProps) {
