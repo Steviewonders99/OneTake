@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import LandingPagesCard from "@/components/LandingPagesCard";
+import CampaignSlugField from "@/components/CampaignSlugField";
 import type { IntakeRequest } from "@/lib/types";
 
 interface ProgressData {
@@ -162,6 +163,15 @@ export default function CampaignPreviewPanel({ requestId, canEdit = false }: Cam
               </span>
             )}
           </p>
+
+          {/* Row 2b: Campaign tracking slug (admin inline editor) */}
+          <div className="mt-1">
+            <CampaignSlugField
+              requestId={request.id}
+              initialValue={request.campaign_slug ?? null}
+              canEdit={canEdit}
+            />
+          </div>
 
           {/* Row 3: Goal one-liner */}
           {goalText && (
