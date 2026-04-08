@@ -1,22 +1,34 @@
-"""Marketing Brief Evaluator — strict relevance to RFP + OneForma positioning.
+"""Marketing Brief Evaluator — brand voice auditor for OneForma briefs.
 
 Every brief must demonstrate:
 1. Direct traceability to the RFP requirements
 2. Persona-specific messaging (not generic)
 3. Cultural intelligence integration
-4. OneForma brand voice compliance
+4. OneForma BRAND VOICE compliance (tagline, 4 tone rules, no banned words)
 5. Ethical positioning for sensitive topics
 6. Actionable channel strategy with evidence
+7. Pillar clarity (Earn / Grow / Shape angles surfaced for downstream copy)
 
 Scoring: 0-10 per dimension (Neurogen pattern)
 Hard gates: MIN_ACCEPT = 8.0 overall, MIN_DIM = 7 per dimension
 Verdict: accept | revise | reject
+
+Brand voice auditor: any brief containing a word from WORDS_TO_AVOID receives
+an automatic 0 on brand_voice_compliance, which triggers a hard-gate failure.
 """
 from __future__ import annotations
 
 import json
 import logging
 from typing import Any
+
+from worker.brand import (
+    TAGLINE,
+    TONE_RULES,
+    WORDS_TO_AVOID,
+    PILLARS,
+    build_brand_voice_block,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,33 +38,33 @@ logger = logging.getLogger(__name__)
 
 BRIEF_EVAL_DIMENSIONS: dict[str, dict[str, Any]] = {
     "rfp_traceability": {
-        "weight": 0.20,
+        "weight": 0.18,
         "min_score": 7,
-        "description": "Can every value prop be traced back to a specific RFP requirement?",
+        "description": "Can every value prop be traced back to a specific RFP requirement, framed as expertise the contributor brings (not as a task for hire)?",
         "scoring_guide": {
             "0-3": "Brief reads like a generic template — no connection to the actual RFP",
             "4-5": "Some RFP requirements addressed but major gaps (missing task type, wrong skills)",
             "6-7": "Most RFP requirements reflected but loose connections — 'we could do better'",
-            "8-9": "Every value prop maps to a specific RFP requirement with clear logic",
-            "10": "Perfect 1:1 mapping. Reading the brief, you could reconstruct the RFP",
+            "8-9": "Every value prop maps to a specific RFP requirement and is framed expertise-first",
+            "10": "Perfect 1:1 mapping. Each requirement is reframed as expertise OneForma is recruiting for",
         },
     },
     "persona_specificity": {
-        "weight": 0.15,
+        "weight": 0.13,
         "min_score": 7,
-        "description": "Are the 3 personas specific enough to drive creative decisions?",
+        "description": "Are the 3 personas specific enough to drive creative decisions, and is each persona positioned as an EXPERT (linguistic, professional, lived, or cultural) rather than as a generic, interchangeable audience segment?",
         "scoring_guide": {
             "0-3": "Generic audience description ('young adults interested in tech')",
             "4-5": "Some persona detail but interchangeable — could be anyone",
-            "6-7": "Personas have names and basic psychology but lack cultural depth",
-            "8-9": "Each persona has distinct psychology hooks, pain points, and platform preferences",
-            "10": "Reading the persona, you could picture EXACTLY who this person is and what makes them click",
+            "6-7": "Personas have names and basic detail but expertise framing is missing or weak",
+            "8-9": "Each persona has a distinct expertise type, pain points, and platform preferences",
+            "10": "Reading the persona, you could picture EXACTLY who this expert is and why their expertise matters",
         },
     },
     "cultural_integration": {
-        "weight": 0.15,
+        "weight": 0.13,
         "min_score": 6,
-        "description": "Does the brief incorporate real cultural research findings?",
+        "description": "Does the brief incorporate real cultural research findings (dialect, platform reality, economic framing) without resorting to stereotypes or 'every walk of life' generic language?",
         "scoring_guide": {
             "0-3": "No cultural awareness — could be for any country",
             "4-5": "Mentions the region but no specific cultural insights",
@@ -61,34 +73,47 @@ BRIEF_EVAL_DIMENSIONS: dict[str, dict[str, Any]] = {
             "10": "Someone from the target region would say 'yes, this understands my world'",
         },
     },
-    "oneforma_brand_fit": {
-        "weight": 0.10,
+    "brand_voice_compliance": {
+        "weight": 0.18,
         "min_score": 7,
-        "description": "Does the messaging match OneForma's brand voice?",
+        "description": (
+            "Check if the brief uses the new brand voice: tagline alignment "
+            "('OneForma is the AI platform that sees the expert in everyone'), "
+            "expertise-first framing (NOT money-first or task-first), the 4 tone "
+            "rules (Expertise First, Human First, Purposeful, Specific), locked "
+            "CTAs (CTA_PRIMARY 'Put your expertise to work' or CTA_SECONDARY 'Find "
+            "a project that knows your worth'), and avoidance of banned words. "
+            "AUTOMATIC 0 if any banned word appears in output."
+        ),
         "scoring_guide": {
-            "0-3": "Corporate tone, 'we are hiring' language, job board aesthetic",
-            "4-5": "Mildly friendly but still reads like a corporate careers page",
-            "6-7": "Opportunity-focused but missing the 'friend telling you about a gig' warmth",
-            "8-9": "Nails the OneForma voice: friendly, inviting, contributor-benefit-first",
-            "10": "You'd think a real OneForma contributor wrote this to recruit their friends",
+            "0-3": "Banned word detected, OR job-board / 'we are hiring' language, OR money-first hook",
+            "4-5": "No banned words but tone is generic — could belong to any platform",
+            "6-7": "Voice is recognizable but breaks one of the 4 tone rules in places",
+            "8-9": "Voice nails tagline, all 4 tone rules, locked CTAs, expertise-first throughout",
+            "10": "A brand strategist would say 'this IS the OneForma voice — every line earns its place'",
         },
     },
-    "psychology_depth": {
+    "pillar_clarity": {
         "weight": 0.10,
         "min_score": 6,
-        "description": "Are marketing psychology hooks well-chosen and applied per persona?",
+        "description": (
+            "Does the brief clearly surface 3 angles (Earn / Grow / Shape) the "
+            "downstream copy can use, or is the brief pillar-ambiguous? Each pillar "
+            "should be identifiable: Earn = predictable pay + flexibility; Grow = "
+            "skill-building + portfolio; Shape = expertise contribution + collaborator status."
+        ),
         "scoring_guide": {
-            "0-3": "No psychological targeting — same generic message for everyone",
-            "4-5": "Mentions a bias type but doesn't apply it to messaging",
-            "6-7": "Each persona has a psychology hook but application is surface-level",
-            "8-9": "Psychology hooks drive specific copy angles per persona (e.g., loss aversion for parents)",
-            "10": "A behavioral scientist would approve every hook-to-message mapping",
+            "0-3": "No pillar structure — brief is monolithic, downstream copy can't pick an angle",
+            "4-5": "One pillar mentioned but the other two are missing or muddled",
+            "6-7": "All 3 pillars present but uneven — one is much weaker than the others",
+            "8-9": "Each pillar (Earn / Grow / Shape) has a distinct hook and proof points",
+            "10": "Downstream copywriter could write 3 separate ad variations from this brief without ambiguity",
         },
     },
     "channel_evidence": {
         "weight": 0.10,
         "min_score": 6,
-        "description": "Is the channel strategy backed by real data (not assumptions)?",
+        "description": "Is the channel strategy backed by real data (not assumptions), with platform choices that match where target experts actually spend time?",
         "scoring_guide": {
             "0-3": "Generic channel list ('LinkedIn, Facebook') — no region-specific data",
             "4-5": "Channels match the region broadly but no demographic breakdown",
@@ -100,7 +125,7 @@ BRIEF_EVAL_DIMENSIONS: dict[str, dict[str, Any]] = {
     "ethical_compliance": {
         "weight": 0.10,
         "min_score": 7,
-        "description": "Are sensitive topics (children, medical, moderation) handled correctly?",
+        "description": "Are sensitive topics (children, medical, moderation, biometrics) handled with positive repositioning, expertise framing, and trust signals — never with raw mechanistic language?",
         "scoring_guide": {
             "0-3": "Sensitive topic present but not addressed — raw/inappropriate framing",
             "4-5": "Sensitivity acknowledged but repositioning is weak",
@@ -110,9 +135,9 @@ BRIEF_EVAL_DIMENSIONS: dict[str, dict[str, Any]] = {
         },
     },
     "actionability": {
-        "weight": 0.10,
+        "weight": 0.08,
         "min_score": 7,
-        "description": "Could a creative team execute from this brief without asking questions?",
+        "description": "Could a creative team execute from this brief without asking questions? Are visual direction, copy angles, and pillar selection unambiguous?",
         "scoring_guide": {
             "0-3": "Vague directions — 'make it engaging' with no specifics",
             "4-5": "Some direction but major gaps in visual/copy/format guidance",
@@ -133,9 +158,12 @@ SAFETY_GATE = True  # Must pass ethical compliance
 
 # =========================================================================
 # Sensitive topic detection keywords (from ethical_positioning.py categories)
+# AND brand voice scrubbing patterns (banned brand words, leaked end-customer
+# / enterprise client names, old brand framing)
 # =========================================================================
 
 _SENSITIVE_KEYWORDS = [
+    # Sensitive subject matter (ethical compliance gate)
     "children", "kids", "minor", "child safety", "COPPA", "under 18",
     "pediatric", "medical", "health", "patient", "clinical", "diagnostic",
     "X-ray", "pathology", "HIPAA", "moderation", "harmful content", "toxic",
@@ -143,6 +171,18 @@ _SENSITIVE_KEYWORDS = [
     "facial recognition", "fingerprint", "voice print", "iris", "face detection",
     "military", "defense", "weapons", "drone", "surveillance", "intelligence",
     "personal photos", "selfies", "voice recording", "handwriting sample",
+    # Specific end-customer names that must NEVER appear in any brief
+    # (deny-list — surface as a hard signal for the auditor)
+    "openai", "anthropic", "google ai",
+    # Specific enterprise client names that must NEVER appear in any brief
+    "microsoft", "fedex", "lowe's", "lowes", "allstate", "sony",
+    # Banned brand words (mirror of WORDS_TO_AVOID — surface as a signal so the
+    # evaluator notices and forces brand_voice_compliance to 0)
+    "resource", "crowd", "crowdworker", "crowdsource",
+    "side hustle", "side-hustle", "microtask", "annotator alone",
+    "BPO", "outsourcing", "vendor",
+    # Old brand framing (phase-1 voice migration scrub list)
+    "data annotation company", "gig worker",
 ]
 
 
@@ -170,10 +210,15 @@ def _has_sensitive_topic(request: dict) -> bool:
 # =========================================================================
 
 EVAL_SYSTEM_PROMPT = (
-    "You are a senior creative strategist evaluating recruitment marketing "
-    "briefs for OneForma. You score with brutal honesty across 8 dimensions. "
+    "You are a brand voice evaluator for OneForma, the AI platform that sees "
+    "the expert in everyone. You audit recruitment marketing briefs for both "
+    "creative quality AND brand voice compliance, with brutal honesty across "
+    "8 dimensions.\n\n"
     "Your scores must be calibrated: an 8 is genuinely excellent work, not "
-    "'good enough'. A 5 is mediocre. A 3 is unacceptable.\n\n"
+    "'good enough'. A 5 is mediocre. A 3 is unacceptable. The "
+    "brand_voice_compliance dimension is an AUTOMATIC 0 if any banned word "
+    "appears in the brief — no exceptions, no partial credit.\n\n"
+    f"{build_brand_voice_block()}\n\n"
     "You return ONLY valid JSON. No markdown. No commentary outside the JSON."
 )
 
@@ -249,7 +294,9 @@ def build_brief_eval_prompt(
         else str(form_data)
     )
 
-    return f"""Evaluate this recruitment marketing brief for OneForma against the RFP and personas.
+    banned_words_csv = ", ".join(WORDS_TO_AVOID)
+
+    return f"""Evaluate this recruitment marketing brief for OneForma against the RFP, personas, and brand voice rules.
 
 === ORIGINAL RFP / INTAKE REQUEST ===
 Title: {request.get("title", "?")}
@@ -272,15 +319,20 @@ Task details: {task_description}
 - Overall weighted score must be >= {MIN_ACCEPT_SCORE} to accept
 - Every dimension must score >= its min_score (see above)
 - If a sensitive topic is detected, ethical_compliance < 7 = REJECT (not just revise)
+- BRAND VOICE GATE: If ANY of these banned words appears anywhere in the brief
+  output, brand_voice_compliance is AUTOMATICALLY 0 and the verdict is REJECT.
+  Banned words: {banned_words_csv}
 
 === INSTRUCTIONS ===
 1. Score each dimension 0-10 using the scoring guide above.
 2. Provide specific feedback per dimension (what worked, what failed, what to fix).
 3. List concrete improvement suggestions if verdict is not "accept".
-4. For rfp_traceability: check that each value prop maps to a specific RFP requirement.
-5. For persona_specificity: check that personas drive creative decisions, not just decorate.
+4. For rfp_traceability: check that each value prop maps to a specific RFP requirement, framed expertise-first.
+5. For persona_specificity: check that personas are positioned as experts (linguistic, professional, lived, or cultural).
 6. For cultural_integration: check for real cultural data, not generic regional references.
-7. For ethical_compliance: if sensitive topics exist, check positive framing and avoid-phrases.
+7. For brand_voice_compliance: scan the entire brief for banned words first. If found, score = 0. Otherwise, audit tagline alignment, the 4 tone rules (Expertise First, Human First, Purposeful, Specific), and locked CTA usage.
+8. For pillar_clarity: check that the brief clearly identifies Earn / Grow / Shape angles a downstream copywriter could pick from.
+9. For ethical_compliance: if sensitive topics exist, check positive framing and avoid-phrases.
 
 Return ONLY valid JSON:
 {{
@@ -288,8 +340,8 @@ Return ONLY valid JSON:
     "rfp_traceability": {{"score": 0, "feedback": "..."}},
     "persona_specificity": {{"score": 0, "feedback": "..."}},
     "cultural_integration": {{"score": 0, "feedback": "..."}},
-    "oneforma_brand_fit": {{"score": 0, "feedback": "..."}},
-    "psychology_depth": {{"score": 0, "feedback": "..."}},
+    "brand_voice_compliance": {{"score": 0, "feedback": "..."}},
+    "pillar_clarity": {{"score": 0, "feedback": "..."}},
     "channel_evidence": {{"score": 0, "feedback": "..."}},
     "ethical_compliance": {{"score": 0, "feedback": "..."}},
     "actionability": {{"score": 0, "feedback": "..."}}
