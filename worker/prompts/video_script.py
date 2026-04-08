@@ -104,7 +104,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "ugc_talking_head": {
         "description": "Influencer-style talking head with rapid angle cuts",
         "structure": "Hook (extreme close-up) -> Problem -> Solution -> Celebration -> CTA",
-        "best_for": ["the_student", "the_gig_worker", "the_freelancer"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
         "duration_range": (12, 15),
         "scene_blueprint": [
@@ -118,7 +118,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "pov_reveal": {
         "description": "POV: person discovers an amazing opportunity and shares it",
         "structure": "Surprise hook -> Reaction -> Explain -> Energy build -> CTA",
-        "best_for": ["the_student", "the_techie"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels"],
         "duration_range": (10, 15),
         "scene_blueprint": [
@@ -132,7 +132,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "earnings_reveal": {
         "description": "Person celebrates earnings and explains how they did it",
         "structure": "Celebration -> Reaction -> 'Here's how' -> Steps -> CTA",
-        "best_for": ["the_gig_worker", "the_student", "the_parent"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels", "facebook_reels"],
         "duration_range": (12, 15),
         "scene_blueprint": [
@@ -146,7 +146,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "day_in_the_life": {
         "description": "A day as a OneForma contributor",
         "structure": "Morning routine -> Open laptop -> Work montage -> Earnings -> Life",
-        "best_for": ["the_parent", "the_freelancer", "the_multilingual"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
         "duration_range": (20, 45),
         "scene_blueprint": [
@@ -161,7 +161,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "before_after": {
         "description": "Before: struggling. After: earning from home",
         "structure": "Before (sad) -> Discovery -> After (happy, earning) -> CTA",
-        "best_for": ["the_graduate", "the_gig_worker"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels", "facebook_reels"],
         "duration_range": (12, 20),
         "scene_blueprint": [
@@ -175,7 +175,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "stat_counter": {
         "description": "Animated statistics about OneForma",
         "structure": "Bold stat -> Context -> More stats -> CTA",
-        "best_for": ["the_techie", "the_multilingual"],
+        "best_for": [],
         "platforms": ["linkedin", "youtube_shorts"],
         "duration_range": (10, 15),
         "scene_blueprint": [
@@ -188,7 +188,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "testimonial_quote": {
         "description": "Contributor testimonial with text overlay",
         "structure": "Quote text -> Person appears -> Elaborates -> CTA",
-        "best_for": ["the_parent", "the_retiree", "the_multilingual"],
+        "best_for": [],
         "platforms": ["facebook", "linkedin", "instagram"],
         "duration_range": (15, 30),
         "scene_blueprint": [
@@ -201,7 +201,7 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     "how_it_works": {
         "description": "3-step explainer: sign up, choose tasks, earn",
         "structure": "Hook question -> Step 1 -> Step 2 -> Step 3 -> CTA",
-        "best_for": ["the_student", "the_parent", "the_gig_worker"],
+        "best_for": [],
         "platforms": ["tiktok", "instagram_reels", "youtube_shorts", "facebook"],
         "duration_range": (15, 30),
         "scene_blueprint": [
@@ -214,150 +214,21 @@ VIDEO_TEMPLATES: dict[str, dict[str, Any]] = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Persona psychology hooks — used to customize scripts per persona
-# ---------------------------------------------------------------------------
-
-_PERSONA_VIDEO_HOOKS: dict[str, dict[str, Any]] = {
-    "the_student": {
-        "hook_angles": [
-            "POV: you found a side hustle that works between classes",
-            "I made ${amount} this week... from my dorm room",
-            "Things I wish I knew as a broke college student",
-            "When your friends ask how you afford everything",
-        ],
-        "pain_language": [
-            "minimum wage at the campus coffee shop",
-            "class schedule makes it impossible to hold a normal job",
-            "ramen budget",
-            "textbook money",
-        ],
-        "emotional_triggers": ["fomo", "peer_comparison", "independence"],
-    },
-    "the_freelancer": {
-        "hook_angles": [
-            "What I do between freelance gigs to keep money coming in",
-            "The income bridge every freelancer needs",
-            "Stop panicking between client projects",
-            "My freelance safety net — and it pays ${rate}/hr",
-        ],
-        "pain_language": [
-            "feast or famine freelance cycle",
-            "client ghosted mid-project",
-            "invoice paid 90 days late... again",
-            "the gap between gigs",
-        ],
-        "emotional_triggers": ["security", "professional_pride", "control"],
-    },
-    "the_parent": {
-        "hook_angles": [
-            "What I do when the kids are at school to earn extra",
-            "This mom earns ${amount}/week without leaving home",
-            "Finally — work that does not need a babysitter",
-            "Naptime is now paytime",
-        ],
-        "pain_language": [
-            "childcare costs more than you earn",
-            "feeling guilty for wanting to work",
-            "no job fits school pickup schedule",
-            "losing yourself in parenthood",
-        ],
-        "emotional_triggers": ["guilt_relief", "identity", "contribution"],
-    },
-    "the_graduate": {
-        "hook_angles": [
-            "How I got AI experience without a CS degree",
-            "Entry level jobs want 3 years experience... so I did this",
-            "What I actually do with my linguistics degree",
-            "POV: your degree finally became useful",
-        ],
-        "pain_language": [
-            "applied to 200 jobs, heard back from 3",
-            "overqualified for retail, underqualified for everything else",
-            "student loans but no job",
-            "degree gathering dust",
-        ],
-        "emotional_triggers": ["validation", "career_momentum", "belonging"],
-    },
-    "the_multilingual": {
-        "hook_angles": [
-            "If you speak more than one language, you NEED to see this",
-            "How I finally get paid for speaking {language}",
-            "Your bilingual brain is worth ${rate}/hr to AI companies",
-            "They do not value your languages? These companies do.",
-        ],
-        "pain_language": [
-            "language skills never showed up on a paycheck before",
-            "accent gets you rejected, not hired",
-            "qualifications do not transfer to new country",
-            "being multilingual is invisible on most resumes",
-        ],
-        "emotional_triggers": ["recognition", "pride", "belonging"],
-    },
-    "the_retiree": {
-        "hook_angles": [
-            "Retirement was boring... until I found this",
-            "How I keep my brain sharp AND earn extra",
-            "My pension plus this = actually comfortable",
-            "What I do to stay active at {age}",
-        ],
-        "pain_language": [
-            "retirement is not as fun as they promised",
-            "fixed income does not stretch like it used to",
-            "everyone assumes I cannot learn new things",
-            "feeling left behind",
-        ],
-        "emotional_triggers": ["purpose", "capability", "connection"],
-    },
-    "the_techie": {
-        "hook_angles": [
-            "I train AI models as a side hustle — here is how",
-            "What data annotation actually looks like (it is not boring)",
-            "The side hustle that actually uses your tech skills",
-            "Behind the scenes of how AI learns — and they pay you for it",
-        ],
-        "pain_language": [
-            "salary alone does not cut it anymore",
-            "most side hustles are beneath your skill level",
-            "want to be part of the AI wave, not watching it",
-            "boring gig work that wastes your brain",
-        ],
-        "emotional_triggers": ["insider_knowledge", "skill_flex", "frontier_access"],
-    },
-    "the_gig_worker": {
-        "hook_angles": [
-            "I switched from DoorDash to this... no more gas money",
-            "${rate}/hr from my couch > $15/hr in my car",
-            "Same flexibility as delivery, but you never leave home",
-            "POV: you stop trading time AND gas for money",
-        ],
-        "pain_language": [
-            "gas prices eating your earnings",
-            "body aches from delivery runs",
-            "car maintenance wiping out profits",
-            "no sick days in the gig economy",
-        ],
-        "emotional_triggers": ["comparison", "upgrade", "physical_relief"],
-    },
-}
-
-
 def select_video_template(
     persona: dict,
     platforms: list[str],
 ) -> str:
-    """Select the best video template for a persona x platform combination.
+    """Select the best video template for the target platforms.
 
-    Scoring logic:
-    1. Templates that list the persona archetype in ``best_for`` get +3 points.
-    2. Templates with platform overlap get +2 per matching platform.
-    3. Templates within the persona's preferred duration get +1.
-    4. Highest score wins; ties broken by template order (first declared wins).
+    With dynamic personas (Task 18/19) there are no hardcoded archetype
+    affinities, so scoring is now driven by platform overlap + duration
+    preference only. Ties broken by template order (first declared wins).
 
     Parameters
     ----------
     persona:
-        A persona dict — must contain at least ``archetype_key``.
+        A persona dict. Currently unused in scoring but kept in the
+        signature so callers don't need to change.
     platforms:
         Target video platforms (e.g. ``["tiktok", "instagram_reels"]``).
 
@@ -366,17 +237,13 @@ def select_video_template(
     str
         The key of the best matching template from ``VIDEO_TEMPLATES``.
     """
-    archetype_key = persona.get("archetype_key", "the_student")
+    del persona  # reserved for future persona-aware scoring
 
     best_key = "ugc_talking_head"  # safe default
     best_score = -1
 
     for tpl_key, tpl in VIDEO_TEMPLATES.items():
         score = 0
-
-        # Persona fit
-        if archetype_key in tpl["best_for"]:
-            score += 3
 
         # Platform overlap
         for plat in platforms:
@@ -432,9 +299,7 @@ def build_video_script_prompt(
         The fully formatted user prompt for the LLM.
     """
     template = VIDEO_TEMPLATES[template_key]
-    archetype_key = persona.get("archetype_key", "the_student")
     psychology = persona.get("psychology_profile", {})
-    persona_hooks = _PERSONA_VIDEO_HOOKS.get(archetype_key, _PERSONA_VIDEO_HOOKS["the_student"])
 
     # Build scene-by-scene instruction from the template blueprint
     scene_instructions = []
@@ -448,9 +313,7 @@ def build_video_script_prompt(
         )
     scene_block = "\n".join(scene_instructions)
 
-    # Build persona psychology section
-    hook_options = "\n".join(f'  - "{h}"' for h in persona_hooks["hook_angles"])
-    pain_options = "\n".join(f'  - "{p}"' for p in persona_hooks["pain_language"])
+    # Psychology fields come from the dynamic persona's psychology_profile
     trigger_words = ", ".join(psychology.get("trigger_words", []))
     primary_bias = psychology.get("primary_bias", "social_proof")
     secondary_bias = psychology.get("secondary_bias", "effort_minimization")
@@ -470,9 +333,16 @@ def build_video_script_prompt(
 
     min_dur, max_dur = template["duration_range"]
 
+    archetype_label = (
+        persona.get("archetype")
+        or persona.get("matched_tier")
+        or persona.get("persona_name")
+        or "Contributor"
+    )
+
     return f"""Write a video script for a OneForma recruitment ad.
 
-TARGET PERSONA: {persona.get("archetype", archetype_key)}
+TARGET PERSONA: {archetype_label}
 Age range: {persona.get("age_range", "20-35")}
 Lifestyle: {persona.get("lifestyle", "")}
 Region: {region}
@@ -496,12 +366,6 @@ OBJECTIONS TO PRE-EMPT (address 1-2 subtly in the script):
 VIDEO TEMPLATE: {template_key} — {template["description"]}
 Structure: {template["structure"]}
 Duration: {min_dur}-{max_dur} seconds total
-
-HOOK ANGLE OPTIONS (choose one or adapt):
-{hook_options}
-
-PAIN LANGUAGE OPTIONS (use naturally, not verbatim):
-{pain_options}
 
 SCENE-BY-SCENE BREAKDOWN (follow this structure exactly):
 {scene_block}

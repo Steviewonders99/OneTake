@@ -26,9 +26,8 @@ from prompts.cultural_research import (
 )
 from prompts.eval_registry import evaluate as run_evaluator
 from prompts.persona_engine import (
-    build_persona_brief_prompt,
-    generate_personas,
-    generate_personas_llm,
+    PERSONA_SYSTEM_PROMPT,
+    build_persona_prompt,
 )
 from prompts.recruitment_brief import (
     BRIEF_SYSTEM_PROMPT,
@@ -87,22 +86,28 @@ async def run_stage1(context: dict) -> dict:
 
     # ==================================================================
     # STEP 2: GENERATE PERSONAS (WHO are we talking to?)
-    # 3 personas selected from 8 archetypes, scored against task
-    # requirements, then enriched with cultural research findings.
-    # These personas are the FOUNDATION for everything else.
+    # Dynamic LLM-generated personas constrained by derived_requirements
+    # (Task 18/19 — replaces the legacy 8-archetype system). The brief
+    # is generated BEFORE personas so that persona_constraints are
+    # available; for the first pass we run a lightweight derivation
+    # pre-step inside the brief prompt. Until Task 21 wires in the
+    # full validation retry loop, we read persona_constraints from a
+    # pre-brief extraction pass or fall back to empty constraints.
     # ==================================================================
     logger.info("Step 2: Generating personas (LLM-powered, dynamic)...")
-    personas = await generate_personas_llm(request, cultural_research=cultural_research)
+    personas = await _generate_personas_dynamic(
+        request=request,
+        cultural_research=cultural_research,
+        persona_constraints={},  # Task 21 will populate from a pre-brief derivation
+    )
 
     if cultural_research and personas:
-        # Only apply research if personas came from deterministic fallback (no research injected yet)
-        if not any("digital_habitat" in p for p in personas):
-            personas = apply_research_to_personas(personas, cultural_research)
-            logger.info("Personas enriched with cultural research.")
+        personas = apply_research_to_personas(personas, cultural_research)
+        logger.info("Personas enriched with cultural research.")
 
     logger.info(
         "3 personas: %s",
-        [f"{p['archetype_key']} ({p.get('persona_name', '?')})" for p in personas],
+        [p.get("name") or p.get("persona_name") or p.get("archetype", "?") for p in personas],
     )
 
     # ==================================================================
@@ -112,10 +117,16 @@ async def run_stage1(context: dict) -> dict:
     # ==================================================================
     for persona in personas:
         targeting = persona.get("targeting_profile", {})
+        persona_label = (
+            persona.get("name")
+            or persona.get("persona_name")
+            or persona.get("matched_tier")
+            or persona.get("archetype", "Contributor")
+        )
         try:
             actor_id = await save_actor(request_id, {
-                "name": persona.get("persona_name", persona.get("archetype", "Contributor")),
-                "face_lock": {"archetype_key": persona.get("archetype_key", "")},
+                "name": persona_label,
+                "face_lock": {"matched_tier": persona.get("matched_tier", "")},
                 "prompt_seed": "",
                 "outfit_variations": {},
                 "signature_accessory": "",
@@ -126,13 +137,13 @@ async def run_stage1(context: dict) -> dict:
                 await update_actor_targeting(actor_id, targeting)
                 logger.info(
                     "Saved targeting_profile for persona '%s' (pool=%s, cpl=%s, weight=%d%%)",
-                    persona.get("archetype_key", "?"),
+                    persona_label,
                     targeting.get("estimated_pool_size", "?"),
                     targeting.get("expected_cpl_tier", "?"),
                     targeting.get("budget_weight_pct", 0),
                 )
         except Exception as exc:
-            logger.warning("Could not save actor stub / targeting for '%s': %s", persona.get("archetype_key", "?"), exc)
+            logger.warning("Could not save actor stub / targeting for '%s': %s", persona_label, exc)
 
     # ==================================================================
     # STEP 3b: CAMPAIGN STRATEGY ENGINE (budget cascade + strategy per country)
@@ -266,7 +277,7 @@ async def run_stage1(context: dict) -> dict:
     logger.info("Step 3: Generating persona-driven creative brief...")
 
     # Build persona + research context that feeds into the brief prompt
-    persona_context = build_persona_brief_prompt(personas, {})
+    persona_context = _build_persona_brief_context(personas)
     if cultural_research:
         persona_context += "\n\n" + build_research_summary(cultural_research)
 
@@ -442,6 +453,112 @@ async def run_stage1(context: dict) -> dict:
         "target_regions": target_regions,
         "form_data": form_data,
     }
+
+
+# ---------------------------------------------------------------------------
+# Persona generation helpers (dynamic, LLM-driven — Task 18/19)
+# ---------------------------------------------------------------------------
+
+async def _generate_personas_dynamic(
+    request: dict,
+    cultural_research: dict,
+    persona_constraints: dict,
+) -> list[dict]:
+    """Run the dynamic persona generation LLM call.
+
+    Uses prompts.persona_engine.build_persona_prompt to construct the
+    prompt from persona_constraints + cultural_research, then parses
+    the JSON {"personas": [...]} response. Task 21 will add the
+    validation retry loop on top of this helper.
+    """
+    prompt = build_persona_prompt(
+        request=request,
+        cultural_research=cultural_research,
+        persona_constraints=persona_constraints,
+    )
+
+    try:
+        result = await generate_text(
+            PERSONA_SYSTEM_PROMPT,
+            prompt,
+            thinking=True,
+            max_tokens=8192,
+            temperature=0.7,
+        )
+    except Exception as exc:
+        logger.warning("Dynamic persona generation failed: %s — returning empty list", exc)
+        return []
+
+    parsed = _parse_json(result)
+    personas = parsed.get("personas") if isinstance(parsed, dict) else None
+    if not isinstance(personas, list):
+        logger.warning("Persona LLM output missing 'personas' array — got keys: %s",
+                       list(parsed.keys()) if isinstance(parsed, dict) else type(parsed).__name__)
+        return []
+
+    # Ensure every persona has a persona_name field for downstream consumers
+    for p in personas:
+        if isinstance(p, dict) and "persona_name" not in p:
+            p["persona_name"] = p.get("name") or p.get("archetype", "Contributor")
+
+    logger.info("Dynamic persona LLM returned %d personas", len(personas))
+    return personas[:3]
+
+
+def _build_persona_brief_context(personas: list[dict]) -> str:
+    """Format dynamic personas into a prompt block for brief generation.
+
+    Replaces the legacy build_persona_brief_prompt helper (deleted with
+    the 8-archetype system). Operates on the dynamic persona schema:
+    name, archetype, matched_tier, age_range, lifestyle, motivations,
+    pain_points, psychology_profile, jobs_to_be_done, best_channels.
+    """
+    if not personas:
+        return "TARGET PERSONAS: (none generated)\n"
+
+    all_channels: set[str] = set()
+    all_hooks: set[str] = set()
+    persona_blocks: list[str] = []
+
+    for i, p in enumerate(personas, 1):
+        channels = p.get("best_channels", []) or []
+        psychology = p.get("psychology_profile", {}) or {}
+        primary = psychology.get("primary_bias", "")
+        secondary = psychology.get("secondary_bias", "")
+        all_channels.update(channels)
+        if primary:
+            all_hooks.add(primary)
+        if secondary:
+            all_hooks.add(secondary)
+
+        motivations = p.get("motivations", []) or []
+        pain_points = p.get("pain_points", []) or []
+
+        block = (
+            f"PERSONA {i}: {p.get('name') or p.get('persona_name') or 'Unnamed'}\n"
+            f"  Archetype: {p.get('archetype', '')}\n"
+            f"  Matched tier: {p.get('matched_tier', '')}\n"
+            f"  Age range: {p.get('age_range', '')}\n"
+            f"  Lifestyle: {p.get('lifestyle', '')}\n"
+            f"  Top motivations: {'; '.join(motivations[:3])}\n"
+            f"  Top pain points: {'; '.join(pain_points[:3])}\n"
+            f"  Psychology: {primary}{' + ' + secondary if secondary else ''}\n"
+            f"  Messaging angle: {psychology.get('messaging_angle', '')}\n"
+            f"  Best channels: {', '.join(channels)}\n"
+            f"  Jobs-to-be-done: {json.dumps(p.get('jobs_to_be_done', {}), ensure_ascii=False, default=str)}"
+        )
+        persona_blocks.append(block)
+
+    return (
+        "TARGET PERSONAS (these personas MUST inform all messaging decisions):\n\n"
+        + "\n\n".join(persona_blocks)
+        + "\n\nPERSONA-DRIVEN REQUIREMENTS:\n"
+        + "- Each persona's pain points should appear as messaging angles in the brief.\n"
+        + "- Each persona's motivations should map to specific value propositions.\n"
+        + f"- Channel strategy MUST include: {', '.join(sorted(all_channels)) or '(none specified)'}\n"
+        + f"- Psychology hooks to leverage: {', '.join(sorted(all_hooks)) or '(none specified)'}\n"
+        + "- Each persona gets their own ad variant — do NOT write generic one-size-fits-all copy.\n"
+    )
 
 
 # ---------------------------------------------------------------------------

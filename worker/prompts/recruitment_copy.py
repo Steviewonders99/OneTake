@@ -25,7 +25,6 @@ from prompts.ethical_positioning import (
     build_ethical_copy_prompt,
     detect_sensitivity,
 )
-from prompts.persona_engine import build_persona_copy_prompt
 
 from brand import (
     TAGLINE,
@@ -52,6 +51,7 @@ __all__ = [
     "MARKETING_PSYCHOLOGY",
     "build_copy_prompt",
     "build_copy_eval_prompt",
+    "build_persona_copy_prompt",
     "build_persona_targeted_copy_prompt",
     "build_variation_prompts",
     "select_psychology_hooks",
@@ -59,6 +59,87 @@ __all__ = [
     "apply_ethical_framing",
     "detect_sensitivity",
 ]
+
+
+# ---------------------------------------------------------------------------
+# build_persona_copy_prompt — persona context block for copy generation
+# (inlined from worker/prompts/persona_engine.py in Task 18/19; operates on
+# the dynamic persona schema produced by build_persona_prompt)
+# ---------------------------------------------------------------------------
+
+def build_persona_copy_prompt(
+    persona: dict,
+    channel: str,
+    language: str,
+    brief: dict | None = None,
+) -> str:
+    """Build a copy-generation context block that tailors the ad to one persona."""
+    del channel, brief  # reserved for future platform-aware tuning
+    psychology = persona.get("psychology_profile", {}) or {}
+    raw_jtbd = persona.get("jobs_to_be_done", {})
+    if isinstance(raw_jtbd, list):
+        jtbd = {
+            "functional": raw_jtbd[0] if raw_jtbd else "",
+            "emotional": raw_jtbd[1] if len(raw_jtbd) > 1 else "",
+            "social": raw_jtbd[2] if len(raw_jtbd) > 2 else "",
+        }
+    elif isinstance(raw_jtbd, dict):
+        jtbd = raw_jtbd
+    else:
+        jtbd = {}
+    trigger_words = psychology.get("trigger_words", []) or []
+
+    motivations = persona.get("motivations", []) or []
+    pain_points = persona.get("pain_points", []) or []
+    primary_motivation = motivations[0] if motivations else ""
+    primary_pain = pain_points[0] if pain_points else ""
+
+    persona_name = (
+        persona.get("name")
+        or persona.get("persona_name")
+        or persona.get("matched_tier")
+        or "this person"
+    )
+
+    objections = persona.get("objections", []) or []
+    objection_block = (
+        "\n".join(f'  - "{o}"' for o in objections[:3]) if objections else "  (none)"
+    )
+
+    region = persona.get("region") or (
+        persona.get("age_range", "") and ""
+    ) or "target region"
+
+    return f"""PERSONA-TARGETED COPY (this ad speaks directly to this person):
+
+PERSONA: {persona_name}
+Archetype: {persona.get("archetype", "")}
+Matched tier: {persona.get("matched_tier", "")}
+Age range: {persona.get("age_range", "")} | Language: {language} | Region: {region}
+Lifestyle: {persona.get("lifestyle", "")}
+
+WHAT THEY CARE ABOUT:
+- Motivation: {primary_motivation}
+- Pain point: {primary_pain}
+- Functional need: {jtbd.get("functional", "")}
+- Emotional need: {jtbd.get("emotional", "")}
+- Social need: {jtbd.get("social", "")}
+
+PSYCHOLOGY TO LEVERAGE:
+- Primary bias: {psychology.get("primary_bias", "")} — {psychology.get("messaging_angle", "")}
+- Secondary bias: {psychology.get("secondary_bias", "")}
+- Trigger words to weave in: {", ".join(trigger_words)}
+
+OBJECTIONS TO PREEMPT (address these fears subtly in the copy):
+{objection_block}
+
+COPY MUST:
+- Sound like it was written FOR this specific person, not a generic audience.
+- Use trigger words naturally (not forced).
+- Address the persona's #1 pain point in the first line.
+- Make the persona's emotional need the subtext.
+- Be in {language} and feel native.
+"""
 
 # ---------------------------------------------------------------------------
 # System prompts
@@ -1268,8 +1349,7 @@ def build_variation_prompts(
         form_data=form_data,
     )
 
-    # Persona context block
-    from prompts.persona_engine import build_persona_copy_prompt
+    # Persona context block (inlined — legacy persona_engine helper deleted in Task 18/19)
     persona_block = build_persona_copy_prompt(persona, channel, language, brief)
 
     # System prompt — peer voice with tone rules + banned words

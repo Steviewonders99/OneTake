@@ -207,114 +207,45 @@ def test_openrouter_reachable():
 
 
 # =========================================================================
-# Category 2: Persona Engine (8 tests)
+# Category 2: Persona Engine
+# Task 18/19: deleted 8 hardcoded archetypes + rewrote persona_engine.py as
+# a pure prompt builder (PERSONA_SYSTEM_PROMPT + build_persona_prompt).
+# Task 22 will add replacement tests for the new prompt builder.
 # =========================================================================
 
-def test_all_8_archetypes_exist():
-    """All 8 persona archetypes are defined with required fields."""
-    from prompts.persona_engine import PERSONA_ARCHETYPES
-    assert len(PERSONA_ARCHETYPES) == 8, f"Expected 8 archetypes, got {len(PERSONA_ARCHETYPES)}"
-    required = [
-        "archetype", "age_range", "motivations", "pain_points",
-        "psychology_profile", "best_channels",
-    ]
-    for key, arch in PERSONA_ARCHETYPES.items():
-        for field in required:
-            assert field in arch, f"{key} missing {field}"
+def test_persona_engine_prompt_builder_exports():
+    """persona_engine exposes PERSONA_SYSTEM_PROMPT + build_persona_prompt."""
+    from prompts.persona_engine import PERSONA_SYSTEM_PROMPT, build_persona_prompt
+    assert isinstance(PERSONA_SYSTEM_PROMPT, str) and len(PERSONA_SYSTEM_PROMPT) > 100
+    assert callable(build_persona_prompt)
 
 
-def test_persona_generation_returns_3():
-    """generate_personas returns exactly 3 personas."""
-    from prompts.persona_engine import generate_personas
-    intake = {
-        "task_type": "audio_annotation",
-        "target_regions": ["Latin America"],
-        "target_languages": ["Spanish", "Portuguese"],
-    }
-    personas = generate_personas(intake)
-    assert len(personas) == 3, f"Expected 3 personas, got {len(personas)}"
-
-
-def test_personas_have_psychology_hooks():
-    """Each persona has primary_bias, messaging_angle, trigger_words."""
-    from prompts.persona_engine import PERSONA_ARCHETYPES
-    for key, arch in PERSONA_ARCHETYPES.items():
-        pp = arch["psychology_profile"]
-        assert "primary_bias" in pp, f"{key} missing primary_bias"
-        assert "messaging_angle" in pp, f"{key} missing messaging_angle"
-        assert "trigger_words" in pp, f"{key} missing trigger_words"
-
-
-def test_personas_have_actor_seed_hints():
-    """Each generated persona has actor_seed_hints for image generation."""
-    from prompts.persona_engine import generate_personas
-    intake = {
-        "task_type": "text_annotation",
-        "target_regions": ["South Asia"],
-        "target_languages": ["Hindi"],
-    }
-    personas = generate_personas(intake)
-    for p in personas:
-        assert "actor_seed_hints" in p, f"Persona {p.get('archetype_key')} missing actor_seed_hints"
-
-
-def test_persona_scoring_varies_by_task_type():
-    """Different task types produce different persona rankings."""
-    from prompts.persona_engine import generate_personas
-    audio_intake = {
-        "task_type": "audio_annotation",
-        "target_regions": ["Global"],
-        "target_languages": ["English", "French", "Arabic"],
-    }
-    image_intake = {
-        "task_type": "image_annotation",
-        "target_regions": ["Global"],
-        "target_languages": ["English"],
-    }
-    audio_personas = generate_personas(audio_intake)
-    image_personas = generate_personas(image_intake)
-    audio_keys = [p["archetype_key"] for p in audio_personas]
-    image_keys = [p["archetype_key"] for p in image_personas]
-    # They should not be identical — different tasks have different affinities
-    # Due to randomness they might occasionally match; check top pick differs
-    # Audio should favour multilingual; image should favour techie
-    assert audio_keys[0] != image_keys[0] or audio_keys != image_keys, (
-        f"Same ranking for audio and image: {audio_keys}"
+def test_build_persona_prompt_threads_constraints():
+    """build_persona_prompt echoes persona_constraints into the prompt string."""
+    from prompts.persona_engine import build_persona_prompt
+    prompt = build_persona_prompt(
+        request={
+            "title": "Dermatology image review",
+            "task_type": "image_annotation",
+            "target_regions": ["US"],
+            "target_languages": ["en"],
+        },
+        cultural_research={"ai_fatigue": {"level": "low"}},
+        persona_constraints={
+            "minimum_credentials": "MD/DO with dermatology training",
+            "acceptable_tiers": [
+                "Board-certified dermatologist",
+                "Dermatology resident at US teaching hospital",
+            ],
+            "age_range_hint": "28-55",
+            "excluded_archetypes": ["generic gig worker", "pre-med undergraduate"],
+        },
     )
-
-
-def test_persona_region_customization():
-    """Personas are customized for the target region."""
-    from prompts.persona_engine import generate_personas
-    intake = {
-        "task_type": "text_annotation",
-        "target_regions": ["Latin America"],
-        "target_languages": ["Spanish"],
-    }
-    personas = generate_personas(intake)
-    assert personas[0]["region"] == "Latin America"
-    assert personas[0]["language"] == "Spanish"
-
-
-def test_persona_channels_populated():
-    """Each persona has best_channels list."""
-    from prompts.persona_engine import PERSONA_ARCHETYPES
-    for key, arch in PERSONA_ARCHETYPES.items():
-        assert len(arch["best_channels"]) >= 2, f"{key} has fewer than 2 channels"
-
-
-def test_persona_objection_handlers():
-    """Each generated persona has objection handlers."""
-    from prompts.persona_engine import generate_personas
-    intake = {
-        "task_type": "data_collection",
-        "target_regions": ["Africa"],
-        "target_languages": ["English", "French"],
-    }
-    personas = generate_personas(intake)
-    for p in personas:
-        assert "objection_handlers" in p, f"{p.get('archetype_key')} missing objection_handlers"
-        assert len(p["objection_handlers"]) > 0, f"{p.get('archetype_key')} has empty objection_handlers"
+    assert "MD/DO with dermatology training" in prompt
+    assert "Board-certified dermatologist" in prompt
+    assert "generic gig worker" in prompt
+    assert "28-55" in prompt
+    assert "3 distinct personas" in prompt
 
 
 # =========================================================================
@@ -377,15 +308,20 @@ def test_validation_against_priors():
 
 
 def test_apply_research_to_personas():
-    """Cultural research enriches personas with real data."""
+    """Cultural research enriches dynamic personas with real data."""
     from prompts.cultural_research import apply_research_to_personas
-    from prompts.persona_engine import generate_personas
 
-    personas = generate_personas({
-        "task_type": "text_annotation",
-        "target_regions": ["Latin America"],
-        "target_languages": ["Spanish"],
-    })
+    # Use a minimal synthetic dynamic persona dict (no archetype lookups).
+    personas = [
+        {
+            "name": "Ana",
+            "archetype": "Board-certified dermatologist",
+            "matched_tier": "Board-certified dermatologist",
+            "age_range": "35-45",
+            "best_channels": ["linkedin"],
+            "psychology_profile": {"primary_bias": "authority"},
+        }
+    ]
     # Empty research should return personas unchanged
     result = apply_research_to_personas(personas, {})
     assert len(result) == len(personas)
@@ -461,12 +397,12 @@ def test_every_format_has_required_fields():
 
 
 def test_format_matrix_generation():
-    """build_format_matrix produces results for 3 personas."""
+    """build_format_matrix produces results for 3 dynamic personas."""
     from prompts.content_formats import build_format_matrix
     personas = [
-        {"archetype_key": "the_student", "best_channels": ["instagram", "tiktok"]},
-        {"archetype_key": "the_freelancer", "best_channels": ["linkedin", "twitter"]},
-        {"archetype_key": "the_parent", "best_channels": ["facebook", "pinterest"]},
+        {"matched_tier": "Board-certified dermatologist", "best_channels": ["instagram", "tiktok"]},
+        {"matched_tier": "Freelance linguist with graduate degree", "best_channels": ["linkedin", "twitter"]},
+        {"matched_tier": "Primary caregiver with evenings free", "best_channels": ["facebook", "pinterest"]},
     ]
     matrix = build_format_matrix(personas, ["facebook", "instagram"])
     assert len(matrix) == 3, f"Expected 3 personas in matrix, got {len(matrix)}"
@@ -1021,14 +957,8 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------------------
     print(f"\n\U0001f4cb Category 2: Persona Engine")
-    runner.run("all_8_archetypes_exist", test_all_8_archetypes_exist)
-    runner.run("persona_generation_returns_3", test_persona_generation_returns_3)
-    runner.run("personas_have_psychology_hooks", test_personas_have_psychology_hooks)
-    runner.run("personas_have_actor_seed_hints", test_personas_have_actor_seed_hints)
-    runner.run("persona_scoring_varies_by_task_type", test_persona_scoring_varies_by_task_type)
-    runner.run("persona_region_customization", test_persona_region_customization)
-    runner.run("persona_channels_populated", test_persona_channels_populated)
-    runner.run("persona_objection_handlers", test_persona_objection_handlers)
+    runner.run("persona_engine_prompt_builder_exports", test_persona_engine_prompt_builder_exports)
+    runner.run("build_persona_prompt_threads_constraints", test_build_persona_prompt_threads_constraints)
 
     # ------------------------------------------------------------------
     print(f"\n\U0001f4cb Category 3: Cultural Research")
