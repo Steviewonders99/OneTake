@@ -16,9 +16,14 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 
 from ai.local_llm import generate_text
 from neon_client import get_intake_request, save_brief, save_actor, save_campaign_strategy, update_actor_targeting
+from pipeline.persona_validation import (
+    Stage1PersonaValidationError,
+    validate_personas,
+)
 from prompts.cultural_research import (
     apply_research_to_personas,
     build_research_summary,
@@ -39,6 +44,10 @@ logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
 PASS_THRESHOLD = 0.85
+
+# Max retries for persona validation. Configurable via env for tuning.
+# Total attempts = MAX_PERSONA_RETRIES + 1 (initial attempt + retries).
+MAX_PERSONA_RETRIES = int(os.getenv("STAGE1_PERSONA_MAX_RETRIES", "2"))
 
 
 async def run_stage1(context: dict) -> dict:
@@ -399,6 +408,83 @@ async def run_stage1(context: dict) -> dict:
     pillar_primary_raw = pillar_weighting.get("primary")
     pillar_secondary_raw = pillar_weighting.get("secondary")
 
+    # ==================================================================
+    # STEP 6a: PERSONA VALIDATION RETRY LOOP (Task 21)
+    # The brief now carries persona_constraints in derived_requirements.
+    # Validate the personas we generated earlier against those constraints.
+    # If violations exist, re-run persona generation with the violation
+    # list as feedback. Max MAX_PERSONA_RETRIES retries. If still failing
+    # after the retries are exhausted, raise Stage1PersonaValidationError
+    # to fail the compute_job with a clear error message surfaced in the
+    # admin dashboard. The loop MUST run before save_brief is called so
+    # the persisted brief always references validated personas.
+    # ==================================================================
+    persona_constraints: dict = (derived or {}).get("persona_constraints") or {}
+
+    if not persona_constraints:
+        logger.info(
+            "[stage1] No persona_constraints in derived_requirements — "
+            "skipping persona validation retry loop."
+        )
+    else:
+        ok, violations = validate_personas(personas, persona_constraints)
+        if ok:
+            logger.info(
+                "[stage1] persona validation passed on initial generation"
+            )
+        else:
+            logger.warning(
+                "[stage1] persona validation failed on initial generation: "
+                "%d violations", len(violations),
+            )
+            for v in violations:
+                logger.warning("  - %s", v)
+
+            previous_violations: list[str] = violations
+            for attempt in range(1, MAX_PERSONA_RETRIES + 1):
+                logger.info(
+                    "[stage1] persona retry attempt %d/%d with %d violation hints",
+                    attempt, MAX_PERSONA_RETRIES, len(previous_violations),
+                )
+                personas = await _generate_personas_dynamic(
+                    request=request,
+                    cultural_research=cultural_research,
+                    persona_constraints=persona_constraints,
+                    brief_messaging=brief_data.get("messaging_strategy") or {},
+                    previous_violations=previous_violations,
+                )
+
+                # Re-apply cultural research enrichment on the fresh personas
+                if cultural_research and personas:
+                    personas = apply_research_to_personas(personas, cultural_research)
+
+                ok, violations = validate_personas(personas, persona_constraints)
+                if ok:
+                    logger.info(
+                        "[stage1] persona validation passed on retry %d", attempt
+                    )
+                    break
+
+                logger.warning(
+                    "[stage1] persona validation failed on retry %d: %d violations",
+                    attempt, len(violations),
+                )
+                for v in violations:
+                    logger.warning("  - %s", v)
+
+                if attempt >= MAX_PERSONA_RETRIES:
+                    raise Stage1PersonaValidationError(
+                        f"Persona validation failed after {MAX_PERSONA_RETRIES + 1} attempts. "
+                        f"Violations: {'; '.join(violations)}"
+                    )
+
+                previous_violations = violations
+
+            # Regenerated personas replace the ones embedded in the brief.
+            # Downstream stages read brief_data["personas"], so keep them
+            # in sync with the validated set.
+            brief_data["personas"] = personas
+
     # Validate pillar values (defense in depth — DB CHECK constraint is primary)
     VALID_PILLARS = {"earn", "grow", "shape"}
     pillar_primary = (
@@ -463,18 +549,23 @@ async def _generate_personas_dynamic(
     request: dict,
     cultural_research: dict,
     persona_constraints: dict,
+    brief_messaging: dict | None = None,
+    previous_violations: list[str] | None = None,
 ) -> list[dict]:
     """Run the dynamic persona generation LLM call.
 
     Uses prompts.persona_engine.build_persona_prompt to construct the
     prompt from persona_constraints + cultural_research, then parses
-    the JSON {"personas": [...]} response. Task 21 will add the
-    validation retry loop on top of this helper.
+    the JSON {"personas": [...]} response. When invoked from the Stage 1
+    validation retry loop, ``previous_violations`` is injected into the
+    prompt as feedback so the LLM can correct constraint violations.
     """
     prompt = build_persona_prompt(
         request=request,
         cultural_research=cultural_research,
         persona_constraints=persona_constraints,
+        brief_messaging=brief_messaging,
+        previous_violations=previous_violations,
     )
 
     try:
