@@ -220,13 +220,14 @@ def test_persona_engine_prompt_builder_exports():
     assert callable(build_persona_prompt)
 
 
-def test_build_persona_prompt_threads_constraints():
-    """build_persona_prompt echoes persona_constraints into the prompt string."""
+def test_build_persona_prompt_from_constraints():
+    """Verify build_persona_prompt produces a prompt containing all constraint markers."""
     from prompts.persona_engine import build_persona_prompt
+
     prompt = build_persona_prompt(
         request={
-            "title": "Dermatology image review",
-            "task_type": "image_annotation",
+            "title": "Test Campaign",
+            "task_type": "annotation",
             "target_regions": ["US"],
             "target_languages": ["en"],
         },
@@ -234,18 +235,110 @@ def test_build_persona_prompt_threads_constraints():
         persona_constraints={
             "minimum_credentials": "MD/DO with dermatology training",
             "acceptable_tiers": [
-                "Board-certified dermatologist",
+                "Board-certified dermatologist in US practice",
                 "Dermatology resident at US teaching hospital",
+                "Fourth-year US med student on derm rotation",
             ],
             "age_range_hint": "28-55",
-            "excluded_archetypes": ["generic gig worker", "pre-med undergraduate"],
+            "excluded_archetypes": [
+                "generic gig worker",
+                "pre-med undergraduate",
+                "stay-at-home parent without medical training",
+            ],
         },
     )
-    assert "MD/DO with dermatology training" in prompt
-    assert "Board-certified dermatologist" in prompt
-    assert "generic gig worker" in prompt
-    assert "28-55" in prompt
-    assert "3 distinct personas" in prompt
+
+    # The prompt must contain the constraint markers for the LLM to see them
+    assert "MD/DO" in prompt, "minimum_credentials not in prompt"
+    assert "Board-certified dermatologist" in prompt, "acceptable_tiers not in prompt"
+    assert "28-55" in prompt, "age_range_hint not in prompt"
+    assert "generic gig worker" in prompt, "excluded_archetypes not in prompt"
+    assert "matched_tier" in prompt, "matched_tier field instruction missing"
+    assert "3 distinct personas" in prompt, "persona count instruction missing"
+
+
+def test_build_persona_prompt_with_retry_feedback():
+    """Verify build_persona_prompt includes feedback section when violations are passed."""
+    from prompts.persona_engine import build_persona_prompt
+
+    prompt_no_feedback = build_persona_prompt(
+        request={"title": "Test", "task_type": "annotation", "target_regions": ["US"], "target_languages": ["en"]},
+        cultural_research={},
+        persona_constraints={
+            "minimum_credentials": "Finnish fluency",
+            "acceptable_tiers": ["Finnish native speaker"],
+            "age_range_hint": "18-65",
+            "excluded_archetypes": [],
+        },
+    )
+    assert "RETRY FEEDBACK" not in prompt_no_feedback
+
+    prompt_with_feedback = build_persona_prompt(
+        request={"title": "Test", "task_type": "annotation", "target_regions": ["US"], "target_languages": ["en"]},
+        cultural_research={},
+        persona_constraints={
+            "minimum_credentials": "Finnish fluency",
+            "acceptable_tiers": ["Finnish native speaker"],
+            "age_range_hint": "18-65",
+            "excluded_archetypes": ["generic gig worker"],
+        },
+        previous_violations=[
+            "Persona 'Alex' contains excluded archetype phrase: 'generic gig worker'",
+        ],
+    )
+    assert "RETRY FEEDBACK" in prompt_with_feedback
+    assert "generic gig worker" in prompt_with_feedback
+
+
+def test_validate_personas_clean_and_violation():
+    """Verify validate_personas accepts clean personas and rejects bad ones."""
+    from pipeline.persona_validation import validate_personas, Stage1PersonaValidationError
+
+    # Clean case
+    clean = [{
+        "name": "Dr. Chen",
+        "archetype": "Second-year dermatology resident",
+        "matched_tier": "Dermatology resident at US teaching hospital",
+        "lifestyle": "Long residency hours",
+        "motivations": ["Build clinical writing portfolio"],
+    }]
+    ok, violations = validate_personas(clean, {"excluded_archetypes": ["pre-med undergraduate"]})
+    assert ok and not violations, f"Expected clean pass, got: {violations}"
+
+    # Violation case
+    dirty = [{
+        "name": "Alex",
+        "archetype": "Pre-med undergraduate student",
+        "matched_tier": "Undergraduate",
+        "lifestyle": "College life",
+        "motivations": [],
+    }]
+    ok, violations = validate_personas(dirty, {"excluded_archetypes": ["pre-med undergraduate"]})
+    assert not ok and len(violations) == 1
+    assert "pre-med undergraduate" in violations[0]
+
+    # Missing matched_tier case
+    missing_tier = [{
+        "name": "Jordan",
+        "archetype": "Dermatologist",
+        "lifestyle": "Private practice",
+        "motivations": [],
+    }]
+    ok, violations = validate_personas(missing_tier, {"excluded_archetypes": []})
+    assert not ok
+    assert any("matched_tier" in v for v in violations)
+
+
+def test_stage1_persona_validation_error_is_exception():
+    """Verify Stage1PersonaValidationError is a proper exception class."""
+    from pipeline.persona_validation import Stage1PersonaValidationError
+
+    try:
+        raise Stage1PersonaValidationError("test message")
+    except Stage1PersonaValidationError as e:
+        assert str(e) == "test message"
+    except Exception:
+        raise AssertionError("Stage1PersonaValidationError should be catchable as itself")
 
 
 # =========================================================================
@@ -958,7 +1051,10 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     print(f"\n\U0001f4cb Category 2: Persona Engine")
     runner.run("persona_engine_prompt_builder_exports", test_persona_engine_prompt_builder_exports)
-    runner.run("build_persona_prompt_threads_constraints", test_build_persona_prompt_threads_constraints)
+    runner.run("build_persona_prompt_from_constraints", test_build_persona_prompt_from_constraints)
+    runner.run("build_persona_prompt_with_retry_feedback", test_build_persona_prompt_with_retry_feedback)
+    runner.run("validate_personas_clean_and_violation", test_validate_personas_clean_and_violation)
+    runner.run("stage1_persona_validation_error_is_exception", test_stage1_persona_validation_error_is_exception)
 
     # ------------------------------------------------------------------
     print(f"\n\U0001f4cb Category 3: Cultural Research")
