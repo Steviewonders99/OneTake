@@ -5,6 +5,7 @@ import { getSchemaByTaskType } from '@/lib/db/schemas';
 import { validateFormData } from '@/lib/validation';
 import type { Status } from '@/lib/types';
 import { slugify } from '@/lib/slugify';
+import { REQUIRED_JOB_REQUIREMENTS_KEYS } from '@/lib/shared-schema-modules';
 
 export async function GET(request: Request) {
   const ctx = await getAuthContext();
@@ -82,6 +83,51 @@ export async function POST(request: Request) {
       );
     }
 
+    // Extract the 7 Job Requirements fields from form_data.
+    // The shared JOB_REQUIREMENTS_FIELDS module prepends these to every task
+    // type's task_fields, so they land in formData alongside task-specific fields.
+    // We promote them to first-class columns here and validate the 4 required ones.
+    function readJobReqString(key: string): string | null {
+      const raw = formData[key];
+      if (typeof raw !== 'string') return null;
+      const trimmed = raw.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+
+    const qualifications_required = readJobReqString('qualifications_required');
+    const qualifications_preferred = readJobReqString('qualifications_preferred');
+    const location_scope = readJobReqString('location_scope');
+    const language_requirements = readJobReqString('language_requirements');
+    const engagement_model = readJobReqString('engagement_model');
+    const technical_requirements = readJobReqString('technical_requirements');
+    const context_notes = readJobReqString('context_notes');
+
+    // Application-level required-field validation for the 4 mandatory Job
+    // Requirements keys. The DB columns are nullable (for backwards compat with
+    // existing rows), so we enforce required-ness here.
+    const jobRequirementValues: Record<string, string | null> = {
+      qualifications_required,
+      qualifications_preferred,
+      location_scope,
+      language_requirements,
+      engagement_model,
+      technical_requirements,
+      context_notes,
+    };
+
+    const missingRequired = REQUIRED_JOB_REQUIREMENTS_KEYS.filter(
+      (key) => !jobRequirementValues[key]
+    );
+    if (missingRequired.length > 0) {
+      return Response.json(
+        {
+          error: 'Missing required Job Requirements fields',
+          missing_fields: missingRequired,
+        },
+        { status: 400 }
+      );
+    }
+
     const intakeRequest = await createIntakeRequest({
       title: body.title,
       task_type: body.task_type,
@@ -93,6 +139,13 @@ export async function POST(request: Request) {
       form_data: formData,
       schema_version: schema.version,
       campaign_slug: slugify(body.title) || null,
+      qualifications_required,
+      qualifications_preferred,
+      location_scope,
+      language_requirements,
+      engagement_model,
+      technical_requirements,
+      context_notes,
     });
 
     // Auto-queue generation — no manual "Generate" button needed.
