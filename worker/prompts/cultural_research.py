@@ -1047,6 +1047,49 @@ def build_research_summary(research_data: dict[str, dict[str, Any]]) -> str:
             f"Mixing: {lang.get('language_mixing', 'unknown')}"
         )
 
+        # Professional Community (conditional — only present when job is professional/skilled)
+        pc = profile.get("professional_community")
+        if pc and isinstance(pc, dict):
+            platforms = pc.get("professional_platforms_ranked") or []
+            markers = pc.get("credibility_markers") or []
+            tier_notes = pc.get("tier_specific_notes", "")
+            sections.append(
+                f"  Professional Community: "
+                f"Top platforms: {', '.join(str(p) for p in platforms[:5]) or 'unknown'} — "
+                f"Credibility markers: {', '.join(str(m) for m in markers[:5]) or 'unknown'}"
+                + (f" — Tier notes: {tier_notes}" if tier_notes else "")
+            )
+
+        # Domain Trust Signals (conditional — present when domain-specific trust research ran)
+        dts = profile.get("domain_trust_signals")
+        if dts and isinstance(dts, dict):
+            trust_sigs = dts.get("trust_signals") or []
+            red_flags = dts.get("red_flags") or []
+            builders = dts.get("credibility_builders") or []
+            tier_notes = dts.get("tier_specific_notes", "")
+            sections.append(
+                f"  Domain Trust Signals: "
+                f"Trust signals: {', '.join(str(t) for t in trust_sigs[:5]) or 'unknown'} — "
+                f"Red flags to avoid: {', '.join(str(r) for r in red_flags[:5]) or 'none'} — "
+                f"Credibility builders: {', '.join(str(b) for b in builders[:5]) or 'unknown'}"
+                + (f" — Tier notes: {tier_notes}" if tier_notes else "")
+            )
+
+        # Work Environment Norms (conditional — feeds visual/image direction)
+        wen = profile.get("work_environment_norms")
+        if wen and isinstance(wen, dict):
+            work_env = wen.get("work_environment", "")
+            wardrobe = wen.get("wardrobe", "")
+            tools = wen.get("visible_tools") or []
+            cultural_notes = wen.get("cultural_environment_notes", "")
+            sections.append(
+                f"  Work Environment (visual direction): "
+                f"Environment: {work_env or 'unknown'} — "
+                f"Wardrobe: {wardrobe or 'unknown'} — "
+                f"Visible tools: {', '.join(str(t) for t in tools[:6]) or 'unknown'}"
+                + (f" — Cultural notes: {cultural_notes}" if cultural_notes else "")
+            )
+
         sections.append("")  # blank line between regions
 
     return "\n".join(sections)
@@ -1206,6 +1249,66 @@ def apply_research_to_personas(
                 f"Data cost concern: {tech.get('data_cost_concern', 'unknown')}."
             )
             adjustments.append(f"Tech literacy: primary device = {primary_device}")
+
+        # -- Professional Community Injection (conditional) --
+        # Feeds digital_habitat / best_channels for professional/skilled roles.
+        pc = research.get("professional_community")
+        if pc and isinstance(pc, dict):
+            prof_platforms = pc.get("professional_platforms_ranked") or []
+            cred_markers = pc.get("credibility_markers") or []
+            if prof_platforms:
+                existing_channels = p.get("best_channels") or []
+                # Prepend professional platforms not already listed.
+                for plat in reversed(prof_platforms[:3]):
+                    if plat not in existing_channels:
+                        existing_channels.insert(0, plat)
+                p["best_channels"] = existing_channels
+                p.setdefault("copy_guidance", {})["professional_community"] = (
+                    f"Professional platforms for this audience: {', '.join(str(pl) for pl in prof_platforms[:5])}. "
+                    + (f"Credibility markers: {', '.join(str(m) for m in cred_markers[:5])}." if cred_markers else "")
+                    + (f" {pc.get('tier_specific_notes', '')}" if pc.get("tier_specific_notes") else "")
+                )
+                adjustments.append(
+                    f"Professional community: injected platforms {prof_platforms[:3]} into best_channels"
+                )
+
+        # -- Domain Trust Signals Injection (conditional) --
+        # Informs messaging_angle and objection handlers for domain-specific trust concerns.
+        dts = research.get("domain_trust_signals")
+        if dts and isinstance(dts, dict):
+            trust_sigs = dts.get("trust_signals") or []
+            red_flags = dts.get("red_flags") or []
+            builders = dts.get("credibility_builders") or []
+            if trust_sigs or builders:
+                p.setdefault("copy_guidance", {})["domain_trust"] = (
+                    (f"Trust signals to emphasize: {', '.join(str(t) for t in trust_sigs[:5])}. " if trust_sigs else "")
+                    + (f"Red flags to avoid: {', '.join(str(r) for r in red_flags[:5])}. " if red_flags else "")
+                    + (f"Credibility builders: {', '.join(str(b) for b in builders[:5])}." if builders else "")
+                    + (f" {dts.get('tier_specific_notes', '')}" if dts.get("tier_specific_notes") else "")
+                )
+                adjustments.append(
+                    f"Domain trust signals: injected {len(trust_sigs)} signals + {len(builders)} builders"
+                )
+
+        # -- Work Environment Norms Injection (conditional) --
+        # Feeds lifestyle context and visual direction for image generation.
+        wen = research.get("work_environment_norms")
+        if wen and isinstance(wen, dict):
+            work_env = wen.get("work_environment", "")
+            wardrobe = wen.get("wardrobe", "")
+            tools = wen.get("visible_tools") or []
+            cultural_env = wen.get("cultural_environment_notes", "")
+            if work_env or wardrobe:
+                p["visual_context"] = {
+                    "work_environment": work_env or "unknown",
+                    "wardrobe": wardrobe or "unknown",
+                    "visible_tools": tools[:6],
+                    "cultural_environment_notes": cultural_env or "",
+                }
+                adjustments.append(
+                    f"Work environment norms: visual_context injected "
+                    f"(env={work_env!r}, wardrobe={wardrobe!r})"
+                )
 
         p["cultural_research"] = {
             "status": "enriched",
