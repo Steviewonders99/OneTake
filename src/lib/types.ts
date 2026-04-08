@@ -60,6 +60,10 @@ export interface FieldDefinition {
   group?: string;
   toggle_label?: string;
   text_placeholder?: string;
+  // ─── AI pre-fill metadata (Phase A — 2026-04-08) ───
+  ai_help?: string;
+  prefill_guidance?: string;
+  rows?: number;
 }
 
 export interface TaskTypeSchema {
