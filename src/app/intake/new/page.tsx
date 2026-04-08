@@ -31,6 +31,23 @@ export default function NewIntakePage() {
   const [extracting, setExtracting] = useState(false);
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manuallyEditedKeys, setManuallyEditedKeys] = useState<Set<string>>(new Set());
+  // Field-level validation errors from API
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Wrapped onChange — tracks which fields the user has manually edited so
+  // their AI-drafted badge can be downgraded to "none".
+  function handleFormChange(newData: Record<string, unknown>) {
+    const changedKeys = new Set<string>(manuallyEditedKeys);
+    for (const key of Object.keys(newData)) {
+      if (newData[key] !== formData[key]) {
+        changedKeys.add(key);
+      }
+    }
+    setManuallyEditedKeys(changedKeys);
+    setFormData(newData);
+    setFieldErrors({});
+  }
 
   // Load schemas
   useEffect(() => {
@@ -91,6 +108,13 @@ export default function NewIntakePage() {
       return;
     }
 
+    if (manuallyEditedKeys.size > 0) {
+      const confirmed = window.confirm(
+        `This will replace ${manuallyEditedKeys.size} field${manuallyEditedKeys.size === 1 ? "" : "s"} you've edited. Continue?`
+      );
+      if (!confirmed) return;
+    }
+
     setExtracting(true);
     try {
       const res = await fetch("/api/extract/paste", {
@@ -114,6 +138,7 @@ export default function NewIntakePage() {
       if (ext.base_fields) Object.assign(merged, ext.base_fields);
       if (ext.task_fields) Object.assign(merged, ext.task_fields);
       setFormData(merged);
+      setManuallyEditedKeys(new Set());
 
       toast.success("Successfully extracted data from text");
     } catch {
@@ -126,6 +151,17 @@ export default function NewIntakePage() {
   // Upload RFP file
   async function handleFileUpload(file: File) {
     setExtracting(true);
+
+    if (manuallyEditedKeys.size > 0) {
+      const confirmed = window.confirm(
+        `This will replace ${manuallyEditedKeys.size} field${manuallyEditedKeys.size === 1 ? "" : "s"} you've edited. Continue?`
+      );
+      if (!confirmed) {
+        setExtracting(false);
+        return;
+      }
+    }
+
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -150,6 +186,7 @@ export default function NewIntakePage() {
       if (ext.base_fields) Object.assign(merged, ext.base_fields);
       if (ext.task_fields) Object.assign(merged, ext.task_fields);
       setFormData(merged);
+      setManuallyEditedKeys(new Set());
 
       toast.success(`Extracted data from ${file.name}`);
     } catch (err) {
@@ -159,9 +196,6 @@ export default function NewIntakePage() {
       setExtracting(false);
     }
   }
-
-  // Field-level validation errors from API
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Submit form
   async function handleSubmit() {
@@ -390,10 +424,11 @@ export default function NewIntakePage() {
               <DynamicForm
                 schema={selectedSchema}
                 formData={formData}
-                onChange={(data) => { setFormData(data); setFieldErrors({}); }}
+                onChange={handleFormChange}
                 extraction={extraction}
                 disabled={isSubmitting}
                 fieldErrors={fieldErrors}
+                manuallyEditedKeys={manuallyEditedKeys}
               />
             </div>
           )}
