@@ -235,7 +235,13 @@ async def get_brief(request_id: str) -> dict[str, Any] | None:
     return _row_to_dict(row) if row else None
 
 
-async def save_brief(request_id: str, data: dict[str, Any]) -> str:
+async def save_brief(
+    request_id: str,
+    data: dict[str, Any],
+    pillar_primary: str | None = None,
+    pillar_secondary: str | None = None,
+    derived_requirements: dict | None = None,
+) -> str:
     """Insert a creative brief and return its ID."""
     pool = await _get_pool()
     async with pool.acquire() as conn:
@@ -243,8 +249,9 @@ async def save_brief(request_id: str, data: dict[str, Any]) -> str:
             """
             INSERT INTO creative_briefs
                 (request_id, brief_data, design_direction,
-                 evaluation_score, evaluation_data, content_languages)
-            VALUES ($1, $2, $3, $4, $5, $6)
+                 evaluation_score, evaluation_data, content_languages,
+                 pillar_primary, pillar_secondary, derived_requirements)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id
             """,
             request_id,
@@ -253,6 +260,9 @@ async def save_brief(request_id: str, data: dict[str, Any]) -> str:
             data.get("evaluation_score", 0.0),
             json.dumps(data.get("evaluation_data", {}), default=str),
             data.get("content_languages", []),  # TEXT[] — pass list directly, not JSON string
+            pillar_primary,
+            pillar_secondary,
+            json.dumps(derived_requirements, default=str) if derived_requirements is not None else None,
         )
     brief_id: str = row["id"]
     logger.info("Saved creative brief %s for request %s", brief_id, request_id)

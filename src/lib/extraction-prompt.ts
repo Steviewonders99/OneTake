@@ -9,6 +9,12 @@ function formatFieldKeys(fields: FieldDefinition[]): string {
         const vals = f.options.map((o) => o.value).join(', ');
         desc += ` [options: ${vals}]`;
       }
+      if (f.ai_help) {
+        desc += `\n      What to capture: ${f.ai_help}`;
+      }
+      if (f.prefill_guidance) {
+        desc += `\n      Extraction guidance: ${f.prefill_guidance}`;
+      }
       return desc;
     })
     .join('\n');
@@ -47,7 +53,7 @@ export async function buildExtractionSystemPrompt(): Promise<string> {
   const schemas = await listActiveSchemas();
   const schemaDescriptions = schemas.map(formatSchema).join('\n\n---\n\n');
 
-  return `You are an expert data extraction assistant for OneForma, a data annotation company that recruits contributors for AI companies. OneForma handles diverse task types including audio annotation, text annotation, image/video annotation, data collection, translation, linguistic tasks, and more.
+  return `You are an expert data extraction assistant for OneForma — the AI platform that sees the expert in everyone. OneForma runs a global network of experts contributing to AI development across translation, annotation, data collection, judging, transcription, and domain-specific evaluation. You receive source text describing a specific project and must map it to OneForma's intake schema.
 
 Your job is to analyze RFP documents or project descriptions and extract structured data that maps to OneForma's intake request system. You must:
 
@@ -98,5 +104,7 @@ You MUST respond with valid JSON matching this exact structure (no markdown, no 
 - If a field value cannot be determined, omit it from base_fields/task_fields (do NOT set it to null)
 - Always include it in confidence_flags.fields_missing instead
 - The detected_task_type must be one of the task_type keys listed above
-- extracted_details captures additional context that doesn't map directly to form fields`;
+- extracted_details captures additional context that doesn't map directly to form fields
+- **Shared "Job Requirements" fields** (qualifications_required, qualifications_preferred, location_scope, language_requirements, engagement_model, technical_requirements, context_notes) appear at the top of every task type's task_fields. These describe WHO can do the job, where they work, and what they need. Always attempt to populate ALL 7 of these fields using the "Extraction guidance" notes above — even if you must infer conservatively from context. These fields are pre-filled drafts for the recruiter to review and edit, so it is better to offer a reasonable draft than to omit them.
+- For the 7 Job Requirements fields, do NOT add them to fields_missing unless the source text contains essentially no signal at all about who/where/how. Default to populating them.`;
 }

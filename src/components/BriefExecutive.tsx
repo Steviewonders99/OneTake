@@ -541,6 +541,161 @@ export default function BriefExecutive({
         />
       </div>
 
+      {/* Derived Requirements — AI-generated analysis */}
+      {briefData.derived_requirements && (
+        <details className="card p-5 mb-4">
+          <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)] flex items-center justify-between list-none">
+            <span className="flex items-center gap-2">
+              <Sparkles size={14} className="text-[#0693e3]" />
+              Derived Requirements (AI-generated analysis)
+            </span>
+            <span className="text-xs text-[var(--muted-foreground)]">click to expand</span>
+          </summary>
+
+          <div className="mt-4 space-y-5 text-xs">
+            {/* Credential summary */}
+            {briefData.derived_requirements.credential_summary && (
+              <div>
+                <div className="font-semibold text-[var(--foreground)] mb-1">
+                  Credential summary
+                </div>
+                <div className="text-[var(--muted-foreground)] leading-relaxed">
+                  {briefData.derived_requirements.credential_summary}
+                </div>
+              </div>
+            )}
+
+            {/* Pillar weighting */}
+            {briefData.derived_requirements.pillar_weighting && (
+              <div>
+                <div className="font-semibold text-[var(--foreground)] mb-1">
+                  Pillar weighting:{' '}
+                  <span className="uppercase text-[#0693e3]">
+                    {briefData.derived_requirements.pillar_weighting.primary}
+                  </span>
+                  {' → '}
+                  <span className="uppercase text-[var(--muted-foreground)]">
+                    {briefData.derived_requirements.pillar_weighting.secondary}
+                  </span>
+                </div>
+                {briefData.derived_requirements.pillar_weighting.reasoning && (
+                  <div className="text-[var(--muted-foreground)] italic leading-relaxed">
+                    {briefData.derived_requirements.pillar_weighting.reasoning}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Visual direction */}
+            {briefData.derived_requirements.visual_direction && (
+              <div>
+                <div className="font-semibold text-[var(--foreground)] mb-2">
+                  Visual direction
+                </div>
+                <dl className="space-y-1 text-[var(--muted-foreground)]">
+                  {briefData.derived_requirements.visual_direction.work_environment && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Work environment:</span>{' '}
+                      {briefData.derived_requirements.visual_direction.work_environment}
+                    </div>
+                  )}
+                  {briefData.derived_requirements.visual_direction.wardrobe && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Wardrobe:</span>{' '}
+                      {briefData.derived_requirements.visual_direction.wardrobe}
+                    </div>
+                  )}
+                  {Array.isArray(briefData.derived_requirements.visual_direction.visible_tools) &&
+                    briefData.derived_requirements.visual_direction.visible_tools.length > 0 && (
+                      <div>
+                        <span className="font-medium text-[var(--foreground)]">Visible tools:</span>{' '}
+                        {briefData.derived_requirements.visual_direction.visible_tools.join(', ')}
+                      </div>
+                    )}
+                  {briefData.derived_requirements.visual_direction.emotional_tone && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Emotional tone:</span>{' '}
+                      {briefData.derived_requirements.visual_direction.emotional_tone}
+                    </div>
+                  )}
+                  {briefData.derived_requirements.visual_direction.cultural_adaptations && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Cultural adaptations:</span>{' '}
+                      {briefData.derived_requirements.visual_direction.cultural_adaptations}
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
+            {/* Persona constraints */}
+            {briefData.derived_requirements.persona_constraints && (
+              <div>
+                <div className="font-semibold text-[var(--foreground)] mb-2">
+                  Persona constraints
+                </div>
+                <dl className="space-y-2 text-[var(--muted-foreground)]">
+                  {briefData.derived_requirements.persona_constraints.minimum_credentials && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Minimum credentials:</span>{' '}
+                      {briefData.derived_requirements.persona_constraints.minimum_credentials}
+                    </div>
+                  )}
+                  {briefData.derived_requirements.persona_constraints.age_range_hint && (
+                    <div>
+                      <span className="font-medium text-[var(--foreground)]">Age range:</span>{' '}
+                      {briefData.derived_requirements.persona_constraints.age_range_hint}
+                    </div>
+                  )}
+                  {Array.isArray(briefData.derived_requirements.persona_constraints.acceptable_tiers) &&
+                    briefData.derived_requirements.persona_constraints.acceptable_tiers.length > 0 && (
+                      <div>
+                        <div className="font-medium text-[var(--foreground)] mb-1">
+                          Acceptable tiers:
+                        </div>
+                        <ul className="list-disc pl-5">
+                          {briefData.derived_requirements.persona_constraints.acceptable_tiers.map(
+                            (tier: string, i: number) => (
+                              <li key={i}>{tier}</li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  {Array.isArray(briefData.derived_requirements.persona_constraints.excluded_archetypes) &&
+                    briefData.derived_requirements.persona_constraints.excluded_archetypes.length > 0 && (
+                      <div>
+                        <div className="font-medium text-[var(--foreground)] mb-1">
+                          Excluded archetypes:
+                        </div>
+                        <ul className="list-disc pl-5">
+                          {briefData.derived_requirements.persona_constraints.excluded_archetypes.map(
+                            (arch: string, i: number) => (
+                              <li key={i}>{arch}</li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                </dl>
+              </div>
+            )}
+
+            {/* Narrative angle */}
+            {briefData.derived_requirements.narrative_angle && (
+              <div>
+                <div className="font-semibold text-[var(--foreground)] mb-1">
+                  Narrative angle
+                </div>
+                <div className="text-[var(--muted-foreground)] italic leading-relaxed">
+                  &ldquo;{briefData.derived_requirements.narrative_angle}&rdquo;
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
+      )}
+
       {/* Mini Tabs */}
       <MiniTabs
         defaultTab="messaging"

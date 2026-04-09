@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { JOB_REQUIREMENTS_FIELDS } from '@/lib/shared-schema-modules';
 import type { FieldDefinition } from '@/lib/types';
 
 // ============================================================
@@ -865,9 +866,16 @@ export async function seedDatabase(): Promise<void> {
 
   // Seed task type schemas
   for (const schema of TASK_TYPE_SCHEMAS) {
+    // Phase A (2026-04-08): Prepend the shared Job Requirements fields to
+    // every task type's task_fields so they render in every intake form.
+    const taskFieldsWithJobRequirements: FieldDefinition[] = [
+      ...JOB_REQUIREMENTS_FIELDS,
+      ...schema.task_fields,
+    ];
+
     const schemaPayload = JSON.stringify({
       base_fields: BASE_FIELDS,
-      task_fields: schema.task_fields,
+      task_fields: taskFieldsWithJobRequirements,
       conditional_fields: schema.conditional_fields,
       common_fields: COMMON_FIELDS,
     });

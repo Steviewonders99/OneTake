@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
+import { AlertCircle } from 'lucide-react';
 import FilterTabs from '@/components/FilterTabs';
 
 interface ComputeJobRow {
@@ -169,46 +170,80 @@ export default function PipelinePage() {
                     </td>
                   </tr>
                 ) : (
-                  jobs.map((job) => (
-                    <tr key={job.id} className="border-b border-[var(--border)] last:border-0">
-                      <td className="py-3 px-4 font-medium text-[var(--foreground)] max-w-[200px] truncate">
-                        {job.request_title ?? job.request_id.slice(0, 8)}
-                      </td>
-                      <td className="py-3 px-4 text-[var(--muted-foreground)]">
-                        <span className="tag-pill">{job.job_type}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`badge ${jobStatusColors[job.status] ?? 'badge-draft'}`}>
-                          {job.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-[var(--muted-foreground)] text-xs">
-                        {job.started_at
-                          ? new Date(job.started_at).toLocaleString()
-                          : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-[var(--muted-foreground)] text-xs">
-                        {job.completed_at
-                          ? new Date(job.completed_at).toLocaleString()
-                          : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-[var(--muted-foreground)] font-mono text-xs">
-                        {formatDuration(job.started_at, job.completed_at)}
-                      </td>
-                      <td className="py-3 px-4 max-w-[200px]">
-                        {job.error_message ? (
-                          <span
-                            className="text-xs text-[var(--oneforma-error)] truncate block"
-                            title={job.error_message}
-                          >
-                            {job.error_message}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[var(--muted-foreground)]">--</span>
+                  jobs.map((job) => {
+                    const isFailedWithError =
+                      job.status === 'failed' && !!job.error_message;
+                    const isPersonaValidationError =
+                      !!job.error_message &&
+                      job.error_message.includes('Persona validation failed');
+                    return (
+                      <Fragment key={job.id}>
+                        <tr
+                          className={`border-b border-[var(--border)] last:border-0 ${
+                            isFailedWithError ? 'border-b-0' : ''
+                          }`}
+                        >
+                          <td className="py-3 px-4 font-medium text-[var(--foreground)] max-w-[200px] truncate">
+                            {job.request_title ?? job.request_id.slice(0, 8)}
+                          </td>
+                          <td className="py-3 px-4 text-[var(--muted-foreground)]">
+                            <span className="tag-pill">{job.job_type}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`badge ${jobStatusColors[job.status] ?? 'badge-draft'}`}>
+                              {job.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-[var(--muted-foreground)] text-xs">
+                            {job.started_at
+                              ? new Date(job.started_at).toLocaleString()
+                              : '--'}
+                          </td>
+                          <td className="py-3 px-4 text-[var(--muted-foreground)] text-xs">
+                            {job.completed_at
+                              ? new Date(job.completed_at).toLocaleString()
+                              : '--'}
+                          </td>
+                          <td className="py-3 px-4 text-[var(--muted-foreground)] font-mono text-xs">
+                            {formatDuration(job.started_at, job.completed_at)}
+                          </td>
+                          <td className="py-3 px-4 max-w-[200px]">
+                            {job.error_message ? (
+                              <span
+                                className="text-xs text-[var(--oneforma-error)] truncate block"
+                                title={job.error_message}
+                              >
+                                {job.error_message}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-[var(--muted-foreground)]">--</span>
+                            )}
+                          </td>
+                        </tr>
+                        {isFailedWithError && (
+                          <tr className="border-b border-[var(--border)] last:border-0 bg-red-50/40">
+                            <td colSpan={7} className="py-3 px-4">
+                              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs">
+                                <div className="flex items-center gap-1.5 font-semibold text-red-800 mb-1">
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                  <span>Failed</span>
+                                </div>
+                                <div className="text-red-700 font-mono whitespace-pre-wrap break-words">
+                                  {job.error_message}
+                                </div>
+                                {isPersonaValidationError && (
+                                  <div className="mt-2 text-red-600 italic">
+                                    Tip: Review the intake Job Requirements fields (especially qualifications_required
+                                    and context_notes) and regenerate. The LLM may need more specific constraints.
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                    </tr>
-                  ))
+                      </Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>

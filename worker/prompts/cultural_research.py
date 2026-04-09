@@ -26,6 +26,71 @@ from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
 
+# ─── Context helpers (Phase A — 2026-04-08) ─────────────────────────
+
+def derive_work_tier_context(intake_row: dict) -> str:
+    """Produce a 1-sentence descriptor of the work tier from job requirements.
+
+    Used as the {work_tier_context} substitution in research query templates.
+    Keeps dimension queries aware of whether this is credentialed,
+    professional, or gig-tier work without hardcoded branching on specific
+    job types. See the spec at
+    docs/superpowers/specs/2026-04-08-intake-schema-persona-refactor-design.md
+    § 3 for the intent behind this helper.
+    """
+    parts: list[str] = []
+
+    quals = (intake_row.get("qualifications_required") or "").strip()
+    if quals:
+        first_sentence = quals.split(".")[0][:200]
+        parts.append(first_sentence)
+
+    location = (intake_row.get("location_scope") or "").strip()
+    if location:
+        first_sentence = location.split(".")[0][:120]
+        parts.append(first_sentence)
+
+    engagement = (intake_row.get("engagement_model") or "").strip()
+    if engagement:
+        first_sentence = engagement.split(".")[0][:120]
+        parts.append(first_sentence)
+
+    if not parts:
+        task_type = intake_row.get("task_type") or "data"
+        return f"{task_type} work described in the intake form"
+
+    return ". ".join(parts)
+
+
+def should_run_dimension(dimension_config: dict, intake_row: dict) -> bool:
+    """Decide whether a given research dimension should run for this campaign.
+
+    Dimensions with no 'activates_when' run always (backwards compat with
+    the existing 9 dimensions). New conditional dimensions use one of:
+
+    - 'always' (string) — run unconditionally
+    - {'qualifications_contain_any': [keywords]} — run if any keyword
+       appears in qualifications_required (case-insensitive)
+    - {'credential_tier_at_or_above': 'language_fluency'} — run for any
+       job with non-empty qualifications_required
+    """
+    trigger = dimension_config.get("activates_when")
+    if trigger is None or trigger == "always":
+        return True
+
+    if isinstance(trigger, dict):
+        quals = (intake_row.get("qualifications_required") or "").lower()
+
+        if "qualifications_contain_any" in trigger:
+            keywords = [k.lower() for k in trigger["qualifications_contain_any"]]
+            return any(kw in quals for kw in keywords)
+
+        if "credential_tier_at_or_above" in trigger:
+            return bool(quals.strip())
+
+    return True  # default to running if trigger syntax is unfamiliar
+
+
 # ---------------------------------------------------------------------------
 # RESEARCH_DIMENSIONS — what to research for each region
 # ---------------------------------------------------------------------------
@@ -33,89 +98,119 @@ logger = logging.getLogger(__name__)
 RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
     "ai_fatigue": {
         "query_template": (
-            "What is the current level of AI fatigue or AI skepticism in {region} "
-            "as of 2026? Are people in {region} tired of seeing AI-related job ads? "
-            "What is the general sentiment toward artificial intelligence among "
-            "{demographic} in {region}?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What is the current level of AI fatigue or AI skepticism toward "
+            "this KIND of work among {demographic} in {region} as of 2026? "
+            "Adapt your answer to the credential tier — if the work is "
+            "credentialed professional work (e.g., licensed MD, PhD), research "
+            "how credentialed professionals in {region} feel about AI "
+            "involvement in their field. If it's entry-level gig or language "
+            "work, research gig-worker sentiment toward AI ads. What is the "
+            "general sentiment among {demographic} in {region} toward AI in "
+            "their line of work?"
         ),
         "why_it_matters": (
             "If AI fatigue is high, we avoid leading with 'AI' in ads and instead "
             "frame it as 'flexible remote work' or 'language work'"
         ),
-        "output_keys": ["fatigue_level", "sentiment", "recommended_framing"],
+        "output_keys": [
+            "fatigue_level",
+            "sentiment",
+            "recommended_framing",
+            "tier_specific_notes",
+        ],
     },
     "gig_work_perception": {
         "query_template": (
-            "How is gig work / freelance work perceived in {region} among "
-            "{demographic}? Is it stigmatized, aspirational, or seen as a necessity? "
-            "What is the cultural attitude toward non-traditional employment in "
-            "{region}?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "How is THIS specific tier of work perceived in {region} among "
+            "{demographic}? Adapt your answer to the credential tier — if the "
+            "work is credentialed professional contract work, research how "
+            "professional-tier contract work or moonlighting is viewed in "
+            "{region}. If it's entry-level gig or language work, research how "
+            "gig work is viewed. Is the work in this tier stigmatized, "
+            "aspirational, or seen as a necessity within its own tier?"
         ),
         "why_it_matters": (
             "In some cultures gig work = failure; in others it = freedom. "
             "Messaging must match perception."
         ),
-        "output_keys": ["perception", "cultural_framing", "messaging_implication"],
+        "output_keys": [
+            "perception",
+            "cultural_framing",
+            "messaging_implication",
+            "tier_specific_notes",
+        ],
     },
     "data_annotation_trust": {
         "query_template": (
-            "What is the trust level for online data annotation / microtask work "
-            "in {region}? Are there common scam associations? What legitimate "
-            "platforms are known (Appen, Toloka, Clickworker, Scale AI)? How can "
-            "OneForma differentiate?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What is the trust level for THIS KIND of remote work in {region} "
+            "among {demographic}? For credentialed professional work, research "
+            "skepticism about 'AI moonlighting' or contract work in the "
+            "profession. For general gig/annotation work, research scam "
+            "associations and platform reputation. How can OneForma "
+            "differentiate itself to establish credibility in this specific "
+            "tier?"
         ),
         "why_it_matters": (
             "In many regions, 'work from home online' = scam. We need to know the "
             "trust barrier and how to overcome it."
         ),
-        "output_keys": ["trust_level", "scam_associations", "trust_builders"],
+        "output_keys": [
+            "trust_level",
+            "scam_associations",
+            "trust_builders",
+            "tier_specific_notes",
+        ],
     },
     "platform_reality": {
         "query_template": (
-            "What social media and messaging platforms do {demographic} in {region} "
-            "ACTUALLY use daily in 2026? Rank by usage. Include: WhatsApp, Telegram, "
-            "Facebook, Instagram, TikTok, LinkedIn, VK, WeChat, Line, KakaoTalk, "
-            "Twitter/X, local platforms. What job platforms do they use for "
-            "remote/freelance work?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What social media, messaging, and platform apps do {demographic} "
+            "in {region} ACTUALLY use daily in 2026 FOR THIS KIND OF WORK? "
+            "If credentialed professional work, include professional community "
+            "platforms (Doximity, Justia, specialty forums, LinkedIn groups). "
+            "If entry-level work, include WhatsApp, Telegram, Facebook, "
+            "Instagram, TikTok, Twitter/X, VK, WeChat, Line, KakaoTalk, local "
+            "platforms. Rank by usage for this specific tier. What job/work "
+            "platforms do {demographic} use to find remote/credentialed work "
+            "in {region}?"
         ),
         "why_it_matters": (
             "We might plan LinkedIn ads for a country where nobody uses LinkedIn "
             "but everyone is on Telegram."
         ),
-        "output_keys": ["top_platforms_ranked", "job_platforms", "messaging_apps"],
+        "output_keys": [
+            "top_platforms_ranked",
+            "job_platforms",
+            "messaging_apps",
+            "tier_specific_notes",
+        ],
     },
     "demographic_channel_map": {
         "query_template": (
-            "For {region} in 2026, provide a DETAILED breakdown of which social media "
-            "platforms are used by WHICH AGE GROUPS. This is critical because platforms "
-            "skew VERY differently by age in different countries.\n\n"
-            "For example: In the US, Facebook is 40+ but in Brazil Facebook is 18-35. "
-            "TikTok is 16-28 globally but restricted in some countries.\n\n"
-            "For EACH age bracket in {region}, rank the top 5 platforms by daily usage:\n"
-            "- 16-20 (teens/young adults)\n"
-            "- 21-25 (university age / early career)\n"
-            "- 26-35 (young professionals / young parents)\n"
-            "- 36-50 (established professionals / parents)\n"
-            "- 50+ (older adults / retirees)\n\n"
-            "IMPORTANT: Include ALL of these platforms in your analysis — mark each as "
-            "'dominant', 'popular', 'niche', 'unused', or 'blocked' per age group:\n"
-            "  Social: Facebook, Instagram, TikTok, Twitter/X, LinkedIn, Reddit, "
-            "Snapchat, Pinterest, YouTube\n"
-            "  Messaging: WhatsApp, Telegram, WeChat, Line, KakaoTalk, Viber, "
-            "Signal, Facebook Messenger\n"
-            "  Regional: VK (Russia), Odnoklassniki (CIS), Weibo (China), "
-            "Naver/Daum (Korea), Mixi (Japan)\n"
-            "  Job/Gig: Indeed, LinkedIn Jobs, Upwork, Fiverr, Freelancer, "
-            "Appen, Toloka, Microworkers, local platforms\n"
-            "  Communities: Reddit (which subreddits?), Discord, Facebook Groups, "
-            "WhatsApp Groups, Telegram Groups\n\n"
-            "Also specify:\n"
-            "- Which platforms have PAID AD capabilities in {region}?\n"
-            "- Which platforms are BLOCKED or RESTRICTED in {region}?\n"
-            "- Is REDDIT used in {region}? If so, which subreddits for work/money/freelance?\n"
-            "- Is WECHAT used in {region}? If so, for which demographics and purposes?\n"
-            "- What community groups (Facebook Groups, WhatsApp Groups, Reddit) "
-            "do people in {region} use to find remote/freelance work?\n\n"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "For {region} in 2026, provide a DETAILED breakdown of which social "
+            "media platforms are used by WHICH AGE GROUPS among {demographic} "
+            "in this work tier. Platforms skew VERY differently by age and tier "
+            "in different countries.\n\n"
+            "For EACH age bracket in {region} (16-20, 21-25, 26-35, 36-50, 50+), "
+            "rank the top 5 platforms by daily usage. Focus on platforms "
+            "relevant to {work_tier_context} — skip platforms irrelevant to "
+            "this tier (e.g., TikTok for credentialed MDs).\n\n"
+            "For each platform, mark as 'dominant', 'popular', 'niche', "
+            "'unused', or 'blocked' per age group. Include: Social (Facebook, "
+            "Instagram, TikTok, Twitter/X, LinkedIn, Reddit, Snapchat, "
+            "Pinterest, YouTube); Messaging (WhatsApp, Telegram, WeChat, Line, "
+            "KakaoTalk, Viber, Signal); Regional (VK, Weibo, Naver, Mixi); "
+            "Job/Gig (Indeed, LinkedIn Jobs, Upwork, Fiverr, specialty boards); "
+            "Communities (Reddit subreddits, Discord, Facebook Groups, "
+            "WhatsApp Groups).\n\n"
+            "Also specify: Which platforms have PAID AD capabilities in "
+            "{region}? Which are BLOCKED or RESTRICTED? Is REDDIT used in "
+            "{region} for this tier of work? What community groups do "
+            "{demographic} in {region} use to find work in this tier?\n\n"
             "Return as JSON with age brackets as keys."
         ),
         "why_it_matters": (
@@ -132,14 +227,19 @@ RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
             "blocked_platforms",
             "ad_capable_platforms",
             "gig_platforms_by_age",
+            "tier_specific_notes",
         ],
     },
     "economic_context": {
         "query_template": (
-            "What is the average hourly wage for skilled remote work in {region} "
-            "in 2026? What is the minimum wage? What is the youth unemployment rate "
-            "for {demographic}? What hourly rate would be considered attractive for "
-            "annotation/data work?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What is the competitive compensation for THIS TIER of work among "
+            "{demographic} in {region} in 2026? For credentialed professional "
+            "work, research typical professional hourly rates, moonlighting "
+            "rates, contract consulting rates. For entry-level work, research "
+            "minimum wage, gig economy rates, annotation platform rates. What "
+            "rate would be considered attractive vs insulting for THIS tier "
+            "in {region}?"
         ),
         "why_it_matters": (
             "A rate that's insulting in Germany might be life-changing in Morocco. "
@@ -150,15 +250,19 @@ RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
             "minimum_wage",
             "youth_unemployment",
             "competitive_rate",
+            "tier_specific_notes",
         ],
     },
     "cultural_sensitivities": {
         "query_template": (
-            "What cultural, religious, or social sensitivities should a recruitment "
-            "ad in {region} be aware of? Consider: religious holidays (Ramadan, "
-            "Diwali, etc.), gender norms in advertising, imagery taboos, color "
-            "symbolism, humor style, formality expectations, family dynamics. "
-            "What would OFFEND people in this region?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What cultural, religious, or social sensitivities should a "
+            "recruitment ad in {region} targeting {demographic} for THIS tier "
+            "of work be aware of? Consider: religious holidays (Ramadan, "
+            "Diwali, etc.), gender norms, imagery taboos, color symbolism, "
+            "humor style, formality expectations, family dynamics, and any "
+            "tier-specific professional etiquette. What would OFFEND or feel "
+            "inappropriate for THIS demographic and tier?"
         ),
         "why_it_matters": (
             "An ad that works in Brazil could be offensive in Saudi Arabia. "
@@ -170,14 +274,19 @@ RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
             "imagery_taboos",
             "formality_level",
             "things_to_avoid",
+            "tier_specific_notes",
         ],
     },
     "tech_literacy": {
         "query_template": (
-            "What is the smartphone penetration and internet quality for "
-            "{demographic} in {region}? Do most people have laptops/desktops or "
-            "primarily use phones? What is the typical internet speed? Are there "
-            "data cost concerns? What apps do they use for work?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What is the tech literacy level and device ecosystem for "
+            "{demographic} in {region} doing THIS tier of work? For "
+            "credentialed professionals, research primary device (laptop vs "
+            "desktop vs EHR workstation), software familiarity, internet "
+            "reliability at typical work locations. For entry-level workers, "
+            "research smartphone penetration, primary device, internet speed, "
+            "data cost concerns. What apps/tools do they use for work?"
         ),
         "why_it_matters": (
             "If people primarily use phones, our ads should show phone-based "
@@ -188,15 +297,20 @@ RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
             "primary_device",
             "internet_quality",
             "data_cost_concern",
+            "tier_specific_notes",
         ],
     },
     "language_nuance": {
         "query_template": (
-            "For {language} speakers in {region}: what dialect or variant is used? "
-            "Is formal or informal address preferred in ads? What slang or "
-            "colloquialisms would make copy feel authentic? What language choices "
-            "would feel 'translated' or 'foreign'? Should ads be in {language} only "
-            "or mix with local dialect/English?"
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "For {language} speakers in {region} doing THIS tier of work: "
+            "what dialect or variant is used? What register is appropriate "
+            "(formal vs informal) for advertising this specific tier of work? "
+            "What professional jargon, slang, or colloquialisms would feel "
+            "authentic? What language choices would feel 'translated' or "
+            "'foreign'? Should ads be in {language} only or mix with local "
+            "dialect/English? How does the register differ for credentialed "
+            "vs entry-level audiences in {region}?"
         ),
         "why_it_matters": (
             "French in Morocco != French in France. Arabic in Egypt != Arabic in "
@@ -208,6 +322,104 @@ RESEARCH_DIMENSIONS: dict[str, dict[str, Any]] = {
             "authentic_slang",
             "avoid_phrases",
             "language_mixing",
+            "tier_specific_notes",
+        ],
+    },
+
+    # ─── Phase A additions (2026-04-08) — conditional dimensions ─────
+
+    "professional_community": {
+        "query_template": (
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What professional community platforms, forums, and networks are "
+            "actively used by people in this profession in {region}? Include: "
+            "professional association websites, medical networks (Doximity, "
+            "Sermo), legal networks (Justia, Martindale), specialty subreddits, "
+            "professional Twitter/X communities, LinkedIn groups, specialty "
+            "conferences with active online communities, and any locale-specific "
+            "professional platforms. Rank by active usage among practicing "
+            "professionals in {region}. Which platforms are free to post on? "
+            "Which have paid advertising?"
+        ),
+        "why_it_matters": (
+            "Credentialed professionals do not hang out on TikTok or generic "
+            "gig subreddits. They use professional community platforms that "
+            "generic gig research misses entirely."
+        ),
+        "activates_when": {
+            "qualifications_contain_any": [
+                "licensed", "certified", "board", "registered",
+                "MD", "DO", "PhD", "JD", "CFA", "CPA", "PE",
+                "credentialed", "professional", "specialist",
+            ],
+        },
+        "output_keys": [
+            "professional_platforms_ranked",
+            "free_post_platforms",
+            "paid_ad_platforms",
+            "credibility_markers",
+            "tier_specific_notes",
+        ],
+    },
+
+    "domain_trust_signals": {
+        "query_template": (
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "What makes a work opportunity CREDIBLE to professionals in this "
+            "field in {region}? What credentials, affiliations, or endorsements "
+            "would establish legitimacy? What are the RED FLAGS that would make "
+            "a professional in this field immediately dismiss an offer "
+            "(e.g., vague compensation, no named client, no peer review, "
+            "questionable platforms)? What signals would make them take it "
+            "seriously (e.g., named institutional partners, published rates, "
+            "peer endorsements, clear data usage policies)?"
+        ),
+        "why_it_matters": (
+            "Credentialed professionals have high skepticism thresholds. "
+            "Generic 'earn extra income' framing is an instant red flag. "
+            "We need to know what CREDIBILITY looks like in their community."
+        ),
+        "activates_when": {
+            "credential_tier_at_or_above": "language_fluency",
+        },
+        "output_keys": [
+            "trust_signals",
+            "red_flags",
+            "credibility_builders",
+            "transparency_expectations",
+            "tier_specific_notes",
+        ],
+    },
+
+    "work_environment_norms": {
+        "query_template": (
+            "CONTEXT: This campaign is recruiting for: {work_tier_context}. "
+            "For this specific kind of work in {region}, describe the typical "
+            "PHYSICAL work environment: home office? clinical setting? "
+            "professional office? field work? studio? What does the typical "
+            "workspace look like for this credential tier in this region — "
+            "size, lighting, visible tools, background appropriateness? "
+            "What WARDROBE is expected or credible (casual, business-casual, "
+            "lab coat, scrubs, field gear)? What VISIBLE TOOLS would appear "
+            "in or near the worker (laptop, medical chart, EHR monitor, "
+            "dermatoscope, drawing tablet, microphone, etc.)? This dimension "
+            "directly feeds visual/creative direction downstream — be specific "
+            "and culturally grounded."
+        ),
+        "why_it_matters": (
+            "Stage 2 actor generation needs to know what the work environment "
+            "and wardrobe actually look like. Without this, we generate "
+            "generic home-office backdrops for every job, even credentialed "
+            "medical work."
+        ),
+        "activates_when": "always",
+        "output_keys": [
+            "work_environment",
+            "wardrobe",
+            "visible_tools",
+            "background_norms",
+            "cultural_environment_notes",
+            "tier_specific_notes",
         ],
     },
 }
@@ -232,6 +444,58 @@ REGIONAL_PLATFORM_PRIORS: dict[str, dict[str, Any]] = {
         "wechat": {"dominant_age": "all", "youth_usage": "niche", "note": "Chinese diaspora only"},
         "whatsapp": {"dominant_age": "25+", "youth_usage": "medium"},
         "telegram": {"dominant_age": "25-40", "youth_usage": "low", "note": "Tech-savvy niche"},
+        "doximity": {
+            "dominant_age": "28-55",
+            "youth_usage": "low",
+            "ad_capable": False,
+            "professional_focus": "medical",
+            "note": "Physician professional network — closed membership verified by NPI. Active professional community for moonlighting, consulting, and research opportunities.",
+        },
+        "medical_twitter": {
+            "dominant_age": "25-50",
+            "youth_usage": "medium",
+            "ad_capable": True,
+            "professional_focus": "medical, academic",
+            "note": "#MedEd, #MedTwitter, and specialty-specific hashtags are active professional communities on X/Twitter.",
+        },
+        "r_medicine": {
+            "dominant_age": "22-40",
+            "youth_usage": "high",
+            "ad_capable": False,
+            "professional_focus": "medical trainees and early-career",
+            "subreddits": ["r/medicine", "r/medicalschool", "r/Residency", "r/AskDocs"],
+            "note": "Active communities for moonlighting, residency advice, and side work discussion.",
+        },
+        "justia_legal_network": {
+            "dominant_age": "28-60",
+            "youth_usage": "low",
+            "ad_capable": True,
+            "professional_focus": "legal",
+            "note": "Attorney directory + professional networking. Used for referral marketing and thought leadership.",
+        },
+    },
+    "UK": {
+        "doximity_uk": {
+            "dominant_age": "28-55",
+            "youth_usage": "low",
+            "ad_capable": False,
+            "professional_focus": "medical, limited UK presence",
+            "note": "Physician professional network with limited UK reach compared to US.",
+        },
+        "nhs_networks": {
+            "dominant_age": "25-60",
+            "youth_usage": "low",
+            "ad_capable": False,
+            "professional_focus": "NHS clinical staff",
+            "note": "Internal NHS Networks communities — closed but trusted channel for NHS clinicians.",
+        },
+        "bmj_careers": {
+            "dominant_age": "25-55",
+            "youth_usage": "low",
+            "ad_capable": True,
+            "professional_focus": "medical",
+            "note": "British Medical Journal careers platform — authoritative for UK physicians and NHS trainees.",
+        },
     },
     "CA": {
         "facebook": {"dominant_age": "30+", "youth_usage": "low", "ad_capable": True},
@@ -523,6 +787,7 @@ async def research_region(
     language: str,
     demographic: str = "young adults 18-35",
     task_type: str = "data annotation",
+    intake_row: dict | None = None,
 ) -> dict[str, Any]:
     """Conduct deep cultural research for a target region via Kimi K2.5.
 
@@ -539,6 +804,12 @@ async def research_region(
         Target demographic description (default "young adults 18-35").
     task_type:
         The kind of work being advertised (default "data annotation").
+    intake_row:
+        Optional intake_requests row (dict) used to derive the
+        {work_tier_context} substitution for dimension queries. When
+        omitted, a neutral fallback context is used so the function
+        remains backwards-compatible with existing callers. Task 14
+        wires the real intake_row through from stage1_intelligence.
 
     Returns
     -------
@@ -546,6 +817,9 @@ async def research_region(
         A comprehensive research profile with keys matching RESEARCH_DIMENSIONS,
         plus metadata about the research itself.
     """
+    intake_row = intake_row or {}
+    work_tier_context = derive_work_tier_context(intake_row)
+
     # Check cache first — research changes slowly, reuse for 7 days
     from cache_manager import get_cached_research, save_research_cache
 
@@ -561,30 +835,50 @@ async def research_region(
         demographic,
     )
 
+    # Filter dimensions by conditional activation triggers (Task 11).
+    # Dimensions with no 'activates_when' run always (back-compat); conditional
+    # dimensions are skipped when the intake doesn't match their trigger.
+    active_dimensions: list[tuple[str, dict]] = []
+    skipped_dimensions: list[str] = []
+    for dim_name, dim_config in RESEARCH_DIMENSIONS.items():
+        if should_run_dimension(dim_config, intake_row):
+            active_dimensions.append((dim_name, dim_config))
+        else:
+            skipped_dimensions.append(dim_name)
+            logger.info(
+                "Skipping dimension %s — not activated for this campaign "
+                "(activates_when=%s)",
+                dim_name,
+                dim_config.get("activates_when"),
+            )
+
     research: dict[str, Any] = {
         "_meta": {
             "region": region,
             "language": language,
             "demographic": demographic,
             "task_type": task_type,
-            "dimensions_researched": list(RESEARCH_DIMENSIONS.keys()),
+            "work_tier_context": work_tier_context,
+            "dimensions_researched": [k for k, _ in active_dimensions],
+            "dimensions_skipped": skipped_dimensions,
         },
     }
 
-    # Research all 9 dimensions IN PARALLEL (they're independent)
+    # Research active dimensions IN PARALLEL (they're independent)
     import asyncio
 
     async def _research_one_dimension(dim_key: str, dim: dict) -> tuple[str, dict]:
         query = dim["query_template"].format(
             region=region, language=language,
             demographic=demographic, task_type=task_type,
+            work_tier_context=work_tier_context,
         )
         logger.info("Researching dimension '%s' for %s ...", dim_key, region)
         result = await _call_kimi(query, dim["output_keys"])
         return dim_key, result
 
     dim_results = await asyncio.gather(
-        *[_research_one_dimension(k, v) for k, v in RESEARCH_DIMENSIONS.items()],
+        *[_research_one_dimension(k, v) for k, v in active_dimensions],
         return_exceptions=True,
     )
     for r in dim_results:
@@ -598,9 +892,10 @@ async def research_region(
     validation = validate_research_against_priors(region, research)
     research["_validation"] = validation
     logger.info(
-        "Cultural research complete for %s — %d dimensions. Validation: %s",
+        "Cultural research complete for %s — %d dimensions (%d skipped). Validation: %s",
         region,
-        len(RESEARCH_DIMENSIONS),
+        len(active_dimensions),
+        len(skipped_dimensions),
         validation["summary"],
     )
 
@@ -619,6 +914,7 @@ async def research_all_regions(
     languages: list[str],
     demographic: str = "young adults 18-35",
     task_type: str = "data annotation",
+    intake_row: dict | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Research all target regions and return a dict keyed by region.
 
@@ -635,6 +931,10 @@ async def research_all_regions(
         Target demographic.
     task_type:
         The type of work being advertised.
+    intake_row:
+        The raw intake_requests row from Neon. Passed through to
+        ``research_region`` so context-aware dimension filtering and
+        ``work_tier_context`` injection work correctly.
 
     Returns
     -------
@@ -654,6 +954,7 @@ async def research_all_regions(
             language=language,
             demographic=demographic,
             task_type=task_type,
+            intake_row=intake_row,
         )
 
     return all_research
@@ -751,6 +1052,49 @@ def build_research_summary(research_data: dict[str, dict[str, Any]]) -> str:
             f"Formality: {lang.get('formality_preference', 'unknown')} — "
             f"Mixing: {lang.get('language_mixing', 'unknown')}"
         )
+
+        # Professional Community (conditional — only present when job is professional/skilled)
+        pc = profile.get("professional_community")
+        if pc and isinstance(pc, dict):
+            platforms = pc.get("professional_platforms_ranked") or []
+            markers = pc.get("credibility_markers") or []
+            tier_notes = pc.get("tier_specific_notes", "")
+            sections.append(
+                f"  Professional Community: "
+                f"Top platforms: {', '.join(str(p) for p in platforms[:5]) or 'unknown'} — "
+                f"Credibility markers: {', '.join(str(m) for m in markers[:5]) or 'unknown'}"
+                + (f" — Tier notes: {tier_notes}" if tier_notes else "")
+            )
+
+        # Domain Trust Signals (conditional — present when domain-specific trust research ran)
+        dts = profile.get("domain_trust_signals")
+        if dts and isinstance(dts, dict):
+            trust_sigs = dts.get("trust_signals") or []
+            red_flags = dts.get("red_flags") or []
+            builders = dts.get("credibility_builders") or []
+            tier_notes = dts.get("tier_specific_notes", "")
+            sections.append(
+                f"  Domain Trust Signals: "
+                f"Trust signals: {', '.join(str(t) for t in trust_sigs[:5]) or 'unknown'} — "
+                f"Red flags to avoid: {', '.join(str(r) for r in red_flags[:5]) or 'none'} — "
+                f"Credibility builders: {', '.join(str(b) for b in builders[:5]) or 'unknown'}"
+                + (f" — Tier notes: {tier_notes}" if tier_notes else "")
+            )
+
+        # Work Environment Norms (conditional — feeds visual/image direction)
+        wen = profile.get("work_environment_norms")
+        if wen and isinstance(wen, dict):
+            work_env = wen.get("work_environment", "")
+            wardrobe = wen.get("wardrobe", "")
+            tools = wen.get("visible_tools") or []
+            cultural_notes = wen.get("cultural_environment_notes", "")
+            sections.append(
+                f"  Work Environment (visual direction): "
+                f"Environment: {work_env or 'unknown'} — "
+                f"Wardrobe: {wardrobe or 'unknown'} — "
+                f"Visible tools: {', '.join(str(t) for t in tools[:6]) or 'unknown'}"
+                + (f" — Cultural notes: {cultural_notes}" if cultural_notes else "")
+            )
 
         sections.append("")  # blank line between regions
 
@@ -911,6 +1255,66 @@ def apply_research_to_personas(
                 f"Data cost concern: {tech.get('data_cost_concern', 'unknown')}."
             )
             adjustments.append(f"Tech literacy: primary device = {primary_device}")
+
+        # -- Professional Community Injection (conditional) --
+        # Feeds digital_habitat / best_channels for professional/skilled roles.
+        pc = research.get("professional_community")
+        if pc and isinstance(pc, dict):
+            prof_platforms = pc.get("professional_platforms_ranked") or []
+            cred_markers = pc.get("credibility_markers") or []
+            if prof_platforms:
+                existing_channels = p.get("best_channels") or []
+                # Prepend professional platforms not already listed.
+                for plat in reversed(prof_platforms[:3]):
+                    if plat not in existing_channels:
+                        existing_channels.insert(0, plat)
+                p["best_channels"] = existing_channels
+                p.setdefault("copy_guidance", {})["professional_community"] = (
+                    f"Professional platforms for this audience: {', '.join(str(pl) for pl in prof_platforms[:5])}. "
+                    + (f"Credibility markers: {', '.join(str(m) for m in cred_markers[:5])}." if cred_markers else "")
+                    + (f" {pc.get('tier_specific_notes', '')}" if pc.get("tier_specific_notes") else "")
+                )
+                adjustments.append(
+                    f"Professional community: injected platforms {prof_platforms[:3]} into best_channels"
+                )
+
+        # -- Domain Trust Signals Injection (conditional) --
+        # Informs messaging_angle and objection handlers for domain-specific trust concerns.
+        dts = research.get("domain_trust_signals")
+        if dts and isinstance(dts, dict):
+            trust_sigs = dts.get("trust_signals") or []
+            red_flags = dts.get("red_flags") or []
+            builders = dts.get("credibility_builders") or []
+            if trust_sigs or builders:
+                p.setdefault("copy_guidance", {})["domain_trust"] = (
+                    (f"Trust signals to emphasize: {', '.join(str(t) for t in trust_sigs[:5])}. " if trust_sigs else "")
+                    + (f"Red flags to avoid: {', '.join(str(r) for r in red_flags[:5])}. " if red_flags else "")
+                    + (f"Credibility builders: {', '.join(str(b) for b in builders[:5])}." if builders else "")
+                    + (f" {dts.get('tier_specific_notes', '')}" if dts.get("tier_specific_notes") else "")
+                )
+                adjustments.append(
+                    f"Domain trust signals: injected {len(trust_sigs)} signals + {len(builders)} builders"
+                )
+
+        # -- Work Environment Norms Injection (conditional) --
+        # Feeds lifestyle context and visual direction for image generation.
+        wen = research.get("work_environment_norms")
+        if wen and isinstance(wen, dict):
+            work_env = wen.get("work_environment", "")
+            wardrobe = wen.get("wardrobe", "")
+            tools = wen.get("visible_tools") or []
+            cultural_env = wen.get("cultural_environment_notes", "")
+            if work_env or wardrobe:
+                p["visual_context"] = {
+                    "work_environment": work_env or "unknown",
+                    "wardrobe": wardrobe or "unknown",
+                    "visible_tools": tools[:6],
+                    "cultural_environment_notes": cultural_env or "",
+                }
+                adjustments.append(
+                    f"Work environment norms: visual_context injected "
+                    f"(env={work_env!r}, wardrobe={wardrobe!r})"
+                )
 
         p["cultural_research"] = {
             "status": "enriched",

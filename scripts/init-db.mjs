@@ -31,6 +31,9 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_tracked_links_slug ON tracked_links(slug)`,
   `CREATE INDEX IF NOT EXISTS idx_tracked_links_request ON tracked_links(request_id)`,
   `CREATE INDEX IF NOT EXISTS idx_tracked_links_recruiter ON tracked_links(recruiter_clerk_id, request_id)`,
+  `ALTER TABLE intake_requests ADD COLUMN IF NOT EXISTS qualifications_required TEXT, ADD COLUMN IF NOT EXISTS qualifications_preferred TEXT, ADD COLUMN IF NOT EXISTS location_scope TEXT, ADD COLUMN IF NOT EXISTS language_requirements TEXT, ADD COLUMN IF NOT EXISTS engagement_model TEXT, ADD COLUMN IF NOT EXISTS technical_requirements TEXT, ADD COLUMN IF NOT EXISTS context_notes TEXT`,
+  `ALTER TABLE creative_briefs ADD COLUMN IF NOT EXISTS pillar_primary TEXT CHECK (pillar_primary IN ('earn', 'grow', 'shape')), ADD COLUMN IF NOT EXISTS pillar_secondary TEXT CHECK (pillar_secondary IN ('earn', 'grow', 'shape')), ADD COLUMN IF NOT EXISTS derived_requirements JSONB`,
+  `CREATE INDEX IF NOT EXISTS idx_creative_briefs_pillar_primary ON creative_briefs(pillar_primary) WHERE pillar_primary IS NOT NULL`,
 ];
 
 async function init() {

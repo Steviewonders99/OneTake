@@ -60,6 +60,10 @@ export interface FieldDefinition {
   group?: string;
   toggle_label?: string;
   text_placeholder?: string;
+  // ─── AI pre-fill metadata (Phase A — 2026-04-08) ───
+  ai_help?: string;
+  prefill_guidance?: string;
+  rows?: number;
 }
 
 export interface TaskTypeSchema {
@@ -111,6 +115,14 @@ export interface IntakeRequest {
   schema_version: number;
   created_at: string;
   updated_at: string;
+  // ─── Job Requirements (Phase A — 2026-04-08) ──────────────────
+  qualifications_required: string | null;
+  qualifications_preferred: string | null;
+  location_scope: string | null;
+  language_requirements: string | null;
+  engagement_model: string | null;
+  technical_requirements: string | null;
+  context_notes: string | null;
 }
 
 // ============================================================
@@ -129,6 +141,34 @@ export interface Attachment {
   created_at: string;
 }
 
+// ─── Derived Requirements (Stage 1 brief output) ─────────────────
+// Phase A of intake schema refactor (2026-04-08)
+
+export type BrandPillar = "earn" | "grow" | "shape";
+
+export interface DerivedRequirements {
+  credential_summary: string;
+  pillar_weighting: {
+    primary: BrandPillar;
+    secondary: BrandPillar;
+    reasoning: string;
+  };
+  visual_direction: {
+    work_environment: string;
+    wardrobe: string;
+    visible_tools: string[];
+    emotional_tone: string;
+    cultural_adaptations: string;
+  };
+  persona_constraints: {
+    minimum_credentials: string;
+    acceptable_tiers: string[];
+    age_range_hint: string;
+    excluded_archetypes: string[];
+  };
+  narrative_angle: string;
+}
+
 // ============================================================
 // CREATIVE BRIEF TYPES
 // ============================================================
@@ -144,6 +184,9 @@ export interface CreativeBrief {
   evaluation_data: Record<string, unknown> | null;
   version: number;
   created_at: string;
+  pillar_primary: BrandPillar | null;
+  pillar_secondary: BrandPillar | null;
+  derived_requirements: DerivedRequirements | null;
 }
 
 // ============================================================

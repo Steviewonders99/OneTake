@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import { Sparkles, AlertCircle } from "lucide-react";
 
 type ConfidenceLevel = "extracted" | "inferred" | "missing" | "none";
 
@@ -18,14 +18,14 @@ const config: Record<
 > = {
   extracted: {
     borderClass: "confidence-extracted",
-    label: "Extracted from RFP",
-    Icon: CheckCircle2,
-    color: "text-green-600",
+    label: "✨ AI drafted — review and edit",
+    Icon: Sparkles,
+    color: "text-purple-600",
   },
   inferred: {
     borderClass: "confidence-inferred",
-    label: "AI-inferred",
-    Icon: AlertTriangle,
+    label: "✨ AI inferred — review and edit",
+    Icon: Sparkles,
     color: "text-yellow-600",
   },
   missing: {

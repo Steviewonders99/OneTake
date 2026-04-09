@@ -103,6 +103,57 @@ TAGLINE (for your orientation only, do not paste verbatim into the brief):
 {TAGLINE}
 """
 
+DERIVED_REQUIREMENTS_RULES = """
+
+## DERIVED REQUIREMENTS (REQUIRED OUTPUT)
+
+After generating the brief, you MUST populate a `derived_requirements` sub-object
+in the JSON output. Use the job_requirements fields from the intake data
+(qualifications_required, qualifications_preferred, location_scope,
+language_requirements, engagement_model, technical_requirements, context_notes)
+and the cultural_research output to inform your analysis.
+
+## PILLAR SELECTION RULES (binding)
+
+- Board-certified or licensed professional credentials required → `pillar_weighting.primary = "shape"`
+- Professional experience or domain knowledge required (but no license) → `pillar_weighting.primary = "grow"`
+- Language fluency or general detail-orientation only → `pillar_weighting.primary = "earn"`
+- The secondary pillar picks the next-closest fit along the Shape → Grow → Earn ladder
+- Both values MUST be lowercase strings exactly matching one of: `earn`, `grow`, `shape`
+
+## VISUAL DIRECTION RULES (binding)
+
+- If qualifications require a clinical license → `visual_direction.work_environment` MUST be clinical
+  (exam room, hospital, clinic office) — NOT generic home office
+- If qualifications require business professional credentials → `visual_direction.work_environment`
+  MUST be professional office — NOT casual
+- If the job is language-only or detail work → home office is appropriate
+- If the job involves physical/outdoor work → `visual_direction.work_environment` describes the
+  actual setting (studio, field, workshop, etc.)
+- `visual_direction.wardrobe` MUST match the credential tier — never give a credentialed expert
+  generic casual attire
+- `visual_direction.visible_tools` should be credible for the work described, not generic stock
+  props (e.g., a real EHR interface for clinical work, not a random laptop)
+- When the cultural_research output has a `work_environment_norms` dimension, pull its
+  `work_environment`, `wardrobe`, and `visible_tools` into the derived visual_direction for
+  regional authenticity
+
+## EXCLUDED ARCHETYPES RULES (binding)
+
+- For credentialed jobs, `persona_constraints.excluded_archetypes` MUST include disambiguated phrases
+  like: "generic gig worker", "stay-at-home parent without the specific credential",
+  "side-hustle freelancer", "pre-med undergraduate", "retiree without active clinical practice",
+  "non-medical multilingual professional", "general student without clinical years"
+- Phrases MUST be specific enough to NOT collide with acceptable_tiers
+- For gig/language-only jobs, `excluded_archetypes` may be empty or minimal
+- The downstream validator matches phrases as full substrings (case-insensitive).
+  Single-word entries like "student" would over-match and reject valid personas —
+  ALWAYS use multi-word disambiguated phrases
+- Each excluded_archetypes entry must be a COMPLETE phrase, not a fragment or single word
+"""
+
+BRIEF_SYSTEM_PROMPT = BRIEF_SYSTEM_PROMPT + DERIVED_REQUIREMENTS_RULES
+
 
 def _format_feedback_section(feedback: list | None) -> str:
     """Format the feedback loop section for the prompt."""
@@ -218,6 +269,12 @@ TASK DETAILS: {task_description}
 {service_category_section}
 {persona_section}
 {pillar_reference}
+You must populate a top-level `derived_requirements` sub-object at the end of
+the JSON output. This sub-object maps the intake Job Requirements and the
+cultural research output into structured guidance for downstream stages
+(persona engine, Stage 2 scene generation, Stage 3 copy, Stage 4 composition).
+See the schema below for the exact shape.
+
 Return ONLY valid JSON (no markdown, no explanation):
 {{
   "service_category": "One of: annotation | data_collection | judging | transcription | translation",
@@ -278,6 +335,28 @@ Return ONLY valid JSON (no markdown, no explanation):
     "things_to_avoid": ["From cultural research — imagery, phrases, topics to avoid"],
     "things_to_lean_into": ["What resonates culturally — from research findings"],
     "trust_signals": ["How to build credibility in this region — referencing expertise and recognition"]
+  }},
+  "derived_requirements": {{
+    "credential_summary": "2-3 sentence compressed read of qualifications_required — what level of expertise does this job demand in one glance?",
+    "pillar_weighting": {{
+      "primary": "earn | grow | shape (pick ONE exactly — lowercase string)",
+      "secondary": "earn | grow | shape (pick ONE, different from primary, lowercase string)",
+      "reasoning": "1-2 sentences explaining WHY this pillar pairing given the credential tier and intake context."
+    }},
+    "visual_direction": {{
+      "work_environment": "Free-text description of the physical environment where this work credibly happens. Be specific — e.g., 'modern dermatology exam room with EHR workstation visible, professional medical furniture, clinical-clean but lived-in' or 'home office with laptop and good natural lighting, quiet neighborhood'.",
+      "wardrobe": "Free-text description of appropriate attire — e.g., 'white lab coat over scrubs or business-casual, stethoscope credible but optional'.",
+      "visible_tools": ["Array of credible props that should appear in or near the actor — e.g., 'tablet showing EHR interface', 'medical chart', 'otoscope on desk'"],
+      "emotional_tone": "Free-text description of the emotional register — e.g., 'authoritative and empathetic — competent professional caring for a patient, not a cold transaction'.",
+      "cultural_adaptations": "Free-text pulling from cultural_research output — regional/cultural specifics the scene should respect. E.g., 'US clinical aesthetic, EHR-heavy workflow, American patient-portal conventions'."
+    }},
+    "persona_constraints": {{
+      "minimum_credentials": "Free-text statement of the minimum bar to apply. E.g., 'MD/DO with dermatology training OR dermatology resident at US teaching hospital OR clinical-year US med student with documented dermatology rotation'.",
+      "acceptable_tiers": ["Array of acceptable applicant profiles — each a distinct career stage or credential variant. Every generated persona must exactly match one of these strings in their matched_tier field."],
+      "age_range_hint": "Free-text age guidance based on credential progression — e.g., '24-55, reflects career arc from fourth-year med student through experienced attending'.",
+      "excluded_archetypes": ["Array of DISAMBIGUATED multi-word phrases that must NOT appear in any generated persona's archetype, lifestyle, or motivations. Use phrases specific enough to not collide with acceptable_tiers. BAD: 'student'. GOOD: 'pre-med undergraduate' or 'general student without clinical years' or 'generic gig worker'."]
+    }},
+    "narrative_angle": "One-sentence positioning summary for the creative team — e.g., 'Credentialed US clinical professionals contributing clinical judgment to AI documentation — not annotators, not crowd workers. The work is an extension of their clinical practice.'"
   }}
 }}
 

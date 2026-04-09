@@ -25,6 +25,9 @@ interface DynamicFormProps {
   extraction?: ExtractionResult | null;
   disabled?: boolean;
   fieldErrors?: Record<string, string>;
+  /** Field keys that the user has manually edited after extraction. These fields
+   *  will have their AI-drafted confidence badge downgraded to "none". */
+  manuallyEditedKeys?: Set<string>;
 }
 
 // ============================================================
@@ -742,6 +745,7 @@ function FieldSection({
   confidenceMap,
   disabled,
   fieldErrors,
+  manuallyEditedKeys,
 }: {
   title: string;
   fields: FieldDefinition[];
@@ -750,6 +754,7 @@ function FieldSection({
   confidenceMap: ConfidenceMap;
   disabled?: boolean;
   fieldErrors?: Record<string, string>;
+  manuallyEditedKeys?: Set<string>;
 }) {
   const visibleFields = fields.filter((f) => {
     if (!f.show_when) return true;
@@ -800,7 +805,11 @@ function FieldSection({
                   field={field}
                   value={formData[field.key]}
                   onChange={(val) => onChange(field.key, val)}
-                  confidence={confidenceMap[field.key] || "none"}
+                  confidence={
+                    manuallyEditedKeys?.has(field.key)
+                      ? "none"
+                      : confidenceMap[field.key] || "none"
+                  }
                   disabled={disabled}
                 />
               </div>
@@ -828,6 +837,7 @@ export default function DynamicForm({
   extraction,
   disabled,
   fieldErrors,
+  manuallyEditedKeys,
 }: DynamicFormProps) {
   const confidenceMap = buildConfidenceMap(extraction);
 
@@ -850,6 +860,7 @@ export default function DynamicForm({
         confidenceMap={confidenceMap}
         disabled={disabled}
         fieldErrors={fieldErrors}
+        manuallyEditedKeys={manuallyEditedKeys}
       />
       <FieldSection
         title={`${schema.display_name} Details`}
@@ -859,6 +870,7 @@ export default function DynamicForm({
         confidenceMap={confidenceMap}
         disabled={disabled}
         fieldErrors={fieldErrors}
+        manuallyEditedKeys={manuallyEditedKeys}
       />
       {conditional_fields.length > 0 && (
         <FieldSection
@@ -869,6 +881,7 @@ export default function DynamicForm({
           confidenceMap={confidenceMap}
           disabled={disabled}
           fieldErrors={fieldErrors}
+          manuallyEditedKeys={manuallyEditedKeys}
         />
       )}
       <FieldSection
@@ -879,6 +892,7 @@ export default function DynamicForm({
         confidenceMap={confidenceMap}
         disabled={disabled}
         fieldErrors={fieldErrors}
+        manuallyEditedKeys={manuallyEditedKeys}
       />
     </div>
   );

@@ -28,7 +28,7 @@ from ai.local_vlm import analyze_image
 from ai.seedream import generate_image
 from blob_uploader import upload_to_blob
 from neon_client import save_actor, save_asset, update_actor_seed
-from prompts.persona_engine import build_persona_actor_prompt, PERSONA_SYSTEM_PROMPT
+from prompts.persona_engine import PERSONA_SYSTEM_PROMPT
 from prompts.recruitment_actors import (
     ACTOR_SYSTEM_PROMPT,
     build_actor_prompt,
@@ -43,6 +43,105 @@ MAX_VARIATION_RETRIES = 2
 SEED_VQA_THRESHOLD = 0.85
 VARIATION_VQA_THRESHOLD = 0.75  # Lower bar — face is already validated
 ACTORS_PER_PERSONA = 3
+
+
+def build_persona_actor_prompt(
+    persona: dict,
+    region: str,
+    language: str,
+) -> str:
+    """Generate an actor-card prompt derived from a dynamic persona.
+
+    Replaces the legacy build_persona_actor_prompt from persona_engine
+    (deleted in Task 18/19). Reads the dynamic persona schema produced
+    by prompts.persona_engine.build_persona_prompt: name, archetype,
+    matched_tier, age_range, lifestyle, motivations, psychology_profile,
+    jobs_to_be_done.
+    """
+    psychology = persona.get("psychology_profile", {}) or {}
+    raw_jtbd = persona.get("jobs_to_be_done", {})
+    if isinstance(raw_jtbd, list):
+        jtbd = {
+            "functional": raw_jtbd[0] if raw_jtbd else "Earn money remotely",
+            "emotional": raw_jtbd[1] if len(raw_jtbd) > 1 else "Feel productive",
+        }
+    else:
+        jtbd = raw_jtbd if isinstance(raw_jtbd, dict) else {}
+
+    persona_name = (
+        persona.get("name")
+        or persona.get("persona_name")
+        or persona.get("matched_tier")
+        or "Contributor"
+    )
+    archetype_label = persona.get("archetype") or persona.get("matched_tier") or "Contributor"
+    age_range_hint = persona.get("age_range", "25-35")
+    try:
+        lo, hi = (int(x) for x in str(age_range_hint).split("-")[:2])
+        mid_age = (lo + hi) // 2
+    except (ValueError, IndexError):
+        mid_age = 30
+        lo, hi = 28, 32
+
+    motivations = persona.get("motivations", []) or []
+    primary_motivation = motivations[0] if motivations else "earning flexibly"
+
+    return f"""Create an AI UGC actor identity card for a OneForma recruitment ad campaign.
+
+This actor EMBODIES a specific target persona — every detail should make
+the target audience think "that looks like ME".
+
+TARGET PERSONA: {persona_name}
+ARCHETYPE: {archetype_label}
+MATCHED TIER: {persona.get("matched_tier", "")}
+AGE: {mid_age} (range {lo}-{hi})
+REGION: {region}
+LANGUAGE: {language}
+
+PERSONA CONTEXT (the actor must LOOK like this person):
+- Lifestyle: {persona.get("lifestyle", "")}
+- Primary motivation: {primary_motivation}
+
+PSYCHOLOGY (the image must TRIGGER these responses in the target audience):
+- Primary hook: {psychology.get("primary_bias", "social_proof")}
+- The viewer should think: "{psychology.get("messaging_angle", "This could be me")}"
+- Jobs-to-be-done — functional: {jtbd.get("functional", "Earn money remotely")}
+- Jobs-to-be-done — emotional: {jtbd.get("emotional", "Feel productive")}
+
+Return ONLY valid JSON matching this EXACT schema:
+{{
+  "name": "A culturally appropriate first name for {region}",
+  "persona_key": "{persona.get("matched_tier", persona_name)}",
+  "face_lock": {{
+    "skin_tone_hex": "#HEXCOLOR (realistic for someone from {region})",
+    "eye_color": "specific eye color",
+    "jawline": "face shape description",
+    "hair": "specific hairstyle common in {region} for a {archetype_label}",
+    "nose_shape": "specific description",
+    "age_range": "{lo}-{hi}",
+    "distinguishing_marks": "1-2 unique features"
+  }},
+  "prompt_seed": "One dense paragraph (80-120 words) describing this EXACT person. Include: ethnicity, age, skin tone hex, face shape, hair, eye color, distinguishing marks, default expression. This person IS a {archetype_label} — their vibe should communicate '{primary_motivation}'.",
+  "outfit_variations": {{
+    "at_home_working": "Work-appropriate casual clothing — annotating data at home",
+    "at_home_relaxed": "Relaxed version — couch or bed with laptop",
+    "cafe_working": "Slightly more put-together for a cafe",
+    "celebrating_earnings": "Same vibe, looking at phone with satisfied expression"
+  }},
+  "signature_accessory": "ONE item they ALWAYS have (over-ear headphones, earbuds, watch, bracelet, hair clip, glasses — relevant to a {archetype_label})",
+  "backdrops": [
+    "Primary home/work setting appropriate for this persona",
+    "A realistic {region} cafe or public workspace",
+    "A realistic {region} outdoor or balcony setting",
+    "A close-up framing for story/portrait format"
+  ]
+}}
+
+RULES:
+- This actor is a {archetype_label} aged {lo}-{hi} in {region}.
+- They should look like someone the target persona would IDENTIFY with.
+- NOT a stock-photo model. NOT corporate. Real person vibes.
+- Setting should match the persona's lifestyle."""
 
 
 async def run_stage2(context: dict) -> dict:

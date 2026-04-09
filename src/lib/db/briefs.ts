@@ -1,5 +1,5 @@
 import { getDb } from '../db';
-import type { CreativeBrief } from '@/lib/types';
+import type { BrandPillar, CreativeBrief, DerivedRequirements } from '@/lib/types';
 
 export async function createBrief(data: {
   request_id: string;
@@ -10,12 +10,16 @@ export async function createBrief(data: {
   evaluation_score?: number | null;
   evaluation_data?: Record<string, unknown> | null;
   version?: number;
+  pillar_primary?: BrandPillar | null;
+  pillar_secondary?: BrandPillar | null;
+  derived_requirements?: DerivedRequirements | null;
 }): Promise<CreativeBrief> {
   const sql = getDb();
   const rows = await sql`
     INSERT INTO creative_briefs (
       request_id, brief_data, channel_research, design_direction,
-      content_languages, evaluation_score, evaluation_data, version
+      content_languages, evaluation_score, evaluation_data, version,
+      pillar_primary, pillar_secondary, derived_requirements
     )
     VALUES (
       ${data.request_id},
@@ -25,7 +29,10 @@ export async function createBrief(data: {
       ${data.content_languages ?? []},
       ${data.evaluation_score ?? null},
       ${data.evaluation_data ? JSON.stringify(data.evaluation_data) : null},
-      ${data.version ?? 1}
+      ${data.version ?? 1},
+      ${data.pillar_primary ?? null},
+      ${data.pillar_secondary ?? null},
+      ${data.derived_requirements ? JSON.stringify(data.derived_requirements) : null}
     )
     RETURNING *
   `;

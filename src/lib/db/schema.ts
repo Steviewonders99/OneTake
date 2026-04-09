@@ -87,6 +87,18 @@ export async function createTables(): Promise<void> {
       WHERE campaign_slug IS NOT NULL
   `;
 
+  // Job Requirements columns — Phase A of intake schema refactor (2026-04-08)
+  await sql`
+    ALTER TABLE intake_requests
+      ADD COLUMN IF NOT EXISTS qualifications_required  TEXT,
+      ADD COLUMN IF NOT EXISTS qualifications_preferred TEXT,
+      ADD COLUMN IF NOT EXISTS location_scope           TEXT,
+      ADD COLUMN IF NOT EXISTS language_requirements    TEXT,
+      ADD COLUMN IF NOT EXISTS engagement_model         TEXT,
+      ADD COLUMN IF NOT EXISTS technical_requirements   TEXT,
+      ADD COLUMN IF NOT EXISTS context_notes            TEXT
+  `;
+
   // 5. attachments — FK to intake_requests
   await sql`
     CREATE TABLE IF NOT EXISTS attachments (
@@ -116,6 +128,22 @@ export async function createTables(): Promise<void> {
       version INT NOT NULL DEFAULT 1,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+
+  // Derived requirements — Phase A of intake schema refactor (2026-04-08)
+  await sql`
+    ALTER TABLE creative_briefs
+      ADD COLUMN IF NOT EXISTS pillar_primary       TEXT
+        CHECK (pillar_primary IN ('earn', 'grow', 'shape')),
+      ADD COLUMN IF NOT EXISTS pillar_secondary     TEXT
+        CHECK (pillar_secondary IN ('earn', 'grow', 'shape')),
+      ADD COLUMN IF NOT EXISTS derived_requirements JSONB
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_creative_briefs_pillar_primary
+      ON creative_briefs(pillar_primary)
+      WHERE pillar_primary IS NOT NULL
   `;
 
   // 7. actor_profiles — FK to intake_requests
