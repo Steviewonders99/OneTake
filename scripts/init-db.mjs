@@ -34,6 +34,9 @@ const statements = [
   `ALTER TABLE intake_requests ADD COLUMN IF NOT EXISTS qualifications_required TEXT, ADD COLUMN IF NOT EXISTS qualifications_preferred TEXT, ADD COLUMN IF NOT EXISTS location_scope TEXT, ADD COLUMN IF NOT EXISTS language_requirements TEXT, ADD COLUMN IF NOT EXISTS engagement_model TEXT, ADD COLUMN IF NOT EXISTS technical_requirements TEXT, ADD COLUMN IF NOT EXISTS context_notes TEXT`,
   `ALTER TABLE creative_briefs ADD COLUMN IF NOT EXISTS pillar_primary TEXT CHECK (pillar_primary IN ('earn', 'grow', 'shape')), ADD COLUMN IF NOT EXISTS pillar_secondary TEXT CHECK (pillar_secondary IN ('earn', 'grow', 'shape')), ADD COLUMN IF NOT EXISTS derived_requirements JSONB`,
   `CREATE INDEX IF NOT EXISTS idx_creative_briefs_pillar_primary ON creative_briefs(pillar_primary) WHERE pillar_primary IS NOT NULL`,
+  `CREATE TABLE IF NOT EXISTS design_artifacts (artifact_id TEXT PRIMARY KEY, category TEXT NOT NULL, description TEXT NOT NULL, blob_url TEXT NOT NULL, dimensions TEXT, css_class TEXT, usage_snippet TEXT NOT NULL, usage_notes TEXT, pillar_affinity TEXT[] DEFAULT '{}', format_affinity TEXT[] DEFAULT '{}', is_active BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`,
+  `CREATE INDEX IF NOT EXISTS idx_design_artifacts_category ON design_artifacts(category)`,
+  `CREATE INDEX IF NOT EXISTS idx_design_artifacts_active ON design_artifacts(is_active) WHERE is_active = true`,
 ];
 
 async function init() {
