@@ -72,7 +72,7 @@ def derive_languages_from_regions(
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
-PASS_THRESHOLD = 0.70
+PASS_THRESHOLD = 0.85
 
 # Channels we generate copy for.
 DEFAULT_CHANNELS = [
@@ -99,8 +99,17 @@ ANTI_PATTERNS = {
     "learn more", "click here", "start earning",
 }
 
+# ── Pillar embodiment signals ─────────────────────────────────────────
+# Used to verify that copy actually embodies the intended brand pillar.
 
-def _score_copy_quality(copy_data: dict, persona: dict | None = None) -> tuple[float, list[str]]:
+PILLAR_SIGNALS: dict[str, set[str]] = {
+    "earn": {"earn", "paid", "payout", "income", "compensation", "money", "financial", "twice-monthly", "payoneer", "paypal"},
+    "grow": {"grow", "career", "skill", "learn", "portfolio", "credential", "experience", "develop", "advance", "build"},
+    "shape": {"expert", "expertise", "judgment", "shape", "influence", "recognition", "respected", "valued", "contribute", "impact"},
+}
+
+
+def _score_copy_quality(copy_data: dict, persona: dict | None = None, pillar: str | None = None) -> tuple[float, list[str]]:
     """Score copy against conversion benchmarks and persona fit.
 
     Returns (score 0-1, list of issues).
@@ -157,6 +166,30 @@ def _score_copy_quality(copy_data: dict, persona: dict | None = None) -> tuple[f
         # Motivation referenced (+0.05)
         if motivation and any(word.lower() in all_text for word in motivation.split()[:3]):
             score += 0.05
+
+    # Pillar embodiment scoring
+    if pillar and pillar in PILLAR_SIGNALS:
+        target_signals = PILLAR_SIGNALS[pillar]
+        target_hits = sum(1 for w in target_signals if w in all_text)
+        score += min(target_hits * 0.03, 0.09)
+
+        # Check for pillar confusion — does a non-target pillar dominate?
+        max_other_hits = 0
+        dominant_other = None
+        for other_pillar, other_signals in PILLAR_SIGNALS.items():
+            if other_pillar == pillar:
+                continue
+            other_hits = sum(1 for w in other_signals if w in all_text)
+            if other_hits > max_other_hits:
+                max_other_hits = other_hits
+                dominant_other = other_pillar
+
+        if max_other_hits > target_hits and max_other_hits > 0:
+            score -= 0.05
+            issues.append(
+                f"Pillar confusion: copy reads more like '{dominant_other}' "
+                f"than target pillar '{pillar}' ({max_other_hits} vs {target_hits} signal hits)"
+            )
 
     # Cap at 1.0
     score = min(max(score, 0.0), 1.0)
@@ -215,7 +248,7 @@ async def run_stage3(context: dict) -> dict:
                         copy_data = _parse_json(copy_text)
 
                         # Score against persona fit + conversion benchmarks
-                        score, eval_issues = _score_copy_quality(copy_data, persona)
+                        score, eval_issues = _score_copy_quality(copy_data, persona, pillar=var.get("pillar"))
 
                         # Retry once if below threshold
                         if score < PASS_THRESHOLD and "raw_text" not in copy_data:
@@ -234,7 +267,7 @@ async def run_stage3(context: dict) -> dict:
                                 var["system"], retry_user, skill_stage="copy",
                             )
                             copy_data = _parse_json(copy_text)
-                            score, eval_issues = _score_copy_quality(copy_data, persona)
+                            score, eval_issues = _score_copy_quality(copy_data, persona, pillar=var.get("pillar"))
 
                         logger.info(
                             "Copy: %s/%s/%s [%s] score=%.2f",
@@ -255,6 +288,7 @@ async def run_stage3(context: dict) -> dict:
                                 "persona_name": persona_name,
                                 "copy_angle": var["angle"],
                                 "psychology_bias": var["bias"],
+                                "pillar": var.get("pillar", ""),
                             },
                         })
                         copy_count += 1
