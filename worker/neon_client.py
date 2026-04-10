@@ -458,3 +458,78 @@ async def update_actor_targeting(actor_id: str, targeting_profile: dict) -> None
             json.dumps(targeting_profile, default=str),
             actor_id,
         )
+
+
+# ── Design Artifacts ────────────────────────────────────────────
+
+
+async def get_active_artifacts() -> list[dict[str, Any]]:
+    """Fetch all active design artifacts for compositor prompt."""
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT artifact_id, category, description, blob_url,
+                   dimensions, css_class, usage_snippet, usage_notes,
+                   pillar_affinity, format_affinity
+            FROM design_artifacts
+            WHERE is_active = true
+            ORDER BY category, artifact_id
+        """)
+    return [dict(r) for r in rows]
+
+
+async def upsert_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
+    """Insert or update a design artifact. Returns the upserted row."""
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("""
+            INSERT INTO design_artifacts
+                (artifact_id, category, description, blob_url,
+                 dimensions, css_class, usage_snippet, usage_notes,
+                 pillar_affinity, format_affinity, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (artifact_id) DO UPDATE SET
+                category = EXCLUDED.category,
+                description = EXCLUDED.description,
+                blob_url = EXCLUDED.blob_url,
+                dimensions = EXCLUDED.dimensions,
+                css_class = EXCLUDED.css_class,
+                usage_snippet = EXCLUDED.usage_snippet,
+                usage_notes = EXCLUDED.usage_notes,
+                pillar_affinity = EXCLUDED.pillar_affinity,
+                format_affinity = EXCLUDED.format_affinity,
+                is_active = EXCLUDED.is_active,
+                updated_at = NOW()
+            RETURNING *
+        """,
+            artifact["artifact_id"],
+            artifact["category"],
+            artifact["description"],
+            artifact["blob_url"],
+            artifact.get("dimensions", ""),
+            artifact.get("css_class", ""),
+            artifact["usage_snippet"],
+            artifact.get("usage_notes", ""),
+            artifact.get("pillar_affinity", []),
+            artifact.get("format_affinity", []),
+            artifact.get("is_active", True),
+        )
+    return dict(row)
+
+
+async def delete_artifact(artifact_id: str, *, hard: bool = False) -> None:
+    """Delete a design artifact. Soft delete by default (sets is_active=false).
+    Pass hard=True to remove the row entirely (for test cleanup).
+    """
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        if hard:
+            await conn.execute(
+                "DELETE FROM design_artifacts WHERE artifact_id = $1",
+                artifact_id,
+            )
+        else:
+            await conn.execute(
+                "UPDATE design_artifacts SET is_active = false, updated_at = NOW() WHERE artifact_id = $1",
+                artifact_id,
+            )
