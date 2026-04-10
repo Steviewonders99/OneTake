@@ -49,6 +49,7 @@ def build_persona_actor_prompt(
     persona: dict,
     region: str,
     language: str,
+    visual_direction: dict | None = None,
 ) -> str:
     """Generate an actor-card prompt derived from a dynamic persona.
 
@@ -57,6 +58,11 @@ def build_persona_actor_prompt(
     by prompts.persona_engine.build_persona_prompt: name, archetype,
     matched_tier, age_range, lifestyle, motivations, psychology_profile,
     jobs_to_be_done.
+
+    When *visual_direction* is provided (from Stage 1 derived_requirements),
+    scene generation uses work_environment, wardrobe, visible_tools,
+    emotional_tone and cultural_adaptations to produce scene-aware
+    actor identity cards instead of generic home-office defaults.
     """
     psychology = persona.get("psychology_profile", {}) or {}
     raw_jtbd = persona.get("jobs_to_be_done", {})
@@ -86,6 +92,33 @@ def build_persona_actor_prompt(
     motivations = persona.get("motivations", []) or []
     primary_motivation = motivations[0] if motivations else "earning flexibly"
 
+    # Build scene guidance from visual_direction (derived_requirements)
+    vd = visual_direction or {}
+    work_env = vd.get("work_environment", "")
+    wardrobe = vd.get("wardrobe", "")
+    visible_tools = vd.get("visible_tools", "")
+    emotional_tone = vd.get("emotional_tone", "")
+    cultural_adapt = vd.get("cultural_adaptations", "")
+
+    if work_env:
+        scene_guidance = f"""
+VISUAL DIRECTION (from campaign analysis — use these to generate SCENE-AWARE variations):
+- Work environment: {work_env}
+- Wardrobe: {wardrobe or "contextually appropriate for this work environment"}
+- Visible tools/props: {visible_tools or "relevant to the work described"}
+- Emotional tone: {emotional_tone or "authentic and natural"}
+- Cultural adaptations: {cultural_adapt or "appropriate for " + region}
+
+SCENE GENERATION RULES (visual_direction OVERRIDES the defaults):
+- Scene 1 MUST show the person ACTIVELY WORKING in the described work environment wearing the described wardrobe with the described tools visible.
+- Scene 2 should show a BREAK or TRANSITION moment — same professional context but relaxed (e.g., break room, stepping outside, reviewing notes).
+- Scene 3 should show a DIFFERENT ANGLE on their professional life — could be commuting to the work environment, preparing for work, or in a secondary work setting.
+- Scene 4 should show a REWARD/CELEBRATION moment — checking phone for payment notification, telling someone about their work, treating themselves after a shift.
+- ALL scenes must use wardrobe and tools from the visual direction above — NOT generic "casual clothes with laptop".
+- Backdrops must match the work environment described — NOT generic home offices or cafes (unless the work environment IS a home office or cafe)."""
+    else:
+        scene_guidance = ""
+
     return f"""Create an AI UGC actor identity card for a OneForma recruitment ad campaign.
 
 This actor EMBODIES a specific target persona — every detail should make
@@ -107,7 +140,7 @@ PSYCHOLOGY (the image must TRIGGER these responses in the target audience):
 - The viewer should think: "{psychology.get("messaging_angle", "This could be me")}"
 - Jobs-to-be-done — functional: {jtbd.get("functional", "Earn money remotely")}
 - Jobs-to-be-done — emotional: {jtbd.get("emotional", "Feel productive")}
-
+{scene_guidance}
 Return ONLY valid JSON matching this EXACT schema:
 {{
   "name": "A culturally appropriate first name for {region}",
@@ -122,17 +155,24 @@ Return ONLY valid JSON matching this EXACT schema:
     "distinguishing_marks": "1-2 unique features"
   }},
   "prompt_seed": "One dense paragraph (80-120 words) describing this EXACT person. Include: ethnicity, age, skin tone hex, face shape, hair, eye color, distinguishing marks, default expression. This person IS a {archetype_label} — their vibe should communicate '{primary_motivation}'.",
-  "outfit_variations": {{
-    "at_home_working": "Work-appropriate casual clothing — annotating data at home",
-    "at_home_relaxed": "Relaxed version — couch or bed with laptop",
-    "cafe_working": "Slightly more put-together for a cafe",
-    "celebrating_earnings": "Same vibe, looking at phone with satisfied expression"
+  "scenes": {{
+    "scene_key_1": {{
+      "name": "Short human-readable scene name",
+      "setting": "Detailed environment — specific to this persona's work and life in {region}",
+      "outfit": "What they're wearing — must match the visual direction if provided",
+      "pose_and_action": "What they're physically doing",
+      "emotion": "Facial expression and body language",
+      "ad_angle": "What marketing message this scene supports"
+    }},
+    "scene_key_2": {{ ... same structure ... }},
+    "scene_key_3": {{ ... same structure ... }},
+    "scene_key_4": {{ ... same structure ... }}
   }},
-  "signature_accessory": "ONE item they ALWAYS have (over-ear headphones, earbuds, watch, bracelet, hair clip, glasses — relevant to a {archetype_label})",
+  "signature_accessory": "ONE item they ALWAYS have (relevant to a {archetype_label})",
   "backdrops": [
-    "Primary home/work setting appropriate for this persona",
-    "A realistic {region} cafe or public workspace",
-    "A realistic {region} outdoor or balcony setting",
+    "Primary work/life setting appropriate for this persona",
+    "A realistic {region} secondary setting",
+    "A different {region} environment",
     "A close-up framing for story/portrait format"
   ]
 }}
@@ -141,7 +181,8 @@ RULES:
 - This actor is a {archetype_label} aged {lo}-{hi} in {region}.
 - They should look like someone the target persona would IDENTIFY with.
 - NOT a stock-photo model. NOT corporate. Real person vibes.
-- Setting should match the persona's lifestyle."""
+- Generate EXACTLY 4 scenes with unique snake_case keys.
+- Setting should match the persona's lifestyle and the visual direction if provided."""
 
 
 async def run_stage2(context: dict) -> dict:
@@ -151,6 +192,17 @@ async def run_stage2(context: dict) -> dict:
     design: dict = context.get("design_direction", {})
     regions: list[str] = context.get("target_regions", [])
     languages: list[str] = context.get("target_languages", [])
+
+    # Extract visual_direction from derived_requirements (Phase A+B data)
+    derived_req = brief.get("derived_requirements", {})
+    if isinstance(derived_req, str):
+        try:
+            import json as _json
+            derived_req = _json.loads(derived_req)
+        except (ValueError, TypeError):
+            derived_req = {}
+    visual_direction = derived_req.get("visual_direction", {}) if isinstance(derived_req, dict) else {}
+
     raw_personas = context.get("personas", brief.get("personas", []))
     logger.info("Stage 2 raw_personas: type=%s, len=%s, first_type=%s",
                 type(raw_personas).__name__, len(raw_personas) if raw_personas else 0,
@@ -184,6 +236,7 @@ async def run_stage2(context: dict) -> dict:
                     "language": persona.get("language", languages[0] if languages else "English"),
                     "persona": persona,
                     "actor_index": actor_idx,
+                    "visual_direction": visual_direction,
                 })
         logger.info(
             "Persona-driven actor generation: %d personas x %d actors = %d jobs",
@@ -269,7 +322,8 @@ async def _generate_actor_card(job, brief, request_id):
     persona = job["persona"]
 
     if persona:
-        actor_prompt = build_persona_actor_prompt(persona, region, language)
+        visual_direction = job.get("visual_direction", {})
+        actor_prompt = build_persona_actor_prompt(persona, region, language, visual_direction=visual_direction)
         actor_idx = job.get("actor_index", 0)
         if actor_idx > 0:
             actor_prompt += (
@@ -288,6 +342,7 @@ async def _generate_actor_card(job, brief, request_id):
         "face_lock": actor_data.get("face_lock", {}),
         "prompt_seed": actor_data.get("prompt_seed", ""),
         "outfit_variations": actor_data.get("outfit_variations", {}),
+        "scenes": actor_data.get("scenes", {}),
         "signature_accessory": actor_data.get("signature_accessory", "headphones"),
         "backdrops": actor_data.get("backdrops", []),
         "persona_key": persona.get("archetype_key") if persona else None,

@@ -1019,6 +1019,187 @@ def test_multi_actor_scenes():
 
 
 # =========================================================================
+# Category 12: Stage 2 Visual Direction (2 tests)
+# =========================================================================
+
+def test_build_persona_actor_prompt_with_visual_direction():
+    """Actor prompt should include visual_direction when provided."""
+    from pipeline.stage2_images import build_persona_actor_prompt
+    persona = {
+        "name": "Dr. Sofia",
+        "archetype": "Clinical Specialist",
+        "matched_tier": "tier_3_credentialed",
+        "age_range": "30-40",
+        "lifestyle": "Urban medical professional in São Paulo",
+        "motivations": ["professional recognition", "career growth"],
+        "psychology_profile": {
+            "primary_bias": "authority",
+            "secondary_bias": "social_proof",
+            "messaging_angle": "Your clinical expertise is valued",
+        },
+        "jobs_to_be_done": {
+            "functional": "Document dermatology cases for AI training",
+            "emotional": "Feel recognized as a medical expert",
+        },
+    }
+    visual_direction = {
+        "work_environment": "clinical consultation room with examination equipment",
+        "wardrobe": "lab coat over smart business casual",
+        "visible_tools": "dermatoscope, clinical tablet, medical charts",
+        "emotional_tone": "professional confidence and focus",
+        "cultural_adaptations": "Brazilian medical professional setting",
+    }
+    result = build_persona_actor_prompt(persona, "BR", "Portuguese", visual_direction=visual_direction)
+    assert "clinical consultation room" in result, "work_environment should be in prompt"
+    assert "lab coat" in result, "wardrobe should be in prompt"
+    assert "dermatoscope" in result, "visible_tools should be in prompt"
+    assert "scenes" in result.lower(), "Should use scenes schema"
+    print("  ✓ test_build_persona_actor_prompt_with_visual_direction")
+
+
+def test_build_persona_actor_prompt_without_visual_direction():
+    """Actor prompt should work without visual_direction (fallback)."""
+    from pipeline.stage2_images import build_persona_actor_prompt
+    persona = {
+        "name": "Ana",
+        "archetype": "Language Expert",
+        "matched_tier": "tier_1_gig",
+        "age_range": "22-28",
+        "lifestyle": "University student in Helsinki",
+        "motivations": ["earn money for tuition"],
+        "psychology_profile": {"primary_bias": "practicality"},
+        "jobs_to_be_done": {"functional": "OCR annotation in Finnish"},
+    }
+    result = build_persona_actor_prompt(persona, "FI", "Finnish")
+    assert "Ana" in result or "Language Expert" in result, "Persona info should be in prompt"
+    assert "VISUAL DIRECTION" not in result, "No visual direction block when not provided"
+    assert "scenes" in result.lower(), "Should still use scenes schema"
+    print("  ✓ test_build_persona_actor_prompt_without_visual_direction")
+
+
+# =========================================================================
+# Stage 3 Copy — Language derivation, pillar weighting, cultural context
+# =========================================================================
+
+def test_derive_languages_from_regions():
+    """Language derivation from regions."""
+    from pipeline.stage3_copy import derive_languages_from_regions
+    # Derive from regions
+    assert derive_languages_from_regions(["BR", "MX"], []) == ["Portuguese", "Spanish"]
+    # Existing languages preserved
+    assert derive_languages_from_regions(["BR"], ["English"]) == ["English"]
+    # Empty → English
+    assert derive_languages_from_regions([], []) == ["English"]
+    # Dedup
+    assert derive_languages_from_regions(["BR", "PT"], []) == ["Portuguese"]
+    # Unknown → English
+    assert derive_languages_from_regions(["XX"], []) == ["English"]
+    # Case insensitive
+    assert derive_languages_from_regions(["fi"], []) == ["Finnish"]
+    print("  ✓ test_derive_languages_from_regions")
+
+
+def test_build_variation_prompts_pillar_weighted():
+    """Pillar weighting generates 2 variations, not 3."""
+    from prompts.recruitment_copy import build_variation_prompts
+    persona = {
+        "persona_name": "Dr. Sofia",
+        "name": "Dr. Sofia",
+        "psychology_profile": {"primary_bias": "authority", "secondary_bias": "growth", "messaging_angle": "expertise"},
+        "motivations": ["recognition"],
+        "pain_points": ["undervalued"],
+        "objections": [],
+        "age_range": "30-40",
+        "lifestyle": "medical professional",
+        "archetype": "Clinical Specialist",
+        "matched_tier": "tier_3_credentialed",
+        "jobs_to_be_done": {"functional": "Document cases"},
+    }
+    result = build_variation_prompts(
+        persona=persona,
+        brief={"task_type": "medical_documentation", "campaign_objective": "recruit credentialed experts"},
+        channel="linkedin_feed",
+        language="Portuguese",
+        pillar_weighting={"primary": "shape", "secondary": "earn"},
+    )
+    assert len(result) == 2, f"Expected 2 variations, got {len(result)}"
+    assert result[0]["pillar"] == "shape"
+    assert result[1]["pillar"] == "earn"
+    print("  ✓ test_build_variation_prompts_pillar_weighted")
+
+
+def test_build_variation_prompts_no_weighting():
+    """Without pillar weighting, generates all 3 variations."""
+    from prompts.recruitment_copy import build_variation_prompts
+    persona = {
+        "persona_name": "Ana",
+        "name": "Ana",
+        "psychology_profile": {},
+        "motivations": [],
+        "pain_points": [],
+        "objections": [],
+        "age_range": "22-28",
+        "lifestyle": "student",
+        "archetype": "gig worker",
+        "matched_tier": "tier_1_gig",
+        "jobs_to_be_done": {},
+    }
+    result = build_variation_prompts(
+        persona=persona,
+        brief={"task_type": "ocr", "campaign_objective": "recruit annotators"},
+        channel="facebook_feed",
+        language="Finnish",
+    )
+    assert len(result) == 3, f"Expected 3 variations, got {len(result)}"
+    print("  ✓ test_build_variation_prompts_no_weighting")
+
+
+def test_build_variation_prompts_with_cultural_context():
+    """Cultural context should appear in the user prompt."""
+    from prompts.recruitment_copy import build_variation_prompts
+    persona = {
+        "persona_name": "Youssef",
+        "name": "Youssef",
+        "psychology_profile": {"primary_bias": "practicality"},
+        "motivations": ["income"],
+        "pain_points": [],
+        "objections": [],
+        "age_range": "25-35",
+        "lifestyle": "multilingual professional",
+        "archetype": "translator",
+        "matched_tier": "tier_2",
+        "jobs_to_be_done": {},
+    }
+    cultural = "- ai_fatigue: Low awareness of AI gig work in Morocco\n- payment_pref: Mobile money preferred"
+    result = build_variation_prompts(
+        persona=persona,
+        brief={"task_type": "translation", "campaign_objective": "recruit translators"},
+        channel="facebook_feed",
+        language="French",
+        cultural_context=cultural,
+    )
+    assert any("ai_fatigue" in v["user"] for v in result), "Cultural context should be in user prompt"
+    assert any("CULTURAL CONTEXT" in v["user"] for v in result), "Cultural context header should be present"
+    print("  ✓ test_build_variation_prompts_with_cultural_context")
+
+
+def test_score_copy_quality_pillar_signals():
+    """Pillar embodiment scoring."""
+    from pipeline.stage3_copy import _score_copy_quality
+    # Shape copy with shape signals → bonus
+    shape_copy = {"primary_text": "Your expertise in clinical judgment is exactly what AI teams need. Be recognized for the impact you bring."}
+    score, issues = _score_copy_quality(shape_copy, pillar="shape")
+    assert score > 0.60, f"Shape copy should score well, got {score}"
+    assert not any("confusion" in i.lower() for i in issues), "Should not have confusion"
+
+    # Earn copy that reads like Shape → confusion
+    confused_copy = {"primary_text": "Your expertise and judgment are valued. Be recognized as a respected contributor who shapes AI."}
+    score2, issues2 = _score_copy_quality(confused_copy, pillar="earn")
+    assert any("confusion" in i.lower() for i in issues2), "Should detect pillar confusion"
+    print("  ✓ test_score_copy_quality_pillar_signals")
+
+
+# =========================================================================
 # MAIN
 # =========================================================================
 
@@ -1137,6 +1318,19 @@ if __name__ == "__main__":
     runner.run("actor_prompt_returns_tuple", test_actor_prompt_returns_tuple)
     runner.run("region_settings_coverage", test_region_settings_coverage)
     runner.run("multi_actor_scenes", test_multi_actor_scenes)
+
+    # ------------------------------------------------------------------
+    print(f"\n\U0001f4cb Category 12: Stage 2 Visual Direction")
+    runner.run("build_persona_actor_prompt_with_visual_direction", test_build_persona_actor_prompt_with_visual_direction)
+    runner.run("build_persona_actor_prompt_without_visual_direction", test_build_persona_actor_prompt_without_visual_direction)
+
+    # ------------------------------------------------------------------
+    print(f"\n\U0001f4cb Category 13: Stage 3 Copy — Language, Pillars, Cultural Context")
+    runner.run("derive_languages_from_regions", test_derive_languages_from_regions)
+    runner.run("build_variation_prompts_pillar_weighted", test_build_variation_prompts_pillar_weighted)
+    runner.run("build_variation_prompts_no_weighting", test_build_variation_prompts_no_weighting)
+    runner.run("build_variation_prompts_with_cultural_context", test_build_variation_prompts_with_cultural_context)
+    runner.run("score_copy_quality_pillar_signals", test_score_copy_quality_pillar_signals)
 
     # ------------------------------------------------------------------
     elapsed = time.time() - start

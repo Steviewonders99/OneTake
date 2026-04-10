@@ -1307,6 +1307,8 @@ def build_variation_prompts(
     language: str,
     regions: list[str] | None = None,
     form_data: dict | None = None,
+    pillar_weighting: dict | None = None,
+    cultural_context: str | None = None,
 ) -> list[dict[str, str]]:
     """Build 3 copy prompts — one per brand pillar (Earn / Grow / Shape).
 
@@ -1366,9 +1368,21 @@ def build_variation_prompts(
         "shape": messaging_angle or "recognition",
     }
 
+    # Determine which pillars to generate based on pillar_weighting
+    VALID_PILLARS = {"earn", "grow", "shape"}
+    if (
+        pillar_weighting
+        and isinstance(pillar_weighting, dict)
+        and pillar_weighting.get("primary") in VALID_PILLARS
+        and pillar_weighting.get("secondary") in VALID_PILLARS
+    ):
+        active_pillars = [pillar_weighting["primary"], pillar_weighting["secondary"]]
+    else:
+        active_pillars = list(_PILLAR_ORDER)
+
     variations: list[dict[str, str]] = []
 
-    for pillar_key in _PILLAR_ORDER:
+    for pillar_key in active_pillars:
         pillar_meta = PILLARS[pillar_key]
         hero_block = _format_hero_template(pillar_key)
         sub_bias = sub_bias_by_pillar[pillar_key]
@@ -1392,6 +1406,11 @@ def build_variation_prompts(
             f'"{pillar_key}" in your JSON output.'
         )
 
+        # Cultural context (if provided)
+        cultural_block = ""
+        if cultural_context:
+            cultural_block = f"\n\nCULTURAL CONTEXT FOR THIS REGION:\n{cultural_context}\n\nUse these cultural insights to make the copy feel native to this region — not just translated, but culturally resonant."
+
         variations.append({
             "angle": f"pillar_{pillar_key}",
             "pillar": pillar_key,
@@ -1402,6 +1421,7 @@ def build_variation_prompts(
 {facts_block}
 
 {persona_block}
+{cultural_block}
 ---
 {base_prompt}""",
         })

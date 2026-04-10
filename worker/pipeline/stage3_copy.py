@@ -25,10 +25,54 @@ from prompts.recruitment_copy import (
     build_variation_prompts,
 )
 
+# ── Region → Language mapping ─────────────────────────────────────────
+# Used when target_languages is empty but target_regions is populated.
+
+REGION_LANGUAGE_MAP: dict[str, str] = {
+    "BR": "Portuguese", "MX": "Spanish", "CO": "Spanish", "AR": "Spanish",
+    "CL": "Spanish", "PE": "Spanish", "JP": "Japanese", "KR": "Korean",
+    "CN": "Mandarin Chinese", "TW": "Traditional Chinese", "DE": "German",
+    "FR": "French", "IT": "Italian", "PT": "Portuguese", "MA": "French",
+    "EG": "Arabic", "SA": "Arabic", "AE": "Arabic", "IN": "Hindi",
+    "ID": "Indonesian", "PH": "Filipino", "TH": "Thai", "VN": "Vietnamese",
+    "TR": "Turkish", "PL": "Polish", "RO": "Romanian", "UA": "Ukrainian",
+    "RU": "Russian", "FI": "Finnish", "SE": "Swedish", "NO": "Norwegian",
+    "DK": "Danish", "NL": "Dutch", "BE": "Dutch", "GR": "Greek",
+    "IL": "Hebrew", "NG": "English", "KE": "English", "ZA": "English",
+    "US": "English", "GB": "English", "CA": "English", "AU": "English",
+    "NZ": "English",
+}
+
+
+def derive_languages_from_regions(
+    regions: list[str],
+    target_languages: list[str],
+) -> list[str]:
+    """Derive target languages from regions when target_languages is empty.
+
+    If target_languages is provided (non-empty), returns it as-is.
+    Otherwise, maps each region to its primary professional language,
+    deduplicating while preserving order.
+    """
+    if target_languages:
+        return target_languages
+    if not regions:
+        return ["English"]
+
+    languages: list[str] = []
+    seen: set[str] = set()
+    for region in regions:
+        lang = REGION_LANGUAGE_MAP.get(region.upper(), "English")
+        if lang not in seen:
+            languages.append(lang)
+            seen.add(lang)
+    return languages or ["English"]
+
+
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
-PASS_THRESHOLD = 0.70
+PASS_THRESHOLD = 0.85
 
 # Channels we generate copy for.
 DEFAULT_CHANNELS = [
@@ -55,8 +99,17 @@ ANTI_PATTERNS = {
     "learn more", "click here", "start earning",
 }
 
+# ── Pillar embodiment signals ─────────────────────────────────────────
+# Used to verify that copy actually embodies the intended brand pillar.
 
-def _score_copy_quality(copy_data: dict, persona: dict | None = None) -> tuple[float, list[str]]:
+PILLAR_SIGNALS: dict[str, set[str]] = {
+    "earn": {"earn", "paid", "payout", "income", "compensation", "money", "financial", "twice-monthly", "payoneer", "paypal"},
+    "grow": {"grow", "career", "skill", "learn", "portfolio", "credential", "experience", "develop", "advance", "build"},
+    "shape": {"expert", "expertise", "judgment", "shape", "influence", "recognition", "respected", "valued", "contribute", "impact"},
+}
+
+
+def _score_copy_quality(copy_data: dict, persona: dict | None = None, pillar: str | None = None) -> tuple[float, list[str]]:
     """Score copy against conversion benchmarks and persona fit.
 
     Returns (score 0-1, list of issues).
@@ -114,6 +167,30 @@ def _score_copy_quality(copy_data: dict, persona: dict | None = None) -> tuple[f
         if motivation and any(word.lower() in all_text for word in motivation.split()[:3]):
             score += 0.05
 
+    # Pillar embodiment scoring
+    if pillar and pillar in PILLAR_SIGNALS:
+        target_signals = PILLAR_SIGNALS[pillar]
+        target_hits = sum(1 for w in target_signals if w in all_text)
+        score += min(target_hits * 0.03, 0.09)
+
+        # Check for pillar confusion — does a non-target pillar dominate?
+        max_other_hits = 0
+        dominant_other = None
+        for other_pillar, other_signals in PILLAR_SIGNALS.items():
+            if other_pillar == pillar:
+                continue
+            other_hits = sum(1 for w in other_signals if w in all_text)
+            if other_hits > max_other_hits:
+                max_other_hits = other_hits
+                dominant_other = other_pillar
+
+        if max_other_hits > target_hits and max_other_hits > 0:
+            score -= 0.05
+            issues.append(
+                f"Pillar confusion: copy reads more like '{dominant_other}' "
+                f"than target pillar '{pillar}' ({max_other_hits} vs {target_hits} signal hits)"
+            )
+
     # Cap at 1.0
     score = min(max(score, 0.0), 1.0)
     return score, issues
@@ -124,10 +201,33 @@ async def run_stage3(context: dict) -> dict:
     request_id: str = context["request_id"]
     brief: dict = context.get("brief", {})
     design: dict = context.get("design_direction", {})
-    languages: list[str] = context.get("target_languages", []) or ["English"]
     regions: list[str] = context.get("target_regions", [])
+    languages: list[str] = derive_languages_from_regions(
+        regions,
+        context.get("target_languages", []),
+    )
     form_data: dict = context.get("form_data", {})
     personas: list[dict] = context.get("personas", brief.get("personas", []))
+
+    # Extract derived_requirements for pillar weighting (Phase A+B data)
+    derived_req = brief.get("derived_requirements", {})
+    if isinstance(derived_req, str):
+        try:
+            derived_req = json.loads(derived_req)
+        except (ValueError, TypeError):
+            derived_req = {}
+    pillar_weighting = derived_req.get("pillar_weighting", {}) if isinstance(derived_req, dict) else {}
+
+    # Cultural research — region-specific insights for copy adaptation
+    cultural_research: dict = context.get("cultural_research", {})
+
+    if pillar_weighting:
+        logger.info(
+            "Pillar weighting active: primary=%s, secondary=%s",
+            pillar_weighting.get("primary"), pillar_weighting.get("secondary"),
+        )
+    else:
+        logger.info("No pillar weighting — generating all 3 pillars (fallback)")
 
     # Determine channels from design direction or defaults.
     format_matrix: dict = design.get("format_matrix", {})
@@ -146,6 +246,29 @@ async def run_stage3(context: dict) -> dict:
             persona_channels = persona.get("best_channels", channels)
             all_channels = list(set(persona_channels + channels))
 
+            # Build cultural context for this persona's region
+            persona_region = persona.get("region", regions[0] if regions else "")
+            region_research = cultural_research.get(persona_region, {})
+            if isinstance(region_research, dict):
+                # Format research summary — truncate to avoid token bloat
+                research_lines = []
+                for dim_key, dim_data in region_research.items():
+                    if dim_key.startswith("_"):
+                        continue
+                    if isinstance(dim_data, dict):
+                        summary = dim_data.get("summary", dim_data.get("key_finding", ""))
+                    elif isinstance(dim_data, str):
+                        summary = dim_data
+                    else:
+                        continue
+                    if summary:
+                        research_lines.append(f"- {dim_key}: {summary[:200]}")
+                cultural_context = "\n".join(research_lines)[:2000] if research_lines else None
+            elif isinstance(region_research, str):
+                cultural_context = region_research[:2000]
+            else:
+                cultural_context = None
+
             for channel in all_channels:
                 for language in languages:
                     # Build 3 variation prompts — angles derived from persona's own psychology
@@ -156,6 +279,8 @@ async def run_stage3(context: dict) -> dict:
                         language=language,
                         regions=regions,
                         form_data=form_data,
+                        pillar_weighting=pillar_weighting,
+                        cultural_context=cultural_context,
                     )
 
                     for var in variations:
@@ -171,7 +296,7 @@ async def run_stage3(context: dict) -> dict:
                         copy_data = _parse_json(copy_text)
 
                         # Score against persona fit + conversion benchmarks
-                        score, eval_issues = _score_copy_quality(copy_data, persona)
+                        score, eval_issues = _score_copy_quality(copy_data, persona, pillar=var.get("pillar"))
 
                         # Retry once if below threshold
                         if score < PASS_THRESHOLD and "raw_text" not in copy_data:
@@ -190,7 +315,7 @@ async def run_stage3(context: dict) -> dict:
                                 var["system"], retry_user, skill_stage="copy",
                             )
                             copy_data = _parse_json(copy_text)
-                            score, eval_issues = _score_copy_quality(copy_data, persona)
+                            score, eval_issues = _score_copy_quality(copy_data, persona, pillar=var.get("pillar"))
 
                         logger.info(
                             "Copy: %s/%s/%s [%s] score=%.2f",
@@ -211,6 +336,7 @@ async def run_stage3(context: dict) -> dict:
                                 "persona_name": persona_name,
                                 "copy_angle": var["angle"],
                                 "psychology_bias": var["bias"],
+                                "pillar": var.get("pillar", ""),
                             },
                         })
                         copy_count += 1
