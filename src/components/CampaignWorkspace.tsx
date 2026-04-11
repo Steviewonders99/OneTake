@@ -328,7 +328,7 @@ function PersonaSection({
 
 
   return (
-    <div className="border border-[var(--border)] rounded-2xl overflow-hidden bg-white">
+    <div className="rounded-2xl overflow-hidden bg-white">
       {/* Persona Header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -384,7 +384,7 @@ function PersonaSection({
           {/* Row 1: Demographics + Psychographics + Channels */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Demographics */}
-            <div className="space-y-2">
+            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
               <div className="flex items-center gap-1.5">
                 <Users size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Demographics</span>
@@ -399,7 +399,7 @@ function PersonaSection({
             </div>
 
             {/* Psychographics */}
-            <div className="space-y-2">
+            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
               <div className="flex items-center gap-1.5">
                 <Heart size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Psychographics</span>
@@ -427,7 +427,7 @@ function PersonaSection({
             </div>
 
             {/* Channel Targeting */}
-            <div className="space-y-2">
+            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
               <div className="flex items-center gap-1.5">
                 <Target size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Targeting</span>
@@ -484,7 +484,7 @@ function PersonaSection({
                     .sort((a, b) => (b.evaluation_score || 0) - (a.evaluation_score || 0))[0];
                   const imgUrl = actorImage?.blob_url || "";
                   return (
-                    <div key={actor.id} className="rounded-xl overflow-hidden bg-[var(--muted)]">
+                    <div key={actor.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white">
                       {imgUrl ? (
                         <div className="aspect-[4/3] relative bg-[var(--muted)]">
                           <img src={imgUrl} alt={actor.name} className="absolute inset-0 w-full h-full object-cover" />
