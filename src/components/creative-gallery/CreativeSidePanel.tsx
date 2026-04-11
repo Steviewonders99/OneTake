@@ -233,8 +233,13 @@ export default function CreativeSidePanel({
     return () => window.removeEventListener("keydown", handler);
   }, [handleClose]);
 
+  // Scroll to top on open
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[100] flex" style={{ height: "100vh", width: "100vw" }}>
+    <div className="fixed inset-0 z-[100] flex h-full w-full">
       {/* Backdrop */}
       <div
         className={`absolute inset-0 transition-opacity duration-200 ${
@@ -249,7 +254,7 @@ export default function CreativeSidePanel({
         className={`relative ml-auto flex transition-transform duration-200 ease-out ${
           isClosing ? "translate-x-full" : "translate-x-0"
         }`}
-        style={{ width: "100vw", height: "100vh" }}
+        style={{ width: "100%", height: "100%" }}
       >
         {/* LEFT: Dark Preview */}
         <div className="flex-[6] bg-[#0a0a0a] flex flex-col relative overflow-hidden">
