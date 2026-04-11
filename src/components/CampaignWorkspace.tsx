@@ -963,13 +963,6 @@ export default function CampaignWorkspace({
       {/* Persona Sections */}
       {showPersonas && personaGroups.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users size={14} className="text-[var(--muted-foreground)]" />
-              <h2 className="text-[14px] font-semibold text-[var(--foreground)]">Personas & Creatives</h2>
-              <span className="text-[13px] text-[var(--muted-foreground)]">{personaGroups.length} personas · {assets.filter(a => a.asset_type !== "base_image").length} creatives</span>
-            </div>
-          </div>
           {personaGroups.map((group, i) => (
             <PersonaSection
               key={group.key}
