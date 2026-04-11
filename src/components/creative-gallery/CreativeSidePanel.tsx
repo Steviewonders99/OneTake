@@ -234,7 +234,7 @@ export default function CreativeSidePanel({
   }, [handleClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-[100] flex" style={{ height: "100vh", width: "100vw" }}>
       {/* Backdrop */}
       <div
         className={`absolute inset-0 transition-opacity duration-200 ${
@@ -246,12 +246,13 @@ export default function CreativeSidePanel({
 
       {/* Panel */}
       <div
-        className={`relative ml-auto w-full h-full flex transition-transform duration-200 ease-out ${
+        className={`relative ml-auto flex transition-transform duration-200 ease-out ${
           isClosing ? "translate-x-full" : "translate-x-0"
         }`}
+        style={{ width: "100vw", height: "100vh" }}
       >
         {/* LEFT: Dark Preview */}
-        <div className="flex-[6] bg-[#0a0a0a] flex flex-col relative">
+        <div className="flex-[6] bg-[#0a0a0a] flex flex-col relative overflow-hidden">
           {/* Top bar */}
           <div className="px-5 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -289,13 +290,17 @@ export default function CreativeSidePanel({
           </div>
 
           {/* Preview */}
-          <div className="flex-1 flex items-center justify-center p-6">
+          <div className="flex-1 flex items-center justify-center p-6 min-h-0 overflow-hidden">
             {activeAsset.blob_url ? (
               <img
                 src={activeAsset.blob_url}
                 alt=""
-                className="max-w-full max-h-full rounded-2xl object-contain"
-                style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }}
+                className="rounded-2xl object-contain"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "calc(100vh - 160px)",
+                  boxShadow: "0 12px 48px rgba(0,0,0,0.5)",
+                }}
               />
             ) : (
               <div
@@ -327,7 +332,7 @@ export default function CreativeSidePanel({
         </div>
 
         {/* RIGHT: Edit Panel */}
-        <div className="flex-[4] bg-white border-l border-[#E5E5E5] flex flex-col">
+        <div className="flex-[4] bg-white border-l border-[#E5E5E5] flex flex-col h-screen overflow-hidden">
           {/* Header */}
           <div className="px-6 py-4 border-b border-[#f0f0f0]">
             <div className="text-sm font-bold text-[#1A1A1A]">Edit Creative</div>
