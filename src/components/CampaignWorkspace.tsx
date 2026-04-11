@@ -36,6 +36,7 @@ import type {
   CreativeBrief,
 } from "@/lib/types";
 import { getPlatformMeta, PlatformLogo, toChannel } from "@/lib/platforms";
+import ChannelCreativeGallery from "@/components/creative-gallery/ChannelCreativeGallery";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -400,8 +401,6 @@ function PersonaSection({
   onRefine?: (asset: GeneratedAsset) => void;
   onDelete?: (asset: GeneratedAsset) => void;
 }) {
-  const [activePlatform, setActivePlatform] = useState<string | null>(null);
-  const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [showCopy, setShowCopy] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const colors = ["#6B21A8", "#0693E3", "#E91E8C", "#22c55e"];
@@ -412,56 +411,6 @@ function PersonaSection({
   const demo = tp.demographics || {};
   const psycho = tp.psychographics || {};
 
-  // Group assets by platform
-  const assetsByPlatform = useMemo(() => {
-    const map = new Map<string, GeneratedAsset[]>();
-    for (const asset of group.assets) {
-      const plat = asset.platform || "unknown";
-      if (!map.has(plat)) map.set(plat, []);
-      map.get(plat)!.push(asset);
-    }
-    // Sort carousel slides by index
-    for (const [, assets] of map) {
-      assets.sort((a, b) => {
-        const ai = (a.content as Record<string, any>)?.slide_index ?? 0;
-        const bi = (b.content as Record<string, any>)?.slide_index ?? 0;
-        return ai - bi;
-      });
-    }
-    return map;
-  }, [group.assets]);
-
-  // Get 1 representative creative per platform — MUST have a blob_url (skip blanks)
-  const representativeByPlatform = useMemo(() => {
-    const reps = new Map<string, GeneratedAsset>();
-    for (const [plat, assets] of assetsByPlatform) {
-      // Prioritize assets with images, then by score
-      const withImage = assets.filter(a => a.blob_url);
-      const best = withImage.length > 0
-        ? [...withImage].sort((a, b) => (b.evaluation_score || 0) - (a.evaluation_score || 0))[0]
-        : assets[0]; // fallback to first even without image
-      if (best) reps.set(plat, best);
-    }
-    return reps;
-  }, [assetsByPlatform]);
-
-  const activePlatformAssets = activePlatform ? (assetsByPlatform.get(activePlatform) || []) : [];
-
-  // Group platforms by channel — handles both snake_case and Title Case
-  const channelGroups = useMemo(() => {
-    const groups = new Map<string, { platforms: string[]; totalAssets: number }>();
-    for (const plat of group.platforms) {
-      const channel = toChannel(plat);
-      if (!channel) continue; // Skip filtered channels
-      if (!groups.has(channel)) groups.set(channel, { platforms: [], totalAssets: 0 });
-      groups.get(channel)!.platforms.push(plat);
-      groups.get(channel)!.totalAssets += assetsByPlatform.get(plat)?.length || 0;
-    }
-    return groups;
-  }, [group.platforms, assetsByPlatform]);
-
-  // Get formats for active channel
-  const activeChannelPlatforms = activeChannel ? (channelGroups.get(activeChannel)?.platforms || []) : [];
 
   return (
     <div className="border border-[var(--border)] rounded-2xl overflow-hidden bg-white">
@@ -720,144 +669,101 @@ function PersonaSection({
             );
           })()}
 
-          {/* Row 3: Channel Icons (grouped) */}
-          <div>
-            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Channels</span>
-            <div className="flex flex-wrap gap-2">
-              {Array.from(channelGroups.entries()).map(([channel, { platforms: plats, totalAssets }]) => {
-                const firstPlat = plats[0] || "";
-                const meta = getPlatformMeta(firstPlat);
-                const isActive = activeChannel === channel;
-                return (
-                  <button
-                    key={channel}
-                    onClick={() => {
-                      setActiveChannel(isActive ? null : channel);
-                      setActivePlatform(null);
-                    }}
-                    className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl cursor-pointer transition-all ${
-                      isActive ? "bg-white shadow-md border-2" : "bg-[var(--muted)] hover:bg-white hover:shadow-sm border-2 border-transparent"
-                    }`}
-                    style={isActive ? { borderColor: meta.color } : {}}
+          {/* ── Creative Gallery (Channel > Version > Formats) ── */}
+          <ChannelCreativeGallery
+            assets={group.assets}
+            onAssetClick={onAssetClick}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Research Accordion (collapsible card with key/value table) ───────
+
+function ResearchAccordion({
+  title,
+  content,
+  defaultOpen = false,
+}: {
+  title: string;
+  content: unknown;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  // Normalize content into rows for table rendering
+  const rows: Array<{ label: string; value: string }> = [];
+  let plainText: string | null = null;
+
+  if (content && typeof content === "object" && !Array.isArray(content)) {
+    for (const [k, v] of Object.entries(content as Record<string, unknown>)) {
+      if (k.startsWith("_")) continue;
+      const value =
+        typeof v === "string"
+          ? v
+          : typeof v === "number" || typeof v === "boolean"
+          ? String(v)
+          : Array.isArray(v)
+          ? v.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" · ")
+          : JSON.stringify(v, null, 2);
+      rows.push({ label: k.replace(/_/g, " "), value });
+    }
+  } else if (Array.isArray(content)) {
+    content.forEach((item, i) => {
+      rows.push({
+        label: `${i + 1}`,
+        value: typeof item === "string" ? item : JSON.stringify(item),
+      });
+    });
+  } else if (typeof content === "string") {
+    plainText = content;
+  } else if (content != null) {
+    plainText = JSON.stringify(content, null, 2);
+  }
+
+  if (rows.length === 0 && !plainText) return null;
+
+  return (
+    <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--muted)] transition-colors cursor-pointer"
+      >
+        <h4 className="text-[14px] font-semibold text-[var(--foreground)] capitalize">
+          {title.replace(/_/g, " ")}
+        </h4>
+        {open ? (
+          <ChevronDown size={16} className="text-[var(--muted-foreground)]" />
+        ) : (
+          <ChevronRight size={16} className="text-[var(--muted-foreground)]" />
+        )}
+      </button>
+      {open && (
+        <div className="border-t border-[var(--border)]">
+          {rows.length > 0 ? (
+            <table className="w-full text-[12px]">
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr
+                    key={`${row.label}-${i}`}
+                    className={i % 2 === 0 ? "bg-white" : "bg-[var(--muted)]"}
                   >
-                    <PlatformLogo brand={meta.brand} className="w-7 h-7" />
-                    <span className="text-[12px] font-medium text-[var(--foreground)]">{channel}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">{totalAssets}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {/* Format sub-tabs for active channel */}
-            {activeChannel && activeChannelPlatforms.length > 1 && (
-              <div className="flex gap-2 mt-3">
-                {activeChannelPlatforms.map(plat => {
-                  const format = plat.split("_").slice(1).join(" ") || "feed";
-                  const count = assetsByPlatform.get(plat)?.length || 0;
-                  const isActive = activePlatform === plat;
-                  return (
-                    <button
-                      key={plat}
-                      onClick={() => setActivePlatform(isActive ? null : plat)}
-                      className={`px-3 py-1.5 rounded-lg text-[12px] font-medium cursor-pointer transition-all capitalize ${
-                        isActive ? "bg-[var(--foreground)] text-white" : "bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--border)]"
-                      }`}
-                    >
-                      {format} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Row 3: Best creative per platform — show for no channel selection OR single-format channel */}
-          {!activeChannel && representativeByPlatform.size > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-              {Array.from(representativeByPlatform.entries()).map(([plat, asset]) => {
-                const meta = getPlatformMeta(plat);
-                return (
-                  <button
-                    key={plat}
-                    onClick={() => setActivePlatform(plat)}
-                    className="group border border-[var(--border)] rounded-xl overflow-hidden bg-white hover:shadow-md transition-all cursor-pointer text-left"
-                  >
-                    <div className="relative aspect-square bg-[var(--muted)]">
-                      {asset.blob_url ? (
-                        <img src={asset.blob_url} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center"><Layers size={14} className="text-[var(--muted-foreground)] opacity-30" /></div>
-                      )}
-                      <div className="absolute top-1.5 left-1.5 w-5 h-5 flex items-center justify-center">
-                        <PlatformLogo brand={meta.brand} className="w-5 h-5" />
-                      </div>
-                      <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium">
-                        {assetsByPlatform.get(plat)?.length || 1}
-                      </div>
-                    </div>
-                    <div className="px-2 py-1.5">
-                      <p className="text-[11px] font-medium text-[var(--foreground)] truncate">{meta.label}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Row 4a: All creatives for channel (when no specific format selected) */}
-          {activeChannel && !activePlatform && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[14px] font-semibold text-[var(--foreground)]">{activeChannel}</span>
-                <span className="text-[13px] text-[var(--muted-foreground)]">
-                  {activeChannelPlatforms.reduce((sum, p) => sum + (assetsByPlatform.get(p)?.length || 0), 0)} creatives
-                </span>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 max-h-[360px] overflow-y-auto pr-1">
-                {activeChannelPlatforms.flatMap(plat => (assetsByPlatform.get(plat) || [])).map(asset => (
-                  <CreativeThumb key={asset.id} asset={asset} onClick={() => onAssetClick(asset)} onDelete={onDelete} />
+                    <td className="px-4 py-2.5 align-top w-[180px] font-semibold text-[var(--foreground)] capitalize border-r border-[var(--border)] whitespace-nowrap">
+                      {row.label}
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--muted-foreground)] leading-relaxed">
+                      {row.value}
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Row 4b: All creatives for selected specific format */}
-          {activePlatform && activePlatformAssets.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 flex items-center justify-center">
-                    <PlatformLogo brand={getPlatformMeta(activePlatform).brand} className="w-6 h-6" />
-                  </div>
-                  <span className="text-[14px] font-semibold text-[var(--foreground)]">{getPlatformMeta(activePlatform).label}</span>
-                  <span className="text-[13px] text-[var(--muted-foreground)]">{activePlatformAssets.length} creatives</span>
-                </div>
-              </div>
-
-              {/* Creatives grid — capped height with scroll */}
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 max-h-[360px] overflow-y-auto pr-1">
-                {activePlatformAssets.map(asset => (
-                  <CreativeThumb key={asset.id} asset={asset} onClick={() => onAssetClick(asset)} onDelete={onDelete} />
-                ))}
-              </div>
-
-              {/* Mockups for this platform — first 4 only */}
-              <div className="mt-3">
-                <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Ad Mockups</span>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
-                  {activePlatformAssets.slice(0, 4).map(asset => (
-                    <button key={`mock-${asset.id}`} onClick={() => onAssetClick(asset)} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white hover:shadow-md transition-shadow cursor-pointer text-left">
-                      <div className="bg-[#1a1a1a] p-2">
-                        <MockupPreview asset={asset} />
-                      </div>
-                      <div className="px-3 py-2">
-                        <p className="text-[13px] font-medium text-[var(--foreground)] truncate">
-                          {(asset.content as Record<string, any>)?.overlay_headline || asset.format}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              </tbody>
+            </table>
+          ) : (
+            <div className="px-4 py-3 text-[12px] text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">
+              {plainText}
             </div>
           )}
         </div>
@@ -1149,34 +1055,36 @@ export default function CampaignWorkspace({
                     </div>
                   </div>
                 )}
-                {/* Full Cultural Research */}
+                {/* Full Cultural Research — region groups, dimension accordions */}
                 {briefData.cultural_research && (
                   <div>
                     <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-3">Cultural Research</span>
-                    <div className="space-y-3">
+                    <div className="space-y-5">
                       {Object.entries(briefData.cultural_research as Record<string, any>).map(([region, data]) => {
                         if (typeof data !== "object" || !data) return null;
-                        return Object.entries(data as Record<string, any>).map(([dimension, content]) => {
-                          if (dimension.startsWith("_")) return null;
-                          const text = typeof content === "string" ? content : JSON.stringify(content, null, 2);
-                          return (
-                            <div key={`${region}-${dimension}`} className="border border-[var(--border)] rounded-xl p-4">
-                              <h4 className="text-[14px] font-semibold text-[var(--foreground)] capitalize mb-2">
-                                {dimension.replace(/_/g, " ")}
-                              </h4>
-                              <div className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
-                                {typeof content === "object" && content !== null
-                                  ? Object.entries(content as Record<string, unknown>).map(([k, v]) => (
-                                      <div key={k} className="mb-3">
-                                        <span className="font-semibold text-[var(--foreground)] capitalize block mb-0.5">{k.replace(/_/g, " ")}</span>
-                                        <span className="leading-relaxed">{String(v)}</span>
-                                      </div>
-                                    ))
-                                  : <span className="whitespace-pre-wrap">{text}</span>}
-                              </div>
+                        const dimensions = Object.entries(data as Record<string, any>).filter(
+                          ([dim]) => !dim.startsWith("_")
+                        );
+                        if (dimensions.length === 0) return null;
+                        return (
+                          <div key={region}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Globe size={13} className="text-[var(--muted-foreground)]" />
+                              <span className="text-[13px] font-semibold text-[var(--foreground)] capitalize">{region.replace(/_/g, " ")}</span>
+                              <span className="text-[12px] text-[var(--muted-foreground)]">{dimensions.length} insights</span>
                             </div>
-                          );
-                        });
+                            <div className="space-y-2">
+                              {dimensions.map(([dimension, content]) => (
+                                <ResearchAccordion
+                                  key={`${region}-${dimension}`}
+                                  title={dimension}
+                                  content={content}
+                                  defaultOpen={false}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
                       })}
                     </div>
                   </div>
