@@ -25,7 +25,7 @@ import type {
   ActorProfile,
   CreativeBrief,
 } from "@/lib/types";
-import { getPlatformMeta, PlatformLogo } from "@/lib/platforms";
+import { getPlatformMeta, PlatformLogo, toChannel } from "@/lib/platforms";
 import ChannelCreativeGallery from "@/components/creative-gallery/ChannelCreativeGallery";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -316,6 +316,7 @@ function PersonaSection({
   onDelete?: (asset: GeneratedAsset) => void;
 }) {
   const [showCopy, setShowCopy] = useState(false);
+  const [messagingChannel, setMessagingChannel] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
   const colors = ["#6B21A8", "#0693E3", "#E91E8C", "#22c55e"];
   const color = colors[index % colors.length];
@@ -383,7 +384,7 @@ function PersonaSection({
           {/* Row 1: Demographics + Psychographics + Channels */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Demographics */}
-            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
+            <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <Users size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Demographics</span>
@@ -398,7 +399,7 @@ function PersonaSection({
             </div>
 
             {/* Psychographics */}
-            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
+            <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <Heart size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Psychographics</span>
@@ -426,7 +427,7 @@ function PersonaSection({
             </div>
 
             {/* Channel Targeting */}
-            <div className="border border-[var(--border)] rounded-xl p-3.5 space-y-2">
+            <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <Target size={12} style={{ color }} />
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Targeting</span>
@@ -483,7 +484,7 @@ function PersonaSection({
                     .sort((a, b) => (b.evaluation_score || 0) - (a.evaluation_score || 0))[0];
                   const imgUrl = actorImage?.blob_url || "";
                   return (
-                    <div key={actor.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white">
+                    <div key={actor.id} className="rounded-xl overflow-hidden bg-[var(--muted)]">
                       {imgUrl ? (
                         <div className="aspect-[4/3] relative bg-[var(--muted)]">
                           <img src={imgUrl} alt={actor.name} className="absolute inset-0 w-full h-full object-cover" />
@@ -537,27 +538,48 @@ function PersonaSection({
                   </div>
                   {showCopy ? <ChevronDown size={16} className="text-[var(--muted-foreground)]" /> : <ChevronRight size={16} className="text-[var(--muted-foreground)]" />}
                 </button>
-                {showCopy && (
-                  <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Array.from(copyByPlatform.entries()).map(([plat, assets]) => {
-                      const meta = getPlatformMeta(plat);
-                      return (
-                        <div key={plat} className="border border-[var(--border)] rounded-xl overflow-hidden">
-                          <div className="px-3 py-2 bg-[var(--muted)] flex items-center gap-2">
-                            <PlatformLogo brand={meta.brand} className="w-4 h-4" />
-                            <span className="text-[13px] font-semibold text-[var(--foreground)]">{meta.label || plat.replace(/_/g, " ")}</span>
-                            <span className="text-[12px] text-[var(--muted-foreground)]">{assets.length}</span>
-                          </div>
-                          <div className="divide-y divide-[var(--border)]">
-                            {assets.map((asset: any) => (
-                              <EditableCopyCard key={asset.id} asset={asset} />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                {showCopy && (() => {
+                  // Group platforms into channels
+                  const copyByChannel = new Map<string, any[]>();
+                  for (const [plat, platAssets] of copyByPlatform.entries()) {
+                    const ch = toChannel(plat) || plat;
+                    if (!copyByChannel.has(ch)) copyByChannel.set(ch, []);
+                    copyByChannel.get(ch)!.push(...platAssets);
+                  }
+                  const channelNames = Array.from(copyByChannel.keys());
+                  const activeMsg = messagingChannel && copyByChannel.has(messagingChannel)
+                    ? messagingChannel
+                    : channelNames[0] || "";
+                  const activeAssets = copyByChannel.get(activeMsg) || [];
+
+                  return (
+                    <div className="px-4 pb-4">
+                      {/* Channel tabs */}
+                      <div className="flex gap-0.5 border-b border-[var(--border)] mb-4">
+                        {channelNames.map((ch) => (
+                          <button
+                            key={ch}
+                            onClick={() => setMessagingChannel(ch)}
+                            className={`px-4 py-2 text-[12px] font-medium cursor-pointer transition-colors ${
+                              ch === activeMsg
+                                ? "text-[#6B21A8] border-b-2 border-[#6B21A8] -mb-px"
+                                : "text-[#999] hover:text-[#555]"
+                            }`}
+                          >
+                            {ch}
+                            <span className="ml-1.5 text-[11px] text-[#bbb]">{copyByChannel.get(ch)?.length}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {/* Copy cards for active channel */}
+                      <div className="divide-y divide-[var(--border)]">
+                        {activeAssets.map((asset: any) => (
+                          <EditableCopyCard key={asset.id} asset={asset} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}
