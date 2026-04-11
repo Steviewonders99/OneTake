@@ -821,41 +821,6 @@ export default function CampaignWorkspace({
                     </ul>
                   </div>
                 )}
-                {/* Campaign Strategy Overview */}
-                {briefData.campaign_strategies_summary && (
-                  <div>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Campaign Strategy</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Object.entries(briefData.campaign_strategies_summary as Record<string, any>).map(([region, s]: [string, any]) => (
-                        <div key={region} className="border border-[var(--border)] rounded-xl p-4" style={{ borderTopColor: "#0693E3", borderTopWidth: "2px" }}>
-                          <span className="text-[14px] font-bold text-[var(--foreground)]">{region}</span>
-                          <div className="mt-2 text-[13px] text-[var(--muted-foreground)] space-y-1">
-                            <p>Tier {s.tier || 1} · {s.ad_set_count || "?"} ad sets</p>
-                            {s.split_test_variable && <p>Split test: <span className="font-medium text-[var(--foreground)] capitalize">{s.split_test_variable}</span></p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Budget Data */}
-                {briefData.budget_data && (
-                  <div>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Budget Allocation</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {Object.entries(briefData.budget_data as Record<string, any>).map(([key, val]: [string, any]) => {
-                        if (typeof val !== "object" || !val) return null;
-                        return (
-                          <div key={key} className="border border-[var(--border)] rounded-xl p-3">
-                            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">{key}</span>
-                            {val.monthly_budget && <span className="text-[16px] font-bold text-[var(--foreground)]">${Number(val.monthly_budget).toLocaleString()}</span>}
-                            {val.weight_pct && <span className="text-[12px] text-[var(--muted-foreground)] block">{val.weight_pct}% of total</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             ),
           },
