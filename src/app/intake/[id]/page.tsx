@@ -470,8 +470,7 @@ export default function IntakeDetailPage({
           {/* Sticky Pipeline Nav */}
           <PipelineNav
             stages={[
-              { key: "research", label: "Research", status: channelResearch ? "passed" : request.status === "generating" ? "running" : "pending" },
-              { key: "brief", label: "Brief", status: brief ? "passed" : request.status === "generating" ? "running" : "pending" },
+              { key: "workspace", label: "Brief", status: brief ? "passed" : request.status === "generating" ? "running" : "pending" },
               { key: "images", label: "Images", status: assets.filter(a => a.asset_type === "base_image" || a.asset_type === "composed_creative").length > 0 ? "passed" : actors.length > 0 ? "running" : "pending" },
               { key: "videos", label: "Videos", status: assets.filter(a => (a.asset_type as string) === "video").length > 0 ? "passed" : assets.filter(a => a.asset_type === "composed_creative").length > 0 ? "running" : "pending" },
               { key: "details", label: "Details", status: "passed" },
@@ -591,13 +590,12 @@ export default function IntakeDetailPage({
               </LiveSection>
             )}
 
-            {/* ═══ Campaign Workspace — Unified persona-centric view ═══ */}
-            {/* Marketing/Admin: merged brief + personas + creatives */}
+            {/* ═══ Campaign Brief — Strategy, media, regional intel ═══ */}
             {brief && briefData && (role === "admin" || role === "designer" || role === null) && (
               <LiveSection
                 id="section-workspace"
                 title="Campaign Workspace"
-                subtitle="Strategy, personas, targeting, and creatives in one view"
+                subtitle="Strategy, media planning, and regional intelligence"
                 accentColor="#6B21A8"
                 visible={!!brief}
               >
@@ -613,8 +611,34 @@ export default function IntakeDetailPage({
                     onRefine={(asset) => setRefineAsset(asset)}
                     onRetry={(asset) => handleRetry(asset)}
                     onDelete={handleDeleteAsset}
+                    section="brief"
                   />
                 </section>
+              </LiveSection>
+            )}
+
+            {/* ═══ Personas & Creatives — Persona cards with channel gallery ═══ */}
+            {brief && briefData && (role === "admin" || role === "designer" || role === null) && (
+              <LiveSection
+                id="section-images"
+                title="Personas & Creatives"
+                subtitle={`${data.actors.length} actors · ${assets.filter(a => a.asset_type === "composed_creative").length} creatives`}
+                accentColor="#E91E8C"
+                visible={assets.length > 0 || data.actors.length > 0}
+              >
+                <CampaignWorkspace
+                  briefData={briefData}
+                  channelResearch={brief.channel_research as Record<string, any> | null}
+                  designDirection={brief.design_direction as Record<string, any> | null}
+                  campaignStrategies={data.campaignStrategies}
+                  actors={data.actors}
+                  assets={assets}
+                  editable={role === "admin"}
+                  onRefine={(asset) => setRefineAsset(asset)}
+                  onRetry={(asset) => handleRetry(asset)}
+                  onDelete={handleDeleteAsset}
+                  section="personas"
+                />
               </LiveSection>
             )}
 

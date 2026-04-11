@@ -41,6 +41,8 @@ interface CampaignWorkspaceProps {
   onRefine?: (asset: GeneratedAsset) => void;
   onRetry?: (asset: GeneratedAsset) => void;
   onDelete?: (asset: GeneratedAsset) => void;
+  /** Render only specific sections. Defaults to all. */
+  section?: "brief" | "personas";
 }
 
 interface PersonaGroup {
@@ -676,6 +678,7 @@ export default function CampaignWorkspace({
   onRefine,
   onRetry,
   onDelete,
+  section,
 }: CampaignWorkspaceProps) {
   const [htmlEditorAsset, setHtmlEditorAsset] = useState<GeneratedAsset | null>(null);
   const [translateMode, setTranslateMode] = useState(false);
@@ -706,8 +709,13 @@ export default function CampaignWorkspace({
     }
   };
 
+  const showBrief = !section || section === "brief";
+  const showPersonas = !section || section === "personas";
+
   return (
     <div className="space-y-4">
+      {showBrief && (
+      <>
       {/* Translate toggle */}
       <div className="flex justify-end">
         <button
@@ -984,9 +992,11 @@ export default function CampaignWorkspace({
           },
         ]}
       />
+      </>
+      )}
 
       {/* Persona Sections */}
-      {personaGroups.length > 0 && (
+      {showPersonas && personaGroups.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
