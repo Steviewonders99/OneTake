@@ -456,13 +456,13 @@ async def _save_composition(
         "vqa_issues": (vqa_result or {}).get("issues", []),
         "compose_attempts": attempts,
         "artifacts_used": design.get("artifacts_used", []),
-        "layer_count": len(design.get("layer_manifest", [])),
+        "layer_manifest": design.get("layer_manifest", []),
         "html_url": html_url,
         "headline": copy.get("headline", ""),
         "subheadline": copy.get("subheadline", ""),
         "cta": copy.get("cta", ""),
         "language": copy.get("language", "en"),
-        "composer_version": "v3",
+        "version": 3,
     }
 
     await save_asset(
