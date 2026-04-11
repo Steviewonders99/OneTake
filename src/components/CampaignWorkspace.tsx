@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import MiniTabs from "@/components/MiniTabs";
 import EditableField from "@/components/EditableField";
+import { useAutosave } from "@/hooks/useAutosave";
+import AutosaveStatus from "@/components/AutosaveStatus";
 import CreativeHtmlEditor from "@/components/CreativeHtmlEditor";
 import MediaStrategyTab from "@/components/MediaStrategyTab";
 import { toast } from "sonner";
@@ -214,6 +216,85 @@ function CreativeThumb({
         </p>
       </div>
     </button>
+  );
+}
+
+// ── EditableCopyCard ─────────────────────────────────────────────────
+
+function EditableCopyCard({ asset }: { asset: GeneratedAsset }) {
+  const content = (asset.content || {}) as Record<string, any>;
+  const cd = content.copy_data || {};
+  const angle = content.copy_angle || "";
+
+  // Resolve platform-specific field names
+  const headlineKey = cd.tweet_text ? "tweet_text" : cd.card_headline ? "card_headline" : "headline";
+  const bodyKey = cd.introductory_text ? "introductory_text" : cd.message_text ? "message_text" : "primary_text";
+  const descKey = cd.card_description ? "card_description" : "description";
+  const ctaKey = cd.cta_button ? "cta_button" : cd.button_text ? "button_text" : "cta";
+
+  const headlineSave = useAutosave(asset.id, "copy_data", headlineKey);
+  const bodySave = useAutosave(asset.id, "copy_data", bodyKey);
+  const descSave = useAutosave(asset.id, "copy_data", descKey);
+  const ctaSave = useAutosave(asset.id, "copy_data", ctaKey);
+
+  const headline = cd[headlineKey] || "";
+  const body = cd[bodyKey] || "";
+  const description = cd[descKey] || "";
+  const cta = cd[ctaKey] || "";
+
+  if (!headline && !body) return null;
+
+  const allStatuses = [headlineSave.status, bodySave.status, descSave.status, ctaSave.status];
+  const aggregateStatus = allStatuses.includes("error")
+    ? "error" as const
+    : allStatuses.includes("saving")
+    ? "saving" as const
+    : allStatuses.includes("saved")
+    ? "saved" as const
+    : "idle" as const;
+
+  return (
+    <div className="px-3 py-2.5 space-y-2">
+      {angle && (
+        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 capitalize inline-block">
+          {angle.replace(/^(primary_|secondary_)/, "").replace(/_/g, " ")}
+        </span>
+      )}
+      {headline && (
+        <EditableField
+          value={headline}
+          editable
+          onSave={headlineSave.save}
+          textClassName="text-[13px] font-bold text-[var(--foreground)] leading-snug"
+        />
+      )}
+      {body && (
+        <EditableField
+          value={body}
+          editable
+          onSave={bodySave.save}
+          textClassName="text-[12px] text-[var(--muted-foreground)] leading-relaxed"
+          multiline
+        />
+      )}
+      {description && (
+        <EditableField
+          value={description}
+          editable
+          onSave={descSave.save}
+          textClassName="text-[12px] text-[var(--muted-foreground)]"
+        />
+      )}
+      {cta && (
+        <EditableField
+          value={cta}
+          editable
+          onSave={ctaSave.save}
+          textClassName="text-[11px] font-semibold text-[#6B21A8]"
+        />
+      )}
+      <AutosaveStatus status={aggregateStatus} />
+    </div>
   );
 }
 
@@ -468,30 +549,9 @@ function PersonaSection({
                             <span className="text-[12px] text-[var(--muted-foreground)]">{assets.length}</span>
                           </div>
                           <div className="divide-y divide-[var(--border)]">
-                            {assets.map((asset: any) => {
-                              const content = (asset.content || {}) as Record<string, any>;
-                              const cd = content.copy_data || {};
-                              const angle = content.copy_angle || "";
-                              const headline = cd.headline || cd.card_headline || cd.tweet_text || "";
-                              const primaryText = cd.primary_text || cd.message_text || cd.introductory_text || "";
-                              const description = cd.description || cd.card_description || "";
-                              const cta = cd.cta || cd.cta_button || cd.cta_text || cd.button_text || "";
-                              if (!headline && !primaryText) return null;
-                              return (
-                                <div key={asset.id} className="px-3 py-2.5 space-y-1">
-                                  {angle && (
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 capitalize inline-block mb-1">
-                                      {angle.replace(/^(primary_|secondary_)/, "").replace(/_/g, " ")}
-                                    </span>
-                                  )}
-                                  {headline && <p className="text-[13px] font-bold text-[var(--foreground)] leading-snug">{headline}</p>}
-                                  {primaryText && <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed line-clamp-2">{primaryText}</p>}
-                                  {cta && (
-                                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#6B21A8] text-white mt-1">{cta}</span>
-                                  )}
-                                </div>
-                              );
-                            })}
+                            {assets.map((asset: any) => (
+                              <EditableCopyCard key={asset.id} asset={asset} />
+                            ))}
                           </div>
                         </div>
                       );
