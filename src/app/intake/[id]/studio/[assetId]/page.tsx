@@ -73,7 +73,8 @@ export default function StudioPage({
       setLoading(true);
       try {
         const res = await fetch(`/api/generate/${requestId}/images`);
-        const all: GeneratedAsset[] = await res.json();
+        const data = await res.json();
+        const all: GeneratedAsset[] = data.assets || data || [];
         const target = all.find((a) => a.id === assetId);
         const composed = all.filter(
           (a) => a.asset_type === "composed_creative" && a.blob_url,
