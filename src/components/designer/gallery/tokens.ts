@@ -32,7 +32,21 @@ export const LIGHT = {
   vqaBad: "#dc2626",
 } as const;
 
-export type Theme = typeof DARK;
+export type Theme = {
+  readonly bg: string;
+  readonly surface: string;
+  readonly card: string;
+  readonly border: string;
+  readonly borderHover: string;
+  readonly text: string;
+  readonly textMuted: string;
+  readonly textDim: string;
+  readonly accent: string;
+  readonly accentSoft: string;
+  readonly vqaGood: string;
+  readonly vqaOk: string;
+  readonly vqaBad: string;
+};
 
 export const FONT = {
   sans: "-apple-system, system-ui, 'Segoe UI', Roboto, sans-serif",
