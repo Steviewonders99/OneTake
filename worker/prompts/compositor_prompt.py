@@ -118,8 +118,27 @@ def _section_inputs(
         f"{k}: {v}" for k, v in (visual_direction or {}).items() if v
     ) or "none specified"
 
+    # Build safe zone description — per-side if available, else uniform margin
+    if "safe_top" in platform_spec:
+        safe_zone_desc = (
+            f"SAFE ZONES (pixels from edge where platform UI covers content — CRITICAL):\n"
+            f"  Top: {platform_spec['safe_top']}px (status bar, navigation)\n"
+            f"  Right: {platform_spec['safe_right']}px (action buttons on TikTok/Stories)\n"
+            f"  Bottom: {platform_spec['safe_bottom']}px (caption, music bar, nav bar)\n"
+            f"  Left: {platform_spec['safe_left']}px (minimal overlay)\n"
+            f"  ALL text, CTA buttons, and important elements MUST be inside these margins.\n"
+            f"  The PERSON'S FACE must also be fully visible within the safe zone — do NOT let\n"
+            f"  platform UI overlay the person's face or upper body."
+        )
+    else:
+        m = platform_spec.get("safe_margin", 60)
+        safe_zone_desc = (
+            f"SAFE ZONE: {m}px from all edges. ALL text, CTA, and the person's face must be inside this margin."
+        )
+
     return f"""CREATIVE INPUTS:
-Platform: {platform} ({platform_spec['width']}x{platform_spec['height']}, safe margin: {platform_spec.get('safe_margin', 60)}px)
+Platform: {platform} ({platform_spec['width']}x{platform_spec['height']})
+{safe_zone_desc}
 Pillar: {pillar}
 Actor name: {actor.get('name', 'Actor')}
 Actor full photo URL: {actor.get('photo_url', '')}
@@ -128,7 +147,15 @@ Headline: {copy.get('headline', '')}
 Subheadline: {copy.get('subheadline', '')}
 CTA text: {copy.get('cta', 'Apply Now')}
 Visual direction: {vd_summary}
-Language: {copy.get('language', 'en')}"""
+Language: {copy.get('language', 'en')}
+
+PERSON POSITIONING (CRITICAL — violations fail VQA):
+- The actor's face MUST be fully visible (not cropped at any edge).
+- The actor must occupy 50-55% of the canvas height.
+- On vertical platforms (Stories/TikTok/Reels), position the person in the UPPER 60% of canvas.
+  This keeps the face ABOVE the bottom dead zone (caption/nav bars).
+- The face must NOT be behind platform action buttons (right side on TikTok).
+- Do NOT center the person vertically — bias them UPWARD to stay in the safe zone."""
 
 
 def _section_brand_rules() -> str:

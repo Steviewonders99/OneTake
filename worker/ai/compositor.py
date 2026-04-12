@@ -31,15 +31,33 @@ logger = logging.getLogger(__name__)
 PLATFORM_SPECS: dict[str, dict[str, Any]] = {
     # ── Single-image ad formats ──────────────────────────────────
     "ig_feed":        {"width": 1080, "height": 1080, "safe_margin": 60,  "label": "Instagram Feed"},
-    "ig_story":       {"width": 1080, "height": 1920, "safe_margin": 80,  "label": "Instagram Story"},
+    "ig_story":       {
+        "width": 1080, "height": 1920, "safe_margin": 80,  "label": "Instagram Story",
+        "safe_top": 100, "safe_right": 60, "safe_bottom": 200, "safe_left": 60,
+        # Top: status bar + username + close button (100px)
+        # Bottom: reply bar + swipe-up CTA + story indicators (200px)
+        # Right: story reaction buttons (60px)
+    },
     "linkedin_feed":  {"width": 1200, "height": 627,  "safe_margin": 48,  "label": "LinkedIn Feed"},
     "facebook_feed":  {"width": 1200, "height": 628,  "safe_margin": 48,  "label": "Facebook Feed"},
     "google_display": {"width": 1200, "height": 628,  "safe_margin": 40,  "label": "Google Display"},
-    "tiktok_feed":    {"width": 1080, "height": 1920, "safe_margin": 100, "label": "TikTok Feed"},
+    "tiktok_feed":    {
+        "width": 1080, "height": 1920, "safe_margin": 100, "label": "TikTok Feed",
+        "safe_top": 150, "safe_right": 164, "safe_bottom": 400, "safe_left": 60,
+        # Top: status bar + back/search buttons (150px)
+        # Right: action buttons column — like/comment/share/save (164px)
+        # Bottom: caption + music bar + navigation (400px!) — MASSIVE dead zone
+        # Left: relatively safe (60px breathing room)
+    },
     "telegram_card":  {"width": 1280, "height": 720,  "safe_margin": 48,  "label": "Telegram Card"},
     "twitter_post":   {"width": 1200, "height": 675,  "safe_margin": 48,  "label": "X/Twitter Post"},
     "indeed_banner":  {"width": 1200, "height": 628,  "safe_margin": 40,  "label": "Indeed Banner"},
-    "whatsapp_story": {"width": 1080, "height": 1920, "safe_margin": 80,  "label": "WhatsApp Status"},
+    "whatsapp_story": {
+        "width": 1080, "height": 1920, "safe_margin": 80,  "label": "WhatsApp Status",
+        "safe_top": 100, "safe_right": 60, "safe_bottom": 180, "safe_left": 60,
+        # Top: status bar + contact name + progress dots (100px)
+        # Bottom: reply bar + caption area (180px)
+    },
 
     # ── WeChat formats ───────────────────────────────────────────
     "wechat_moments":  {

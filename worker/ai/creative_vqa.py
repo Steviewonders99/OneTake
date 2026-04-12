@@ -99,7 +99,50 @@ def check_deterministic(
         if "home" in scene_lower and any(w in headline_lower for w in ["cafe", "coffee shop", "office"]):
             issues.append(f"Scene-headline mismatch: scene is '{scene}' but headline mentions cafe/office")
 
-    # 8. WeChat 20% text overlay rule
+    # 8. Person visibility — check HTML for actor photo positioning
+    # The actor photo should be present and positioned within the safe zone
+    html_str = design.get("html", "")
+    has_actor_img = bool(design.get("actor_photo") or "photo_url" in str(design) or "<img" in html_str)
+    checks["has_actor_photo"] = has_actor_img
+    if not has_actor_img:
+        issues.append("No actor photo detected — creative must include a visible person (50-55% canvas height)")
+
+    # 9. Person position vs. dead zone — for vertical platforms (Stories/TikTok/Reels)
+    # Check that the person image is not vertically centered (which puts them in the bottom dead zone)
+    is_vertical = spec.get("height", 0) > spec.get("width", 0)
+    if is_vertical and html_str:
+        # Flag if actor photo uses vertical centering (top:50% or top:45%+) — likely in dead zone
+        import re as _re
+        # Find img tags and check their positioning
+        actor_url = design.get("actor_photo", "") or design.get("photo_url", "")
+        if actor_url and actor_url in html_str:
+            # Find the style context around the actor image
+            idx = html_str.find(actor_url)
+            if idx > 0:
+                # Look at the surrounding ~500 chars for positioning clues
+                context = html_str[max(0, idx - 500):idx + 200]
+                # Check for bottom-heavy centering
+                bottom_pct_match = _re.search(r'top:\s*(\d+)%', context)
+                if bottom_pct_match:
+                    top_pct = int(bottom_pct_match.group(1))
+                    safe_bottom = spec.get("safe_bottom", spec.get("safe_margin", 80))
+                    bottom_dead_pct = (safe_bottom / spec["height"]) * 100
+                    # If person is positioned past the 50% mark, they risk being in the dead zone
+                    if top_pct > 50:
+                        checks["person_in_safe_zone"] = False
+                        issues.append(
+                            f"Person positioned at top:{top_pct}% — too low on vertical canvas. "
+                            f"Bottom {safe_bottom}px is dead zone (platform UI). "
+                            f"Move person to top:20-40% range to keep face visible."
+                        )
+                    else:
+                        checks["person_in_safe_zone"] = True
+                else:
+                    checks["person_in_safe_zone"] = True  # Can't determine — pass
+        else:
+            checks["person_in_safe_zone"] = True  # No URL match — can't check
+
+    # 10. WeChat 20% text overlay rule
     text_overlay_max = spec.get("text_overlay_max_pct")
     if text_overlay_max and headline:
         # Rough estimate: count text characters, estimate pixel coverage
@@ -140,6 +183,8 @@ Score this creative on a 0-1 scale across these dimensions, then give an overall
 
 6. HEADLINE-SCENE MATCH (0-1): Does the overlay headline match what's happening in the image? (e.g., person at desk → work/earning headline, NOT "your couch" headline)
 
+7. PERSON VISIBILITY (0-1): Is the person's face FULLY visible and not cropped? Does the person occupy 50-55% of canvas height? Is the face in the UPPER 60% of the canvas (critical for vertical formats like Stories/TikTok where bottom 20-30% is covered by platform UI)? Score 0 if the face is cropped, hidden behind UI elements, or positioned in the bottom dead zone.
+
 Return ONLY valid JSON:
 {{
   "visual_hierarchy": 0.0,
@@ -148,13 +193,15 @@ Return ONLY valid JSON:
   "ctr_appeal": 0.0,
   "composition": 0.0,
   "headline_scene_match": 0.0,
+  "person_visibility": 0.0,
   "overall_score": 0.0,
   "issues": ["issue 1", "issue 2"],
   "strengths": ["strength 1"],
   "verdict": "pass|fail"
 }}
 
-The overall_score should be a weighted average: CTR_APPEAL (30%) + DEPTH (25%) + COMPOSITION (20%) + BRAND (15%) + HEADLINE_MATCH (10%).
+The overall_score should be a weighted average: CTR_APPEAL (25%) + PERSON_VISIBILITY (20%) + DEPTH (20%) + COMPOSITION (15%) + BRAND (10%) + HEADLINE_MATCH (10%).
+PERSON_VISIBILITY is critical — if the person's face is not fully visible or is in the dead zone, the overall score MUST be below 0.7.
 Score generously — 0.8+ means "would ship to client". 0.6-0.8 means "needs one more revision". Below 0.6 means "start over".
 """
 
@@ -379,6 +426,9 @@ Score 1-10 on: spec compliance (right dimensions, safe zones?), text legibility 
 - No CTA button visible
 - Stock-looking photo
 - Internal jargon in copy ("human review", "secure platform")
+- Person's face cropped, hidden, or not fully visible
+- Person positioned in bottom dead zone (face behind caption/nav bars on Stories/TikTok/Reels)
+- No clear human face visible in the creative
 
 ## GRADE THRESHOLDS:
 - 85-100: A — Ship It (launch immediately)
