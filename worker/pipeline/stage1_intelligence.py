@@ -43,6 +43,36 @@ from prompts.recruitment_brief import (
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
+
+
+def _infer_demographic(form_data: dict, request: dict) -> str:
+    """Infer target demographic from task type, qualifications, and location when not provided."""
+    task_type = request.get("task_type", "")
+    quals = request.get("qualifications_required", "") or ""
+    location = request.get("location_scope", "") or ""
+
+    # Professional/credentialed signals
+    pro_signals = ["licensed", "certified", "degree", "experience", "professional", "nurse", "doctor", "engineer"]
+    if any(s in quals.lower() for s in pro_signals):
+        return "working professionals 28-55"
+
+    # Student/university signals
+    student_signals = ["student", "university", "college", "campus", "intern"]
+    if any(s in quals.lower() for s in student_signals) or any(s in location.lower() for s in student_signals):
+        return "university students 18-25"
+
+    # Task-type based defaults
+    type_demographics = {
+        "transcription": "young professionals 22-40",
+        "translation": "bilingual professionals 25-45",
+        "annotation": "tech-savvy adults 20-35",
+        "judging": "diverse adults 25-55",
+        "data_collection": "general population 18-45",
+    }
+    if task_type in type_demographics:
+        return type_demographics[task_type]
+
+    return "adults 18-45"
 PASS_THRESHOLD = 0.85
 
 # Max retries for persona validation. Configurable via env for tuning.
@@ -85,7 +115,7 @@ async def run_stage1(context: dict) -> dict:
             cultural_research = await research_all_regions(
                 regions=target_regions,
                 languages=target_languages,
-                demographic=form_data.get("demographic", "young adults 18-35"),
+                demographic=form_data.get("demographic") or _infer_demographic(form_data, request),
                 task_type=task_type,
                 intake_row=request,  # enables context-aware dimension filtering + work_tier_context
             )
@@ -226,7 +256,7 @@ async def run_stage1(context: dict) -> dict:
                 channel_strategy=channel_strategy,
                 budget_data=country_budget_for_llm,
                 task_type=task_type,
-                task_description=form_data.get("description", ""),
+                task_description=form_data.get("task_description") or form_data.get("description", ""),
                 feedback=feedback if feedback else None,
             )
 
