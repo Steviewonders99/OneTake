@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Copy, AlertTriangle, Loader2 } from "lucide-react";
+import { Copy, AlertTriangle, Loader2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { slugify } from "@/lib/slugify";
+import { extractField } from "@/lib/format";
 import SearchableDropdown from "./SearchableDropdown";
 import {
   SOURCE_OPTIONS,
@@ -34,6 +35,7 @@ interface LinkBuilderBarProps {
   activeChannel: string;
   selectedAsset: GeneratedAsset | null;
   recruiterInitials: string;
+  onDetachCreative: () => void;
 }
 
 /** Derive a sensible initial source+content from the active channel. */
@@ -47,17 +49,51 @@ function pickInitialSourceAndContent(channel: string): { source: UtmSource; cont
   return { source: "social", content: fallback?.value ?? "" };
 }
 
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: 0.4,
+  color: "#8A8A8E",
+  marginBottom: 5,
+};
+
+const inputStyle: React.CSSProperties = {
+  fontSize: 13,
+  padding: "9px 12px",
+  borderRadius: 8,
+  border: "1px solid #E8E8EA",
+  background: "#FAFAFA",
+  color: "#1A1A1A",
+  fontFamily: "inherit",
+  WebkitAppearance: "none",
+  width: "100%",
+  boxSizing: "border-box",
+};
+
 export default function LinkBuilderBar({
   requestId,
   campaignSlug,
   activeChannel,
   selectedAsset,
   recruiterInitials,
+  onDetachCreative,
 }: LinkBuilderBarProps) {
   const [landingPages, setLandingPages] = useState<LandingPagesData | null>(null);
   const [selectedUrlKey, setSelectedUrlKey] = useState<LandingPageKey | null>(null);
   const [term, setTerm] = useState(recruiterInitials || "??");
   const [submitting, setSubmitting] = useState(false);
+  const [recentLinks, setRecentLinks] = useState<Array<{ id: string; short_url: string; utm_source: string; utm_content: string; click_count: number; created_at: string; asset_thumbnail: string | null }>>([]);
 
   // Source + content dropdowns
   const [utmSource, setUtmSource] = useState<UtmSource>(() => pickInitialSourceAndContent(activeChannel).source);
@@ -79,6 +115,23 @@ export default function LinkBuilderBar({
   useEffect(() => {
     fetchLandingPages();
   }, [fetchLandingPages]);
+
+  // Load recent links
+  const loadRecentLinks = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/tracked-links?request_id=${requestId}&limit=3`);
+      if (r.ok) {
+        const data = await r.json();
+        if (data?.links) setRecentLinks(data.links.slice(0, 3));
+      }
+    } catch {
+      // silent
+    }
+  }, [requestId]);
+
+  useEffect(() => {
+    loadRecentLinks();
+  }, [loadRecentLinks]);
 
   // Compute available URLs
   const availableUrls = useMemo(() => {
@@ -194,6 +247,7 @@ export default function LinkBuilderBar({
       }
       await navigator.clipboard.writeText(data.short_url);
       toast.success(`Short link copied! ${data.short_url}`);
+      loadRecentLinks();
     } catch (e) {
       toast.error("Failed to create tracked link");
       console.error(e);
@@ -202,86 +256,146 @@ export default function LinkBuilderBar({
     }
   }
 
-  if (readinessState === "disabled") {
-    return (
-      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-amber-300 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] px-4 md:px-6 py-3 z-20">
-        <div className="max-w-[1100px] mx-auto flex items-center gap-3">
-          <AlertTriangle size={18} className="text-amber-500 shrink-0" />
-          <p className="text-sm text-[var(--foreground)] flex-1">
-            <span className="font-semibold">Waiting for landing page URLs.</span>{" "}
-            <span className="text-[var(--muted-foreground)]">
-              Marketing or the designer needs to add at least one URL before you can build tracked links.
-            </span>
-          </p>
+  return (
+    <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA", overflow: "hidden" }}>
+      {/* Panel header */}
+      <div style={{ padding: "14px 18px", borderBottom: "1px solid #E8E8EA", display: "flex", alignItems: "center", gap: 8 }}>
+        <Link2 size={16} style={{ color: "#8A8A8E" }} />
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Link Builder</div>
+          <div style={{ fontSize: 11, color: "#8A8A8E" }}>Tracked links for any channel</div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="sticky bottom-0 left-0 right-0 bg-white border-t-2 border-[#9B51E0] shadow-[0_-6px_16px_rgba(0,0,0,0.08)] px-4 md:px-6 py-3 z-20">
-      <div className="max-w-[1100px] mx-auto">
-        <div className="text-[10px] font-bold text-[#9B51E0] uppercase tracking-wider mb-2">
-          Your Tracked Link
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
-          <FieldReadonly label="Campaign" value={campaignSlug ?? "—"} />
-          <SearchableDropdown
-            label="Source"
-            value={utmSource}
-            options={sourceOptions}
-            onChange={(v) => setUtmSource(v as UtmSource)}
-            searchable={false}
-          />
-          <SearchableDropdown
-            label="Platform"
-            value={utmContent}
-            options={contentOptions}
-            onChange={setUtmContent}
-            searchable={true}
-            placeholder="Pick a platform…"
-          />
-          <FieldEditable
-            label="Your tag"
-            value={term}
-            onChange={setTerm}
-            onBlur={() => setTerm(slugify(term) || recruiterInitials || "??")}
-          />
-          {availableUrls.length > 1 ? (
+      {/* Disabled state */}
+      {readinessState === "disabled" && (
+        <div style={{ padding: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 14, background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8 }}>
+            <AlertTriangle size={16} style={{ color: "#F59E0B", flexShrink: 0 }} />
             <div>
-              <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold mb-1">Destination</div>
-              <select
-                value={selectedUrlKey ?? ""}
-                onChange={(e) => setSelectedUrlKey(e.target.value as LandingPageKey)}
-                className="w-full text-xs px-2 py-1.5 rounded-md border border-[var(--border)] bg-[var(--muted)] cursor-pointer"
-              >
-                {availableUrls.map((u) => (
-                  <option key={u.key} value={u.key}>
-                    {LANDING_PAGE_LABEL[u.key]}
-                  </option>
-                ))}
-              </select>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#1A1A1A" }}>Waiting for landing page URLs</div>
+              <div style={{ fontSize: 11, color: "#8A8A8E" }}>Marketing needs to add at least one URL first.</div>
             </div>
-          ) : (
-            <FieldReadonly label="Destination" value={selectedUrlKey ? LANDING_PAGE_LABEL[selectedUrlKey] : "—"} />
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex-1 text-xs text-[var(--muted-foreground)] font-mono truncate">
-            {selectedUrl ? `${selectedUrl.slice(0, 60)}${selectedUrl.length > 60 ? "…" : ""}` : "Pick a destination"}
           </div>
-          <button
-            onClick={handleCopyLink}
-            disabled={!canSubmit}
-            className="btn-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? <Loader2 size={15} className="animate-spin" /> : <Copy size={15} />}
-            {submitting ? "Copying…" : "Copy Link"}
+        </div>
+      )}
+
+      {/* Body with form */}
+      {readinessState === "ready" && (
+        <div style={{ padding: 18 }}>
+          {/* Attached Creative section */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, color: "#8A8A8E", marginBottom: 5, display: "flex", alignItems: "center", gap: 4 }}>
+              Attached Creative <span style={{ fontSize: 9, fontWeight: 500, color: "#8A8A8E", background: "#F0F0F0", padding: "1px 5px", borderRadius: 3, textTransform: "none", letterSpacing: 0 }}>Optional</span>
+            </div>
+            {selectedAsset ? (
+              <div style={{ background: "#FAFAFA", border: "1px solid #E8E8EA", borderRadius: 8, padding: "9px 10px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EBEBEB", flexShrink: 0, overflow: "hidden" }}>
+                  {selectedAsset.blob_url && <img src={selectedAsset.blob_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractField(selectedAsset.content, "overlay_headline") || extractField(selectedAsset.copy_data, "headline") || "Creative"}
+                </div>
+                <button onClick={onDetachCreative} style={{ fontSize: 14, color: "#8A8A8E", cursor: "pointer", padding: "2px 4px", lineHeight: 1, background: "none", border: "none", fontFamily: "inherit" }}>&times;</button>
+              </div>
+            ) : (
+              <div style={{ background: "#FAFAFA", border: "1px dashed #E8E8EA", borderRadius: 8, padding: 10, textAlign: "center", fontSize: 12, color: "#8A8A8E" }}>
+                No creative attached
+              </div>
+            )}
+          </div>
+
+          {/* Form fields — 2x2 grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            {/* Source */}
+            <SearchableDropdown
+              label="Source"
+              value={utmSource}
+              options={sourceOptions}
+              onChange={(v) => setUtmSource(v as UtmSource)}
+              searchable={false}
+            />
+            {/* Platform */}
+            <SearchableDropdown
+              label="Platform"
+              value={utmContent}
+              options={contentOptions}
+              onChange={setUtmContent}
+              searchable={true}
+              placeholder="Pick a platform…"
+            />
+            {/* Your Tag */}
+            <FieldEditable
+              label="Your tag"
+              value={term}
+              onChange={setTerm}
+              onBlur={() => setTerm(slugify(term) || recruiterInitials || "??")}
+            />
+            {/* Destination */}
+            {availableUrls.length > 1 ? (
+              <div>
+                <div style={labelStyle}>Destination</div>
+                <select
+                  value={selectedUrlKey ?? ""}
+                  onChange={(e) => setSelectedUrlKey(e.target.value as LandingPageKey)}
+                  style={{ ...inputStyle, cursor: "pointer" }}
+                >
+                  {availableUrls.map((u) => (
+                    <option key={u.key} value={u.key}>
+                      {LANDING_PAGE_LABEL[u.key]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <FieldReadonly label="Destination" value={selectedUrlKey ? LANDING_PAGE_LABEL[selectedUrlKey] : "—"} />
+            )}
+          </div>
+
+          {/* URL Preview bar */}
+          <div style={{ background: "#1A1A1A", borderRadius: 8, padding: "9px 12px", marginBottom: 14, display: "flex", alignItems: "center", gap: 7 }}>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
+            <div style={{ fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 11, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {selectedUrl ? <>{new URL(selectedUrl).hostname}<span style={{ color: "#4ade80" }}>/r/...</span></> : "Select a destination"}
+            </div>
+          </div>
+
+          {/* Generate button */}
+          <button onClick={handleCopyLink} disabled={!canSubmit} style={{
+            width: "100%", background: canSubmit ? "#32373C" : "#E8E8EA",
+            color: canSubmit ? "white" : "#8A8A8E", border: "none",
+            padding: 12, borderRadius: 10, fontSize: 13, fontWeight: 700,
+            cursor: canSubmit ? "pointer" : "not-allowed",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+            fontFamily: "inherit",
+          }}>
+            {submitting ? <Loader2 size={14} className="animate-spin" /> : <Copy size={14} />}
+            {submitting ? "Generating..." : "Generate & Copy Link"}
           </button>
         </div>
-      </div>
+      )}
+
+      {/* Recent Links section */}
+      {recentLinks.length > 0 && (
+        <div style={{ borderTop: "1px solid #E8E8EA", padding: "14px 18px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, color: "#8A8A8E", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            Recent Links
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#6D28D9", textTransform: "none", letterSpacing: 0, cursor: "pointer" }}>Dashboard →</span>
+          </div>
+          {recentLinks.map((link) => (
+            <div key={link.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid #F7F7F8" }}>
+              <div style={{ width: 26, height: 26, borderRadius: 5, background: "#EBEBEB", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {link.asset_thumbnail ? <img src={link.asset_thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Link2 size={12} style={{ color: "#8A8A8E" }} />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 11, fontWeight: 600, color: "#1A1A1A" }}>{link.short_url.replace(/^https?:\/\/[^/]+/, "")}</div>
+                <div style={{ fontSize: 10, color: "#8A8A8E" }}>{link.utm_content} · {timeAgo(link.created_at)}</div>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: link.click_count > 0 ? "#1A1A1A" : "#D4D4D4" }}>{link.click_count}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -289,8 +403,8 @@ export default function LinkBuilderBar({
 function FieldReadonly({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold mb-1">{label}</div>
-      <div className="text-xs px-2 py-1.5 rounded-md bg-[var(--muted)] text-[var(--foreground)] font-medium truncate" title={value}>
+      <div style={labelStyle}>{label}</div>
+      <div style={{ fontSize: 13, padding: "9px 12px", borderRadius: 8, background: "#FAFAFA", color: "#1A1A1A", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={value}>
         {value}
       </div>
     </div>
@@ -310,13 +424,13 @@ function FieldEditable({
 }) {
   return (
     <div>
-      <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold mb-1">{label}</div>
+      <div style={labelStyle}>{label}</div>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
-        className="w-full text-xs px-2 py-1.5 rounded-md border border-[var(--border)] bg-white"
+        style={inputStyle}
       />
     </div>
   );
