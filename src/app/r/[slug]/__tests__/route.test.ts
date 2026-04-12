@@ -56,7 +56,7 @@ describe('GET /r/[slug]', () => {
     expect(mockSql).toHaveBeenCalledTimes(1);
 
     // Inspect the raw template strings passed to the tagged-template call
-    const [templateStrings] = mockSql.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    const [templateStrings] = mockSql.mock.calls[0] as unknown as [TemplateStringsArray, ...unknown[]];
     const rawSql = templateStrings.join('').toLowerCase();
     expect(rawSql).toContain('click_count + 1');
   });
@@ -71,7 +71,7 @@ describe('GET /r/[slug]', () => {
     await GET(request, context);
 
     // The slug should appear as a tagged-template interpolation argument
-    const callArgs = mockSql.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    const callArgs = mockSql.mock.calls[0] as unknown as [TemplateStringsArray, ...unknown[]];
     const interpolatedValues = callArgs.slice(1);
     expect(interpolatedValues).toContain('Abc123');
   });
