@@ -15,6 +15,7 @@ interface FormatCardProps {
   onClick: () => void;
   onDownload: () => void;
   onExportFigma: () => void;
+  onEdit?: () => void;
 }
 
 function getVqaColor(score: number, theme: Theme): string {
@@ -49,6 +50,7 @@ export default function FormatCard({
   onClick,
   onDownload,
   onExportFigma,
+  onEdit,
 }: FormatCardProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -219,7 +221,7 @@ export default function FormatCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // Edit action (placeholder for future)
+                onEdit?.();
               }}
               title="Edit"
               style={{

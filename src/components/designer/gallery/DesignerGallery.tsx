@@ -10,6 +10,7 @@ import ThemeToggle from "./ThemeToggle";
 import PersonaContextCard from "./PersonaContextCard";
 import VersionGroup from "./VersionGroup";
 import AssetLightbox from "./AssetLightbox";
+import EditWorkspace from "../edit/EditWorkspace";
 
 interface DesignerGalleryProps {
   request: IntakeRequest;
@@ -37,6 +38,7 @@ export default function DesignerGallery({
   const [activePersonaIdx, setActivePersonaIdx] = useState(0);
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
   const [lightboxAsset, setLightboxAsset] = useState<GeneratedAsset | null>(null);
+  const [editingAsset, setEditingAsset] = useState<GeneratedAsset | null>(null);
 
   // ── Theme Toggle ───────────────────────────────────────────────
 
@@ -338,47 +340,62 @@ export default function DesignerGallery({
           minHeight: "80vh",
         }}
       >
-        <PersonaContextCard persona={activePersona} theme={theme} />
-
-        {versions.length === 0 ? (
-          /* Empty state */
-          <div style={{ textAlign: "center", padding: "64px 0" }}>
-            <ImageIcon
-              size={40}
-              style={{ color: theme.textDim, margin: "0 auto 16px", display: "block" }}
-            />
-            <div style={{ fontSize: 15, fontWeight: 600 }}>
-              Pipeline is generating creatives for this campaign
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: theme.textMuted,
-                marginTop: 8,
-                maxWidth: 320,
-                margin: "8px auto 0",
-              }}
-            >
-              Check back in 30 minutes. The AI is composing persona-targeted creatives
-              with VQA validation.
-            </div>
-          </div>
+        {editingAsset ? (
+          <EditWorkspace
+            asset={editingAsset}
+            theme={theme}
+            onClose={() => setEditingAsset(null)}
+            onAssetUpdated={() => {
+              setEditingAsset(null);
+              // Re-fetch data would go here — for now just close
+            }}
+          />
         ) : (
-          versions.map((v) => (
-            <VersionGroup
-              key={v.versionLabel}
-              version={v}
-              channelName=""
-              isExpanded={expandedVersion === v.versionLabel}
-              onToggle={() =>
-                setExpandedVersion(
-                  expandedVersion === v.versionLabel ? null : v.versionLabel
-                )
-              }
-              theme={theme}
-              onAssetClick={setLightboxAsset}
-            />
-          ))
+          <>
+            <PersonaContextCard persona={activePersona} theme={theme} />
+
+            {versions.length === 0 ? (
+              /* Empty state */
+              <div style={{ textAlign: "center", padding: "64px 0" }}>
+                <ImageIcon
+                  size={40}
+                  style={{ color: theme.textDim, margin: "0 auto 16px", display: "block" }}
+                />
+                <div style={{ fontSize: 15, fontWeight: 600 }}>
+                  Pipeline is generating creatives for this campaign
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: theme.textMuted,
+                    marginTop: 8,
+                    maxWidth: 320,
+                    margin: "8px auto 0",
+                  }}
+                >
+                  Check back in 30 minutes. The AI is composing persona-targeted creatives
+                  with VQA validation.
+                </div>
+              </div>
+            ) : (
+              versions.map((v) => (
+                <VersionGroup
+                  key={v.versionLabel}
+                  version={v}
+                  channelName=""
+                  isExpanded={expandedVersion === v.versionLabel}
+                  onToggle={() =>
+                    setExpandedVersion(
+                      expandedVersion === v.versionLabel ? null : v.versionLabel
+                    )
+                  }
+                  theme={theme}
+                  onAssetClick={setLightboxAsset}
+                  onEditAsset={setEditingAsset}
+                />
+              ))
+            )}
+          </>
         )}
       </div>
 

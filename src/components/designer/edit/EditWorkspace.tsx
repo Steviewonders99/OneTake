@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import type { GeneratedAsset } from "@/lib/types";
 import type { Theme } from "../gallery/tokens";
 import { FONT } from "../gallery/tokens";
 import LayerToggle from "./LayerToggle";
 import type { Layer } from "./LayerToggle";
+import QuickEditor from "./QuickEditor";
+import GraphicEditor from "./GraphicEditor";
 
 interface EditWorkspaceProps {
   asset: GeneratedAsset;
@@ -49,20 +52,26 @@ export default function EditWorkspace({ asset, theme, onClose, onAssetUpdated }:
         <LayerToggle activeLayer={activeLayer} onToggle={setActiveLayer} theme={theme} />
       </div>
 
-      {/* Edit content — placeholder for now, will render QuickEditor or GraphicEditor */}
-      <div style={{ padding: 24, minHeight: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", color: theme.textMuted }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
-            {activeLayer === "photo" ? "Photo Edit Mode" : "Graphic Overlay Mode"}
-          </div>
-          <div style={{ fontSize: 12 }}>
-            {activeLayer === "photo"
-              ? "Flux 2 quick edit, scene swap, or Seedream regeneration"
-              : "Live text + style editing with instant preview"
-            }
-          </div>
-        </div>
-      </div>
+      {/* Edit content — QuickEditor (photo layer) or GraphicEditor (graphic layer) */}
+      {activeLayer === "photo" ? (
+        <QuickEditor
+          asset={asset}
+          theme={theme}
+          onClose={onClose}
+          onAccept={(newUrl) => {
+            // For now, just close and refresh — PATCH will be wired later
+            toast.success("Edit accepted — gallery will refresh");
+            onAssetUpdated();
+          }}
+        />
+      ) : (
+        <GraphicEditor
+          asset={asset}
+          theme={theme}
+          onClose={onClose}
+          onSaved={onAssetUpdated}
+        />
+      )}
     </div>
   );
 }

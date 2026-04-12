@@ -17,6 +17,7 @@ interface VersionGroupProps {
   onToggle: () => void;
   theme: Theme;
   onAssetClick: (asset: GeneratedAsset) => void;
+  onEditAsset: (asset: GeneratedAsset) => void;
 }
 
 function getVqaColor(score: number, theme: Theme): string {
@@ -68,6 +69,7 @@ export default function VersionGroup({
   onToggle,
   theme,
   onAssetClick,
+  onEditAsset,
 }: VersionGroupProps) {
   const platformLabels = getUniquePlatformLabels(version.assets);
   const hasVqa = version.avgVqaScore > 0;
@@ -227,7 +229,7 @@ export default function VersionGroup({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              toast.info("Coming soon — Edit system shipping next");
+              onEditAsset(version.assets[0]);
             }}
             title="Edit"
             style={{
@@ -321,6 +323,7 @@ export default function VersionGroup({
                   onExportFigma={() => {
                     window.open(`/api/export/figma/${asset.id}`, "_blank");
                   }}
+                  onEdit={() => onEditAsset(asset)}
                 />
               );
             })}
