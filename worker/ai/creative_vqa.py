@@ -142,7 +142,23 @@ def check_deterministic(
         else:
             checks["person_in_safe_zone"] = True  # No URL match — can't check
 
-    # 10. WeChat 20% text overlay rule
+    # 10. Universal 25% text overlay rule (applies to ALL platforms)
+    overlay_headline = design.get("overlay_headline", "") or headline
+    overlay_sub = design.get("overlay_sub", "")
+    overlay_cta = design.get("overlay_cta", "") or cta
+    total_chars = len(overlay_headline) + len(overlay_sub) + len(overlay_cta)
+    if total_chars > 0:
+        est_text_pixels_universal = total_chars * 20 * 40
+        canvas_pixels_universal = spec.get("width", 1080) * spec.get("height", 1080)
+        est_pct_universal = (est_text_pixels_universal / canvas_pixels_universal) * 100
+        checks["universal_text_overlay_ok"] = est_pct_universal <= 25
+        if est_pct_universal > 25:
+            issues.append(
+                f"Text overlay ~{est_pct_universal:.0f}% exceeds 25% limit — "
+                f"total {total_chars} chars. Shorten headline or remove subheadline."
+            )
+
+    # 11. WeChat 20% text overlay rule
     text_overlay_max = spec.get("text_overlay_max_pct")
     if text_overlay_max and headline:
         # Rough estimate: count text characters, estimate pixel coverage
