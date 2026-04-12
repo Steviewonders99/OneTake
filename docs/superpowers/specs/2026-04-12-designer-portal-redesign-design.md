@@ -143,6 +143,95 @@ Designer Workspace
 
 ---
 
+## Designer Dashboard — Work Management View
+
+The `/designer` authenticated dashboard is a **Linear-style workboard** — not a card grid. The designer signs in and instantly knows what needs attention.
+
+### Layout
+- **Top bar:** Nova logo + "Creative Studio" label + theme toggle (sun/moon) + user avatar
+- **Collapsible sidebar** (48px collapsed, 220px on hover): My Work, Needs Review, Completed, filters, quick stats
+- **Main area:** Time-based greeting header + status-grouped list view
+
+### Time-Based Greeting
+- `"Good morning, {firstName}"` (before 12pm)
+- `"Good afternoon, {firstName}"` (12pm-5pm)
+- `"Good evening, {firstName}"` (after 5pm)
+- Subtitle: "{N} campaigns · {N} need your review"
+
+### Sidebar (collapsed by default)
+- Collapsed: 48px width, shows only icons
+- Hover: expands to 220px with labels + counts, smooth 200ms transition
+- Text fades in after width expands
+
+**Navigation items:**
+- My Work (count badge)
+- Needs Review (count badge)
+- Completed
+- Divider
+- High Priority (filter)
+- Recently Updated (filter)
+- All Campaigns (filter)
+- Divider
+- Quick Stats: Active, Creatives, Avg VQA, Pending review
+
+### List View — Status-Grouped Rows
+
+**Column headers (sticky):** Priority | Campaign | Personas | Creatives | VQA | Created | Progress | →
+
+**Status groups (collapsible):**
+
+**1. Needs Review** (amber dot)
+- Priority bar (red=urgent, amber=high, blue=medium, gray=low)
+- Campaign title + slug + channel count
+- Persona avatar chips with initials
+- Creative count with image icon
+- VQA percentage (green ≥85%, amber ≥70%, red <70%)
+- Created date (neutral — NOT due date, no urgency)
+- Progress bar (0-100%)
+- Hover arrow → click opens gallery
+
+**2. Approved** (green dot)
+- Same columns but dimmed (opacity 0.6)
+- Progress: 100% green
+- Created date shows when campaign was created
+
+**3. Pipeline Generating** (pulsing purple dot)
+- Dimmed (opacity 0.5)
+- Creative count: "—"
+- VQA: "—"
+- Progress: pulsing purple bar with estimated %
+- Persona: "?" avatar
+
+### View Toggle
+- List (default, active) / Cards toggle in header
+- Cards view shows the campaign card grid (future enhancement)
+
+### Theme Toggle
+- Dark mode default
+- Sun/moon icon in top bar
+- Switches all colors (background, surfaces, borders, text)
+- State persists in localStorage
+
+### Design Tokens (same as gallery)
+- Dark: `#0F0F10` bg, `#141416` surface, `#1A1A1E` card, `#2A2A2E` border
+- Light: `#FFFFFF` bg, `#F7F7F8` surface, `#FFFFFF` card, `#E8E8EA` border
+- Font: system sans-serif throughout, NO serif
+
+### Components
+| Component | Purpose |
+|---|---|
+| `src/components/designer/dashboard/DesignerDashboard.tsx` | Main dashboard orchestrator |
+| `src/components/designer/dashboard/DashboardSidebar.tsx` | Collapsible sidebar with nav + stats |
+| `src/components/designer/dashboard/WorkItemRow.tsx` | Single campaign row with all columns |
+| `src/components/designer/dashboard/StatusGroup.tsx` | Collapsible status section header |
+
+### Modified Files
+| File | Changes |
+|---|---|
+| `src/app/designer/page.tsx` | Replace sidebar+panel layout with DesignerDashboard |
+
+---
+
 ## System 2: Edit & Regenerate — In-Platform Creative Control
 
 ### Problem
