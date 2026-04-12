@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import DesignerCampaignList from "@/components/designer/DesignerCampaignList";
-import DesignerPreviewPanel from "@/components/designer/DesignerPreviewPanel";
+import DesignerGalleryPanel from "@/components/designer/gallery/DesignerGalleryPanel";
 
 export default function DesignerPortal() {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
@@ -50,7 +50,7 @@ export default function DesignerPortal() {
         {/* Right: Campaign preview */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white min-h-0">
           {selectedId ? (
-            <DesignerPreviewPanel requestId={selectedId} />
+            <DesignerGalleryPanel requestId={selectedId} />
           ) : (
             <div className="flex items-center justify-center h-full text-[#737373] text-sm">
               Select a campaign to preview
