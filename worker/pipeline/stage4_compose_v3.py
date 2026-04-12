@@ -46,7 +46,10 @@ from config import (
 from neon_client import get_active_artifacts, get_actors, get_assets, save_asset
 from nim_key_pool import get_nim_key
 from pipeline.archetype_selector import select_archetype
-from prompts.compositor_prompt import build_compositor_prompt, inject_vqa_feedback
+from pipeline.stage4_graphic_copy import generate_graphic_copy
+from prompts.compositor_prompt import build_compositor_prompt, filter_catalog, inject_vqa_feedback
+from prompts.design_base_knowledge import get_base_knowledge, classify_persona_type, get_template_recs
+from prompts.project_context import build_project_context
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +162,11 @@ async def run_stage4(context: dict) -> dict:
     pillar_weighting: dict = derived.get("pillar_weighting", {})
     visual_direction: dict = derived.get("visual_direction", {})
 
+    # Load cultural research, personas, and strategies from context
+    cultural_research: dict = context.get("cultural_research", {})
+    personas: list[dict] = context.get("personas", brief.get("personas", []))
+    strategies: list[dict] = context.get("strategies", [])
+
     # Top 2 pillars by weight (fallback to ["earn", "grow"])
     top_pillars = _get_top_pillars(pillar_weighting)
     logger.info("Top 2 pillars for composition: %s", top_pillars)
@@ -187,6 +195,9 @@ async def run_stage4(context: dict) -> dict:
             visual_direction=visual_direction,
             brief=brief,
             user_feedback=feedback,
+            cultural_research=cultural_research,
+            personas=personas,
+            strategies=strategies,
         )
         for item in matrix
     ]
@@ -217,6 +228,9 @@ async def _compose_one(
     visual_direction: dict,
     brief: dict,
     user_feedback: str | None,
+    cultural_research: dict | None = None,
+    personas: list[dict] | None = None,
+    strategies: list[dict] | None = None,
 ) -> int:
     """Compose one creative: prompt → LLM → render → VQA → save.
 
@@ -235,19 +249,66 @@ async def _compose_one(
         # Resolve copy for this pillar/platform
         copy = _get_copy_for_pillar_platform(copy_lookup, pillar, platform)
 
+        # ── Phase 1: Match actor to persona ──────────────────────────
+        actor_name_full = actor.get("name", "")
+        matched_persona = {}
+        for p in (personas or []):
+            pname = p.get("persona_name", p.get("name", ""))
+            if pname and actor_name_full and (
+                pname.lower().startswith(actor_name_full.split()[0].lower()) or
+                actor_name_full.lower().startswith(pname.split()[0].lower())
+            ):
+                matched_persona = p
+                break
+        if not matched_persona and personas:
+            matched_persona = personas[0]
+
+        # Resolve strategy for persona's region
+        persona_region = matched_persona.get("region", "")
+        matched_strategy = {}
+        for s in (strategies or []):
+            if isinstance(s, dict) and s.get("country", "").upper() == persona_region.upper():
+                matched_strategy = s.get("strategy_data", s)
+                break
+
+        # Build project context (diamond persona mini brief)
+        project_ctx = build_project_context(
+            request=brief,
+            brief=brief,
+            persona=matched_persona,
+            cultural_research=cultural_research,
+            strategy=matched_strategy,
+            stage3_copy=copy,
+        )
+
+        # Generate graphic copy via Phase 1 (Gemma 4)
+        base_knowledge = get_base_knowledge()
+        graphic_copy = await generate_graphic_copy(
+            base_knowledge=base_knowledge,
+            project_context=project_ctx,
+            language=copy.get("language", "en"),
+            platform=platform,
+            platform_spec=spec,
+        )
+
+        # Filter artifact catalog for this pillar/platform
+        filtered_catalog = filter_catalog(catalog, pillar, platform)
+
         # Select archetype
         archetype = select_archetype(pillar, visual_direction, platform)
 
-        # Build initial prompt
+        # Build initial prompt (Phase 2 — compositor receives Phase 1 graphic copy)
         prompt = build_compositor_prompt(
-            catalog=catalog,
+            catalog=filtered_catalog,
             archetype=archetype,
             platform=platform,
             platform_spec=spec,
             pillar=pillar,
             actor=actor,
-            copy=copy,
+            copy=graphic_copy,
             visual_direction=visual_direction,
+            project_context=project_ctx,
+            design_intent=graphic_copy.get("design_intent", ""),
         )
 
         # If user feedback exists, append to initial prompt
