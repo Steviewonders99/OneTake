@@ -148,10 +148,13 @@ async def publish_job_to_wordpress(
     # ── 4. Publish to WordPress ───────────────────────────────────────
     slug = _slugify(title)
 
-    from config import WP_SITE_URL
+    from config import WP_SITE_URL, WP_PUBLISH_STATUS
     if not WP_SITE_URL:
         logger.warning("WP_SITE_URL not set — skipping WordPress publish")
         return {"wp_url": "", "wp_post_id": None, "tracked_links": []}
+
+    publish_status = WP_PUBLISH_STATUS or "draft"
+    logger.info("WP publish status: %s", publish_status)
 
     try:
         from wp_mcp_client import WordPressMCPClient
@@ -160,7 +163,7 @@ async def publish_job_to_wordpress(
             result = await wp.create_job_post(
                 title=title,
                 content=content,
-                status="publish",
+                status=publish_status,
                 slug=slug,
                 meta=meta,
                 job_types=[job_type],

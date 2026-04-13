@@ -37,6 +37,7 @@ VERCEL_BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 WP_SITE_URL = os.environ.get("WP_SITE_URL", "")
 WP_USERNAME = os.environ.get("WP_USERNAME", "")
 WP_APP_PASSWORD = os.environ.get("WP_APP_PASSWORD", "")
+WP_PUBLISH_STATUS = os.environ.get("WP_PUBLISH_STATUS", "draft")  # "draft" for testing, "publish" for production
 
 # ---------------------------------------------------------------------------
 # NVIDIA NIM (FREE Kimi K2.5 + other models)
