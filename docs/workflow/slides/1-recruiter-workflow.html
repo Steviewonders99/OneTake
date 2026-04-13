@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova — Recruiter Workflow</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; background: #D8DCE4; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .slide { width: 1440px; height: 810px; background: #F0F2F7; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.15); position: relative; }
+    .g-top { position: absolute; top: 0; left: 0; right: 0; height: 68px; background: linear-gradient(135deg, #7B2DAA 0%, #CD128A 50%, #E84BA5 100%); z-index: 2; }
+    .g-left { position: absolute; top: 0; left: 0; width: 8px; height: 100%; background: linear-gradient(180deg, #7B2DAA 0%, #CD128A 60%, #E84BA5 100%); z-index: 3; }
+    .title { position: absolute; top: 15px; left: 36px; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.02em; z-index: 4; }
+    .canvas { position: absolute; top: 68px; left: 8px; right: 0; bottom: 0; }
+    .c { position: absolute; width: 270px; height: 155px; background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 1; overflow: hidden; }
+    .c-pink { border: 2px solid #E84BA5; }
+    .c-blue { border: 2px solid #7CB9F0; }
+    .c-dash { border: 2px dashed #7CB9F0; background: #FAFBFE; }
+    .c h3 { font-size: 13.5px; font-weight: 700; color: #1A1A2E; line-height: 1.25; margin-bottom: 5px; }
+    .c p { font-size: 11px; color: #6B7280; line-height: 1.4; }
+    .c ul { list-style: none; margin-top: 4px; font-size: 10.5px; color: #6B7280; line-height: 1.55; }
+    .c ul li::before { content: "• "; color: #C0C7D3; }
+    .c .m { margin-top: 6px; font-size: 9.5px; font-weight: 600; color: #9CA3AF; display: flex; align-items: center; gap: 4px; }
+    .note { position: absolute; font-size: 9.5px; color: #9CA3AF; font-style: italic; z-index: 1; }
+    .arr { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .leg { position: absolute; bottom: 14px; left: 36px; display: flex; gap: 20px; z-index: 1; }
+    .leg span { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #6B7280; font-weight: 600; }
+    .leg i { width: 14px; height: 10px; border-radius: 3px; background: #fff; display: inline-block; font-style: normal; }
+    .tag { position: absolute; bottom: 14px; right: 36px; font-size: 10px; color: #B0B8C8; }
+  </style>
+</head>
+<body>
+<div class="slide">
+  <div class="g-top"></div>
+  <div class="g-left"></div>
+  <div class="title">Recruiter Workflow</div>
+
+  <div class="canvas">
+    <!-- ROW 1 (L→R) y=30 -->
+    <div class="c c-pink" style="left:36px; top:30px;">
+      <h3>Receive job description</h3>
+      <p>Recruiter gets JD or RFP from hiring team — ready to submit</p>
+    </div>
+    <div class="c c-pink" style="left:346px; top:30px;">
+      <h3>Upload or paste RFP</h3>
+      <p>Step 1 of intake wizard — AI extracts task type, regions, qualifications automatically</p>
+      <div class="m">Or skip → manual entry</div>
+    </div>
+    <div class="c c-pink" style="left:656px; top:30px;">
+      <h3>Fill project details</h3>
+      <p>Steps 2-4 of wizard</p>
+      <ul>
+        <li>Task type &amp; work mode</li>
+        <li>Title, volume, regions</li>
+        <li>Qualifications &amp; AIDA form</li>
+      </ul>
+    </div>
+    <div class="c c-pink" style="left:966px; top:30px;">
+      <h3>Review &amp; submit</h3>
+      <p>Step 5 — verify all fields, click Submit Request</p>
+      <div class="m">Request created → status: draft</div>
+    </div>
+
+    <!-- ROW 2 (R→L) y=230 -->
+    <div class="c c-blue" style="left:966px; top:230px;">
+      <h3>Pipeline auto-generates</h3>
+      <p>6-stage AI pipeline runs — personas, images, copy, creatives, video, landing pages</p>
+      <div class="m">⏱ ~15–30 minutes</div>
+    </div>
+    <div class="c c-dash" style="left:656px; top:230px;">
+      <h3>Notification received</h3>
+      <p>Teams + Outlook email: "Your campaign creatives are ready for review"</p>
+      <div class="m">📩 Teams + Outlook</div>
+    </div>
+    <div class="c c-pink" style="left:346px; top:230px;">
+      <h3>Open Creative Library</h3>
+      <p>View all composed creatives filtered by channel tabs — Meta, LinkedIn, TikTok, Google</p>
+    </div>
+    <div class="c c-pink" style="left:36px; top:230px;">
+      <h3>Build UTM tracked links</h3>
+      <p>Sticky Link Builder panel</p>
+      <ul>
+        <li>Select base URL</li>
+        <li>Auto-generates UTM params</li>
+        <li>Copy short link</li>
+      </ul>
+    </div>
+
+    <!-- ROW 3 (L→R) y=430 -->
+    <div class="c c-pink" style="left:36px; top:430px;">
+      <h3>View landing pages</h3>
+      <p>Per-persona /lp/ URLs available — copy for ad campaign destinations</p>
+      <div class="m">🔗 Landing page URLs</div>
+    </div>
+    <div class="c c-pink" style="left:346px; top:430px;">
+      <h3>Share with candidates</h3>
+      <p>Distribute tracked links via email, social media, job boards, and direct outreach</p>
+    </div>
+    <div class="c c-pink" style="left:656px; top:430px;">
+      <h3>Download creatives</h3>
+      <p>Download individual creatives or batch download for offline use</p>
+    </div>
+
+    <span class="note" style="left:966px; top:460px;">Recruiter never sees: raw images,<br/>strategy editing, designer tools,<br/>pipeline stages, or admin panel.</span>
+
+    <!-- ARROWS -->
+    <svg class="arr" viewBox="0 0 1432 742">
+      <defs>
+        <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7CB9F0"/></marker>
+        <marker id="ahl" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto"><polygon points="8 0, 0 3, 8 6" fill="#7CB9F0"/></marker>
+      </defs>
+      <!-- Row 1 L→R -->
+      <line x1="306" y1="107" x2="346" y2="107" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="616" y1="107" x2="656" y2="107" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="926" y1="107" x2="966" y2="107" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <!-- Row1→2 -->
+      <line x1="1101" y1="185" x2="1101" y2="230" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <!-- Row 2 R→L -->
+      <line x1="966" y1="307" x2="926" y2="307" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ahl)"/>
+      <line x1="656" y1="307" x2="616" y2="307" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ahl)"/>
+      <line x1="346" y1="307" x2="306" y2="307" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ahl)"/>
+      <!-- Row2→3 -->
+      <line x1="171" y1="385" x2="171" y2="430" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <!-- Row 3 L→R -->
+      <line x1="306" y1="507" x2="346" y2="507" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="616" y1="507" x2="656" y2="507" stroke="#7CB9F0" stroke-width="2" marker-end="url(#ah)"/>
+    </svg>
+
+    <div class="leg">
+      <span><i style="border:2px solid #E84BA5;"></i> Recruiter action</span>
+      <span><i style="border:2px solid #7CB9F0;"></i> System / automated</span>
+      <span><i style="border:2px dashed #7CB9F0;"></i> Notification</span>
+    </div>
+    <div class="tag">Nova Creative Operations &middot; OneForma</div>
+  </div>
+</div>
+</body>
+</html>
