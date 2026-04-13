@@ -9,6 +9,7 @@ import type { Theme } from "./tokens";
 import { FONT, FIGMA_ICON } from "./tokens";
 import FormatCard from "./FormatCard";
 import DesignNotes from "./DesignNotes";
+import PushToFigmaButton from "../figma/PushToFigmaButton";
 
 interface VersionGroupProps {
   version: VersionGroupType;
@@ -18,6 +19,7 @@ interface VersionGroupProps {
   theme: Theme;
   onAssetClick: (asset: GeneratedAsset) => void;
   onEditAsset: (asset: GeneratedAsset) => void;
+  requestId: string;
 }
 
 function getVqaColor(score: number, theme: Theme): string {
@@ -70,6 +72,7 @@ export default function VersionGroup({
   theme,
   onAssetClick,
   onEditAsset,
+  requestId,
 }: VersionGroupProps) {
   const platformLabels = getUniquePlatformLabels(version.assets);
   const hasVqa = version.avgVqaScore > 0;
@@ -271,7 +274,7 @@ export default function VersionGroup({
             <RefreshCw size={13} />
           </button>
 
-          {/* Figma */}
+          {/* Figma SVG Export */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -290,6 +293,16 @@ export default function VersionGroup({
               cursor: "pointer",
             }}
             dangerouslySetInnerHTML={{ __html: FIGMA_ICON }}
+          />
+
+          {/* Push to Figma */}
+          <PushToFigmaButton
+            requestId={requestId}
+            scope="version"
+            persona={version.actorName.split(" ")[0]}
+            version={version.versionLabel}
+            theme={theme}
+            compact
           />
         </div>
       </button>

@@ -1,10 +1,12 @@
 "use client";
 
 import { FONT, type Theme } from "./tokens";
+import PushToFigmaButton from "../figma/PushToFigmaButton";
 
 interface PersonaContextCardProps {
   persona: Record<string, any>;
   theme: Theme;
+  requestId: string;
 }
 
 const DESIGN_GUIDANCE: Record<string, string[]> = {
@@ -37,6 +39,7 @@ function truncate(str: string | undefined, max: number): string {
 export default function PersonaContextCard({
   persona,
   theme,
+  requestId,
 }: PersonaContextCardProps) {
   const name =
     persona.persona_name || persona.name || "Unknown Persona";
@@ -97,7 +100,7 @@ export default function PersonaContextCard({
         <div
           style={{
             display: "flex",
-            alignItems: "baseline",
+            alignItems: "center",
             gap: 8,
             marginBottom: 4,
           }}
@@ -124,6 +127,15 @@ export default function PersonaContextCard({
               {[archetype, demographics].filter(Boolean).join(" · ")}
             </span>
           )}
+          <div style={{ marginLeft: "auto", flexShrink: 0 }}>
+            <PushToFigmaButton
+              requestId={requestId}
+              scope="persona"
+              persona={name}
+              theme={theme}
+              compact
+            />
+          </div>
         </div>
 
         {/* Description */}

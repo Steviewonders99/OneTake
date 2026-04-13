@@ -12,6 +12,7 @@ import VersionGroup from "./VersionGroup";
 import AssetLightbox from "./AssetLightbox";
 import EditWorkspace from "../edit/EditWorkspace";
 import FigmaExportButton from "../figma/FigmaExportButton";
+import PushToFigmaButton from "../figma/PushToFigmaButton";
 import FigmaConnectModal from "../figma/FigmaConnectModal";
 import FigmaSyncStatus from "../figma/FigmaSyncStatus";
 import ManualUpload from "../figma/ManualUpload";
@@ -295,6 +296,7 @@ export default function DesignerGallery({
             theme={theme}
             campaignSlug={request.campaign_slug || "export"}
           />
+          <PushToFigmaButton requestId={request.id} scope="campaign" theme={theme} />
           <button onClick={() => setShowFigmaConnect(true)} style={darkButtonStyle}>
             <Link2 size={13} /> Connect Figma
           </button>
@@ -378,7 +380,7 @@ export default function DesignerGallery({
           />
         ) : (
           <>
-            <PersonaContextCard persona={activePersona} theme={theme} />
+            <PersonaContextCard persona={activePersona} theme={theme} requestId={request.id} />
 
             {versions.length === 0 ? (
               /* Empty state */
@@ -418,6 +420,7 @@ export default function DesignerGallery({
                   theme={theme}
                   onAssetClick={setLightboxAsset}
                   onEditAsset={setEditingAsset}
+                  requestId={request.id}
                 />
               ))
             )}
