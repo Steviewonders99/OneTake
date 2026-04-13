@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Download, Layers, ImageIcon, Check } from "lucide-react";
+import { Download, Layers, ImageIcon, Check, Link2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import type { IntakeRequest, CreativeBrief, GeneratedAsset, ActorProfile } from "@/lib/types";
 import type { VersionGroup as VersionGroupType } from "@/lib/channels";
@@ -11,6 +11,10 @@ import PersonaContextCard from "./PersonaContextCard";
 import VersionGroup from "./VersionGroup";
 import AssetLightbox from "./AssetLightbox";
 import EditWorkspace from "../edit/EditWorkspace";
+import FigmaExportButton from "../figma/FigmaExportButton";
+import FigmaConnectModal from "../figma/FigmaConnectModal";
+import FigmaSyncStatus from "../figma/FigmaSyncStatus";
+import ManualUpload from "../figma/ManualUpload";
 
 interface DesignerGalleryProps {
   request: IntakeRequest;
@@ -39,6 +43,8 @@ export default function DesignerGallery({
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
   const [lightboxAsset, setLightboxAsset] = useState<GeneratedAsset | null>(null);
   const [editingAsset, setEditingAsset] = useState<GeneratedAsset | null>(null);
+  const [showFigmaConnect, setShowFigmaConnect] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
 
   // ── Theme Toggle ───────────────────────────────────────────────
 
@@ -175,6 +181,12 @@ export default function DesignerGallery({
     return v ? v.assets : [];
   }, [expandedVersion, versions]);
 
+  // All composed creative assets (for ManualUpload routing)
+  const allComposedAssets: GeneratedAsset[] = useMemo(
+    () => assets.filter((a) => a.asset_type === "composed_creative" && a.blob_url),
+    [assets]
+  );
+
   // ── Handlers ───────────────────────────────────────────────────
 
   function handleDownloadAll() {
@@ -278,6 +290,17 @@ export default function DesignerGallery({
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <FigmaExportButton
+            requestId={request.id}
+            theme={theme}
+            campaignSlug={request.campaign_slug || "export"}
+          />
+          <button onClick={() => setShowFigmaConnect(true)} style={darkButtonStyle}>
+            <Link2 size={13} /> Connect Figma
+          </button>
+          <button onClick={() => setShowUpload(true)} style={darkButtonStyle}>
+            <Upload size={13} /> Upload
+          </button>
           <button onClick={handleDownloadAll} style={darkButtonStyle}>
             <Download size={13} /> Download All
           </button>
@@ -286,6 +309,9 @@ export default function DesignerGallery({
           </button>
         </div>
       </div>
+
+      {/* Figma Sync Status */}
+      <FigmaSyncStatus requestId={request.id} theme={theme} />
 
       {/* Persona Tabs */}
       <div
@@ -420,6 +446,34 @@ export default function DesignerGallery({
           onClose={() => setLightboxAsset(null)}
           onNavigate={setLightboxAsset}
           theme={theme}
+        />
+      )}
+
+      {/* Figma Connect Modal */}
+      {showFigmaConnect && (
+        <FigmaConnectModal
+          requestId={request.id}
+          theme={theme}
+          onClose={() => setShowFigmaConnect(false)}
+          onConnected={() => {
+            setShowFigmaConnect(false);
+            toast.success("Figma sync enabled!");
+          }}
+        />
+      )}
+
+      {/* Manual Upload Modal */}
+      {showUpload && (
+        <ManualUpload
+          requestId={request.id}
+          theme={theme}
+          assets={allComposedAssets}
+          personas={personas}
+          onUploaded={() => {
+            setShowUpload(false);
+            toast.success("Upload complete — gallery refreshing...");
+          }}
+          onClose={() => setShowUpload(false)}
         />
       )}
     </div>
