@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova — Team Process</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 32px; max-width: 1400px; margin: 0 auto; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; text-decoration: none; margin-bottom: 24px; }
+    .back:hover { color: #94a3b8; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
+    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+    .subtitle { font-size: 14px; color: #64748b; margin-bottom: 32px; line-height: 1.6; }
+    .diagram { background: #111827; border: 1px solid #2d3748; border-radius: 16px; padding: 32px; overflow-x: auto; margin-bottom: 32px; }
+    .diagram .mermaid { display: flex; justify-content: center; }
+
+    .swimlanes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+    .lane { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
+    .lane-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .lane-dot { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+    .lane h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .lane-role { font-size: 11px; color: #64748b; margin-bottom: 12px; }
+    .lane ul { list-style: none; font-size: 12px; color: #94a3b8; line-height: 1.9; }
+    .lane ul li { padding-left: 16px; position: relative; }
+    .lane ul li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 50%; }
+
+    .l-blue ul li::before { background: #3b82f6; }
+    .l-purple ul li::before { background: #a78bfa; }
+    .l-pink ul li::before { background: #f472b6; }
+    .l-yellow ul li::before { background: #facc15; }
+
+    .footer { margin-top: 32px; text-align: center; font-size: 12px; color: #475569; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back">&larr; All Workflows</a>
+  <div class="badge">Workflow 6 of 6</div>
+  <h1>Team Process — Human Handoff Flow</h1>
+  <p class="subtitle">How the four roles collaborate. No system details — just who does what, when, and what the handoffs look like. This is the workflow you'd explain to a new team member on day one.</p>
+
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    classDef recruiter fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    classDef marketing fill:#2d1b4e,stroke:#a78bfa,color:#e2e8f0
+    classDef designer fill:#3b1a2e,stroke:#f472b6,color:#e2e8f0
+    classDef agency fill:#422006,stroke:#facc15,color:#fef3c7
+    classDef notify fill:#2e2a1a,stroke:#fbbf24,color:#fde68a
+    classDef gate fill:#451a1a,stroke:#f87171,color:#fca5a5
+    classDef auto fill:#0a2e1a,stroke:#34d399,color:#a7f3d0
+
+    %% RECRUITER INITIATES
+    R1["👤 Recruiter\nreceives job description from hiring team"]:::recruiter
+    R1 --> R2["📋 Fills intake form\ntask type, requirements, qualifications,\nbudget, regions, languages"]:::recruiter
+    R2 --> R3["🚀 Submits request"]:::recruiter
+
+    %% NOVA AUTO-GENERATES
+    R3 --> AUTO["⚡ Nova generates everything automatically\npersonas, images, copy, creatives,\nvideo, landing pages\n~15-30 minutes"]:::auto
+
+    %% MARKETING REVIEWS
+    AUTO --> N1["📣 Teams + Outlook Notification\n'Campaign ready for review'"]:::notify
+    N1 --> M1["👔 Marketing Manager\nreviews generated campaign"]:::marketing
+    M1 --> M2["Reviews & edits:\n• Media strategy (budgets, targeting)\n• Ad copy per persona\n• Channel allocation\n• Landing page URLs"]:::marketing
+
+    M2 --> MG{Marketing Manager\nhappy with output?}:::gate
+    MG -->|"Needs changes"| M3["Requests regeneration\nor edits inline"]:::marketing
+    M3 --> AUTO
+    MG -->|"Approved"| N2["📣 Teams + Outlook Notification\n'Ready for design review'"]:::notify
+
+    %% DESIGNER WORKS
+    N2 --> D1["🎨 Designer\nopens campaign in gallery"]:::designer
+    D1 --> D2["Reviews all creatives\nper persona, per version, per format"]:::designer
+    D2 --> D3["Edits & polishes:\n• Quick retouching (Flux 2)\n• Overlay text adjustments\n• Regenerate if needed\n• Figma export & push"]:::designer
+
+    D3 --> DG{Designer\nsatisfied with quality?}:::gate
+    DG -->|"Needs more work"| D3
+    DG -->|"Done"| D4["✅ Designer submits finals"]:::designer
+
+    %% MARKETING FINAL APPROVAL
+    D4 --> N3["📣 Teams + Outlook Notification\n'Designer finals submitted'"]:::notify
+    N3 --> M4["👔 Marketing Manager\nfinal review of polished creatives"]:::marketing
+    M4 --> FG{Final approval?}:::gate
+    FG -->|"Needs revision"| N2
+    FG -->|"Approved"| M5["✅ Marketing Manager\napproves campaign"]:::marketing
+
+    %% RECRUITER GETS NOTIFIED
+    M5 --> N4["📣 Teams + Outlook Notification\n'Your campaign is approved and live'"]:::notify
+    N4 --> R4["👤 Recruiter\naccesses creative library\nbuilds UTM tracked links\nshares with candidates"]:::recruiter
+
+    %% AGENCY HANDOFF
+    M5 --> M6["👔 Marketing Manager\ngenerates agency magic link"]:::marketing
+    M6 --> N5["📣 Teams + Outlook Notification\n'Campaign package ready'\n+ magic link"]:::notify
+    N5 --> A1["📊 Paid Media Agency\nopens magic link portal"]:::agency
+    A1 --> A2["Downloads creatives\ngets targeting data\ngets ad copy + UTM links\ngets landing page URLs\nlaunches ad campaigns"]:::agency
+    </pre>
+  </div>
+
+  <div class="swimlanes">
+    <div class="lane l-blue">
+      <div class="lane-header">
+        <div class="lane-dot" style="background: #3b82f6;"></div>
+        <h3>Recruiter</h3>
+      </div>
+      <div class="lane-role">Initiates + receives</div>
+      <ul>
+        <li>Receives JD from hiring team</li>
+        <li>Fills intake form (5 steps)</li>
+        <li>Submits request</li>
+        <li>Waits for approval notification</li>
+        <li>Accesses creative library</li>
+        <li>Builds UTM tracked links</li>
+        <li>Shares links with candidates</li>
+      </ul>
+    </div>
+
+    <div class="lane l-purple">
+      <div class="lane-header">
+        <div class="lane-dot" style="background: #a78bfa;"></div>
+        <h3>Marketing Manager</h3>
+      </div>
+      <div class="lane-role">Reviews + approves + delivers</div>
+      <ul>
+        <li>Reviews AI-generated campaign</li>
+        <li>Edits media strategy inline</li>
+        <li>Adjusts budgets + targeting</li>
+        <li>Enters landing page URLs</li>
+        <li>Approves for designer</li>
+        <li>Final approval after design polish</li>
+        <li>Sends magic link to agency</li>
+      </ul>
+    </div>
+
+    <div class="lane l-pink">
+      <div class="lane-header">
+        <div class="lane-dot" style="background: #f472b6;"></div>
+        <h3>Designer</h3>
+      </div>
+      <div class="lane-role">Polishes + perfects</div>
+      <ul>
+        <li>Reviews creatives in gallery</li>
+        <li>Quick retouch (faces, backgrounds)</li>
+        <li>Adjusts text overlays + styles</li>
+        <li>Regenerates if needed</li>
+        <li>Exports to Figma</li>
+        <li>Pushes finals back</li>
+        <li>Submits for approval</li>
+      </ul>
+    </div>
+
+    <div class="lane l-yellow">
+      <div class="lane-header">
+        <div class="lane-dot" style="background: #facc15;"></div>
+        <h3>Paid Media Agency</h3>
+      </div>
+      <div class="lane-role">Receives + launches</div>
+      <ul>
+        <li>Receives magic link</li>
+        <li>Reviews strategy + targeting</li>
+        <li>Downloads all creatives</li>
+        <li>Gets ad copy per creative</li>
+        <li>Gets UTM tracked links</li>
+        <li>Gets landing page URLs</li>
+        <li>Launches campaigns in ad managers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">Nova Creative Operations &middot; OneForma &middot; 2026-04-13</div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { darkMode: true, background: '#111827', primaryColor: '#1a2332', primaryTextColor: '#e2e8f0', primaryBorderColor: '#475569', lineColor: '#475569', fontSize: '13px', fontFamily: '-apple-system, system-ui, sans-serif' }, flowchart: { htmlLabels: true, curve: 'basis', padding: 14, nodeSpacing: 30, rankSpacing: 50 } });
+  </script>
+</body>
+</html>

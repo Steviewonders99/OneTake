@@ -3,7 +3,7 @@
 **Date:** 2026-04-13
 **Author:** Steven Junop + Claude
 
-Five perspectives on the same system: Recruiter, Marketing Manager, Designer, Agency, and Full System Pipeline. All workflows include the Stage 6 Landing Page Engine.
+Six perspectives on the same system: Recruiter, Marketing Manager, Designer, Agency, and Full System Pipeline. All workflows include the Stage 6 Landing Page Engine.
 
 ---
 
@@ -291,3 +291,54 @@ flowchart TD
 **LLMs used:** Kimi K2.5 (Stage 1), Seedream 4.5 (Stage 2), Gemma 4 (Stage 3, 6), GLM-5 (Stage 4), Flux 2 (Stage 4 edit), Kling 3.0 (Stage 5)
 **Quality gates:** VQA (Stage 2, 4), Copy Quality (Stage 3), Drift Validation (Stage 6)
 **Notifications:** Microsoft Teams webhooks + Outlook email at pipeline completion and final approval
+
+---
+
+## 6. Team Process — Human Handoff Flow
+
+Who does what, when, and how work moves between the four roles. No system details — just the human collaboration.
+
+```mermaid
+flowchart TD
+    R1[👤 Recruiter receives JD from hiring team]
+    R1 --> R2[📋 Fills intake form — task type, requirements, budget, regions]
+    R2 --> R3[🚀 Submits request]
+
+    R3 --> AUTO[⚡ Nova generates everything automatically — ~15-30 min]
+
+    AUTO --> N1[📣 Teams + Outlook: Campaign ready for review]
+    N1 --> M1[👔 Marketing Manager reviews generated campaign]
+    M1 --> M2[Edits: media strategy, ad copy, budgets, targeting, landing page URLs]
+
+    M2 --> MG{Marketing Manager happy?}
+    MG -->|Needs changes| M3[Requests regeneration or edits inline]
+    M3 --> AUTO
+    MG -->|Approved| N2[📣 Teams + Outlook: Ready for design review]
+
+    N2 --> D1[🎨 Designer opens campaign in gallery]
+    D1 --> D2[Reviews all creatives per persona, version, format]
+    D2 --> D3[Edits: quick retouch, overlay text, regenerate, Figma export]
+
+    D3 --> DG{Designer satisfied?}
+    DG -->|Needs more work| D3
+    DG -->|Done| D4[✅ Designer submits finals]
+
+    D4 --> N3[📣 Teams + Outlook: Designer finals submitted]
+    N3 --> M4[👔 Marketing Manager final review]
+    M4 --> FG{Final approval?}
+    FG -->|Needs revision| N2
+    FG -->|Approved| M5[✅ Campaign approved]
+
+    M5 --> N4[📣 Teams + Outlook: Your campaign is approved and live]
+    N4 --> R4[👤 Recruiter accesses creative library, builds UTM links, shares with candidates]
+
+    M5 --> M6[👔 Marketing Manager generates agency magic link]
+    M6 --> N5[📣 Teams + Outlook: Campaign package ready + magic link]
+    N5 --> A1[📊 Agency opens portal, downloads creatives, gets targeting + landing page URLs, launches campaigns]
+```
+
+**Roles:**
+- **Recruiter** — Initiates (intake form) and receives (creative library + tracked links)
+- **Marketing Manager** — Reviews, edits strategy, approves twice (after AI + after designer), delivers to agency
+- **Designer** — Polishes creatives (retouch, overlay, Figma), submits finals
+- **Paid Media Agency** — Receives package via magic link, launches ad campaigns
