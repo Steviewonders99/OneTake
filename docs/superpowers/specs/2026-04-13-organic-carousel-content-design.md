@@ -205,6 +205,97 @@ This runs as part of Stage 4, not a new stage. The carousel engine is already ca
 | `src/lib/db/schema.ts` | Add `'organic_carousel'` to asset_type CHECK |
 | `src/components/recruiter/RecruiterWorkspace.tsx` | Add Organic tab |
 
+## Designer View — Organic vs Paid Separation
+
+### Priority: Organic First
+
+Organic content has higher precedence than paid — it's seen directly by real people on feeds, not filtered through an ad platform. A bad organic carousel reflects directly on the recruiter who posted it.
+
+### Designer Dashboard — Distribution Split
+
+The workboard splits into two priority sections. Organic always appears FIRST:
+
+```
+Designer Dashboard
+├── Organic (higher priority — pink accent bar)
+│   ├── Needs Attention (3)
+│   ├── In Progress (1)
+│   └── Completed (2)
+│
+└── Paid (standard priority — charcoal accent bar)
+    ├── Needs Attention (5)
+    ├── In Progress (2)
+    └── Completed (8)
+```
+
+- Organic section: pink left-border accent (`#E84BA5`)
+- Paid section: charcoal left-border accent (`#32373C`)
+- Organic campaigns always sort above paid in each status group
+- Work items show a distribution badge: `ORGANIC` (pink pill) or `PAID` (charcoal pill)
+
+### Designer Gallery — Top-Level Tabs
+
+```
+Designer Gallery
+├── [Organic] tab (default when organic assets exist)
+│   ├── Persona tabs (context cards, psychology)
+│   ├── LinkedIn carousel versions
+│   └── IG carousel versions
+│
+└── [Paid] tab
+    ├── Persona tabs
+    ├── Version accordions V1-V5
+    └── Format cards per platform
+```
+
+- Top-level `Organic` | `Paid` tabs above the persona tabs
+- When organic assets exist, `Organic` tab is active by default (higher priority)
+- Same edit tools available: Quick Edit (Flux 2), Graphic Editor, Regenerate
+- Same lightbox, design notes, VQA scores
+
+### Figma Export — Page Separation
+
+```
+Figma File
+├── Page: Organic
+│   ├── Frame: LinkedIn Carousels
+│   │   ├── Nova_{Persona}_V1_linkedin_carousel_1080x1080
+│   │   └── Nova_{Persona}_V2_linkedin_carousel_1080x1080
+│   └── Frame: IG Carousels
+│       ├── Nova_{Persona}_V1_ig_carousel_1080x1350
+│       └── Nova_{Persona}_V2_ig_carousel_1080x1350
+│
+└── Page: Paid
+    ├── Frame: Meta
+    ├── Frame: LinkedIn
+    └── Frame: TikTok
+```
+
+- Separate Figma pages for organic vs paid
+- Frame naming includes platform and distribution context
+- Each carousel's slides grouped in a single frame
+
+### Figma Push — Distribution-Aware
+
+The 3-level push adds a distribution dimension:
+
+| Push Option | What Gets Pushed |
+|---|---|
+| Push All Organic | All organic carousel slides → Organic page |
+| Push All Paid | All composed creatives → Paid page |
+| Push by Persona | Both organic + paid for one persona |
+| Push Single Version | One specific carousel or creative |
+
+### New/Modified Files (Designer)
+
+| File | Changes |
+|---|---|
+| `src/components/designer/dashboard/DesignerDashboard.tsx` | Split work items by distribution (organic first), add accent bars |
+| `src/components/designer/dashboard/WorkItemRow.tsx` | Add ORGANIC/PAID badge pill |
+| `src/components/designer/gallery/DesignerGallery.tsx` | Add top-level Organic/Paid tabs |
+| `src/components/designer/figma/FigmaExportButton.tsx` | Separate exports by distribution → Figma pages |
+| `src/components/designer/figma/PushToFigmaButton.tsx` | Add "Push All Organic" / "Push All Paid" options |
+
 ## Future Channels (Not in v1)
 
 The tab system is designed to scale. Future additions follow the same pattern:
