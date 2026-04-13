@@ -249,28 +249,21 @@ describe('diffFrames', () => {
     expect(result).toEqual(current);
   });
 
-  // NOTE: Known limitation — diffFrames uses a simplified comparison:
-  //   `!prevHash || prevHash !== frame.nodeId`
-  // When previous has entries, prevHash is a hash string (e.g. "abc123")
-  // and frame.nodeId is a node ID (e.g. "1:1"). These are always different,
-  // so the function always returns the frame as "changed". This is by design:
-  // the real diff happens later using image hashes after PNG export.
-
-  it('returns all frames when previous map has entries (simplified diff always considers changed)', () => {
+  it('returns EMPTY when all frames exist in previous map (already synced)', () => {
     const current = [
       makeFrame('1:1', 'Maria'),
       makeFrame('2:2', 'Alex'),
     ];
     const previous = {
-      '1:1': 'somehash_abc',
-      '2:2': 'somehash_def',
+      '1:1': 'synced',
+      '2:2': 'synced',
     };
     const result = diffFrames(current, previous);
-    // prevHash ("somehash_abc") !== frame.nodeId ("1:1") → always true
-    expect(result).toHaveLength(2);
+    // All frames exist in previous → none are new → empty result
+    expect(result).toHaveLength(0);
   });
 
-  it('returns new frame that is not in previous map', () => {
+  it('returns only new frames not in previous map', () => {
     const current = [
       makeFrame('1:1', 'Maria'),
       makeFrame('2:2', 'Alex'),
@@ -280,25 +273,23 @@ describe('diffFrames', () => {
       // '2:2' is missing — Alex is new
     };
     const result = diffFrames(current, previous);
-    // Maria: prevHash ("hash_a") !== nodeId ("1:1") → returned
-    // Alex: no prevHash → returned
-    expect(result).toHaveLength(2);
-    expect(result.some(f => f.routing.persona === 'Alex')).toBe(true);
+    // Maria: exists in previous → NOT returned (already synced)
+    // Alex: NOT in previous → returned (new)
+    expect(result).toHaveLength(1);
+    expect(result[0].routing.persona).toBe('Alex');
   });
 
-  it('returns frame even when it exists in previous (because prevHash !== nodeId)', () => {
+  it('returns empty when frame exists in previous (already synced)', () => {
     const current = [makeFrame('1:1', 'Maria')];
-    const previous = { '1:1': 'cached_hash_value' };
+    const previous = { '1:1': 'synced' };
     const result = diffFrames(current, previous);
-    // "cached_hash_value" !== "1:1" → returned
-    expect(result).toHaveLength(1);
-    expect(result[0].nodeId).toBe('1:1');
+    // Maria exists in previous → not returned
+    expect(result).toHaveLength(0);
   });
 
   it('verifies function signature accepts NovaFrame[] and Record<string, string>', () => {
-    // TypeScript compile-time check, but also runtime verification
     const current: NovaFrame[] = [makeFrame('5:5', 'Sofia')];
-    const previous: Record<string, string> = { '5:5': 'old_hash' };
+    const previous: Record<string, string> = {};
     const result = diffFrames(current, previous);
     expect(Array.isArray(result)).toBe(true);
     expect(result[0]).toHaveProperty('nodeId');
@@ -306,30 +297,43 @@ describe('diffFrames', () => {
     expect(result[0]).toHaveProperty('routing');
   });
 
-  it('returns all 100 frames when previous has entries (known limitation of simplified diff)', () => {
+  it('returns 0 frames when all 100 exist in previous (all synced)', () => {
     const current: NovaFrame[] = [];
     const previous: Record<string, string> = {};
     for (let i = 0; i < 100; i++) {
       const nodeId = `${i}:0`;
       current.push(makeFrame(nodeId, `Persona${i}`));
-      previous[nodeId] = `hash_${i}`;
+      previous[nodeId] = `synced`;
     }
     const result = diffFrames(current, previous);
-    // All returned because prevHash (`hash_X`) !== nodeId (`X:0`)
-    expect(result).toHaveLength(100);
+    // All exist in previous → none returned
+    expect(result).toHaveLength(0);
+  });
+
+  it('returns only new frames when some exist in previous, some dont', () => {
+    const current: NovaFrame[] = [];
+    const previous: Record<string, string> = {};
+    for (let i = 0; i < 10; i++) {
+      const nodeId = `${i}:0`;
+      current.push(makeFrame(nodeId, `Persona${i}`));
+      if (i < 5) previous[nodeId] = `synced`; // first 5 are synced
+    }
+    const result = diffFrames(current, previous);
+    // 5 exist in previous, 5 don't → 5 returned
+    expect(result).toHaveLength(5);
   });
 
   it('ignores extra entries in previous that are not in current', () => {
     const current = [makeFrame('1:1', 'Maria')];
     const previous = {
-      '1:1': 'hash_a',
-      '2:2': 'hash_b', // not in current
-      '3:3': 'hash_c', // not in current
-      '99:99': 'hash_z', // not in current
+      '1:1': 'synced',
+      '2:2': 'synced', // not in current
+      '3:3': 'synced', // not in current
+      '99:99': 'synced', // not in current
     };
     const result = diffFrames(current, previous);
-    // Only current frames are considered; extra previous entries are ignored
-    expect(result).toHaveLength(1);
-    expect(result[0].nodeId).toBe('1:1');
+    // Maria (1:1) exists in previous → NOT returned
+    // Extra previous entries (2:2, 3:3, 99:99) are irrelevant — only current is filtered
+    expect(result).toHaveLength(0);
   });
 });

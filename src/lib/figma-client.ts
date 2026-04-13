@@ -82,20 +82,32 @@ export function extractNovaFrames(fileData: FigmaFileResponse): NovaFrame[] {
 }
 
 /**
- * Diff two sets of Nova frames to find which ones changed.
- * Compares by node ID — if a frame exists in both but has different
- * content (detected by Figma's version field), it's considered changed.
+ * Diff two sets of Nova frames to find which ones are new (not previously synced).
+ *
+ * The sync route already checks file-level `lastModified` before calling this.
+ * If lastModified changed, ALL frames are potentially changed — this function
+ * filters to only frames we haven't synced before (new frames).
+ *
+ * For frames that existed before, the sync route re-exports them because
+ * we can't tell WHICH frames changed from the file-level timestamp alone.
+ * This is a known trade-off: we over-export but never miss a change.
+ *
+ * @param current - Nova frames found in the current file tree
+ * @param previous - Map of nodeId → "synced" for previously synced frames
+ * @returns Frames not in the previous map (new/unsynced frames)
  */
 export function diffFrames(
   current: NovaFrame[],
-  previous: Record<string, string>, // nodeId → last known hash/version
+  previous: Record<string, string>, // nodeId → "synced" marker
 ): NovaFrame[] {
-  return current.filter((frame) => {
-    const prevHash = previous[frame.nodeId];
-    // If we don't have a previous hash, it's new (count as changed)
-    // If we do, we'll compare after image export (hash the PNG)
-    return !prevHash || prevHash !== frame.nodeId; // simplified — real diff uses image hashes
-  });
+  if (Object.keys(previous).length === 0) {
+    // No previous state — all frames are new
+    return current;
+  }
+  // Return frames NOT in previous (new frames only)
+  // When file lastModified changed, the sync route re-exports everything
+  // regardless — this filter is for the initial import case
+  return current.filter((frame) => !(frame.nodeId in previous));
 }
 
 /**
