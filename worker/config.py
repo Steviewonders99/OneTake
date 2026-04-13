@@ -32,6 +32,13 @@ VERCEL_BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
 VERCEL_BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 
 # ---------------------------------------------------------------------------
+# WordPress (MCP auto-publish)
+# ---------------------------------------------------------------------------
+WP_SITE_URL = os.environ.get("WP_SITE_URL", "")
+WP_USERNAME = os.environ.get("WP_USERNAME", "")
+WP_APP_PASSWORD = os.environ.get("WP_APP_PASSWORD", "")
+
+# ---------------------------------------------------------------------------
 # NVIDIA NIM (FREE Kimi K2.5 + other models)
 # ---------------------------------------------------------------------------
 NVIDIA_NIM_API_KEY = os.environ.get("NVIDIA_NIM_API_KEY", "")

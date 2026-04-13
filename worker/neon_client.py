@@ -533,3 +533,41 @@ async def delete_artifact(artifact_id: str, *, hard: bool = False) -> None:
                 "UPDATE design_artifacts SET is_active = false, updated_at = NOW() WHERE artifact_id = $1",
                 artifact_id,
             )
+
+
+# ---------------------------------------------------------------------------
+# Campaign landing pages
+# ---------------------------------------------------------------------------
+
+async def upsert_campaign_landing_page(
+    request_id: str,
+    field: str,
+    value: str,
+) -> None:
+    """Upsert a single field in campaign_landing_pages.
+
+    Parameters
+    ----------
+    request_id : str
+        The intake request UUID.
+    field : str
+        One of: 'job_posting_url', 'landing_page_url', 'ada_form_url'.
+    value : str
+        The URL to store.
+    """
+    allowed = {"job_posting_url", "landing_page_url", "ada_form_url"}
+    if field not in allowed:
+        raise ValueError(f"Invalid field: {field}. Must be one of {allowed}")
+
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            f"""
+            INSERT INTO campaign_landing_pages (id, request_id, {field}, created_at, updated_at)
+            VALUES (gen_random_uuid(), $1, $2, NOW(), NOW())
+            ON CONFLICT (request_id) DO UPDATE SET {field} = $2, updated_at = NOW()
+            """,
+            request_id,
+            value,
+        )
+    logger.info("Upserted campaign_landing_pages.%s for %s", field, request_id[:8])

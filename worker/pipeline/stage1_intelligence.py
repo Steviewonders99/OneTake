@@ -39,6 +39,7 @@ from prompts.recruitment_brief import (
     build_brief_prompt,
     build_design_direction_prompt,
 )
+from pipeline.wp_job_publisher import publish_job_to_wordpress
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,29 @@ async def run_stage1(context: dict) -> dict:
     target_languages: list[str] = request.get("target_languages", [])
     form_data: dict = request.get("form_data", {})
     task_type: str = request.get("task_type", "data annotation")
+
+    # ==================================================================
+    # STEP 0: WORDPRESS JOB PUBLISH (before any AI generation)
+    # Publish the JD to WordPress immediately so the job posting URL
+    # is live while the pipeline generates everything else.
+    # ==================================================================
+    logger.info("Step 0: Publishing JD to WordPress...")
+    try:
+        wp_result = await publish_job_to_wordpress(
+            request_id=request_id,
+            request=request,
+            form_data=form_data,
+            target_languages=target_languages,
+            target_regions=target_regions,
+        )
+        if wp_result.get("wp_url"):
+            context["wp_job_url"] = wp_result["wp_url"]
+            context["wp_post_id"] = wp_result["wp_post_id"]
+            logger.info("✓ WP job live: %s", wp_result["wp_url"])
+        else:
+            logger.info("WP publish skipped (no credentials or non-fatal error)")
+    except Exception as exc:
+        logger.warning("WP publish failed (non-fatal, continuing): %s", exc)
 
     # ==================================================================
     # STEP 1: CULTURAL RESEARCH (understand the people FIRST)
