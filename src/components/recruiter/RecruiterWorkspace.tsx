@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Image, LayoutDashboard, FileText } from "lucide-react";
+import { ArrowLeft, Download, Image, LayoutDashboard } from "lucide-react";
 import { getRecruiterStatus } from "@/lib/format";
-import { RecruiterOverviewTab } from "@/components/RecruiterDetailView";
 import CreativeLibrary from "./CreativeLibrary";
 import LinkBuilderBar from "./LinkBuilderBar";
 import DashboardTab from "./DashboardTab";
@@ -18,13 +17,13 @@ import type {
   TrackedLinksSummary,
 } from "@/lib/types";
 
-type TabKey = "creatives" | "dashboard" | "overview";
+type TabKey = "creatives" | "dashboard";
 
 interface RecruiterWorkspaceProps {
   request: IntakeRequest;
   brief: CreativeBrief | null;
   assets: GeneratedAsset[];
-  pipelineRuns: PipelineRun[];
+  pipelineRuns?: PipelineRun[];
 }
 
 export default function RecruiterWorkspace({
@@ -89,7 +88,7 @@ export default function RecruiterWorkspace({
     setSelectedAsset(asset);
   }, []);
 
-  // Pre-approval: no tabs, just overview
+  // Pre-approval: no tabs, just a status message
   if (!isApproved) {
     return (
       <div style={{ flex: 1, overflowY: "auto", background: "#F7F7F8" }}>
@@ -100,12 +99,13 @@ export default function RecruiterWorkspace({
           showDownloadAll={false}
           approvedCount={0}
         />
-        <RecruiterOverviewTab
-          request={request}
-          brief={brief}
-          assets={assets}
-          pipelineRuns={pipelineRuns}
-        />
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px", textAlign: "center" }}>
+          <Image size={40} style={{ color: "#8A8A8E", margin: "0 auto 16px" }} />
+          <div style={{ fontSize: 16, fontWeight: 600, color: "#1A1A1A", marginBottom: 8 }}>Campaign is being prepared</div>
+          <div style={{ fontSize: 13, color: "#8A8A8E", maxWidth: 400, margin: "0 auto" }}>
+            The marketing team is generating creatives for this campaign. You&apos;ll be notified when assets are ready for distribution.
+          </div>
+        </div>
       </div>
     );
   }
@@ -129,7 +129,6 @@ export default function RecruiterWorkspace({
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", display: "flex", gap: 0 }}>
           <TabButton active={activeTab === "creatives"} onClick={() => setActiveTab("creatives")} icon={<Image size={14} />} label="Assets & Creatives" />
           <TabButton active={activeTab === "dashboard"} onClick={() => setActiveTab("dashboard")} icon={<LayoutDashboard size={14} />} label="Dashboard" />
-          <TabButton active={activeTab === "overview"} onClick={() => setActiveTab("overview")} icon={<FileText size={14} />} label="Overview" />
         </div>
       </div>
 
@@ -171,14 +170,6 @@ export default function RecruiterWorkspace({
           </>
         )}
         {activeTab === "dashboard" && <DashboardTab requestId={request.id} />}
-        {activeTab === "overview" && (
-          <RecruiterOverviewTab
-            request={request}
-            brief={brief}
-            assets={assets}
-            pipelineRuns={pipelineRuns}
-          />
-        )}
       </div>
     </div>
   );
