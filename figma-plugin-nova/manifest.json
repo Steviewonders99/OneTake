@@ -1,0 +1,20 @@
+{
+  "name": "Nova Creative Studio",
+  "id": "nova-creative-studio-internal",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "permissions": ["currentuser"],
+  "networkAccess": {
+    "allowedDomains": [
+      "nova-intake.vercel.app",
+      "centric-intake.vercel.app",
+      "localhost",
+      "*.vercel-storage.com",
+      "*.public.blob.vercel-storage.com"
+    ]
+  }
+}

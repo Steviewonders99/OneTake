@@ -1,0 +1,13 @@
+{
+  "name": "figma-plugin-nova",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.104.0",
+    "typescript": "^5.8.0"
+  }
+}
