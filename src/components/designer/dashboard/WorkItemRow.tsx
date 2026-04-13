@@ -123,6 +123,22 @@ export default function WorkItemRow({
           }}
         >
           {title}
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              padding: "2px 6px",
+              borderRadius: 9999,
+              background: "rgba(232,75,165,0.1)",
+              color: "#E84BA5",
+              textTransform: "uppercase" as const,
+              letterSpacing: "0.04em",
+              marginLeft: 6,
+              verticalAlign: "middle",
+            }}
+          >
+            ORGANIC
+          </span>
         </div>
         <div
           style={{

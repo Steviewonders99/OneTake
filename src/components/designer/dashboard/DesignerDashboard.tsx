@@ -335,6 +335,58 @@ export default function DesignerDashboard() {
             <span />
           </div>
 
+          {/* ── Organic Priority Section ──────────────────── */}
+          <div
+            style={{
+              padding: "12px 32px 4px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 3,
+                height: 16,
+                borderRadius: 2,
+                background: "#E84BA5",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.06em",
+                color: "#E84BA5",
+                fontFamily: FONT.sans,
+              }}
+            >
+              Organic — Review Priority
+            </span>
+            <div
+              style={{
+                flex: 1,
+                height: 1,
+                background: theme.border,
+                marginLeft: 8,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.06em",
+                color: theme.textDim,
+                fontFamily: FONT.sans,
+              }}
+            >
+              Paid — Standard
+            </span>
+          </div>
+
           {/* ── Status groups ─────────────────────────────── */}
           {grouped.review.length > 0 && (
             <StatusGroup

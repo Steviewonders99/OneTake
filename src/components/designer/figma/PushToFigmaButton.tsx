@@ -8,7 +8,7 @@ import { FONT, FIGMA_ICON } from "../gallery/tokens";
 
 interface PushToFigmaButtonProps {
   requestId: string;
-  scope: "campaign" | "persona" | "version";
+  scope: "campaign" | "persona" | "version" | "organic" | "paid";
   persona?: string;
   version?: string;
   theme: Theme;
@@ -35,9 +35,10 @@ export default function PushToFigmaButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           request_id: requestId,
-          scope,
+          scope: scope === "organic" || scope === "paid" ? "campaign" : scope,
           persona: persona || undefined,
           version: version || undefined,
+          distribution: scope === "organic" ? "organic" : scope === "paid" ? "paid" : undefined,
         }),
       });
 

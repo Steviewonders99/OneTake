@@ -41,6 +41,7 @@ export default function DesignerGallery({
     }
     return DARK;
   });
+  const [distributionTab, setDistributionTab] = useState<"organic" | "paid">("paid");
   const [activePersonaIdx, setActivePersonaIdx] = useState(0);
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
   const [lightboxAsset, setLightboxAsset] = useState<GeneratedAsset | null>(null);
@@ -317,6 +318,54 @@ export default function DesignerGallery({
       <FigmaSyncStatus requestId={request.id} theme={theme} />
 
       {/* Persona Tabs */}
+      {/* ── Distribution tabs: Organic / Paid ──────────────── */}
+      {assets.some((a) => a.asset_type === "organic_carousel") && (
+        <div
+          style={{
+            padding: "0 32px",
+            borderBottom: `1px solid ${theme.border}`,
+            display: "flex",
+            gap: 4,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setDistributionTab("organic")}
+            style={{
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: distributionTab === "organic" ? 700 : 400,
+              color: distributionTab === "organic" ? "#E84BA5" : theme.textMuted,
+              background: "none",
+              border: "none",
+              borderBottom: distributionTab === "organic" ? "2px solid #E84BA5" : "2px solid transparent",
+              cursor: "pointer",
+              fontFamily: FONT.sans,
+            }}
+          >
+            Organic
+          </button>
+          <button
+            type="button"
+            onClick={() => setDistributionTab("paid")}
+            style={{
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: distributionTab === "paid" ? 700 : 400,
+              color: distributionTab === "paid" ? theme.text : theme.textMuted,
+              background: "none",
+              border: "none",
+              borderBottom: distributionTab === "paid" ? `2px solid ${theme.text}` : "2px solid transparent",
+              cursor: "pointer",
+              fontFamily: FONT.sans,
+            }}
+          >
+            Paid
+          </button>
+        </div>
+      )}
+
+      {/* ── Persona tabs ───────────────────────────────────── */}
       <div
         style={{
           padding: "12px 32px 0",
