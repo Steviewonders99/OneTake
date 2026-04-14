@@ -22,6 +22,7 @@ export default function IntakeWizard() {
   const [workMode, setWorkMode] = useState<"onsite" | "remote" | null>(null);
   const [confidenceFlags, setConfidenceFlags] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -174,7 +175,7 @@ export default function IntakeWizard() {
 
       {/* Step content */}
       <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 40 }}>
-        {currentStep === 0 && <StepStart onExtracted={handleExtracted} onSkip={handleSkip} />}
+        {currentStep === 0 && <StepStart onExtracted={handleExtracted} onSkip={handleSkip} onExtractingChange={setIsExtracting} />}
         {currentStep === 1 && (
           <StepTaskMode
             taskType={taskType}
@@ -208,8 +209,8 @@ export default function IntakeWizard() {
         )}
       </div>
 
-      {/* Bottom nav */}
-      <WizardNav
+      {/* Bottom nav — hidden during extraction */}
+      {!isExtracting && <WizardNav
         currentStep={currentStep}
         totalSteps={5}
         onBack={handleBack}
@@ -219,7 +220,7 @@ export default function IntakeWizard() {
         showSkip={currentStep === 0}
         onSkip={handleSkip}
         isSubmit={currentStep === 4}
-      />
+      />}
     </div>
   );
 }

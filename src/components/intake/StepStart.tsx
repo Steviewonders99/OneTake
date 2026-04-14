@@ -7,9 +7,10 @@ import { ExtractionResult } from "@/lib/types";
 interface StepStartProps {
   onExtracted: (result: ExtractionResult) => void;
   onSkip: () => void;
+  onExtractingChange?: (extracting: boolean) => void;
 }
 
-export default function StepStart({ onExtracted, onSkip }: StepStartProps) {
+export default function StepStart({ onExtracted, onSkip, onExtractingChange }: StepStartProps) {
   const [entryMode, setEntryMode] = useState<"upload" | "paste" | null>(null);
   const [pasteText, setPasteText] = useState("");
   const [extracting, setExtracting] = useState(false);
@@ -24,6 +25,7 @@ export default function StepStart({ onExtracted, onSkip }: StepStartProps) {
   async function handlePasteExtract() {
     if (!pasteText.trim()) return;
     setExtracting(true);
+    onExtractingChange?.(true);
     setError(null);
     try {
       const res = await fetch("/api/extract/paste", {
@@ -38,11 +40,13 @@ export default function StepStart({ onExtracted, onSkip }: StepStartProps) {
       setError(err instanceof Error ? err.message : "Extraction failed. Try again.");
     } finally {
       setExtracting(false);
+      onExtractingChange?.(false);
     }
   }
 
   async function handleFileExtract(file: File) {
     setExtracting(true);
+    onExtractingChange?.(true);
     setError(null);
     try {
       const formData = new FormData();
@@ -58,6 +62,7 @@ export default function StepStart({ onExtracted, onSkip }: StepStartProps) {
       setError(err instanceof Error ? err.message : "Extraction failed. Try again.");
     } finally {
       setExtracting(false);
+      onExtractingChange?.(false);
     }
   }
 
