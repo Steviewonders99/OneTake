@@ -162,16 +162,18 @@ export default function IntakeWizard() {
       {/* Gradient bar */}
       <div style={{ height: 2, background: "linear-gradient(135deg, #7C3AED, #6D28D9)" }} />
 
-      {/* Top bar */}
-      <div style={{ background: "white", borderBottom: "1px solid #E8E8EA", padding: "16px 40px", display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Top bar — sticky */}
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "white", borderBottom: "1px solid #E8E8EA", padding: "16px 40px", display: "flex", alignItems: "center", gap: 12 }}>
         <Link href="/" style={{ color: "#8A8A8E", display: "flex" }}>
           <ArrowLeft size={18} />
         </Link>
         <span style={{ fontSize: 15, fontWeight: 700 }}>New Recruitment Request</span>
       </div>
 
-      {/* Progress */}
-      <WizardProgress currentStep={currentStep} />
+      {/* Progress — sticky below header */}
+      <div style={{ position: "sticky", top: 53, zIndex: 19, background: "#F7F7F8" }}>
+        <WizardProgress currentStep={currentStep} />
+      </div>
 
       {/* Step content */}
       <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 40 }}>

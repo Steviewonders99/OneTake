@@ -27,7 +27,7 @@ export default function WizardNav({
 }: WizardNavProps) {
   const label = nextLabel || (isSubmit ? "Submit Request" : "Continue");
   return (
-    <div style={{ background: "#FFFFFF", borderTop: "1px solid #E8E8EA", padding: "16px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{ position: "sticky", bottom: 0, zIndex: 20, background: "#FFFFFF", borderTop: "1px solid #E8E8EA", padding: "16px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
       <div style={{ fontSize: 12, color: "#8A8A8E" }}>Step {currentStep + 1} of {totalSteps}</div>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         {showSkip && onSkip && (
