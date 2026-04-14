@@ -1,11 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
 import { uploadToBlob } from '@/lib/blob';
-import { callKimiK25 } from '@/lib/openrouter';
+import { callNIM } from '@/lib/nim';
 import { buildExtractionSystemPrompt } from '@/lib/extraction-prompt';
 import type { ExtractionResult } from '@/lib/types';
 
-// Increase serverless function timeout for vision OCR
-export const maxDuration = 60;
+// Increase serverless function timeout for vision OCR + extraction
+export const maxDuration = 300;
 
 // Use Gemma 4 vision (NIM, free) to OCR PDF pages as images
 async function ocrWithGemma4(imageBase64: string, systemPrompt: string): Promise<string> {
@@ -212,7 +212,7 @@ async function callLLMForExtraction(systemPrompt: string, userPrompt: string): P
     }
   }
 
-  return callKimiK25(systemPrompt, userPrompt);
+  return callNIM(systemPrompt, userPrompt);
 }
 
 function parseJsonFromResponse(raw: string): ExtractionResult {

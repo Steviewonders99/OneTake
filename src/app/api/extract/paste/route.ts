@@ -1,9 +1,9 @@
 import { auth } from '@clerk/nextjs/server';
-import { callKimiK25 } from '@/lib/openrouter';
+import { callNIM } from '@/lib/nim';
 import { buildExtractionSystemPrompt } from '@/lib/extraction-prompt';
 import type { ExtractionResult } from '@/lib/types';
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const { userId } = await auth();
@@ -33,8 +33,9 @@ export async function POST(request: Request) {
     // Build the system prompt with all active schemas
     const systemPrompt = await buildExtractionSystemPrompt();
 
-    // Call Kimi K2.5 for extraction
-    const rawResponse = await callKimiK25(
+    // Call Gemma 4 via NIM for extraction (free, fast)
+    // Falls back to Kimi K2.5 on NIM, then OpenRouter as last resort
+    const rawResponse = await callNIM(
       systemPrompt,
       `Please analyze the following project description or RFP text and extract structured data:\n\n${text}`
     );
