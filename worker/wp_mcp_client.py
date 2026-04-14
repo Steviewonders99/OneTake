@@ -46,7 +46,7 @@ class WordPressMCPClient:
         app_password: str = "",
     ) -> None:
         self.command = "npx"
-        self.args = ["-y", "mcp-wordpress-remote"]
+        self.args = ["-y", "@automattic/mcp-wordpress-remote"]
         self.extra_env: dict[str, str] = {}
 
         url = site_url or WP_SITE_URL

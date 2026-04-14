@@ -157,9 +157,9 @@ async def publish_job_to_wordpress(
     logger.info("WP publish status: %s", publish_status)
 
     try:
-        from wp_mcp_client import WordPressMCPClient
+        from wp_rest_client import WordPressClient
 
-        async with WordPressMCPClient() as wp:
+        async with WordPressClient() as wp:
             result = await wp.create_job_post(
                 title=title,
                 content=content,
