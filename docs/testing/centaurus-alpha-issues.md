@@ -103,6 +103,21 @@
 
 ---
 
+## Stage 4: Composition
+
+### Issue 13: GLM-5 NIM rate limit — 0 compositions rendered
+- **Severity:** CRITICAL
+- **What happened:** 36 NIM calls to GLM-5 failed, 0 composed creatives generated. Every composition attempt returned empty — no HTML, no renders, no uploads.
+- **Root cause:** NVIDIA NIM free tier rate limits on GLM-5 (`z-ai/glm5`). After Stage 1-3 consumed API quota with Qwen 3.5 and Gemma 4 calls, GLM-5 had no capacity left.
+- **Fix options:**
+  1. **Stagger NIM key rotation** — use different keys for different stages (key pool already exists in `.keys.json`)
+  2. **Add retry with exponential backoff** — wait 30-60s between retries instead of immediate retry
+  3. **Fallback to Kimi K2.5 for HTML generation** — Kimi can generate HTML/CSS (less specialized than GLM-5 but functional)
+  4. **Queue compositions** — rate-limit to 2-3 NIM calls per minute instead of bursting
+- **Impact:** TOTAL BLOCKER — no creatives generated. Pipeline produces personas, copy, and images but nothing to show Miguel.
+
+---
+
 ## Stage 3: Copy Generation (cont.)
 
 ### Issue 12: Stage 3 NOT using diamond persona mini brief — DRIFT RISK

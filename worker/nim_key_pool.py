@@ -7,6 +7,9 @@ import itertools
 import os
 import logging
 
+from dotenv import load_dotenv
+load_dotenv()  # Ensure .env is loaded before reading keys
+
 logger = logging.getLogger(__name__)
 
 # Collect all NIM keys from environment
