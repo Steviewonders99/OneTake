@@ -3,6 +3,8 @@ import { callKimiK25 } from '@/lib/openrouter';
 import { buildExtractionSystemPrompt } from '@/lib/extraction-prompt';
 import type { ExtractionResult } from '@/lib/types';
 
+export const maxDuration = 120;
+
 export async function POST(request: Request) {
   const { userId } = await auth();
 
