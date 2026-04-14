@@ -451,7 +451,7 @@ async def _call_compositor_model(prompt: str) -> str:
 
     for model_id, model_label in models:
         try:
-            async with httpx.AsyncClient(timeout=120) as client:
+            async with httpx.AsyncClient(timeout=300) as client:
                 resp = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
                     headers={
@@ -462,7 +462,7 @@ async def _call_compositor_model(prompt: str) -> str:
                         "model": model_id,
                         "messages": [{"role": "user", "content": prompt}],
                         "temperature": 0.7,
-                        "max_tokens": 4096,
+                        "max_tokens": 16384,
                     },
                 )
 
