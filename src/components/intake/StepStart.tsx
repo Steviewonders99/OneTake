@@ -491,91 +491,10 @@ We need 500 dermatology study participants in 12 US metro areas. Must have diagn
             </div>
           )}
 
-          {/* Extract & Continue button (inline, for paste mode) */}
-          {entryMode === "paste" && !extracting && (
-            <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button
-                onClick={onSkip}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 9999,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  border: "none",
-                  background: "none",
-                  color: muted,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                Skip — fill manually
-              </button>
-              <button
-                onClick={handleExtractClick}
-                disabled={!canExtract}
-                style={{
-                  padding: "10px 28px",
-                  borderRadius: 9999,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  border: "none",
-                  background: canExtract ? charcoal : "#E8E8EA",
-                  color: canExtract ? "white" : muted,
-                  cursor: canExtract ? "pointer" : "not-allowed",
-                  fontFamily: "inherit",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                Extract &amp; Continue
-              </button>
-            </div>
-          )}
-
-          {/* Skip only button (upload mode, before file chosen) */}
-          {entryMode === "upload" && !extracting && (
-            <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={onSkip}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 9999,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  border: "none",
-                  background: "none",
-                  color: muted,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                Skip — fill manually
-              </button>
-            </div>
-          )}
+          {/* Buttons handled by WizardNav at the bottom */}
 
           {/* No mode selected — show skip */}
-          {entryMode === null && (
-            <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={onSkip}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 9999,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  border: "none",
-                  background: "none",
-                  color: muted,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                Skip — fill manually
-              </button>
-            </div>
-          )}
+          {/* No-mode skip also handled by WizardNav */}
         </div>
       </div>
 
