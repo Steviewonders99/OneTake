@@ -65,3 +65,4 @@ screenshots/
 verify.mjs
 verify-design-artifacts.mjs
 .superpowers/
+wpaccess.json
