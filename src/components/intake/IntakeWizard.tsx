@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,7 @@ export default function IntakeWizard() {
   const [confidenceFlags, setConfidenceFlags] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const extractTriggerRef = useRef<(() => void) | null>(null);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -177,7 +178,7 @@ export default function IntakeWizard() {
 
       {/* Step content */}
       <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 40 }}>
-        {currentStep === 0 && <StepStart onExtracted={handleExtracted} onSkip={handleSkip} onExtractingChange={setIsExtracting} />}
+        {currentStep === 0 && <StepStart onExtracted={handleExtracted} onSkip={handleSkip} onExtractingChange={setIsExtracting} onRegisterExtract={(fn) => { extractTriggerRef.current = fn; }} />}
         {currentStep === 1 && (
           <StepTaskMode
             taskType={taskType}
@@ -216,7 +217,7 @@ export default function IntakeWizard() {
         currentStep={currentStep}
         totalSteps={5}
         onBack={handleBack}
-        onNext={currentStep === 4 ? handleSubmit : handleNext}
+        onNext={currentStep === 0 ? () => extractTriggerRef.current?.() : currentStep === 4 ? handleSubmit : handleNext}
         nextLabel={currentStep === 0 ? "Extract & Continue" : currentStep === 4 ? "Submit Request" : undefined}
         nextDisabled={currentStep === 0 ? false : isSubmitting}
         showSkip={currentStep === 0}

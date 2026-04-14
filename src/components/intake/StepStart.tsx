@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, DragEvent } from "react";
+import { useState, useRef, useEffect, DragEvent } from "react";
 import { Upload, ClipboardPaste, Loader2 } from "lucide-react";
 import { ExtractionResult } from "@/lib/types";
 
@@ -8,9 +8,10 @@ interface StepStartProps {
   onExtracted: (result: ExtractionResult) => void;
   onSkip: () => void;
   onExtractingChange?: (extracting: boolean) => void;
+  onRegisterExtract?: (fn: () => void) => void;
 }
 
-export default function StepStart({ onExtracted, onSkip, onExtractingChange }: StepStartProps) {
+export default function StepStart({ onExtracted, onSkip, onExtractingChange, onRegisterExtract }: StepStartProps) {
   const [entryMode, setEntryMode] = useState<"upload" | "paste" | null>(null);
   const [pasteText, setPasteText] = useState("");
   const [extracting, setExtracting] = useState(false);
@@ -83,6 +84,11 @@ export default function StepStart({ onExtracted, onSkip, onExtractingChange }: S
       handlePasteExtract();
     }
   }
+
+  // Register extract trigger so WizardNav can call it
+  useEffect(() => {
+    onRegisterExtract?.(handleExtractClick);
+  });
 
   const purple = "#6D28D9";
   const muted = "#8A8A8E";
