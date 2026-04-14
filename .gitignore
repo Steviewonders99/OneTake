@@ -47,4 +47,21 @@ worker/.keys.json
 
 # Superpowers worktrees and brainstorm sessions
 .worktrees/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Figma plugin node_modules
+figma-plugin-nova/node_modules/
+
+# Worker cache
+worker/.cache/
+
+# Temp screenshots
+media-strategy-signin.png
+screenshots/
+
+# Temp verification scripts
+verify.mjs
+verify-design-artifacts.mjs
 .superpowers/
