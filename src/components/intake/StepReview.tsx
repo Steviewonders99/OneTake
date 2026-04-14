@@ -107,12 +107,37 @@ function SectionHeader({ icon, title, stepIndex, onEditStep }: SectionHeaderProp
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+// ─── Missing fields detector ──────────────────────────────────────────────────
+
+interface MissingField {
+  label: string;
+  step: number;
+}
+
+function detectMissingFields(
+  formData: Record<string, unknown>,
+  taskType: string | null,
+  workMode: "onsite" | "remote" | null,
+): MissingField[] {
+  const missing: MissingField[] = [];
+
+  if (!taskType) missing.push({ label: "Task Type", step: 1 });
+  if (!workMode) missing.push({ label: "Work Mode", step: 1 });
+  if (!formData.title || !(formData.title as string).trim()) missing.push({ label: "Project Title", step: 2 });
+  if (!formData.volume_needed) missing.push({ label: "Volume Needed", step: 2 });
+  if (!formData.qualifications_required || !(formData.qualifications_required as string).trim()) missing.push({ label: "Required Qualifications", step: 3 });
+  if (workMode === "onsite" && !formData.ada_form_url) missing.push({ label: "AIDA Screener URL", step: 3 });
+
+  return missing;
+}
+
 export default function StepReview({
   formData,
   taskType,
   workMode,
   onEditStep,
 }: StepReviewProps) {
+  const missingFields = detectMissingFields(formData, taskType, workMode);
   const compensationModel = asString(formData.compensation_model);
   const compensationRate = formData.compensation_rate;
   const compensationDisplay =
@@ -149,6 +174,7 @@ export default function StepReview({
     <div
       style={{
         maxWidth: 1600,
+        width: "100%",
         margin: "0 auto",
         padding: "48px 48px",
       }}
@@ -162,6 +188,56 @@ export default function StepReview({
           Double-check everything before submitting. Click &lsquo;Edit&rsquo; on any section to make changes.
         </p>
       </div>
+
+      {/* Missing fields alert */}
+      {missingFields.length > 0 && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: "14px 18px",
+            borderRadius: 10,
+            background: "#FEF2F2",
+            border: "1px solid #FECACA",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <AlertCircle size={16} color="#DC2626" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#991B1B" }}>
+              {missingFields.length} required field{missingFields.length > 1 ? "s" : ""} missing
+            </span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {missingFields.map((f) => (
+              <button
+                key={f.label}
+                onClick={() => onEditStep(f.step)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "4px 12px",
+                  borderRadius: 9999,
+                  background: "#FFFFFF",
+                  border: "1px solid #FECACA",
+                  color: "#DC2626",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {f.label}
+                <span style={{ fontSize: 10, color: "#991B1B" }}>
+                  Step {f.step}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Review card */}
       <div
