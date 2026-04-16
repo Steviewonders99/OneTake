@@ -77,6 +77,7 @@ export async function GET(
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=300, s-maxage=3600',
+        'Content-Security-Policy': "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https:; frame-ancestors 'none';",
       },
     });
   } catch (error) {
