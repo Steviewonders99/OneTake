@@ -38,7 +38,15 @@ export async function POST(
       try {
         const { auth } = await import('@clerk/nextjs/server');
         const { userId } = await auth();
-        if (userId) authorized = true;
+        if (userId) {
+          const { getAuthContext, canAccessRequest } = await import('@/lib/permissions');
+          const { getIntakeRequest } = await import('@/lib/db/intake');
+          const ctx = await getAuthContext();
+          const intake = await getIntakeRequest(id);
+          if (ctx && intake && canAccessRequest(ctx, intake.created_by)) {
+            authorized = true;
+          }
+        }
       } catch {}
     }
 
