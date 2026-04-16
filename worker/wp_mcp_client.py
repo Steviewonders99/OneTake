@@ -12,9 +12,9 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
-from config import WP_SITE_URL, WP_USERNAME, WP_APP_PASSWORD
+from config import WP_APP_PASSWORD, WP_SITE_URL, WP_USERNAME
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class WordPressMCPClient:
         self._stdio_ctx: Any = None
         self._session_ctx: Any = None
 
-    async def __aenter__(self) -> "WordPressMCPClient":
+    async def __aenter__(self) -> WordPressMCPClient:
         from mcp import ClientSession
         from mcp.client.stdio import StdioServerParameters, stdio_client
 
@@ -114,10 +114,10 @@ class WordPressMCPClient:
         title: str,
         content: str,
         status: str = "publish",
-        slug: Optional[str] = None,
-        meta: Optional[dict] = None,
-        job_types: Optional[list[str]] = None,
-        job_tags: Optional[list[str]] = None,
+        slug: str | None = None,
+        meta: dict | None = None,
+        job_types: list[str] | None = None,
+        job_tags: list[str] | None = None,
     ) -> dict:
         """Create a WordPress job post with taxonomies and meta.
 

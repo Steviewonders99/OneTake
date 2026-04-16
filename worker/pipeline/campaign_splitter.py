@@ -21,7 +21,6 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +145,6 @@ async def split_campaign(
         List of child campaign dicts, each with:
         - child_request_id, country, cities, languages, regions, form_data
     """
-    from ai.local_llm import generate_text
     from neon_client import _get_pool
 
     # Idempotency: check if already split

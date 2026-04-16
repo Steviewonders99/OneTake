@@ -14,15 +14,12 @@ from __future__ import annotations
 import json
 import logging
 
-from ai.local_llm import generate_copy, generate_text
+from ai.local_llm import generate_copy
 from neon_client import save_asset
 from prompts.project_context import build_project_context
 from prompts.recruitment_copy import (
-    COPY_EVAL_SYSTEM_PROMPT,
     COPY_SYSTEM_PROMPT,
-    build_copy_eval_prompt,
     build_copy_prompt,
-    build_persona_targeted_copy_prompt,
     build_variation_prompts,
 )
 

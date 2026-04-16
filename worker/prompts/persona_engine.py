@@ -10,8 +10,6 @@ worker/prompts/recruitment_brief.py for the derived_requirements source.
 from __future__ import annotations
 
 import json
-from typing import Any
-
 
 PERSONA_SYSTEM_PROMPT = (
     "You are a contributor-recruitment psychologist for OneForma, "

@@ -152,7 +152,7 @@ WHAT DRIVES THEM:
     {pains}
   Objections:
     {objs}
-  {f'Jobs to be done:' if jtbd_functional else ''}
+  {'Jobs to be done:' if jtbd_functional else ''}
   {f'  Functional: {jtbd_functional}' if jtbd_functional else ''}
   {f'  Emotional: {jtbd_emotional}' if jtbd_emotional else ''}
   {f'  Social: {jtbd_social}' if jtbd_social else ''}

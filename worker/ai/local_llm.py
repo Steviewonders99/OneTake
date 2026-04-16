@@ -12,10 +12,8 @@ Models
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-
-from config import COPY_MODEL, LLM_MODEL
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +135,8 @@ async def generate_copy(
 
     Marketing skills can be injected via the skill_stage kwarg.
     """
-    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, NVIDIA_NIM_CREATIVE_MODEL, OPENROUTER_API_KEY
     import httpx
+    from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, NVIDIA_NIM_CREATIVE_MODEL, OPENROUTER_API_KEY
 
     # Inject marketing skills if stage specified
     skill_stage = kwargs.pop("skill_stage", None)

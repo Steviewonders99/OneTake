@@ -17,15 +17,11 @@ SEMANTIC MEANING has been rewritten for the new brand voice.
 from __future__ import annotations
 
 from brand import (
-    TAGLINE,
-    TONE_RULES,
-    WORDS_TO_AVOID,
-    PILLARS,
     CTA_PRIMARY,
     CTA_SECONDARY,
+    WORDS_TO_AVOID,
     build_brand_voice_block,
 )
-
 
 EVAL_SYSTEM_PROMPT = (
     "You are a brand voice evaluator for OneForma, the AI platform that sees "

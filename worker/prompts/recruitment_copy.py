@@ -20,44 +20,42 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from brand import (
+    CTA_PRIMARY,
+    CTA_SECONDARY,
+    HERO_TEMPLATES_BY_PILLAR,
+    OPERATIONAL_CONTEXT,
+    PILLARS,
+    POSITIONING,
+    TRUST_STRIP,
+    WORDS_TO_AVOID,
+    build_brand_voice_block,
+    get_cta,
+)
+
 from prompts.ethical_positioning import (
     apply_ethical_framing,
     build_ethical_copy_prompt,
     detect_sensitivity,
 )
 
-from brand import (
-    TAGLINE,
-    POSITIONING,
-    TONE_RULES,
-    WORDS_TO_AVOID,
-    PILLARS,
-    HERO_TEMPLATES_BY_PILLAR,
-    CTA_PRIMARY,
-    CTA_SECONDARY,
-    get_cta,
-    TRUST_STRIP,
-    OPERATIONAL_CONTEXT,
-    build_brand_voice_block,
-)
-
 # ---------------------------------------------------------------------------
 # Re-export ethical helpers so existing imports still work.
 # ---------------------------------------------------------------------------
 __all__ = [
-    "COPY_SYSTEM_PROMPT",
     "COPY_EVAL_SYSTEM_PROMPT",
-    "PLATFORM_AD_SPECS",
+    "COPY_SYSTEM_PROMPT",
     "MARKETING_PSYCHOLOGY",
-    "build_copy_prompt",
+    "PLATFORM_AD_SPECS",
+    "apply_ethical_framing",
     "build_copy_eval_prompt",
+    "build_copy_prompt",
     "build_persona_copy_prompt",
     "build_persona_targeted_copy_prompt",
     "build_variation_prompts",
-    "select_psychology_hooks",
-    "extract_available_facts",
-    "apply_ethical_framing",
     "detect_sensitivity",
+    "extract_available_facts",
+    "select_psychology_hooks",
 ]
 
 

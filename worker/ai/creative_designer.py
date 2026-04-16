@@ -13,7 +13,6 @@ import logging
 from typing import Any
 
 import httpx
-
 from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, NVIDIA_NIM_DESIGN_MODEL, OPENROUTER_API_KEY
 from prompts.creative_overlay import (
     BRAND_KIT,
@@ -238,7 +237,7 @@ C. SHAPE OVERLAY: Solid shape on photo corner. Text inside shape.
 
     # Model cascade: GLM-5 (design) → Kimi K2.5 (fallback) — NIM only, no paid APIs
     # Uses key pool for round-robin rotation (40 RPM per key × N keys)
-    from nim_key_pool import get_nim_key, key_count
+    from nim_key_pool import get_nim_key
     nim_key = get_nim_key() or NVIDIA_NIM_API_KEY
 
     providers = []

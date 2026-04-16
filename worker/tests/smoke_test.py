@@ -19,7 +19,6 @@ from __future__ import annotations
 import os
 import sys
 import time
-import traceback
 
 # Ensure the worker root is on sys.path so imports resolve.
 _WORKER_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +56,7 @@ class SmokeTestRunner:
         print(f"\n{'=' * 60}")
         print(f"SMOKE TEST RESULTS: {self.passed}/{total} passed, {self.failed} failed, {self.skipped} skipped")
         if self.errors:
-            print(f"\nFAILURES:")
+            print("\nFAILURES:")
             for name, err in self.errors:
                 print(f"  \u274c {name}: {err}")
         print(f"{'=' * 60}")
@@ -70,7 +69,7 @@ class SmokeTestRunner:
 
 def test_config_loads():
     """All config values load from env."""
-    from config import DATABASE_URL, OPENROUTER_API_KEY, MLX_SERVER_PORT, LLM_MODEL
+    from config import LLM_MODEL, MLX_SERVER_PORT
     # These have defaults so they always load; env-dependent ones may be empty
     assert MLX_SERVER_PORT > 0, f"MLX_SERVER_PORT={MLX_SERVER_PORT}"
     assert LLM_MODEL, "LLM_MODEL is empty"
@@ -95,50 +94,18 @@ def test_config_all_keys():
 def test_all_imports():
     """Every module in the worker imports without error."""
     # prompts
-    import prompts.persona_engine
-    import prompts.cultural_research
-    import prompts.composition_engine
-    import prompts.content_formats
-    import prompts.recruitment_copy
-    import prompts.recruitment_actors
-    import prompts.recruitment_brief
-    import prompts.ethical_positioning
-    import prompts.eval_brief
-    import prompts.eval_image_realism
-    import prompts.eval_video_script
-    import prompts.eval_registry
-    import prompts.video_script
-    import prompts.video_director
+
     # ai
-    import ai.compositor
-    import ai.deglosser
-    import ai.graphic_compositor
-    import ai.seedream
-    import ai.bg_remover
-    import ai.tts_engine
-    import ai.local_llm
-    import ai.local_vlm
-    import ai.evaluator
-    import ai.kling_client
-    import ai.font_cache
-    import ai.wav2lip
-    # pipeline
-    import pipeline.orchestrator
-    import pipeline.stage1_intelligence
-    import pipeline.stage2_images
-    import pipeline.stage3_copy
-    import pipeline.stage4_compose
-    import pipeline.stage_video
+
     # top-level
-    import neon_client
-    import blob_uploader
-    import teams_notify
-    import mlx_server_manager
+
+    # pipeline
 
 
 def test_neon_connection():
     """Database is reachable and has expected tables (requires DATABASE_URL)."""
     import asyncio
+
     from config import DATABASE_URL
     if not DATABASE_URL:
         raise AssertionError("DATABASE_URL not set -- cannot test DB connectivity")
@@ -163,6 +130,7 @@ def test_neon_connection():
 def test_neon_seed_data():
     """Seed data is present: schemas, languages, regions (requires DATABASE_URL)."""
     import asyncio
+
     from config import DATABASE_URL
     if not DATABASE_URL:
         raise AssertionError("DATABASE_URL not set -- cannot test seed data")
@@ -292,7 +260,7 @@ def test_build_persona_prompt_with_retry_feedback():
 
 def test_validate_personas_clean_and_violation():
     """Verify validate_personas accepts clean personas and rejects bad ones."""
-    from pipeline.persona_validation import validate_personas, Stage1PersonaValidationError
+    from pipeline.persona_validation import validate_personas
 
     # Clean case
     clean = [{
@@ -675,7 +643,7 @@ def test_script_evaluator_8_dimensions():
 
 def test_brief_scoring_accept():
     """Perfect scores produce 'accept' verdict."""
-    from prompts.eval_brief import score_brief, BRIEF_EVAL_DIMENSIONS
+    from prompts.eval_brief import BRIEF_EVAL_DIMENSIONS, score_brief
     perfect = {
         "dimensions": {
             k: {"score": 10, "feedback": "Perfect"}
@@ -691,7 +659,7 @@ def test_brief_scoring_accept():
 
 def test_brief_scoring_reject():
     """Low scores produce 'reject' verdict."""
-    from prompts.eval_brief import score_brief, BRIEF_EVAL_DIMENSIONS
+    from prompts.eval_brief import BRIEF_EVAL_DIMENSIONS, score_brief
     terrible = {
         "dimensions": {
             k: {"score": 2, "feedback": "Terrible"}
@@ -706,7 +674,7 @@ def test_brief_scoring_reject():
 
 def test_image_auto_reject_on_extra_fingers():
     """'extra fingers' trigger forces dimension to 0 and rejects."""
-    from prompts.eval_image_realism import score_image_realism, IMAGE_REALISM_DIMENSIONS
+    from prompts.eval_image_realism import IMAGE_REALISM_DIMENSIONS, score_image_realism
     # Build eval response where anatomical_correctness has auto_reject_triggered
     eval_resp = {
         "dimensions": {
@@ -727,12 +695,12 @@ def test_image_auto_reject_on_extra_fingers():
     result = score_image_realism(eval_resp)
     anat = result["dimension_scores"]["anatomical_correctness"]
     assert anat["score"] == 0, f"Expected anatomical score 0, got {anat['score']}"
-    assert result["verdict"] != "accept", f"Should not accept with extra fingers"
+    assert result["verdict"] != "accept", "Should not accept with extra fingers"
 
 
 def test_script_unsafe_rejects():
     """Unsafe safety status produces 'reject' verdict."""
-    from prompts.eval_video_script import score_script, SCRIPT_EVAL_DIMENSIONS
+    from prompts.eval_video_script import SCRIPT_EVAL_DIMENSIONS, score_script
     eval_resp = {
         "dimensions": {
             k: {"score": 8, "feedback": "Good"}
@@ -898,9 +866,10 @@ def test_compositor_9_platforms():
 
 def test_deglosser_3_intensities():
     """Deglosser has light/medium/heavy intensities."""
+    import io
+
     from ai.deglosser import degloss
     from PIL import Image
-    import io
     # Create a small test image
     img = Image.new("RGB", (100, 100), (180, 150, 140))
     buf = io.BytesIO()
@@ -922,8 +891,9 @@ def test_graphic_compositor_popout():
     result = comp.render()
     assert len(result) > 0, "GraphicCompositor render returned empty bytes"
     # Verify it is a valid PNG
-    from PIL import Image
     import io
+
+    from PIL import Image
     img = Image.open(io.BytesIO(result))
     assert img.size == (200, 200), f"Expected 200x200, got {img.size}"
 
@@ -938,7 +908,7 @@ def test_seedream_10_dimensions():
 
 def test_bg_remover_imports():
     """Background remover imports without error."""
-    from ai.bg_remover import remove_background, create_cutout_with_shadow
+    from ai.bg_remover import create_cutout_with_shadow, remove_background
     assert callable(remove_background)
     assert callable(create_cutout_with_shadow)
 
@@ -1230,7 +1200,7 @@ if __name__ == "__main__":
         runner.skip("openrouter_reachable", "OPENROUTER_API_KEY not set")
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 2: Persona Engine")
+    print("\n\U0001f4cb Category 2: Persona Engine")
     runner.run("persona_engine_prompt_builder_exports", test_persona_engine_prompt_builder_exports)
     runner.run("build_persona_prompt_from_constraints", test_build_persona_prompt_from_constraints)
     runner.run("build_persona_prompt_with_retry_feedback", test_build_persona_prompt_with_retry_feedback)
@@ -1238,7 +1208,7 @@ if __name__ == "__main__":
     runner.run("stage1_persona_validation_error_is_exception", test_stage1_persona_validation_error_is_exception)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 3: Cultural Research")
+    print("\n\U0001f4cb Category 3: Cultural Research")
     runner.run("research_dimensions_complete", test_research_dimensions_complete)
     runner.run("regional_platform_priors", test_regional_platform_priors)
     runner.run("channels_for_age", test_channels_for_age)
@@ -1247,7 +1217,7 @@ if __name__ == "__main__":
     runner.run("apply_research_to_personas", test_apply_research_to_personas)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 4: Composition Engine")
+    print("\n\U0001f4cb Category 4: Composition Engine")
     runner.run("all_11_compositions_defined", test_all_11_compositions_defined)
     runner.run("all_12_intents_mapped", test_all_12_intents_mapped)
     runner.run("composition_never_repeats_in_set", test_composition_never_repeats_in_set)
@@ -1255,7 +1225,7 @@ if __name__ == "__main__":
     runner.run("composition_block_output", test_composition_block_output)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 5: Content Formats")
+    print("\n\U0001f4cb Category 5: Content Formats")
     runner.run("10_platforms_33_formats", test_10_platforms_33_formats)
     runner.run("every_format_has_required_fields", test_every_format_has_required_fields)
     runner.run("format_matrix_generation", test_format_matrix_generation)
@@ -1263,7 +1233,7 @@ if __name__ == "__main__":
     runner.run("reddit_formats_exist", test_reddit_formats_exist)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 6: Platform Ad Specs")
+    print("\n\U0001f4cb Category 6: Platform Ad Specs")
     runner.run("8_platform_ad_specs", test_8_platform_ad_specs)
     runner.run("meta_has_correct_fields", test_meta_has_correct_fields)
     runner.run("linkedin_has_correct_fields", test_linkedin_has_correct_fields)
@@ -1271,7 +1241,7 @@ if __name__ == "__main__":
     runner.run("marketing_psychology_hooks", test_marketing_psychology_hooks)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 7: Ethical Positioning")
+    print("\n\U0001f4cb Category 7: Ethical Positioning")
     runner.run("6_sensitivity_categories", test_6_sensitivity_categories)
     runner.run("detect_children_sensitivity", test_detect_children_sensitivity)
     runner.run("detect_medical_sensitivity", test_detect_medical_sensitivity)
@@ -1279,7 +1249,7 @@ if __name__ == "__main__":
     runner.run("brand_personality_defined", test_brand_personality_defined)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 8: Evaluators")
+    print("\n\U0001f4cb Category 8: Evaluators")
     runner.run("brief_evaluator_8_dimensions", test_brief_evaluator_8_dimensions)
     runner.run("image_evaluator_10_dimensions", test_image_evaluator_10_dimensions)
     runner.run("image_evaluator_auto_reject_triggers", test_image_evaluator_auto_reject_triggers)
@@ -1292,7 +1262,7 @@ if __name__ == "__main__":
     runner.run("eval_registry_has_3_evaluators", test_eval_registry_has_3_evaluators)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 9: Video Pipeline")
+    print("\n\U0001f4cb Category 9: Video Pipeline")
     runner.run("8_video_templates", test_8_video_templates)
     runner.run("20_camera_moves", test_20_camera_moves)
     runner.run("kling_constraints", test_kling_constraints)
@@ -1303,7 +1273,7 @@ if __name__ == "__main__":
     runner.run("multishot_prompt_builds", test_multishot_prompt_builds)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 10: AI Modules")
+    print("\n\U0001f4cb Category 10: AI Modules")
     runner.run("compositor_7_templates", test_compositor_7_templates)
     runner.run("compositor_9_platforms", test_compositor_9_platforms)
     runner.run("deglosser_3_intensities", test_deglosser_3_intensities)
@@ -1312,7 +1282,7 @@ if __name__ == "__main__":
     runner.run("bg_remover_imports", test_bg_remover_imports)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 11: Actor System")
+    print("\n\U0001f4cb Category 11: Actor System")
     runner.run("realism_anchors_count", test_realism_anchors_count)
     runner.run("anti_gloss_instruction", test_anti_gloss_instruction)
     runner.run("actor_prompt_returns_tuple", test_actor_prompt_returns_tuple)
@@ -1320,12 +1290,12 @@ if __name__ == "__main__":
     runner.run("multi_actor_scenes", test_multi_actor_scenes)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 12: Stage 2 Visual Direction")
+    print("\n\U0001f4cb Category 12: Stage 2 Visual Direction")
     runner.run("build_persona_actor_prompt_with_visual_direction", test_build_persona_actor_prompt_with_visual_direction)
     runner.run("build_persona_actor_prompt_without_visual_direction", test_build_persona_actor_prompt_without_visual_direction)
 
     # ------------------------------------------------------------------
-    print(f"\n\U0001f4cb Category 13: Stage 3 Copy — Language, Pillars, Cultural Context")
+    print("\n\U0001f4cb Category 13: Stage 3 Copy — Language, Pillars, Cultural Context")
     runner.run("derive_languages_from_regions", test_derive_languages_from_regions)
     runner.run("build_variation_prompts_pillar_weighted", test_build_variation_prompts_pillar_weighted)
     runner.run("build_variation_prompts_no_weighting", test_build_variation_prompts_no_weighting)

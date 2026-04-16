@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import base64
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import httpx
-
-from config import WP_SITE_URL, WP_USERNAME, WP_APP_PASSWORD
+from config import WP_APP_PASSWORD, WP_SITE_URL, WP_USERNAME
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class WordPressClient:
     def _api_base(self) -> str:
         return f"{self.site_url}/wp-json/wp/v2"
 
-    async def __aenter__(self) -> "WordPressClient":
+    async def __aenter__(self) -> WordPressClient:
         self._client = httpx.AsyncClient(
             timeout=30,
             headers={
@@ -75,10 +74,10 @@ class WordPressClient:
         title: str,
         content: str,
         status: str = "draft",
-        slug: Optional[str] = None,
-        meta: Optional[dict] = None,
-        job_types: Optional[list[str]] = None,
-        job_tags: Optional[list[str]] = None,
+        slug: str | None = None,
+        meta: dict | None = None,
+        job_types: list[str] | None = None,
+        job_tags: list[str] | None = None,
     ) -> dict:
         """Create a WordPress post (or custom post type 'job').
 

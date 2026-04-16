@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 JD_SYSTEM_PROMPT = """\
 You are a recruitment content specialist for OneForma, a global data \
 annotation and AI training platform with 1.8M+ contributors across \

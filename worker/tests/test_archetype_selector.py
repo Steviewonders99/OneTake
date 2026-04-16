@@ -1,6 +1,5 @@
 """Tests for composition archetype selection logic."""
 
-import pytest
 from pipeline.archetype_selector import select_archetype
 
 

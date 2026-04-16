@@ -1,13 +1,11 @@
 """Tests for the artifact-driven compositor prompt builder."""
 
-import pytest
 from prompts.compositor_prompt import (
+    ARCHETYPE_CONSTRAINTS,
     build_artifact_catalog_section,
     build_compositor_prompt,
     inject_vqa_feedback,
-    ARCHETYPE_CONSTRAINTS,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────
 

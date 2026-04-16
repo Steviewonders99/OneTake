@@ -558,7 +558,7 @@ def _build_single_scene_prompt(
     # Scene context
     parts.append(f"{scene.get('environment', 'modern home interior')}.")
     parts.append(f"{scene.get('lighting', 'natural indoor lighting')}.")
-    parts.append(f"Filmed on iPhone, natural skin texture, no beauty filter, slight grain.")
+    parts.append("Filmed on iPhone, natural skin texture, no beauty filter, slight grain.")
     return " ".join(parts)
 
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 import io
 import logging
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +28,12 @@ class GraphicCompositor:
 
     def add_gradient_background(
         self,
-        colors: list[str] = ["#FFFFFF", "#F5F5F5"],
+        colors: list[str] | None = None,
         direction: str = "vertical",
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add a gradient background layer."""
+        if colors is None:
+            colors = ["#FFFFFF", "#F5F5F5"]
         from PIL import ImageColor
 
         gradient = Image.new("RGBA", (self.width, self.height))
@@ -63,7 +65,7 @@ class GraphicCompositor:
         color: str = "#FFFFFF",
         border_radius: int = 24,
         shadow: bool = True,
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add a card/panel that the character will pop out of."""
         from PIL import ImageColor
 
@@ -99,7 +101,7 @@ class GraphicCompositor:
         y: int = 50,
         max_height: int = 900,
         pop_above_card: bool = True,
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add a character cutout that 'pops out' of the card frame.
 
         If pop_above_card=True, the character's head/upper body extends
@@ -128,7 +130,7 @@ class GraphicCompositor:
         color: str = "#1A1A1A",
         font_weight: str = "bold",
         max_width: int = 0,
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add text to the composition."""
         from PIL import ImageColor
 
@@ -138,7 +140,7 @@ class GraphicCompositor:
         # Try to use system font
         try:
             font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
-        except (OSError, IOError):
+        except OSError:
             font = ImageFont.load_default()
 
         c = ImageColor.getrgb(color)
@@ -183,7 +185,7 @@ class GraphicCompositor:
         bg_color: str = "#32373C",
         text_color: str = "#FFFFFF",
         border_radius: int = 9999,
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add a pill-shaped CTA button."""
         from PIL import ImageColor
 
@@ -201,7 +203,7 @@ class GraphicCompositor:
 
         try:
             font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 20)
-        except (OSError, IOError):
+        except OSError:
             font = ImageFont.load_default()
 
         bbox = draw.textbbox((0, 0), text, font=font)
@@ -221,7 +223,7 @@ class GraphicCompositor:
         y: int = 40,
         font_size: int = 24,
         color: str = "#32373C",
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add brand logo text."""
         return self.add_text(text, x=x, y=y, font_size=font_size, color=color)
 
@@ -232,7 +234,7 @@ class GraphicCompositor:
         y: int = 100,
         bg_color: str = "#F0F0F0",
         text_color: str = "#32373C",
-    ) -> "GraphicCompositor":
+    ) -> GraphicCompositor:
         """Add a small badge/pill label."""
         from PIL import ImageColor
 
@@ -241,7 +243,7 @@ class GraphicCompositor:
 
         try:
             font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
-        except (OSError, IOError):
+        except OSError:
             font = ImageFont.load_default()
 
         bbox = draw.textbbox((0, 0), text, font=font)
@@ -284,7 +286,7 @@ async def compose_character_popout(
     headline: str,
     subheadline: str = "",
     cta_text: str = "Start Earning",
-    brand_colors: list[str] = ["#FFFFFF", "#F5F5F5"],
+    brand_colors: list[str] | None = None,
     width: int = 1080,
     height: int = 1080,
 ) -> bytes:
@@ -293,6 +295,8 @@ async def compose_character_popout(
     The character's head and shoulders extend above the card boundary,
     creating a dynamic, professional 3D-like effect.
     """
+    if brand_colors is None:
+        brand_colors = ["#FFFFFF", "#F5F5F5"]
     comp = GraphicCompositor(width, height)
 
     # Background gradient
@@ -347,12 +351,14 @@ async def compose_character_popout(
 async def compose_side_by_side(
     cutout_bytes: bytes,
     headline: str,
-    badges: list[str] = [],
+    badges: list[str] | None = None,
     cta_text: str = "Join Now",
     width: int = 1200,
     height: int = 627,
 ) -> bytes:
     """Character on one side, text on the other -- for landscape ads."""
+    if badges is None:
+        badges = []
     comp = GraphicCompositor(width, height)
 
     comp.add_gradient_background(colors=["#FFFFFF", "#FAFAFA"])

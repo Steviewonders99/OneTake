@@ -678,8 +678,9 @@ def _convert_to_avif(image_bytes: bytes, quality: int = 65) -> bytes:
     Falls back to original bytes if AVIF conversion fails.
     """
     try:
-        from PIL import Image
         import io as _io
+
+        from PIL import Image
 
         img = Image.open(_io.BytesIO(image_bytes)).convert("RGB")
         buf = _io.BytesIO()

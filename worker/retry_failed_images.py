@@ -28,14 +28,15 @@ CONCURRENCY = 10
 
 async def _retry_one(row, pool):
     """Retry a single failed image via Flux.2 Pro. Returns ('fixed'|'failed', name, score)."""
+    import io
+
     import httpx
+    from ai.deglosser import degloss
     from ai.flux_edit import edit_image_flux
     from ai.local_vlm import analyze_image
-    from ai.deglosser import degloss
     from blob_uploader import upload_to_blob
-    from pipeline.stage2_images import _parse_json
     from PIL import Image
-    import io
+    from pipeline.stage2_images import _parse_json
 
     asset_id = str(row["id"])
     blob_url = row["blob_url"]

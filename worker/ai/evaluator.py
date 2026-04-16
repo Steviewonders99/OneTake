@@ -10,8 +10,9 @@ import json
 import logging
 from typing import Any
 
-from ai.local_llm import generate_text
 from prompts.recruitment_evaluation import EVAL_SYSTEM_PROMPT, build_eval_prompt
+
+from ai.local_llm import generate_text
 
 logger = logging.getLogger(__name__)
 

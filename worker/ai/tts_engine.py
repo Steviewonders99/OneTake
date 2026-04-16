@@ -12,14 +12,11 @@ Routing logic:
 from __future__ import annotations
 
 import asyncio
-import io
 import logging
-import struct
 import tempfile
 from typing import Any
 
 import httpx
-
 from config import ELEVENLABS_API_KEY, ELEVENLABS_DEFAULT_VOICE
 
 logger = logging.getLogger(__name__)

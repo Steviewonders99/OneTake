@@ -16,7 +16,6 @@ import json
 import logging
 import os
 import time
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def get_cached_research(region: str) -> dict | None:
         return None
 
     try:
-        with open(cache_file, "r") as f:
+        with open(cache_file) as f:
             data = json.load(f)
 
         cached_at = data.get("_cached_at", 0)

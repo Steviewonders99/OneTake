@@ -40,7 +40,7 @@ def _load_skill(skill_name: str) -> str:
     if not os.path.exists(skill_path):
         logger.warning("Marketing skill '%s' not found at %s", skill_name, skill_path)
         return ""
-    with open(skill_path, "r") as f:
+    with open(skill_path) as f:
         content = f.read()
     # Strip YAML frontmatter
     if content.startswith("---"):

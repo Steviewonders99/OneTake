@@ -35,23 +35,30 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from prompts.eval_brief import (
     BRIEF_EVAL_DIMENSIONS,
-    EVAL_SYSTEM_PROMPT as BRIEF_EVAL_SYSTEM,
     build_brief_eval_prompt,
     score_brief,
 )
+from prompts.eval_brief import (
+    EVAL_SYSTEM_PROMPT as BRIEF_EVAL_SYSTEM,
+)
+from prompts.eval_image_realism import (
+    EVAL_SYSTEM_PROMPT as IMAGE_EVAL_SYSTEM,
+)
 from prompts.eval_image_realism import (
     IMAGE_REALISM_DIMENSIONS,
-    EVAL_SYSTEM_PROMPT as IMAGE_EVAL_SYSTEM,
     build_image_realism_prompt,
     score_image_realism,
 )
 from prompts.eval_video_script import (
-    SCRIPT_EVAL_DIMENSIONS,
     EVAL_SYSTEM_PROMPT as SCRIPT_EVAL_SYSTEM,
+)
+from prompts.eval_video_script import (
+    SCRIPT_EVAL_DIMENSIONS,
     build_script_eval_prompt,
     score_script,
 )

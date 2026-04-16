@@ -12,15 +12,14 @@ words cause automatic rejection downstream.
 from __future__ import annotations
 
 from brand import (
-    TAGLINE,
-    POSITIONING,
-    UNIQUE_VALUE,
-    TONE_RULES,
-    WORDS_TO_AVOID,
-    PILLARS,
-    TRUST_STRIP,
-    SERVICE_CATEGORIES,
     OPERATIONAL_CONTEXT,
+    PILLARS,
+    POSITIONING,
+    SERVICE_CATEGORIES,
+    TAGLINE,
+    TRUST_STRIP,
+    UNIQUE_VALUE,
+    WORDS_TO_AVOID,
     build_brand_voice_block,
 )
 

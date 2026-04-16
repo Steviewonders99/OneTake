@@ -10,7 +10,6 @@ Any "AI tell-tale" detection = automatic reject (score 0 on that dimension)
 """
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 

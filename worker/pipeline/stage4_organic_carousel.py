@@ -15,18 +15,18 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
 
+from ai.compositor import PLATFORM_SPECS
 from ai.local_llm import generate_copy
 from neon_client import get_assets, save_asset
-from pipeline.organic_caption_validator import validate_caption
-from pipeline.stage4_carousel import _generate_carousel, CAROUSEL_PLATFORMS
-from ai.compositor import PLATFORM_SPECS
 from prompts.organic_caption_copy import (
     ORGANIC_CAPTION_SYSTEM_PROMPT,
-    build_linkedin_caption_prompt,
     build_ig_caption_prompt,
+    build_linkedin_caption_prompt,
 )
+
+from pipeline.organic_caption_validator import validate_caption
+from pipeline.stage4_carousel import CAROUSEL_PLATFORMS, _generate_carousel
 
 logger = logging.getLogger(__name__)
 

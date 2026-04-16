@@ -26,7 +26,6 @@ Stripe, Owner.com) analyzed via Google Pomelli:
 """
 from __future__ import annotations
 
-
 # ── 1. Editorial Serif Hero ─────────────────────────────────────────
 # Full-bleed photo with WHITE gradient overlay (bottom 40%).
 # Georgia serif headline stacked 2-3 words/line.

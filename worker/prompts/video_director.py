@@ -155,7 +155,7 @@ def build_kling_prompt(
     ref_count = min(len(actor_references), KLING_CONSTRAINTS["recommended_references"])
     subject_note = ""
     if ref_count > 0:
-        subject_note = f"[SUBJECT matches reference character — maintain consistent face, hair, build across all shots]"
+        subject_note = "[SUBJECT matches reference character — maintain consistent face, hair, build across all shots]"
 
     # Build the Kling prompt in the correct formula order
     parts: list[str] = []
@@ -521,12 +521,13 @@ async def generate_character_grid(
     This single grid image is used as Kling's reference for maximum
     character consistency — same concept as Higgsfield's character sheets.
     """
-    from ai.seedream import generate_image
-    from ai.deglosser import degloss
-    from blob_uploader import upload_to_blob
-    from PIL import Image
     import io
     import uuid
+
+    from ai.deglosser import degloss
+    from ai.seedream import generate_image
+    from blob_uploader import upload_to_blob
+    from PIL import Image
 
     angle_prompts = build_character_grid_prompts(actor_data)
 

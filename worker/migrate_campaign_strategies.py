@@ -5,6 +5,7 @@ Run this script to apply the migration to Neon:
     cd /Users/stevenjunop/centric-intake/worker && python3 migrate_campaign_strategies.py
 """
 import asyncio
+
 import asyncpg
 from config import DATABASE_URL
 

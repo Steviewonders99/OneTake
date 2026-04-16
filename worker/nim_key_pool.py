@@ -4,10 +4,11 @@ NIM free tier: 40 RPM per key. With N keys we get N × 40 RPM.
 Call get_nim_key() to get the next key in rotation.
 """
 import itertools
-import os
 import logging
+import os
 
 from dotenv import load_dotenv
+
 load_dotenv()  # Ensure .env is loaded before reading keys
 
 logger = logging.getLogger(__name__)

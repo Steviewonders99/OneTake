@@ -21,23 +21,23 @@ from ai.local_llm import generate_text
 from ai.seedream import generate_image
 from blob_uploader import upload_to_blob
 from neon_client import get_actors, get_assets, save_asset
-from prompts.video_director import build_kling_prompt, CAMERA_MOVES, LIGHTING_PRESETS, TEXTURE_PRESETS
+from prompts.video_director import CAMERA_MOVES, LIGHTING_PRESETS, TEXTURE_PRESETS
 from prompts.video_evaluator import (
+    MAX_RETRIES,
     ScriptEvalResult,
     build_eval_prompt,
     build_rewrite_prompt,
     check_script_constraints,
     compute_passed,
-    MAX_RETRIES,
 )
 from prompts.video_script import VIDEO_SCRIPT_SYSTEM, build_ugc_script_prompt
 from prompts.video_storyboard import (
-    build_seedream_prompt,
-    vqa_storyboard_frame,
-    rewrite_seedream_prompt,
     MAX_STORYBOARD_RETRIES,
+    build_seedream_prompt,
+    rewrite_seedream_prompt,
+    vqa_storyboard_frame,
 )
-from prompts.video_templates import LOCATIONS, select_template
+from prompts.video_templates import select_template
 
 logger = logging.getLogger(__name__)
 

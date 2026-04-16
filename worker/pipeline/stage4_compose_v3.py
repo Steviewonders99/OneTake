@@ -34,23 +34,20 @@ import uuid
 from typing import Any
 
 import httpx
-
 from ai.compositor import PLATFORM_SPECS, render_to_png
-from ai.creative_vqa import CREATIVE_VQA_THRESHOLD, evaluate_creative
+from ai.creative_vqa import evaluate_creative
 from blob_uploader import upload_to_blob
 from config import (
     COMPOSE_CONCURRENCY,
-    NVIDIA_NIM_BASE_URL,
-    NVIDIA_NIM_DESIGN_MODEL,
 )
 from neon_client import get_active_artifacts, get_actors, get_assets, save_asset
-from nim_key_pool import get_nim_key
+from prompts.compositor_prompt import build_compositor_prompt, filter_catalog, inject_vqa_feedback
+from prompts.design_base_knowledge import get_base_knowledge
+from prompts.project_context import build_project_context
+
 from pipeline.archetype_selector import select_archetype
 from pipeline.stage4_contextualizer import generate_task_contextualizer
 from pipeline.stage4_graphic_copy import generate_graphic_copy
-from prompts.compositor_prompt import build_compositor_prompt, filter_catalog, inject_vqa_feedback
-from prompts.design_base_knowledge import get_base_knowledge, classify_persona_type, get_template_recs
-from prompts.project_context import build_project_context
 
 logger = logging.getLogger(__name__)
 
@@ -468,7 +465,14 @@ async def _call_compositor_model(prompt: str) -> str:
 
                 if resp.status_code == 200:
                     data = resp.json()
-                    content = data["choices"][0]["message"]["content"] or ""
+                    raw_content = data["choices"][0]["message"]["content"]
+                    finish = data["choices"][0].get("finish_reason", "?")
+                    logger.info("OpenRouter %s raw: type=%s len=%s finish=%s preview=%s",
+                        model_label, type(raw_content).__name__,
+                        len(raw_content) if raw_content else 0,
+                        finish,
+                        repr(raw_content[:100]) if raw_content else "None")
+                    content = raw_content or ""
                     # Strip markdown fences (GLM-5.1 wraps HTML in ```html blocks)
                     if "```html" in content:
                         content = content.split("```html", 1)[1]

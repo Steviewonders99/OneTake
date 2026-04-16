@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 from typing import Any
 
-
 LP_COPY_SYSTEM_PROMPT = """\
 You are a senior recruitment landing page copywriter for OneForma, a global \
 data annotation and AI training platform with 1.8M+ contributors across 222 \

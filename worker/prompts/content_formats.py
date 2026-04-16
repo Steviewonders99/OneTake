@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # =========================================================================
 # PLATFORM FORMAT REGISTRY
 # Each platform's available content formats with specs and engagement data

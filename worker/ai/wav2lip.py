@@ -180,14 +180,14 @@ async def _run_wav2lip_inprocess(
 
     def _infer() -> bytes:
         # Import Wav2Lip components
-        import numpy as np
         import cv2
+        import numpy as np
         import torch
+        from wav2lip import audio as wav2lip_audio
+        from wav2lip import face_detection
 
         # Lazy import to avoid loading at module level
         from wav2lip.models import Wav2Lip as Wav2LipModel
-        from wav2lip import audio as wav2lip_audio
-        from wav2lip import face_detection
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
 

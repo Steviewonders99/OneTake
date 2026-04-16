@@ -19,11 +19,7 @@ import logging
 import os
 
 from ai.local_llm import generate_text
-from neon_client import get_intake_request, save_brief, save_actor, save_campaign_strategy, update_actor_targeting
-from pipeline.persona_validation import (
-    Stage1PersonaValidationError,
-    validate_personas,
-)
+from neon_client import get_intake_request, save_actor, save_brief, save_campaign_strategy, update_actor_targeting
 from prompts.cultural_research import (
     apply_research_to_personas,
     build_research_summary,
@@ -38,6 +34,11 @@ from prompts.recruitment_brief import (
     BRIEF_SYSTEM_PROMPT,
     build_brief_prompt,
     build_design_direction_prompt,
+)
+
+from pipeline.persona_validation import (
+    Stage1PersonaValidationError,
+    validate_personas,
 )
 from pipeline.wp_job_publisher import publish_job_to_wordpress
 
@@ -129,7 +130,6 @@ async def run_stage1(context: dict) -> dict:
     cultural_research: dict = {}
     if target_regions:
         # Check for cached research first (saves ~8min of Kimi K2.5 API calls)
-        from prompts.cultural_research import get_platform_priors
         cached = _load_cached_research(target_regions)
         if cached:
             cultural_research = cached
@@ -214,13 +214,13 @@ async def run_stage1(context: dict) -> dict:
     # campaign structure, ad set splits, split test variable.
     # Uses generate-then-evaluate loop with feedback (max 3 retries).
     # ==================================================================
+    from ai.campaign_evaluator import MAX_RETRIES as STRATEGY_MAX_RETRIES
+    from ai.campaign_evaluator import PASS_THRESHOLD as STRATEGY_THRESHOLD
+    from ai.campaign_evaluator import evaluate_campaign_strategy as eval_strategy
     from prompts.campaign_strategy import (
         calculate_budget_cascade,
         generate_campaign_strategy,
     )
-    from ai.campaign_evaluator import evaluate_campaign_strategy as eval_strategy
-    from ai.campaign_evaluator import MAX_RETRIES as STRATEGY_MAX_RETRIES
-    from ai.campaign_evaluator import PASS_THRESHOLD as STRATEGY_THRESHOLD
 
     monthly_budget = form_data.get("monthly_budget")
 

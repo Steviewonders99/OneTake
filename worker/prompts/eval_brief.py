@@ -23,10 +23,7 @@ import logging
 from typing import Any
 
 from brand import (
-    TAGLINE,
-    TONE_RULES,
     WORDS_TO_AVOID,
-    PILLARS,
     build_brand_voice_block,
 )
 

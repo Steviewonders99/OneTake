@@ -23,11 +23,8 @@ Evaluation gate runs per-slide with adapted thresholds.
 """
 from __future__ import annotations
 
-import asyncio
-import json
 import logging
 import uuid
-from typing import Any
 
 from ai.compositor import PLATFORM_SPECS, render_to_png
 from ai.creative_vqa import check_deterministic

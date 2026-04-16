@@ -1,9 +1,10 @@
 """Smoke tests for design artifact Neon client methods."""
 
 import asyncio
-import pytest
+
 import neon_client
-from neon_client import get_active_artifacts, upsert_artifact, delete_artifact
+import pytest
+from neon_client import delete_artifact, get_active_artifacts, upsert_artifact
 
 
 # Single event loop for the whole module — asyncpg pool is loop-bound,

@@ -30,15 +30,14 @@ import uuid
 from typing import Any
 
 import httpx
-
 from ai.bg_remover import create_cutout_with_shadow, remove_background
 from ai.compositor import PLATFORM_SPECS, render_overlay_only, render_to_png
 from ai.creative_designer import design_creatives
-from ai.creative_vqa import COMPOSED_VQA_THRESHOLD, evaluate_composed_creative
+from ai.creative_vqa import evaluate_composed_creative
 from blob_uploader import upload_to_blob
 from config import COMPOSE_CONCURRENCY
 from neon_client import get_actors, get_assets, save_asset
-from prompts.html_reference_templates import get_template_by_pattern, PATTERN_NAMES
+from prompts.html_reference_templates import PATTERN_NAMES, get_template_by_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -1061,8 +1060,10 @@ async def _caption_image(image_bytes: bytes) -> str:
     so overlay copy matches the scene (desk ≠ couch, cafe ≠ home).
     """
     try:
+        import os
+        import tempfile
+
         from ai.local_vlm import analyze_image
-        import tempfile, os
 
         tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         tmp.write(image_bytes)
@@ -1092,8 +1093,9 @@ def convert_to_avif(png_bytes: bytes, quality: int = 65) -> bytes:
     Falls back to returning original PNG if pillow-avif not available.
     """
     try:
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         img = Image.open(io.BytesIO(png_bytes))
         buf = io.BytesIO()
@@ -1113,8 +1115,9 @@ def convert_to_avif(png_bytes: bytes, quality: int = 65) -> bytes:
 def _convert_to_webp(png_bytes: bytes, quality: int = 80) -> bytes:
     """Convert transparent PNG to WebP (supports alpha, ~68% smaller)."""
     try:
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         img = Image.open(io.BytesIO(png_bytes))
         buf = io.BytesIO()

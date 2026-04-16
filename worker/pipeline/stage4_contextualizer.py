@@ -15,8 +15,6 @@ from __future__ import annotations
 
 import logging
 import os
-import tempfile
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -56,7 +54,7 @@ def _load_template(task_type: str) -> str | None:
         logger.warning("Template file not found: %s", template_path)
         return None
 
-    with open(template_path, "r") as f:
+    with open(template_path) as f:
         return f.read()
 
 
@@ -148,8 +146,9 @@ def _composite_into_device(screenshot_png: bytes) -> bytes | None:
     of the device frame SVG (pre-rendered to PNG).
     """
     try:
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         # Load screenshot
         screenshot = Image.open(io.BytesIO(screenshot_png)).convert("RGBA")

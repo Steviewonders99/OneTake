@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 import httpx
-
 from config import VERCEL_BLOB_TOKEN
 
 logger = logging.getLogger(__name__)

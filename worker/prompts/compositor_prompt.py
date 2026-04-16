@@ -1,13 +1,16 @@
 """Artifact-driven compositor prompt builder for GLM-5.
 
-Builds a 6-section prompt that instructs GLM-5 to assemble pre-built
+Builds a 7-section prompt that instructs GLM-5 to assemble pre-built
 design artifacts into layered HTML creatives.
+
+Section 7 (NEW): PPTX-extracted reference code showing real layered
+design techniques — SVG clip-paths, gradient blobs, z-index stacking.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
-
 
 # ── Archetype Structural Constraints ────────────────────────────
 
@@ -251,6 +254,85 @@ CRITICAL RULES:
 - The "html" field must be a SINGLE self-contained HTML string — no external references except blob URLs."""
 
 
+# ── Reference Code (PPTX-extracted layered designs) ────────────
+
+# Best 3 references — picked for layer diversity and technique coverage.
+# Purple/Black: gradient CTA pill, clipped photo, avatar circles, bold text
+# Blue/Yellow: 5 gradient blobs + 7 clipped photos + 9 text layers (most complex)
+# Purple/Pink: 12 clipped photos (blob masks), gradient blobs, 21 total layers
+_REFERENCE_FILES = [
+    "Purple_and_Black_Modern_Tech_Talk_Event_Promotion_Instagram_.html",
+    "Blue_and_Yellow_Modern_Professional_We_Are_Hiring_Instagram_.html",
+    "Purple_And_Pink_Modern_Software_Development_Instagram_Post.html",
+]
+
+_REF_DIR = Path(__file__).resolve().parent.parent.parent / "Designinspio" / "reference_code"
+
+_reference_cache: str | None = None
+
+
+def _load_references() -> str:
+    """Load and cache reference code from PPTX-extracted HTML files."""
+    global _reference_cache
+    if _reference_cache is not None:
+        return _reference_cache
+
+    blocks = []
+    for fname in _REFERENCE_FILES:
+        fpath = _REF_DIR / fname
+        if not fpath.exists():
+            continue
+        raw = fpath.read_text(encoding="utf-8")
+
+        # Extract just the canvas div (skip DOCTYPE/head/body wrapper)
+        canvas_start = raw.find('<div class="canvas">')
+        canvas_end = raw.rfind("</div>\n</body>")
+        if canvas_start == -1 or canvas_end == -1:
+            continue
+        canvas_html = raw[canvas_start:canvas_end + len("</div>")]
+
+        # Extract the manifest comment
+        manifest_start = raw.find("<!--")
+        manifest_end = raw.find("-->")
+        manifest = raw[manifest_start:manifest_end + 3] if manifest_start != -1 else ""
+
+        # Clean template name
+        label = fname.replace("_", " ").replace(".html", "").strip()
+
+        blocks.append(f"""--- REFERENCE: {label} ---
+{manifest}
+
+CODE (study this layering technique):
+{canvas_html}""")
+
+    if not blocks:
+        _reference_cache = ""
+        return ""
+
+    _reference_cache = """DESIGN REFERENCE CODE (extracted from professional PPTX templates):
+
+Study these REAL designs to understand how professional designers layer elements.
+Key techniques to replicate:
+- SVG <clipPath> + <path> = organic blob-shaped photo masks (NOT border-radius)
+- Multiple gradient blobs at different z-indices with rotation for depth
+- Precise absolute positioning (every element has exact px coordinates)
+- Text layers sit ABOVE photos and blobs (highest z-index)
+- Gradient pills for CTA buttons with solid inner shapes
+- Small clipped circles for avatar-stack social proof
+
+DO NOT copy these designs verbatim. Study the TECHNIQUES and apply them
+to the OneForma brand (purple #3D1059→#6B21A8, pink #E91E8C).
+
+""" + "\n\n".join(blocks)
+
+    return _reference_cache
+
+
+def _section_reference_code() -> str:
+    """Build reference code section from PPTX-extracted templates."""
+    return _load_references()
+
+
 # ── Main Builder ────────────────────────────────────────────────
 
 def build_compositor_prompt(
@@ -271,6 +353,7 @@ def build_compositor_prompt(
     """
     sections = [
         _section_role(),
+        _section_reference_code(),
         build_artifact_catalog_section(catalog),
         _section_archetype(archetype),
         _section_project_context(project_context, design_intent) if project_context else "",

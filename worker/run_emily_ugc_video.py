@@ -18,11 +18,11 @@ REQUEST_ID = "54be6d4c-8db1-4b6e-9566-7ac2da2b4ab9"
 
 async def main():
     sys.path.insert(0, ".")
-    from neon_client import _get_pool, save_asset
+    import httpx
     from ai.local_llm import generate_copy
     from ai.sedeo_client import generate_video_from_image
     from blob_uploader import upload_to_blob
-    import httpx
+    from neon_client import _get_pool, save_asset
 
     pool = await _get_pool()
 

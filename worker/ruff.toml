@@ -18,6 +18,26 @@ ignore = [
     "SIM108", # use ternary operator (readability preference)
     "UP007",  # use X | Y for union types (not all code is 3.10+)
     "RUF012", # mutable class attributes (false positives on dataclasses)
+    # Ambiguous unicode characters — multiplication signs (×) in multilingual prompts/docs
+    "RUF001", # ambiguous unicode in strings
+    "RUF002", # ambiguous unicode in docstrings
+    "RUF003", # ambiguous unicode in comments
+    # Stylistic preferences — not worth enforcing in a fast-moving codebase
+    "SIM102", # collapsible if statements (readability preference)
+    "SIM105", # use contextlib.suppress (readability preference)
+    "SIM115", # open file with context handler (sometimes impractical)
+    "E701",   # multiple statements on one line (compact error handling)
+    "E402",   # module import not at top (intentional lazy/conditional imports)
+    "E741",   # ambiguous variable name (e.g. l, I — context-dependent)
+    # Minor best-practice warnings — low risk, high churn to fix
+    "F841",   # unused variables (often intentional: unpacking, documentation)
+    "B007",   # unused loop control variable (common range() pattern)
+    "B011",   # assert False (used as unreachable marker)
+    "B025",   # duplicate try-block exception handler
+    "B904",   # raise without from inside except (minor traceback improvement)
+    "B905",   # zip without explicit strict (Python 3.10+ only)
+    "RUF005", # collection literal concatenation (stylistic)
+    "RUF059", # unused unpacked variable (intentional unpacking)
 ]
 
 [lint.per-file-ignores]

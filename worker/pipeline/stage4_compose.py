@@ -26,9 +26,7 @@ import logging
 import uuid
 
 from ai.compositor import (
-    HOOK_TYPES,
     PLATFORM_SPECS,
-    build_overlay_html,
     compose_creative,
     select_template,
 )

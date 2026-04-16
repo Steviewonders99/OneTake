@@ -18,7 +18,7 @@ import re
 from typing import Any
 
 from ai.local_llm import generate_text
-from neon_client import upsert_campaign_landing_page, _get_pool
+from neon_client import _get_pool, upsert_campaign_landing_page
 from prompts.job_description_copy import JD_SYSTEM_PROMPT, build_jd_content_prompt
 
 logger = logging.getLogger(__name__)
@@ -148,7 +148,7 @@ async def publish_job_to_wordpress(
     # ── 4. Publish to WordPress ───────────────────────────────────────
     slug = _slugify(title)
 
-    from config import WP_SITE_URL, WP_PUBLISH_STATUS
+    from config import WP_PUBLISH_STATUS, WP_SITE_URL
     if not WP_SITE_URL:
         logger.warning("WP_SITE_URL not set — skipping WordPress publish")
         return {"wp_url": "", "wp_post_id": None, "tracked_links": []}

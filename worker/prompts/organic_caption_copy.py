@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 ORGANIC_CAPTION_SYSTEM_PROMPT = """\
 You are writing a social media post for a recruiter at OneForma. \
 The recruiter is posting on their PERSONAL LinkedIn or Instagram account \

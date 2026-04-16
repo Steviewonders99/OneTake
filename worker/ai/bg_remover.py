@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import logging
+
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ async def remove_background(image_bytes: bytes) -> bytes:
     First run downloads the model (~170MB), subsequent runs are fast.
     """
     import asyncio
+
     from rembg import remove
 
     def _remove():
@@ -44,8 +46,9 @@ async def create_cutout_with_shadow(
     Creates a 'floating' cutout effect perfect for graphic overlays.
     """
     import asyncio
-    from rembg import remove
+
     import numpy as np
+    from rembg import remove
 
     def _process():
         input_img = Image.open(io.BytesIO(image_bytes))

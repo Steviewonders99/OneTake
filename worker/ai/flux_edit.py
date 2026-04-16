@@ -10,12 +10,10 @@ Cost: $0.03 per edit via OpenRouter.
 from __future__ import annotations
 
 import base64
-import json
 import logging
+import os
 
 import httpx
-
-import os
 from config import OPENROUTER_API_KEY
 
 # Dedicated Flux key for parallel image editing (separate from main OpenRouter key)

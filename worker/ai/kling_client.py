@@ -15,14 +15,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
-
 import time
+from typing import Any
 
 import httpx
 import jwt
-
-from config import KLING_ACCESS_KEY, KLING_SECRET_KEY, KLING_MODEL
+from config import KLING_ACCESS_KEY, KLING_MODEL, KLING_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 

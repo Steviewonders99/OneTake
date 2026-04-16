@@ -13,8 +13,8 @@ import base64
 import json
 import logging
 import os
-import urllib.request
 import urllib.error
+import urllib.request
 
 logger = logging.getLogger(__name__)
 

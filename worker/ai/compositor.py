@@ -18,8 +18,7 @@ import logging
 import os
 import re
 import tempfile
-from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -173,8 +172,8 @@ async def select_template(
     variant_index: int = 0,
     *,
     use_llm: bool = False,
-    actor_data: Optional[dict] = None,
-    brief: Optional[dict] = None,
+    actor_data: dict | None = None,
+    brief: dict | None = None,
 ) -> str:
     """Select the best template for a creative.
 
@@ -223,8 +222,8 @@ async def _llm_select_template(
     platform: str,
     copy: dict,
     hook_type: str,
-    actor_data: Optional[dict],
-    brief: Optional[dict],
+    actor_data: dict | None,
+    brief: dict | None,
 ) -> str:
     """LLM-based template selection (Qwen3.5-9B creative director).
 
@@ -459,6 +458,7 @@ async def render_overlay_only(html: str, width: int, height: int) -> bytes:
     the overlay layer separately for remixing.
     """
     import re
+
     from playwright.async_api import async_playwright
 
     # Remove all img tags (person photos)

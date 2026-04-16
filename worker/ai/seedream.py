@@ -12,8 +12,7 @@ import logging
 import os
 
 import httpx
-
-from config import OPENROUTER_API_KEY, IMAGE_MODEL
+from config import IMAGE_MODEL, OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +165,7 @@ async def generate_image(
                     return img_resp.content
 
             # Direct URL format: {"url": "https://..."}
-            if "url" in img and img["url"]:
+            if img.get("url"):
                 url = img["url"]
                 if url.startswith("data:image"):
                     b64_part = url.split(",", 1)[-1]
@@ -176,7 +175,7 @@ async def generate_image(
                 return img_resp.content
 
             # Direct base64 format: {"b64_json": "..."}
-            if "b64_json" in img and img["b64_json"]:
+            if img.get("b64_json"):
                 return base64.b64decode(img["b64_json"])
 
         # Handle raw base64 string

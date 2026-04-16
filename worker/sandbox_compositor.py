@@ -18,22 +18,21 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Add worker to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx
-from prompts.compositor_prompt import (
-    build_compositor_prompt,
-    build_artifact_catalog_section,
-    filter_catalog,
-    _section_reference_code,
-    ARCHETYPE_CONSTRAINTS,
-)
 from ai.compositor import PLATFORM_SPECS
-from nim_key_pool import get_nim_key
 from config import NVIDIA_NIM_BASE_URL, NVIDIA_NIM_DESIGN_MODEL
+from nim_key_pool import get_nim_key
+from prompts.compositor_prompt import (
+    _section_reference_code,
+    build_compositor_prompt,
+    filter_catalog,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -192,7 +191,7 @@ async def run_sandbox():
     logger.info(f"  Reference code section: {ref_len} chars (~{ref_len//4} tokens)")
     logger.info(f"  Prompt WITHOUT references: {len(prompt) - ref_len} chars")
     logger.info(f"Platform: {platform_label} ({spec['width']}x{spec['height']})")
-    logger.info(f"Archetype: floating_props")
+    logger.info("Archetype: floating_props")
     logger.info(f"Artifacts in filtered catalog: {len(filtered)}")
     logger.info("")
 

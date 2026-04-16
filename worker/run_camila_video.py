@@ -9,7 +9,6 @@
 import asyncio
 import json
 import logging
-import sys
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s: %(message)s")
 logger = logging.getLogger("camila_video")
@@ -19,11 +18,12 @@ REQUEST_ID = "fd318779-45f2-45bb-b0ff-5420c5c10260"
 
 
 async def main():
-    from neon_client import _get_pool, get_actors, get_assets, get_brief, save_asset
-    from ai.local_llm import generate_copy
-    from ai.kling_client import generate_video, generate_multishot_video
-    from blob_uploader import upload_to_blob
     import uuid
+
+    from ai.kling_client import generate_video
+    from ai.local_llm import generate_copy
+    from blob_uploader import upload_to_blob
+    from neon_client import _get_pool, save_asset
 
     pool = await _get_pool()
 

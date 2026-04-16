@@ -21,7 +21,6 @@ import logging
 from typing import Any
 
 import httpx
-
 from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL, OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -1195,7 +1194,7 @@ def apply_research_to_personas(
             existing = p.get("objection_handlers", {})
             existing.update(extra_handlers)
             p["objection_handlers"] = existing
-            adjustments.append(f"Trust LOW: added region-specific trust builders")
+            adjustments.append("Trust LOW: added region-specific trust builders")
 
         # -- Platform Reality Adjustment --
         platform = research.get("platform_reality", {})
@@ -1206,7 +1205,7 @@ def apply_research_to_personas(
                 f"Job platforms: {platform.get('job_platforms', 'unknown')}"
             )
             # Parse platforms and override best_channels if we can extract names.
-            adjustments.append(f"Platform data: real usage data injected")
+            adjustments.append("Platform data: real usage data injected")
 
         # -- Economic Context Adjustment --
         econ = research.get("economic_context", {})

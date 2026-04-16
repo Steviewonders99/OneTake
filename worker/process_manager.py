@@ -213,7 +213,7 @@ class ProcessManager:
     @staticmethod
     def _read_pid_file(path: str) -> int | None:
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 return int(f.read().strip())
         except (FileNotFoundError, ValueError):
             return None

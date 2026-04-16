@@ -20,17 +20,15 @@ import os
 import signal
 import subprocess
 import time
-from typing import Optional
 
 import httpx
-
 from config import (
     LLM_MODEL,
+    MLX_SERVER_HEALTH_POLL_S,
     MLX_SERVER_HOST,
     MLX_SERVER_IDLE_TIMEOUT_S,
     MLX_SERVER_PORT,
     MLX_SERVER_STARTUP_TIMEOUT_S,
-    MLX_SERVER_HEALTH_POLL_S,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,10 +38,10 @@ class MLXServerManager:
     """Manages lifecycle of a local mlx_lm.server subprocess."""
 
     def __init__(self) -> None:
-        self._process: Optional[subprocess.Popen] = None
+        self._process: subprocess.Popen | None = None
         self._lock = asyncio.Lock()
         self._last_activity: float = 0
-        self._idle_task: Optional[asyncio.Task] = None
+        self._idle_task: asyncio.Task | None = None
         self._host = MLX_SERVER_HOST
         self._port = MLX_SERVER_PORT
         self._model = LLM_MODEL
@@ -281,48 +279,47 @@ class MLXServerManager:
 
         async with httpx.AsyncClient(timeout=httpx.Timeout(
             connect=30.0, read=600.0, write=30.0, pool=30.0
-        )) as client:
-            async with client.stream(
-                "POST",
-                f"{self.base_url}/v1/chat/completions",
-                json={
-                    "model": model or self._model,
-                    "messages": messages,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                    "stream": True,
-                },
-            ) as resp:
-                resp.raise_for_status()
+        )) as client, client.stream(
+            "POST",
+            f"{self.base_url}/v1/chat/completions",
+            json={
+                "model": model or self._model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "stream": True,
+            },
+        ) as resp:
+            resp.raise_for_status()
 
-                async for line in resp.aiter_lines():
-                    self._last_activity = time.monotonic()
+            async for line in resp.aiter_lines():
+                self._last_activity = time.monotonic()
 
-                    if not line.startswith("data: "):
-                        continue
-                    data_str = line[6:].strip()
-                    if data_str == "[DONE]":
-                        break
+                if not line.startswith("data: "):
+                    continue
+                data_str = line[6:].strip()
+                if data_str == "[DONE]":
+                    break
 
-                    try:
-                        chunk = _json.loads(data_str)
-                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                try:
+                    chunk = _json.loads(data_str)
+                    delta = chunk.get("choices", [{}])[0].get("delta", {})
 
-                        if "content" in delta and delta["content"]:
-                            collected_content += delta["content"]
-                            token_count += 1
-                        if "reasoning" in delta and delta["reasoning"]:
-                            collected_reasoning += delta["reasoning"]
-                            token_count += 1
+                    if delta.get("content"):
+                        collected_content += delta["content"]
+                        token_count += 1
+                    if delta.get("reasoning"):
+                        collected_reasoning += delta["reasoning"]
+                        token_count += 1
 
-                        # Log progress every 100 tokens
-                        if token_count % 100 == 0 and token_count > 0:
-                            logger.debug(
-                                "Streaming: %d tokens received (%d content, %d reasoning chars)...",
-                                token_count, len(collected_content), len(collected_reasoning),
-                            )
-                    except _json.JSONDecodeError:
-                        continue
+                    # Log progress every 100 tokens
+                    if token_count % 100 == 0 and token_count > 0:
+                        logger.debug(
+                            "Streaming: %d tokens received (%d content, %d reasoning chars)...",
+                            token_count, len(collected_content), len(collected_reasoning),
+                        )
+                except _json.JSONDecodeError:
+                    continue
 
         logger.info(
             "MLX stream complete: %d tokens, content=%d chars, reasoning=%d chars",

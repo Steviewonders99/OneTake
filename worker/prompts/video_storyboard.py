@@ -13,7 +13,6 @@ import io
 import json
 import logging
 import os
-import tempfile
 from typing import Any
 
 import httpx

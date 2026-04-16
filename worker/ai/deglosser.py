@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import Optional
 
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 def degloss(
     image_bytes: bytes,
     intensity: str = "medium",
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> bytes:
     """Apply the full deglosser pipeline to an image.
 

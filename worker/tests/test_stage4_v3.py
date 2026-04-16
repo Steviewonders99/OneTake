@@ -12,8 +12,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 # Import the module under test (all pure functions)
 from pipeline.stage4_compose_v3 import (
     _build_composition_matrix,
@@ -23,7 +21,6 @@ from pipeline.stage4_compose_v3 import (
     _parse_compositor_response,
     _resolve_channels,
 )
-
 
 # ── _resolve_channels ─────────────────────────────────────────────────────
 

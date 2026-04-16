@@ -9,15 +9,15 @@ from __future__ import annotations
 import logging
 
 from neon_client import get_actors, update_request_status
+from teams_notify import notify_generation_complete, notify_generation_failed
+
 from pipeline.stage1_intelligence import run_stage1
 from pipeline.stage2_images import run_stage2
 from pipeline.stage3_copy import run_stage3
 from pipeline.stage4_compose_v3 import run_stage4
-from pipeline.stage4_carousel import run_carousel_stage
 from pipeline.stage4_organic_carousel import run_organic_carousels
 from pipeline.stage5_video import run_stage5 as run_video_stage
 from pipeline.stage6_landing_pages import run_stage6
-from teams_notify import notify_generation_complete, notify_generation_failed
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,9 @@ async def run_pipeline(job: dict) -> None:
     # If 3+ countries, split into per-country child campaigns.
     # Each child gets its own pipeline run with city-level targeting.
     if job_type == "generate":
-        from pipeline.campaign_splitter import should_split, split_campaign
         from neon_client import get_intake_request as _get_request
+
+        from pipeline.campaign_splitter import should_split, split_campaign
         request = await _get_request(request_id)
         if await should_split(request):
             logger.info("Multinational campaign detected — splitting into per-country campaigns")

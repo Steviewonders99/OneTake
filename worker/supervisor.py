@@ -40,6 +40,7 @@ logger = logging.getLogger("supervisor")
 
 # Load base config for DB access
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -139,7 +140,7 @@ class Supervisor:
                     timeout=self.poll_interval,
                 )
                 break  # Shutdown signal received
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass  # Normal — just loop again
 
         await self._drain_all()
@@ -152,9 +153,7 @@ class Supervisor:
         pending = await count_pending_jobs()
         alive_count = sum(1 for w in self.workers.values() if w.is_alive)
 
-        if pending == 0:
-            target = 1
-        elif pending == 1:
+        if pending == 0 or pending == 1:
             target = 1
         else:
             target = min(pending, self.max_workers)
@@ -186,7 +185,6 @@ class Supervisor:
             return
         self._last_health_check = now
 
-        from neon_client import mark_job_failed
 
         for wid, state in self.workers.items():
             if state.process is not None and not state.is_alive:
