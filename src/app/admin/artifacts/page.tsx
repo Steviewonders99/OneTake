@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ExternalLink, ToggleLeft, ToggleRight, ImageOff } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface Artifact {
   artifact_id: string;
@@ -81,7 +82,7 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
       <div className="h-32 flex items-center justify-center bg-[#F5F5F5] rounded-lg overflow-hidden px-3">
         <div
           className="text-center text-sm"
-          dangerouslySetInnerHTML={{ __html: artifact.usage_snippet }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(artifact.usage_snippet) }}
         />
       </div>
     );
