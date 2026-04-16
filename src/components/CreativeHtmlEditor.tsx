@@ -122,10 +122,6 @@ function injectInteractionScript(html: string): string {
       var el = findByRole(msg.role);
       if (el) {
         el.textContent = msg.text;
-        // Also update innerHTML if it had spans
-        if (msg.text && el.children.length > 0) {
-          el.innerHTML = msg.text;
-        }
       }
     }
 
@@ -226,7 +222,7 @@ function TextControl({
     setValue(text);
     iframeRef.current?.contentWindow?.postMessage(
       { type: "update-text", role, text },
-      "*"
+      window.location.origin
     );
   };
 
@@ -276,7 +272,7 @@ function ColorControl({
     setColor(newColor);
     iframeRef.current?.contentWindow?.postMessage(
       { type: "update-selected-style", property, value: newColor },
-      "*"
+      window.location.origin
     );
   };
 
@@ -360,7 +356,7 @@ export default function CreativeHtmlEditor({
 
   const handleSave = () => {
     // Ask iframe for current HTML state
-    iframeRef.current?.contentWindow?.postMessage({ type: "get-html" }, "*");
+    iframeRef.current?.contentWindow?.postMessage({ type: "get-html" }, window.location.origin);
   };
 
   const handleDownload = () => {
@@ -547,7 +543,7 @@ export default function CreativeHtmlEditor({
                     onChange={(e) => {
                       iframeRef.current?.contentWindow?.postMessage(
                         { type: "update-selected-style", property: "fontSize", value: `${e.target.value}px` },
-                        "*"
+                        window.location.origin
                       );
                     }}
                     className="w-full cursor-pointer"
@@ -563,7 +559,7 @@ export default function CreativeHtmlEditor({
                     onChange={(e) => {
                       iframeRef.current?.contentWindow?.postMessage(
                         { type: "update-selected-style", property: "borderRadius", value: `${e.target.value}px` },
-                        "*"
+                        window.location.origin
                       );
                     }}
                     className="w-full cursor-pointer"
@@ -584,7 +580,7 @@ export default function CreativeHtmlEditor({
                     onChange={(e) => {
                       iframeRef.current?.contentWindow?.postMessage(
                         { type: "update-selected-style", property: "width", value: `${e.target.value}px` },
-                        "*"
+                        window.location.origin
                       );
                     }}
                     className="w-full cursor-pointer"
@@ -600,7 +596,7 @@ export default function CreativeHtmlEditor({
                     onChange={(e) => {
                       iframeRef.current?.contentWindow?.postMessage(
                         { type: "update-selected-style", property: "padding", value: `${e.target.value}px` },
-                        "*"
+                        window.location.origin
                       );
                     }}
                     className="w-full cursor-pointer"
@@ -630,7 +626,7 @@ export default function CreativeHtmlEditor({
                   if (selectedElement) {
                     iframeRef.current?.contentWindow?.postMessage(
                       { type: "update-selected-style", property: "color", value: c.color },
-                      "*"
+                      window.location.origin
                     );
                   }
                 }}
@@ -656,7 +652,7 @@ export default function CreativeHtmlEditor({
                   if (selectedElement) {
                     iframeRef.current?.contentWindow?.postMessage(
                       { type: "update-selected-style", property: "backgroundColor", value: c.color },
-                      "*"
+                      window.location.origin
                     );
                   }
                 }}
