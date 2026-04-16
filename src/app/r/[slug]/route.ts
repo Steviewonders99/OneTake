@@ -24,7 +24,19 @@ export async function GET(
     return notFoundResponse();
   }
 
-  return Response.redirect(rows[0].destination_url, 301);
+  const destinationUrl = rows[0].destination_url;
+
+  // Validate the URL is HTTP(S) to prevent protocol injection
+  try {
+    const parsed = new URL(destinationUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return notFoundResponse();
+    }
+  } catch {
+    return notFoundResponse();
+  }
+
+  return Response.redirect(destinationUrl, 301);
 }
 
 function notFoundResponse(): Response {
