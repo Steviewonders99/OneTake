@@ -1,5 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
-import { getAuthContext, canAccessRequest } from '@/lib/permissions';
+import { getAuthContext, canAccessRequest, canEditRequest } from '@/lib/permissions';
 import {
   getIntakeRequest,
   updateIntakeRequest,
@@ -45,22 +44,23 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
+  const ctx = await getAuthContext();
+  if (!ctx) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { id } = await params;
-
-    // Verify the request exists
     const existing = await getIntakeRequest(id);
     if (!existing) {
       return Response.json(
         { error: 'Intake request not found' },
         { status: 404 }
       );
+    }
+
+    if (!canEditRequest(ctx, existing.created_by, existing.status)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -91,22 +91,23 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
+  const ctx = await getAuthContext();
+  if (!ctx) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { id } = await params;
-
-    // Verify the request exists
     const existing = await getIntakeRequest(id);
     if (!existing) {
       return Response.json(
         { error: 'Intake request not found' },
         { status: 404 }
       );
+    }
+
+    if (!canEditRequest(ctx, existing.created_by, existing.status)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     await deleteIntakeRequest(id);
