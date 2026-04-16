@@ -285,9 +285,10 @@ export async function POST(request: Request) {
     try {
       extraction = parseJsonFromResponse(rawResponse);
     } catch {
+      console.error('[extract/rfp] Failed to parse extraction result:', rawResponse.slice(0, 500));
       return Response.json(
-        { error: `Could not parse AI response. Try the Paste option instead.`, raw_response: rawResponse.slice(0, 300) },
-        { status: 502 }
+        { error: 'Failed to parse extraction result from AI' },
+        { status: 500 }
       );
     }
 
