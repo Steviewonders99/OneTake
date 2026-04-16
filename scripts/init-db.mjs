@@ -1,6 +1,10 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require');
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL environment variable is required');
+  process.exit(1);
+}
+const sql = neon(process.env.DATABASE_URL);
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS task_type_schemas (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), task_type TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL, icon TEXT DEFAULT 'file-text', description TEXT, schema JSONB NOT NULL, version INT DEFAULT 1, is_active BOOLEAN DEFAULT TRUE, sort_order INT DEFAULT 0, created_by TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`,

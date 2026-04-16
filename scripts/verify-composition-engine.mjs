@@ -50,9 +50,11 @@ async function main() {
   console.log("Stage 4 Composition Engine — Verification\n");
 
   // Database connection
-  const sql = neon(
-    "postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"
-  );
+  if (!process.env.DATABASE_URL) {
+    console.error("DATABASE_URL environment variable is required");
+    process.exit(1);
+  }
+  const sql = neon(process.env.DATABASE_URL);
 
   // Database checks
   console.log("Database Checks:");

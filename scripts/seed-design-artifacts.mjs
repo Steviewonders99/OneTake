@@ -24,16 +24,16 @@ const __dirname = dirname(__filename);
 // ---------------------------------------------------------------------------
 
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
-const DB_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require";
-
 if (!BLOB_TOKEN) {
   console.error("ERROR: BLOB_READ_WRITE_TOKEN is not set.");
   process.exit(1);
 }
 
-const sql = neon(DB_URL);
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL environment variable is required");
+  process.exit(1);
+}
+const sql = neon(process.env.DATABASE_URL);
 
 // ---------------------------------------------------------------------------
 // MIME type helper
