@@ -97,12 +97,24 @@ function buildAllocation(strategyData: StrategyData): Record<string, number> {
   if (strategyData.channel_allocation && Object.keys(strategyData.channel_allocation).length > 0) {
     return { ...strategyData.channel_allocation };
   }
-  // Fallback: derive from ad set budgets
+  // Fallback: derive from ad set placements — count ALL placements, not just [0]
   const byChannel: Record<string, number> = {};
   for (const camp of strategyData.campaigns ?? []) {
     for (const adSet of camp.ad_sets ?? []) {
-      const ch = toChannel(adSet.placements?.[0] ?? "") ?? "Other";
-      byChannel[ch] = (byChannel[ch] ?? 0) + (adSet.daily_budget ?? 0);
+      const placements = adSet.placements ?? [];
+      // Collect unique channels from all placements in this ad set
+      const channels = new Set<string>();
+      for (const p of placements) {
+        const ch = toChannel(p);
+        if (ch) channels.add(ch);
+      }
+      // If no placements mapped, use "Other"
+      if (channels.size === 0) channels.add("Other");
+      // Split budget evenly across channels in this ad set
+      const budgetPerChannel = (adSet.daily_budget ?? 0) / channels.size;
+      for (const ch of channels) {
+        byChannel[ch] = (byChannel[ch] ?? 0) + budgetPerChannel;
+      }
     }
   }
   const total = Object.values(byChannel).reduce((s, v) => s + v, 0);
@@ -271,37 +283,60 @@ export default function MediaStrategyEditor({
         onChange={handleAllocationChange}
       />
 
-      {/* Ad set header */}
-      <div
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: "#8A8A8E",
-          marginBottom: 8,
-          marginTop: 8,
-        }}
-      >
-        Ad Sets ({flatAdSets.length})
-      </div>
-
-      {/* Flat ad set list */}
+      {/* Ad sets grouped by channel, max 4 per channel */}
       {flatAdSets.length === 0 ? (
-        <p style={{ fontSize: 13, color: "#8A8A8E", fontStyle: "italic" }}>
+        <p style={{ fontSize: 13, color: "#8A8A8E", fontStyle: "italic", marginTop: 8 }}>
           No ad sets in this strategy.
         </p>
       ) : (
-        flatAdSets.map((flat, i) => (
-          <AdSetRow
-            key={`${flat.campaignIndex}-${flat.adSetIndex}-${i}`}
-            adSet={flat.adSet}
-            channel={flat.channel}
-            onUpdate={(field, value) =>
-              handleAdSetUpdate(flat.campaignIndex, flat.adSetIndex, field, value)
-            }
-          />
-        ))
+        (() => {
+          // Group ad sets by channel
+          const byChannel = new Map<string, typeof flatAdSets>();
+          for (const flat of flatAdSets) {
+            if (!byChannel.has(flat.channel)) byChannel.set(flat.channel, []);
+            byChannel.get(flat.channel)!.push(flat);
+          }
+
+          return Array.from(byChannel.entries()).map(([channel, sets]) => {
+            // Cap at 4 per channel
+            const capped = sets.slice(0, 4);
+            const overflow = sets.length - 4;
+
+            return (
+              <div key={channel} style={{ marginTop: 12 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#8A8A8E",
+                    marginBottom: 6,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {channel}
+                  <span style={{ fontSize: 10, fontWeight: 400, color: "#B0B0B3" }}>
+                    {capped.length} ad set{capped.length !== 1 ? "s" : ""}
+                    {overflow > 0 && ` (+${overflow} more)`}
+                  </span>
+                </div>
+                {capped.map((flat, i) => (
+                  <AdSetRow
+                    key={`${flat.campaignIndex}-${flat.adSetIndex}-${i}`}
+                    adSet={flat.adSet}
+                    channel={flat.channel}
+                    onUpdate={(field, value) =>
+                      handleAdSetUpdate(flat.campaignIndex, flat.adSetIndex, field, value)
+                    }
+                  />
+                ))}
+              </div>
+            );
+          });
+        })()
       )}
     </div>
   );

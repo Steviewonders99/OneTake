@@ -740,34 +740,32 @@ export default function CampaignWorkspace({
     <div className="space-y-4">
       {showBrief && (
       <>
-      {/* Translate toggle */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setTranslateMode(!translateMode)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-colors ${
-            translateMode
-              ? "bg-blue-50 text-blue-700 border border-blue-200"
-              : "bg-[var(--muted)] text-[var(--muted-foreground)] border border-transparent hover:bg-white hover:border-[var(--border)]"
-          }`}
-        >
-          <Languages size={13} />
-          {translateMode ? "Translation On" : "Translate to English"}
-        </button>
-      </div>
-
       {/* Top: Campaign Overview + Regional tabs */}
       <MiniTabs
         defaultTab="campaign"
+        trailing={
+          <button
+            onClick={() => setTranslateMode(!translateMode)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer transition-colors ${
+              translateMode
+                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            }`}
+          >
+            <Languages size={11} />
+            {translateMode ? "Translation On" : "Translate"}
+          </button>
+        }
         tabs={[
           {
             key: "campaign",
             label: "Campaign",
             content: (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Objective */}
                 {(briefData.campaign_objective || briefData.summary) && (
                   <div>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Campaign Objective</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Campaign Objective</span>
                     {editable ? (
                       <EditableField
                         value={briefData.campaign_objective || briefData.summary || ""}
@@ -781,63 +779,55 @@ export default function CampaignWorkspace({
                     )}
                   </div>
                 )}
-                {/* Messaging */}
-                {messaging.primary_message && (
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
-                    <div>
-                      <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Primary Message</span>
-                      {editable ? (
-                        <EditableField
-                          value={messaging.primary_message}
-                          editable={editable}
-                          onSave={(v) => toast.success("Primary message updated")}
-                          textClassName="text-[13px] font-medium text-[var(--foreground)]"
-                          multiline
-                        />
-                      ) : (
-                        <p className="text-[13px] font-medium text-[var(--foreground)]">{messaging.primary_message}</p>
-                      )}
-                    </div>
-                    {messaging.tone && (
+
+                {/* Messaging + Tone — side by side on desktop */}
+                {(messaging.primary_message || messaging.tone) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+                    {messaging.primary_message && (
                       <div>
-                        <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-1">Tone</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Primary Message</span>
                         {editable ? (
                           <EditableField
-                            value={messaging.tone}
+                            value={messaging.primary_message}
                             editable={editable}
-                            onSave={(v) => toast.success("Tone updated")}
-                            textClassName="text-[13px] font-medium text-[#6B21A8]"
+                            onSave={(v) => toast.success("Primary message updated")}
+                            textClassName="text-[13px] leading-relaxed text-[var(--foreground)]"
+                            multiline
                           />
                         ) : (
-                          <span className="inline-flex px-2.5 py-1 rounded-lg text-[13px] font-medium bg-purple-50 text-[#6B21A8] border border-purple-100">{messaging.tone}</span>
+                          <p className="text-[13px] leading-relaxed text-[var(--foreground)]">{messaging.primary_message}</p>
                         )}
+                      </div>
+                    )}
+                    {messaging.tone && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Tone</span>
+                        <p className="text-[13px] leading-relaxed text-[var(--foreground)] bg-[var(--muted)] rounded-lg px-3 py-2">{messaging.tone}</p>
                       </div>
                     )}
                   </div>
                 )}
+
                 {/* Value Props */}
                 {(messaging.value_propositions || briefData.value_props) && (
                   <div>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Value Propositions</span>
-                    <ul className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] block mb-2">Value Propositions</span>
+                    <ul className="space-y-2">
                       {(messaging.value_propositions || briefData.value_props || []).slice(0, 6).map((vp: any, i: number) => {
                         let text = "";
                         if (typeof vp === "string") {
                           text = vp;
                         } else if (vp && typeof vp === "object") {
-                          // Extract the most meaningful string from the object
                           text = vp.text || vp.value || vp.proposition || vp.description || vp.message || "";
-                          // If none of those keys exist, try to find any string value that isn't a key name
                           if (!text) {
                             const vals = Object.values(vp).filter(v => typeof v === "string" && (v as string).length > 10);
                             text = (vals[0] as string) || "";
                           }
-                          // Last resort: skip this item rather than showing JSON
                           if (!text) return null;
                         }
                         return (
-                          <li key={i} className="flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] flex-shrink-0 mt-[7px]" />
+                          <li key={i} className="flex items-start gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#6B21A8] flex-shrink-0 mt-[7px]" />
                             <span className="text-[13px] text-[var(--foreground)] leading-relaxed">{text}</span>
                           </li>
                         );

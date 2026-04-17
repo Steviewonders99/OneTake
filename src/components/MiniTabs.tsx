@@ -12,9 +12,11 @@ interface MiniTab {
 interface MiniTabsProps {
   tabs: MiniTab[];
   defaultTab?: string;
+  /** Optional element rendered at the right end of the tab bar */
+  trailing?: React.ReactNode;
 }
 
-export default function MiniTabs({ tabs, defaultTab }: MiniTabsProps) {
+export default function MiniTabs({ tabs, defaultTab, trailing }: MiniTabsProps) {
   const [active, setActive] = useState(defaultTab || tabs[0]?.key || "");
 
   const activeTab = tabs.find((t) => t.key === active);
@@ -22,7 +24,8 @@ export default function MiniTabs({ tabs, defaultTab }: MiniTabsProps) {
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex gap-0 border-b border-[var(--border)] mb-4">
+      <div className="flex items-center gap-0 border-b border-[var(--border)] mb-4">
+        <div className="flex gap-0 flex-1">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -53,6 +56,8 @@ export default function MiniTabs({ tabs, defaultTab }: MiniTabsProps) {
             )}
           </button>
         ))}
+        </div>
+        {trailing && <div className="flex-shrink-0 ml-auto pl-3">{trailing}</div>}
       </div>
 
       {/* Tab content */}

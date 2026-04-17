@@ -30,6 +30,8 @@ export const PLATFORM_META: Record<string, { label: string; color: string; brand
   youtube_feed: { label: "YouTube", color: "#FF0000", brand: "youtube" },
   reddit_ads: { label: "Reddit", color: "#FF4500", brand: "reddit" },
   snapchat_feed: { label: "Snapchat", color: "#FFFC00", brand: "snapchat" },
+  discord_feed: { label: "Discord", color: "#5865F2", brand: "discord" },
+  discord_community: { label: "Discord", color: "#5865F2", brand: "discord" },
   // Title Case variants (from Stage 3 copy)
   "Facebook Feed": { label: "Facebook", color: "#1877F2", brand: "facebook" },
   "Facebook Groups": { label: "Facebook", color: "#1877F2", brand: "facebook" },
@@ -70,6 +72,7 @@ export function toChannel(plat: string): string | null {
   if (lower.includes("reddit")) return "Reddit";
   if (lower.includes("wechat")) return "WeChat";
   if (lower.includes("snapchat")) return "Snapchat";
+  if (lower.includes("discord")) return "Discord";
   return cleaned.split("_")[0].charAt(0).toUpperCase() + cleaned.split("_")[0].slice(1);
 }
 

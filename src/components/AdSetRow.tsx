@@ -30,13 +30,16 @@ interface AdSetRowProps {
   onUpdate: (field: string, value: unknown) => void;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────
-
-const SPLIT_TEST_OPTIONS = ["creative", "audience", "placement"];
-const OBJECTIVE_OPTIONS = ["lead_generation", "traffic", "conversions"];
+// ── Helpers ──────────────────────────────────────────────────────────
 
 function formatObjective(obj: string): string {
   return obj.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function tierLabel(tier: string): string {
+  if (tier === "hyper") return "Hyper";
+  if (tier === "hot") return "Hot";
+  return "Broad";
 }
 
 // ── Component ─────────────────────────────────────────────────────────
@@ -48,11 +51,12 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
   const budgetRef = useRef<HTMLInputElement>(null);
 
   const tier = (adSet.targeting_tier ?? adSet.targeting_type ?? "broad").toString();
-  const borderColor = tier === "hyper" ? "#6B21A8" : tier === "hot" ? "#f59e0b" : "#22c55e";
-  const personaLabel = adSet.persona_key ? adSet.persona_key.replace(/_/g, " ") : "\u2014";
+  const personaLabel = adSet.persona_key
+    ? adSet.persona_key.replace(/_/g, " ")
+    : null;
   const dailyBudget = adSet.daily_budget ?? 0;
 
-  // Build tiered interests — use interests_by_tier if available, else place all into matching tier
+  // Build tiered interests
   const interestsByTier: InterestsByTier = adSet.interests_by_tier
     ? {
         hyper: adSet.interests_by_tier.hyper ?? [],
@@ -99,9 +103,8 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
       style={{
         background: "#FFFFFF",
         border: "1px solid #E8E8EA",
-        borderLeft: `4px solid ${borderColor}`,
-        borderRadius: 10,
-        marginBottom: 6,
+        borderRadius: 8,
+        marginBottom: 4,
         overflow: "hidden",
       }}
     >
@@ -109,18 +112,18 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "28px 1fr auto auto auto auto auto auto",
+          gridTemplateColumns: "24px 1fr auto auto auto auto",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
           padding: "0 12px",
-          height: 56,
+          height: 48,
           cursor: "pointer",
         }}
         onClick={() => setExpanded(!expanded)}
       >
         {/* Chevron */}
         <ChevronRight
-          size={14}
+          size={13}
           style={{
             color: "#8A8A8E",
             transition: "transform 0.15s",
@@ -132,8 +135,8 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
         {/* Name */}
         <span
           style={{
-            fontSize: 14,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 500,
             color: "#1A1A1A",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -143,21 +146,23 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
           {adSet.name ?? "Ad Set"}
         </span>
 
-        {/* Persona chip */}
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            padding: "2px 8px",
-            borderRadius: 9999,
-            background: "rgba(107,33,168,0.08)",
-            color: "#6B21A8",
-            whiteSpace: "nowrap",
-            textTransform: "capitalize",
-          }}
-        >
-          {personaLabel}
-        </span>
+        {/* Persona chip — only show if we have a real value */}
+        {personaLabel && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: "2px 8px",
+              borderRadius: 9999,
+              background: "rgba(107,33,168,0.08)",
+              color: "#6B21A8",
+              whiteSpace: "nowrap",
+              textTransform: "capitalize",
+            }}
+          >
+            {personaLabel}
+          </span>
+        )}
 
         {/* Channel chip */}
         <span
@@ -228,77 +233,33 @@ export default function AdSetRow({ adSet, channel, onUpdate }: AdSetRowProps) {
           </button>
         )}
 
-        {/* Interest count badge */}
+        {/* Interest count */}
         <span style={{ fontSize: 11, color: "#8A8A8E", whiteSpace: "nowrap" }}>
           {totalInterests} interests
         </span>
-
-        {/* Split test dropdown */}
-        <select
-          value={adSet.split_test_variable ?? "creative"}
-          onChange={(e) => {
-            e.stopPropagation();
-            onUpdate("split_test_variable", e.target.value);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "3px 6px",
-            borderRadius: 6,
-            border: "1px solid #E8E8EA",
-            background: "#FFFFFF",
-            color: "#1A1A1A",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            textTransform: "capitalize",
-          }}
-        >
-          {SPLIT_TEST_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
-            </option>
-          ))}
-        </select>
-
-        {/* Objective dropdown */}
-        <select
-          value={adSet.objective ?? "lead_generation"}
-          onChange={(e) => {
-            e.stopPropagation();
-            onUpdate("objective", e.target.value);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "3px 6px",
-            borderRadius: 6,
-            border: "1px solid #E8E8EA",
-            background: "#FFFFFF",
-            color: "#1A1A1A",
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-        >
-          {OBJECTIVE_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {formatObjective(opt)}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {/* Expanded — Interest tiers */}
+      {/* Expanded — Interest tiers grouped */}
       {expanded && (
         <div
           style={{
             borderTop: "1px solid #E8E8EA",
-            padding: "8px 16px 16px 44px",
-            background: "#FCFCFC",
+            padding: "12px 16px 16px 44px",
+            background: "#FAFAFA",
           }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Targeting tier + objective row */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#8A8A8E" }}>
+              Targeting: {tierLabel(tier)}
+            </span>
+            <span style={{ fontSize: 10, color: "#E8E8EA" }}>|</span>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#8A8A8E" }}>
+              Objective: {formatObjective(adSet.objective ?? "lead_generation")}
+            </span>
+          </div>
+
           <InterestChipEditor
             interests={interestsByTier}
             onChange={(updated) => onUpdate("interests_by_tier", updated)}
