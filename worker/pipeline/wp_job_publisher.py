@@ -151,7 +151,7 @@ async def publish_job_to_wordpress(
     from config import WP_PUBLISH_STATUS, WP_SITE_URL
     if not WP_SITE_URL:
         logger.warning("WP_SITE_URL not set — skipping WordPress publish")
-        return {"wp_url": "", "wp_post_id": None, "tracked_links": []}
+        return {"wp_url": "", "wp_post_id": None}
 
     publish_status = WP_PUBLISH_STATUS or "draft"
     logger.info("WP publish status: %s", publish_status)
@@ -185,48 +185,19 @@ async def publish_job_to_wordpress(
 
     except Exception as exc:
         logger.error("WordPress publish failed (non-fatal): %s", exc, exc_info=True)
-        return {"wp_url": "", "wp_post_id": None, "tracked_links": []}
+        return {"wp_url": "", "wp_post_id": None}
 
     # ── 5. Upsert campaign_landing_pages.job_posting_url ──────────────
     if effective_url:
         await upsert_campaign_landing_page(request_id, "job_posting_url", effective_url)
         logger.info("Stored job_posting_url: %s", effective_url)
 
-    # ── 6. Auto-create UTM tracked links ──────────────────────────────
-    tracked: list[str] = []
-    # Use the published URL for UTM links (not preview URL)
-    utm_base_url = wp_url or effective_url
-    if utm_base_url:
-        campaign_slug = slug
-        utm_configs = [
-            ("organic", "job_board", campaign_slug),
-            ("social", "linkedin", campaign_slug),
-            ("email", "outreach", campaign_slug),
-        ]
-        try:
-            pool = await _get_pool()
-            async with pool.acquire() as conn:
-                for source, medium, campaign in utm_configs:
-                    utm_url = (
-                        f"{utm_base_url}?utm_source={source}"
-                        f"&utm_medium={medium}"
-                        f"&utm_campaign={campaign}"
-                    )
-                    await conn.execute(
-                        """
-                        INSERT INTO tracked_links
-                            (id, request_id, base_url, utm_source, utm_medium, utm_campaign, short_code, created_at)
-                        VALUES
-                            (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW())
-                        ON CONFLICT DO NOTHING
-                        """,
-                        request_id, utm_base_url, source, medium, campaign,
-                        f"{campaign[:20]}-{source[:3]}",
-                    )
-                    tracked.append(utm_url)
-            logger.info("Created %d UTM tracked links for %s", len(tracked), utm_base_url)
-        except Exception as exc:
-            logger.warning("UTM link creation failed (non-fatal): %s", exc)
+    # ── 6. UTM tracked links ────────────────────────────────────────────
+    # NOTE: Tracked links are created by recruiters via the frontend
+    # (/api/tracked-links POST) which handles slug generation, UTM params,
+    # and all NOT NULL constraints correctly. The worker only needs to
+    # ensure campaign_landing_pages has the job_posting_url so the
+    # frontend readiness gate passes.
 
     return {
         "wp_url": wp_url,
@@ -234,7 +205,6 @@ async def publish_job_to_wordpress(
         "wp_effective_url": effective_url,
         "wp_post_id": wp_post_id,
         "wp_status": wp_status,
-        "tracked_links": tracked,
     }
 
 
