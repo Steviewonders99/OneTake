@@ -73,7 +73,33 @@ Nova is a working 6-stage autonomous creative operations pipeline deployed at no
 - Tracked links work immediately (ungated from approval workflow)
 - Short link redirect at `/r/[slug]` with click tracking
 
-### 4. Email + Job Posting Copy Generation — PLANNED
+### 4. Stage 4 HTML Template Tuning — IN PROGRESS
+
+**Status:** Active (April 17, 2026)
+
+**What:** Redesigning and expanding the HTML composition templates that GLM-5 uses to generate platform-ready creatives. Current templates produce functional output but need enterprise-grade polish — better layout diversity, typography hierarchy, and visual impact.
+
+**Scope:**
+- New HTML/CSS template variants for key formats (feed, story, carousel)
+- Improved text hierarchy and spacing
+- Better integration with design artifacts (blobs, gradients, badges)
+- Template-specific brand constraints per format
+- Testing against the 8-category grading matrix to ensure B+ minimum output
+
+### 5. Stage 6 Landing Page Template Design — IN PROGRESS
+
+**Status:** Active (April 17, 2026)
+
+**What:** Designing and testing multiple landing page template concepts for per-persona recruitment pages served via `/lp/[slug]`. Current LP generation produces functional pages but needs stronger conversion design and visual variety.
+
+**Scope:**
+- Multiple LP layout concepts (hero variants, testimonial sections, FAQ blocks)
+- Mobile-responsive designs
+- Per-persona visual adaptation (tone, imagery, copy weight)
+- CTA placement optimization
+- Template selection logic based on persona type and campaign context
+
+### 6. Email + Job Posting Copy Generation — PLANNED
 
 **What:** Extend Stage 3 to generate cold outreach email sequences and job posting copy variants alongside ad copy.
 
