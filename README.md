@@ -41,40 +41,57 @@ Both subsystems share the same Neon Postgres database. The database acts as both
 ```mermaid
 flowchart TD
     A["Recruiter/Admin creates intake request"] --> B["Schema validation + job requirements extraction"]
-    B --> C["Request saved in intake_requests"]
-    C --> D["Status set to generating"]
-    D --> E["compute_jobs row created"]
-    E --> F["Local Python worker claims job from Neon"]
+    B --> C["Request saved to intake_requests"]
+    C --> D["Status: generating"]
+    D --> E["compute_jobs row created (pending)"]
+    E --> F["Python worker claims job from Neon"]
 
-    F --> G["Generation Pipeline"]
-    G --> H["Status set to review"]
-    H --> I["Marketing Manager review in admin dashboard"]
+    F --> G["🔄 Generation Pipeline (Stages 1-6)"]
+    G --> H["Status: review"]
+    H --> I["Marketing Manager reviews in dashboard"]
 
     I --> J{"Approve?"}
-    J -- "No, request changes" --> K["Approval record: changes_requested"]
-    K --> L["Status reset to draft"]
-    L --> M["Regenerate full pipeline or specific stage"]
-    M --> D
+    J -- "Request changes" --> K["Status: draft"]
+    K --> L["Regenerate pipeline or specific stage"]
+    L --> D
 
-    J -- "Yes" --> N["Approval record: approved"]
-    N --> O["Magic link created"]
-    O --> P["Status set to approved"]
-    P --> Q["Designer notified / designer portal opens"]
+    J -- "Approve" --> N["Status: approved"]
+    N --> O["Magic link created (7-day, single-use)"]
+    O --> P["Designer notified via Teams webhook"]
 
-    Q --> R["Designer reviews context, downloads kit, leaves notes, uploads replacements"]
-    R --> S{"Submit finals?"}
-    S -- "Not yet" --> R
-    S -- "Yes" --> T["Status set to sent"]
+    P --> Q["Designer reviews, downloads, uploads finals"]
+    Q --> S{"Submit finals?"}
+    S -- "Not yet" --> Q
+    S -- "Yes" --> T["Status: sent"]
 
-    P --> U["Recruiter post-approval workspace unlocked"]
+    N --> U["Recruiter workspace unlocked"]
     T --> U
-    U --> V["Recruiter uses approved creatives"]
-    V --> W["Recruiter builds tracked links"]
-    W --> X["Short-link redirects tracked"]
+    U --> V["Recruiter browses approved creatives"]
+    V --> W["Creates UTM tracked short links"]
+    W --> X["/r/slug redirects + click tracking"]
 
-    P --> Y["Agency link can be generated"]
+    N --> Y["Agency magic link generated"]
     T --> Y
     Y --> Z["Agency package view + ZIP export"]
+
+    style G fill:#6B21A8,color:#fff
+    style N fill:#22c55e,color:#fff
+    style T fill:#0693e3,color:#fff
+    style K fill:#f59e0b,color:#fff
+```
+
+### Request Status Lifecycle / 请求状态生命周期
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft: Recruiter submits
+    draft --> generating: Generation queued
+    generating --> review: Pipeline complete
+    review --> draft: Changes requested
+    review --> approved: Marketing approves
+    approved --> sent: Finals submitted
+    draft --> rejected: Request rejected
+    generating --> draft: Pipeline failed
 ```
 
 ---
@@ -578,48 +595,120 @@ The worker runs stages sequentially. Each stage writes results to the database a
 
 ```mermaid
 flowchart TD
-    S0["Job claimed by worker"] --> S1["Stage 1: Strategic Intelligence"]
+    S0["Worker claims job from compute_jobs"] --> S1
 
-    S1 --> S1B["Outputs:
-    cultural research
-    personas
-    campaign strategies
-    brief_data
-    design_direction"]
+    subgraph S1["Stage 1: Strategic Intelligence"]
+        S1A["Cultural research per region"] --> S1B["Generate personas + targeting"]
+        S1B --> S1C["Campaign strategy + budget allocation"]
+        S1C --> S1D["Creative brief + design direction"]
+        S1D --> S1E["Quality evaluation rubric"]
+        S1E --> S1F{"Score ≥ threshold?"}
+        S1F -- "No" --> S1A
+        S1F -- "Yes" --> S1G["Write: creative_briefs + campaign_strategies"]
+    end
 
-    S1B --> S2["Stage 2: Character-Driven Image Generation"]
+    S1G --> S2
 
-    S2 --> S2B["Outputs:
-    actor profiles
-    validated seed images
-    image variations
-    base_image assets"]
+    subgraph S2["Stage 2: Character-Driven Image Generation"]
+        S2A["Generate actor identity cards per persona"] --> S2B["Create seed images via Seedream 4.5"]
+        S2B --> S2C["Visual QA scoring"]
+        S2C --> S2D{"VQA ≥ 0.85?"}
+        S2D -- "No, retry" --> S2B
+        S2D -- "Yes" --> S2E["Generate scene/outfit variations"]
+        S2E --> S2F["Upload to Vercel Blob"]
+        S2F --> S2G["Write: actor_profiles + generated_assets"]
+    end
 
-    S2B --> S3["Stage 3: Copy Generation"]
+    S2G --> S3
 
-    S3 --> S3B["Outputs:
-    persona x channel x language
-    copy variants"]
+    subgraph S3["Stage 3: Copy Generation"]
+        S3A["Per persona × channel × language"] --> S3B["Generate pillar-weighted copy variants"]
+        S3B --> S3C["Brand voice evaluation"]
+        S3C --> S3D{"Quality pass?"}
+        S3D -- "No, retry" --> S3B
+        S3D -- "Yes" --> S3E["Write: generated_assets (type: copy)"]
+    end
 
-    S3B --> S4["Stage 4: Layout Composition"]
+    S3E --> S4
 
-    S4 --> S4B["Outputs:
-    composed_creative assets
-    carousel assets
-    final renders"]
+    subgraph S4["Stage 4: Layout Composition"]
+        S4A["Select design artifacts from catalog"] --> S4B["GLM-5 generates HTML/CSS creatives"]
+        S4B --> S4C["Playwright renders HTML → PNG"]
+        S4C --> S4D["8-category grading matrix"]
+        S4D --> S4E{"Grade ≥ B?"}
+        S4E -- "No, redesign" --> S4B
+        S4E -- "Yes" --> S4F["Upload renders to Blob"]
+        S4F --> S4G["Write: generated_assets (composed_creative, carousel_panel)"]
+    end
 
-    S4B --> S5["Stage 5: Video Generation (optional)"]
+    S4G --> S5
 
-    S5 --> S5B["Outputs:
-    short UGC-style video assets"]
+    subgraph S5["Stage 5: Video Generation (optional)"]
+        S5A["Generate UGC scripts"] --> S5B["Kling 3.0 multi-shot video"]
+        S5B --> S5C["TTS voice + Wav2Lip lip-sync"]
+        S5C --> S5D["FFmpeg composition"]
+        S5D --> S5E["Upload to Blob"]
+    end
 
-    S5B --> S6["Stage 6: Landing Pages (optional)"]
+    S5 --> S6
 
-    S6 --> S6B["Outputs:
-    HTML landing pages per persona
-    served via /lp/slug"]
+    subgraph S6["Stage 6: Landing Pages (optional)"]
+        S6A["Generate HTML per persona"] --> S6B["Upload to Blob"]
+        S6B --> S6C["Served via /lp/campaign--persona"]
+    end
 
-    S6B --> DONE["Request status → review"]
+    S6 --> DONE["Status → review · Pipeline complete"]
+
+    style S1 fill:#6B21A8,color:#fff
+    style S2 fill:#0693e3,color:#fff
+    style S3 fill:#22c55e,color:#fff
+    style S4 fill:#f59e0b,color:#000
+    style S5 fill:#e91e8c,color:#fff
+    style S6 fill:#06b6d4,color:#fff
+```
+
+### Model Providers / AI 模型提供商
+
+```mermaid
+flowchart LR
+    subgraph "Stage 1 — Intelligence"
+        OR1["OpenRouter\nKimi K2.5"]
+    end
+
+    subgraph "Stage 2 — Images"
+        NIM["NVIDIA NIM\nSeedream 4.5"]
+        VQA["Gemma 4\nVisual QA"]
+    end
+
+    subgraph "Stage 3 — Copy"
+        OR3["OpenRouter\nKimi K2.5"]
+    end
+
+    subgraph "Stage 4 — Composition"
+        GLM["OpenRouter\nGLM-5"]
+        PW["Playwright\nChromium"]
+    end
+
+    subgraph "Stage 5 — Video"
+        KL["Kling 3.0\nAPI"]
+        TTS["Coqui TTS\nLocal"]
+        W2L["Wav2Lip\nLocal"]
+    end
+
+    subgraph "Storage"
+        BLOB["Vercel Blob"]
+        NEON["Neon Postgres"]
+    end
+
+    OR1 --> NEON
+    NIM --> BLOB
+    VQA --> NEON
+    OR3 --> NEON
+    GLM --> PW
+    PW --> BLOB
+    KL --> BLOB
+    TTS --> W2L
+    W2L --> BLOB
 ```
 
 ### Stage 1: Strategic Intelligence / 战略情报
@@ -705,19 +794,39 @@ Roles are stored in `user_roles` table and resolved via `src/lib/permissions.ts`
 ```mermaid
 sequenceDiagram
     participant R as Recruiter
+    participant App as Nova (Next.js)
+    participant W as Worker (Python)
     participant A as Admin (Marketing)
+    participant T as Teams Webhook
     participant D as Designer
     participant AG as Agency
 
-    R->>A: Submit intake request
-    A->>A: AI pipeline generates creatives
-    A->>A: Stage 1: Marketing approval
-    A->>D: Magic link sent via Teams
-    D->>D: Stage 2: Designer reviews + uploads finals
-    D->>A: Designer approves
-    A->>A: Stage 3: Final approval
-    A->>R: Creatives visible in recruiter workspace
-    A->>AG: Agency package + ZIP export available
+    R->>App: Submit intake request
+    App->>App: Validate + save to Neon
+    App->>W: compute_job created (pending)
+    W->>W: Claim job, run Stages 1→4
+    W->>App: Results written to Neon + Blob
+    App->>A: Dashboard shows: status = review
+
+    Note over A: Stage 1: Marketing Approval
+    A->>App: POST /api/approve (type: marketing)
+    App->>App: Create magic link (7-day, single-use)
+    App->>T: Adaptive card: "New campaign for review"
+    T->>D: Teams notification with magic link
+
+    Note over D: Stage 2: Designer Review
+    D->>App: Access via magic link (no login required)
+    D->>App: Download assets, leave notes, upload finals
+    D->>App: POST /submit-finals (consumes magic link)
+    App->>T: "Designer submitted finals"
+    T->>A: Teams notification
+
+    Note over A: Stage 3: Final Approval
+    A->>App: POST /api/approve (type: final)
+    App->>App: Status → sent, agency link generated
+    App->>T: "Campaign package ready"
+    App->>R: Recruiter workspace unlocked
+    App->>AG: Agency package + ZIP available
 ```
 
 | Capability | Admin | Recruiter | Designer | Viewer |
