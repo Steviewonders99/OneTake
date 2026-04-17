@@ -125,18 +125,38 @@ async def publish_job_to_wordpress(
             job_tags.append(display)
 
     # ── 3. Build CPT meta — Apply Job repeater ────────────────────────
-    apply_url = await _get_apply_url(request_id)
+    # Use locale links from the intake form if available — each locale
+    # gets its own row with the correct MyOneForma/AidaForm link.
+    # Falls back to a single apply_url for all languages if no locale links.
+    locale_links: list[dict] = form_data.get("locale_links", [])
 
-    languages = target_languages if target_languages else ["English"]
-    apply_rows = [
-        {"language": lang, "apply_url": apply_url}
-        for lang in languages
-    ]
+    if locale_links:
+        # Build repeater rows from locale-specific links
+        apply_rows = [
+            {
+                "language": ll.get("language", ll.get("locale", "Unknown")),
+                "apply_url": ll.get("url", ""),
+            }
+            for ll in locale_links
+            if ll.get("url")
+        ]
+        logger.info(
+            "Using %d locale links for apply_job repeater",
+            len(apply_rows),
+        )
+    else:
+        # Fallback: single URL for all target languages
+        apply_url = await _get_apply_url(request_id)
+        languages = target_languages if target_languages else ["English"]
+        apply_rows = [
+            {"language": lang, "apply_url": apply_url}
+            for lang in languages
+        ]
 
     apply_title = (
-        f"This role is available in {languages[0]}"
-        if len(languages) == 1
-        else "This role is available in multiple languages"
+        f"This role is available in {apply_rows[0]['language']}"
+        if len(apply_rows) == 1
+        else f"This role is available in {len(apply_rows)} languages"
     )
 
     meta = {
