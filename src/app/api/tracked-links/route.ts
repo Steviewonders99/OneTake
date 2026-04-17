@@ -60,9 +60,10 @@ export async function POST(request: Request) {
   if (!intake) {
     return Response.json({ error: 'Campaign not found' }, { status: 404 });
   }
-  if (intake.status !== 'approved' && intake.status !== 'sent') {
+  // Rejected campaigns can't have tracked links
+  if (intake.status === 'rejected') {
     return Response.json(
-      { error: 'Campaign must be approved before tracked links can be created' },
+      { error: 'Campaign has been rejected' },
       { status: 403 }
     );
   }

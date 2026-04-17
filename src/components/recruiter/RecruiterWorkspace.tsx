@@ -40,6 +40,7 @@ export default function RecruiterWorkspace({
 
   const statusInfo = getRecruiterStatus(request.status);
   const isApproved = request.status === "approved" || request.status === "sent";
+  const isRejected = request.status === "rejected";
 
   const approvedAssets = useMemo(
     () => assets.filter((a) => a.asset_type === "composed_creative" && a.evaluation_passed === true && a.blob_url),
@@ -61,9 +62,9 @@ export default function RecruiterWorkspace({
       .catch(() => {});
   }, []);
 
-  // Fetch tracked links summary every 30s (only when approved)
+  // Fetch tracked links summary every 30s (always, unless rejected)
   useEffect(() => {
-    if (!isApproved) return;
+    if (isRejected) return;
 
     function fetchSummary() {
       fetch(`/api/tracked-links?request_id=${request.id}&limit=0`)
@@ -77,7 +78,7 @@ export default function RecruiterWorkspace({
     fetchSummary();
     const interval = setInterval(fetchSummary, 30000);
     return () => clearInterval(interval);
-  }, [isApproved, request.id]);
+  }, [isRejected, request.id]);
 
   const handleDownloadAll = useCallback(() => {
     for (const asset of approvedAssets) {
@@ -89,7 +90,7 @@ export default function RecruiterWorkspace({
     setSelectedAsset(asset);
   }, []);
 
-  // Pre-approval: no tabs, just a status message
+  // Pre-approval: show status message + link builder (job posting URL is available immediately)
   if (!isApproved) {
     return (
       <div style={{ flex: 1, overflowY: "auto", background: "#F7F7F8" }}>
@@ -100,12 +101,25 @@ export default function RecruiterWorkspace({
           showDownloadAll={false}
           approvedCount={0}
         />
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px", textAlign: "center" }}>
-          <Image size={40} style={{ color: "#8A8A8E", margin: "0 auto 16px" }} />
-          <div style={{ fontSize: 16, fontWeight: 600, color: "#1A1A1A", marginBottom: 8 }}>Campaign is being prepared</div>
-          <div style={{ fontSize: 13, color: "#8A8A8E", maxWidth: 400, margin: "0 auto" }}>
-            The marketing team is generating creatives for this campaign. You&apos;ll be notified when assets are ready for distribution.
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px" }}>
+          {/* Status banner */}
+          <div style={{ textAlign: "center", padding: "32px 0", marginBottom: 24 }}>
+            <Image size={32} style={{ color: "#8A8A8E", margin: "0 auto 12px" }} />
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#1A1A1A", marginBottom: 6 }}>Creatives are being prepared</div>
+            <div style={{ fontSize: 13, color: "#8A8A8E", maxWidth: 400, margin: "0 auto" }}>
+              The marketing team is generating creatives. You can start building tracked links now using the job posting URL.
+            </div>
           </div>
+
+          {/* Link Builder — available immediately */}
+          <LinkBuilderBar
+            requestId={request.id}
+            campaignSlug={request.campaign_slug}
+            activeChannel="linkedin"
+            selectedAsset={null}
+            recruiterInitials={recruiterInitials}
+            onDetachCreative={() => {}}
+          />
         </div>
       </div>
     );
