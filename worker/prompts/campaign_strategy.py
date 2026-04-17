@@ -111,7 +111,12 @@ def _calculate_fixed_mode(
 def _allocate_personas(country_monthly: float, personas: list[dict]) -> dict[str, dict]:
     allocations = {}
     for persona in personas:
-        key = persona.get("archetype_key", "unknown")
+        key = (
+            persona.get("archetype_key")
+            or persona.get("persona_key")
+            or (persona.get("matched_tier", "") or "").lower().replace(" ", "_")
+            or "unknown"
+        )
         tp = persona.get("targeting_profile", {})
         weight_pct = tp.get("budget_weight_pct", 100 // max(len(personas), 1))
         persona_monthly = country_monthly * (weight_pct / 100)
@@ -158,7 +163,7 @@ def _calculate_ratio_mode(countries: list[dict], personas: list[dict]) -> dict:
         country_ratios[c["country"]] = {
             "weight_pct": round(weight * 100, 1),
             "persona_ratios": {
-                p.get("archetype_key", "unknown"): p.get("targeting_profile", {}).get("budget_weight_pct", 33)
+                (p.get("archetype_key") or p.get("matched_tier", "unknown")).lower().replace(" ", "_"): p.get("targeting_profile", {}).get("budget_weight_pct", 33)
                 for p in personas
             },
             "recommended_ad_sets": "3-5 depending on budget",
@@ -356,8 +361,16 @@ async def generate_campaign_strategy(
     personas_trimmed = []
     for p in personas:
         tp = p.get("targeting_profile", {})
+        # Derive archetype_key: prefer explicit field, fall back to matched_tier or name
+        archetype_key = (
+            p.get("archetype_key")
+            or p.get("persona_key")
+            or (p.get("matched_tier", "") or "").lower().replace(" ", "_")
+            or (p.get("name", "") or "").lower().replace(" ", "_")
+            or "persona"
+        )
         personas_trimmed.append({
-            "archetype_key": p.get("archetype_key"),
+            "archetype_key": archetype_key,
             "age_range": p.get("age_range"),
             "occupation": tp.get("demographics", {}).get("occupation", "unknown"),
             "interests": tp.get("interests", {}),

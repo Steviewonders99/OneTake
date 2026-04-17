@@ -67,7 +67,7 @@ function groupByPersona(
 
   // Initialize groups from brief personas
   for (const p of personas) {
-    const key = p.archetype_key || p.persona_key || `persona_${personas.indexOf(p)}`;
+    const key = p.archetype_key || p.persona_key || (p.matched_tier || "").toLowerCase().replace(/\s+/g, "_") || `persona_${personas.indexOf(p)}`;
     groups.set(key, {
       key,
       persona: p,
@@ -95,7 +95,7 @@ function groupByPersona(
   }
   for (const actor of actorsByName.values()) {
     const fl = (typeof actor.face_lock === "string" ? JSON.parse(actor.face_lock || "{}") : actor.face_lock) as Record<string, any> || {};
-    const pk = fl.persona_key || fl.archetype_key || "unassigned";
+    const pk = fl.persona_key || fl.archetype_key || (fl.matched_tier || "").toLowerCase().replace(/\s+/g, "_") || "unassigned";
     if (!groups.has(pk)) {
       groups.set(pk, { key: pk, persona: { archetype_key: pk }, actors: [], assets: [], platforms: [] });
     }

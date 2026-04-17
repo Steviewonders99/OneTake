@@ -337,26 +337,43 @@ async def _generate_actor_card(job, brief, request_id):
         actor_text = await generate_text(ACTOR_SYSTEM_PROMPT, actor_prompt, thinking=False, max_tokens=4096)
     actor_data = _parse_json(actor_text)
 
+    # Inject persona_key into face_lock so frontend can group actors by persona
+    face_lock = actor_data.get("face_lock", {})
+    if persona and isinstance(face_lock, dict):
+        face_lock["persona_key"] = (
+            persona.get("archetype_key")
+            or persona.get("persona_key")
+            or (persona.get("matched_tier", "") or "").lower().replace(" ", "_")
+        )
     actor_id = await save_actor(request_id, {
         "name": actor_data.get("name", f"Contributor-{region}"),
-        "face_lock": actor_data.get("face_lock", {}),
+        "face_lock": face_lock,
         "prompt_seed": actor_data.get("prompt_seed", ""),
         "outfit_variations": actor_data.get("outfit_variations", {}),
         "scenes": actor_data.get("scenes", {}),
         "signature_accessory": actor_data.get("signature_accessory", "headphones"),
         "backdrops": actor_data.get("backdrops", []),
-        "persona_key": persona.get("archetype_key") if persona else None,
-        "persona_name": persona.get("persona_name") if persona else None,
+        "persona_key": (
+            persona.get("archetype_key")
+            or persona.get("persona_key")
+            or (persona.get("matched_tier", "") or "").lower().replace(" ", "_")
+        ) if persona else None,
+        "persona_name": (persona.get("persona_name") or persona.get("name")) if persona else None,
     })
     actor_data["id"] = actor_id
     actor_data["persona"] = persona
     actor_data["_job"] = job  # Preserve job metadata for Phase 2
+    persona_label = (
+        persona.get("archetype_key")
+        or persona.get("matched_tier")
+        or "none"
+    ) if persona else "none"
     logger.info(
         "Actor '%s' created (id=%s, region=%s, persona=%s)",
         actor_data.get("name"),
         actor_id,
         region,
-        persona.get("archetype_key") if persona else "none",
+        persona_label,
     )
     return actor_data
 
