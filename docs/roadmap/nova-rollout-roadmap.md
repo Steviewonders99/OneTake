@@ -1,81 +1,96 @@
 # Nova — Rollout Roadmap
 
-**Date:** 2026-04-13
+**Date:** 2026-04-17 (updated)
 **Author:** Steven Junop
-**Status:** Draft — pending PM review with Jenn
+**Status:** Active — shared with China engineering team (Michael)
 
 ---
 
-## Current State (Day 8)
+## Current State (Day 12)
 
-Nova is a working 6-stage autonomous creative operations pipeline deployed at nova-intake.vercel.app. It replaces a 3-5 day panic workflow with a 30-minute automated system.
+Nova is a working 6-stage autonomous creative operations pipeline deployed at nova-intake.vercel.app. 80K LOC, 5-gate CI pipeline, production Dockerfile, shared with international engineering team.
 
 ### What's Built & Deployed
 - 6-stage pipeline: Intelligence → Images → Copy → Composition → Video → Landing Pages
 - 4 portals: Recruiter (intake + library), Marketing Manager (command center), Designer (gallery + edit suite), Agency (magic link)
 - 3-stage approval flow with Teams + Outlook notifications
 - Inline-editable media strategy with autosave
-- UTM tracked link builder
+- UTM tracked link builder with per-locale destination URLs
 - Designer edit suite (Flux 2 retouching, graphic overlay, Figma integration)
-- 5-step intake wizard with AI pre-fill from RFP/JD
-- 209 tests passing, zero TypeScript errors
-- Deployed to Vercel + Neon Postgres
+- 5-step intake wizard with AI pre-fill from RFP/JD + locale links Excel upload
+- WordPress auto-publish with ACF repeater (per-locale apply links) + Yoast SEO meta
+- WordPress taxonomy tagging (job_type + job_tag)
+- 17-commit security hardening (auth, IDOR, XSS, secrets, CSP)
+- GitHub Actions CI (build, lint, test, Python lint, Docker build — all green)
+- Multi-arch Dockerfile (Azure VM + Apple Silicon)
+- 851-line bilingual README (EN/CN) with Mermaid diagrams
+- Public GitHub repo: github.com/Steviewonders99/OneTake
+- China engineering team (Michael) engaged — discussing deployment architecture
+- Deployed to Vercel + Neon Postgres, zero build errors
 
 ### What's NOT Built Yet
-- WordPress auto-publish (have WP MCP, not wired)
 - Organic content (social posts, flyers, posters)
-- Auto UTM linking to WP pages
+- Email + job posting copy generation (Stage 3 extension)
 - SharePoint folder automation
 - Microsoft SSO (Clerk SAML configured but not connected to Azure AD)
 - Analytics/conversion tracking on landing pages
+- Branded short link domain (`go.oneforma.com` — waiting on IT for CNAME)
+- Stage 2 regeneration for existing campaigns (persona_key fix needs re-run)
 
 ---
 
-## Three New Requirements
+## Requirements Status
 
-### 1. WordPress Job Description Auto-Publish
+### 1. WordPress Job Description Auto-Publish — SHIPPED
 
-**What:** When a recruiter uploads a JD in the intake wizard, Stage 1 automatically creates WordPress job description landing pages — one per location/region required.
+**Status:** Complete (April 17, 2026)
 
-**How:**
-- Step 1 of Stage 1 (before persona generation): parse JD → extract locations
-- For each location: call WordPress MCP to create/publish a page
-- Use the LP template system (Jinja2) to generate location-specific HTML
-- Return the published WP URLs → store in `campaign_landing_pages`
-- These URLs become the base for UTM tracked links immediately
+- Stage 0 (before persona generation): AI structures JD → publishes to WordPress as `job` CPT
+- ACF `apply_job` repeater populated with per-locale links from Excel upload
+- Yoast SEO meta description auto-generated via excerpt
+- Job type + job tag taxonomies auto-tagged
+- Published URL stored in `campaign_landing_pages.job_posting_url`
+- Recruiter can build UTM tracked links immediately (no approval gate)
 
-**Dependencies:** WordPress MCP (already functional), WP instance credentials, page template
+### 2. Organic Content Generation (Social Posts, Flyers, Posters) — PLANNED
 
-**Effort:** ~2 days (prompt + WP MCP integration + per-location loop)
-
-### 2. Organic Content Generation (Social Posts, Flyers, Posters)
-
-**What:** In addition to paid ad creatives, generate organic social posts, printable flyers, and posters per persona per campaign.
+**What:** Generate organic social posts, printable flyers, and posters per persona per campaign.
 
 **How:**
 - Extend Stage 3 (Copy): add organic post copy generation (LinkedIn posts, Facebook posts, Twitter/X threads)
 - Extend Stage 4 (Composition): add print-ready formats (A4 flyer, A3 poster, social post cards)
 - New asset types: `organic_post`, `flyer`, `poster`
-- New format dimensions in the composition engine
-- Designer reviews these alongside ad creatives in the gallery
 
-**Dependencies:** Print-ready template designs, format dimensions, copy tone adaptation (organic ≠ paid)
+**Effort:** ~3-4 days
 
-**Effort:** ~3-4 days (copy prompts + composition templates + gallery integration)
+### 3. Auto UTM Linking to WordPress — SHIPPED
 
-### 3. Auto UTM Linking to WordPress
+**Status:** Complete (April 17, 2026)
 
-**What:** As soon as WordPress job description pages are published, automatically generate UTM tracked links and make them available to recruiters.
+- WordPress publish → URL captured → stored in campaign_landing_pages
+- Recruiter Link Builder shows job posting URL as destination option
+- Locale-specific links from Excel upload also available as destinations
+- Tracked links work immediately (ungated from approval workflow)
+- Short link redirect at `/r/[slug]` with click tracking
+
+### 4. Email + Job Posting Copy Generation — PLANNED
+
+**What:** Extend Stage 3 to generate cold outreach email sequences and job posting copy variants alongside ad copy.
 
 **How:**
-- After WP publish in Step 1: capture the live URL
-- Auto-create tracked links with standard UTM parameters (source=organic, medium=social, campaign=slug)
-- Pre-populate the recruiter's Link Builder with these links
-- Include links in the Teams + Outlook notification
+- Add email/job posting as output types inside Stage 3
+- Same persona/channel/language matrix, more formats
+- No new pipeline stage needed
 
-**Dependencies:** Requirement 1 (WP pages must exist first)
+**Effort:** ~1-2 days
 
-**Effort:** ~1 day (auto-create tracked_links rows + notification update)
+### 5. Branded Short Link Domain — PENDING IT
+
+**What:** Replace `nova-intake.vercel.app/r/...` with `go.oneforma.com/r/...` for professional tracked links.
+
+**Requires:** IT to add CNAME record: `go` → `cname.vercel-dns.com`
+
+**After DNS:** `vercel domains add go.oneforma.com` + update `NEXT_PUBLIC_APP_URL`
 
 ---
 
@@ -190,10 +205,13 @@ Nova is a working 6-stage autonomous creative operations pipeline deployed at no
 
 | Blocker | Owner | Status | Impact |
 |---|---|---|---|
+| go.oneforma.com CNAME | IT Admin | REQUESTED | Branded short links — cosmetic, not blocking |
 | Azure AD SSO config | IT Admin | NOT STARTED | Blocks internal team access — currently using Clerk dev keys |
 | Teams webhook (prod) | IT Admin | NOT STARTED | Currently using test webhook |
 | Kling API credits | Steven | IN PROGRESS | Blocks Stage 5 video at scale |
-| WordPress credentials | Steven/Jenn | HAVE (WP MCP works) | Ready for auto-publish |
+| WordPress credentials | Steven/Jenn | DONE | WP REST API working, ACF + taxonomies verified |
+| China eng deployment decision | Michael | IN PROGRESS | Standalone vs OneForma 2.0 integration |
+| Neon DB password rotation | Steven | PENDING | Old creds in git history — rotate ASAP |
 | Recruiter pilot volunteers | Jenn | NOT STARTED | Need 1-2 recruiters for Week 3 pilot |
 | Agency contact for test handoff | Jenn/Steven | NOT STARTED | Need agency email for magic link test |
 | SharePoint site + permissions | IT Admin | NOT STARTED | P2 — not blocking launch |
