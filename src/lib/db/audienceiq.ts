@@ -204,3 +204,97 @@ export async function getTargetingVsReality(requestId: string): Promise<{
     actual_skills: actualSkills,
   };
 }
+
+// ── Audience Profiles ──────────────────────────────────────────────────────
+
+export interface AudienceProfileRow {
+  id: string;
+  request_id: string;
+  ring: string;
+  demographics: Record<string, unknown>;
+  skills: Record<string, unknown>;
+  languages: string[];
+  regions: string[];
+  sample_size: number;
+  confidence: string;
+  source: string;
+  captured_at: string;
+}
+
+export async function upsertProfile(profile: Omit<AudienceProfileRow, 'id' | 'captured_at'>): Promise<void> {
+  const sql = getDb();
+  await sql`
+    INSERT INTO audience_profiles (request_id, ring, demographics, skills, languages, regions, sample_size, confidence, source)
+    VALUES (${profile.request_id}, ${profile.ring}, ${JSON.stringify(profile.demographics)}, ${JSON.stringify(profile.skills)}, ${profile.languages}, ${profile.regions}, ${profile.sample_size}, ${profile.confidence}, ${profile.source})
+    ON CONFLICT (request_id, ring) DO UPDATE SET
+      demographics = EXCLUDED.demographics,
+      skills = EXCLUDED.skills,
+      languages = EXCLUDED.languages,
+      regions = EXCLUDED.regions,
+      sample_size = EXCLUDED.sample_size,
+      confidence = EXCLUDED.confidence,
+      source = EXCLUDED.source,
+      captured_at = NOW()
+  `;
+}
+
+export async function getProfiles(requestId: string): Promise<AudienceProfileRow[]> {
+  const sql = getDb();
+  const rows = await sql`SELECT * FROM audience_profiles WHERE request_id = ${requestId} ORDER BY ring`;
+  return rows as AudienceProfileRow[];
+}
+
+// ── Drift Snapshots ────────────────────────────────────────────────────────
+
+export async function insertDriftSnapshot(snapshot: {
+  request_id: string;
+  declared_vs_paid: number;
+  declared_vs_organic: number;
+  paid_vs_converted: number;
+  organic_vs_converted: number;
+  overall_drift: number;
+  severity: string;
+  segment_mismatch: boolean;
+  evidence: Record<string, unknown>;
+  recommendations: string[];
+}): Promise<{ id: string }> {
+  const sql = getDb();
+  const rows = await sql`
+    INSERT INTO audience_drift_snapshots (request_id, declared_vs_paid, declared_vs_organic, paid_vs_converted, organic_vs_converted, overall_drift, severity, segment_mismatch, evidence, recommendations)
+    VALUES (${snapshot.request_id}, ${snapshot.declared_vs_paid}, ${snapshot.declared_vs_organic}, ${snapshot.paid_vs_converted}, ${snapshot.organic_vs_converted}, ${snapshot.overall_drift}, ${snapshot.severity}, ${snapshot.segment_mismatch}, ${JSON.stringify(snapshot.evidence)}, ${snapshot.recommendations})
+    RETURNING id
+  `;
+  return { id: (rows[0] as { id: string }).id };
+}
+
+export async function getLatestDrift(requestId: string): Promise<Record<string, unknown> | null> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT * FROM audience_drift_snapshots WHERE request_id = ${requestId} ORDER BY computed_at DESC LIMIT 1
+  `;
+  return (rows[0] as Record<string, unknown>) ?? null;
+}
+
+// ── Health Scores ──────────────────────────────────────────────────────────
+
+export async function insertHealthScore(score: {
+  request_id: string;
+  score: number;
+  issues: { type: string; message: string; recommended_action: string; severity: string; deduction: number }[];
+}): Promise<{ id: string }> {
+  const sql = getDb();
+  const rows = await sql`
+    INSERT INTO audience_health_scores (request_id, score, issues)
+    VALUES (${score.request_id}, ${score.score}, ${JSON.stringify(score.issues)})
+    RETURNING id
+  `;
+  return { id: (rows[0] as { id: string }).id };
+}
+
+export async function getLatestHealth(requestId: string): Promise<Record<string, unknown> | null> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT * FROM audience_health_scores WHERE request_id = ${requestId} ORDER BY computed_at DESC LIMIT 1
+  `;
+  return (rows[0] as Record<string, unknown>) ?? null;
+}
