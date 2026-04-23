@@ -40,7 +40,7 @@ export default function HieScrollmapWidget({ config }: { config: Record<string, 
           <CartesianGrid {...GRID_STYLE} />
           <XAxis type="number" domain={[0, 100]} {...AXIS_STYLE} tickFormatter={(v: number) => `${v}%`} />
           <YAxis type="category" dataKey="depth_band" {...AXIS_STYLE} width={38} tick={{ fontSize: 9 }} />
-          <Tooltip {...TOOLTIP_STYLE} formatter={(v: number) => [`${v}%`, 'Reached']} />
+          <Tooltip {...TOOLTIP_STYLE} />
           <Bar dataKey="pct_of_total" radius={[0, 4, 4, 0]} fill="#0693e3" />
         </BarChart>
       </ResponsiveContainer>
