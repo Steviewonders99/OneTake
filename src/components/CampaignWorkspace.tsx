@@ -24,9 +24,14 @@ import type {
   GeneratedAsset,
   ActorProfile,
   CreativeBrief,
+  CountryQuota,
+  ComputeJob,
 } from "@/lib/types";
 import { getPlatformMeta, PlatformLogo, toChannel } from "@/lib/platforms";
 import ChannelCreativeGallery from "@/components/creative-gallery/ChannelCreativeGallery";
+import CountryBar from "@/components/campaign/CountryBar";
+import AllCountriesOverview from "@/components/campaign/AllCountriesOverview";
+import CountryHeader from "@/components/campaign/CountryHeader";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -37,6 +42,8 @@ interface CampaignWorkspaceProps {
   campaignStrategies?: any[];
   actors: ActorProfile[];
   assets: GeneratedAsset[];
+  computeJobs?: ComputeJob[];
+  countryQuotas?: CountryQuota[];
   editable?: boolean;
   requestId?: string;
   onRefine?: (asset: GeneratedAsset) => void;
@@ -697,6 +704,8 @@ export default function CampaignWorkspace({
   campaignStrategies = [],
   actors,
   assets,
+  computeJobs,
+  countryQuotas,
   editable = false,
   requestId,
   onRefine,
@@ -706,16 +715,51 @@ export default function CampaignWorkspace({
 }: CampaignWorkspaceProps) {
   const [htmlEditorAsset, setHtmlEditorAsset] = useState<GeneratedAsset | null>(null);
   const [translateMode, setTranslateMode] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState("brief");
+
+  const hasCountries = (countryQuotas?.length ?? 0) > 0;
+
+  // Build country status list from compute_jobs
+  const countryStatuses = useMemo(() => {
+    if (!countryQuotas || !computeJobs) return [];
+    return countryQuotas.map((q) => {
+      const job = computeJobs.find((j) => j.country === q.country && j.job_type === "generate_country");
+      return {
+        country: q.country,
+        status: (job?.status || "pending") as "pending" | "processing" | "complete" | "failed",
+        stageTarget: job?.stage_target ?? null,
+      };
+    });
+  }, [countryQuotas, computeJobs]);
+
+  // Filter data by selected country
+  const filteredActors = useMemo(
+    () => selectedCountry ? actors.filter((a) => a.country === selectedCountry) : actors,
+    [actors, selectedCountry]
+  );
+
+  const filteredAssets = useMemo(
+    () => selectedCountry ? assets.filter((a) => a.country === selectedCountry) : assets,
+    [assets, selectedCountry]
+  );
+
+  const filteredStrategies = useMemo(
+    () => selectedCountry
+      ? (campaignStrategies || []).filter((s: any) => s.country === selectedCountry)
+      : (campaignStrategies || []),
+    [campaignStrategies, selectedCountry]
+  );
 
   const messaging = briefData.messaging_strategy || {};
   const channels = briefData.channels || {};
   const guardrails = briefData.cultural_guardrails || {};
   const contentLang = briefData.content_language || {};
 
-  // Group everything by persona
+  // Group everything by persona (using filtered data)
   const personaGroups = useMemo(
-    () => groupByPersona(briefData, actors, assets),
-    [briefData, actors, assets]
+    () => groupByPersona(briefData, filteredActors, filteredAssets),
+    [briefData, filteredActors, filteredAssets]
   );
 
   const handleChangeLayout = async (asset: GeneratedAsset) => {
@@ -738,7 +782,40 @@ export default function CampaignWorkspace({
 
   return (
     <div className="space-y-4">
-      {showBrief && (
+      {hasCountries && (
+        <CountryBar
+          countries={countryStatuses}
+          selected={selectedCountry}
+          onChange={setSelectedCountry}
+        />
+      )}
+
+      {hasCountries && selectedCountry === null && (
+        <AllCountriesOverview
+          quotas={countryQuotas!}
+          jobs={computeJobs || []}
+          assets={assets}
+          onSelectCountry={setSelectedCountry}
+        />
+      )}
+
+      {hasCountries && selectedCountry !== null && countryQuotas && (
+        <div style={{ padding: "24px 24px 0" }}>
+          <CountryHeader
+            quota={countryQuotas.find((q) => q.country === selectedCountry)!}
+            status={countryStatuses.find((c) => c.country === selectedCountry)?.status || "pending"}
+            assetCounts={{
+              images: filteredAssets.filter((a) => a.asset_type === "base_image").length,
+              creatives: filteredAssets.filter((a) => a.asset_type === "composed_creative").length,
+              copy: filteredAssets.filter((a) => a.asset_type === "copy").length,
+              videos: filteredAssets.filter((a) => a.asset_type === "video").length,
+            }}
+            languages={[]}
+          />
+        </div>
+      )}
+
+      {(!hasCountries || selectedCountry !== null) && showBrief && (
       <>
       {/* Top: Campaign Overview + Regional tabs */}
       <MiniTabs
@@ -843,7 +920,7 @@ export default function CampaignWorkspace({
             label: "Media Strategy",
             content: (
               <MediaStrategyEditor
-                strategies={campaignStrategies as any}
+                strategies={filteredStrategies as any}
                 requestId={requestId ?? assets[0]?.request_id ?? ""}
               />
             ),
@@ -974,14 +1051,14 @@ export default function CampaignWorkspace({
       )}
 
       {/* Persona Sections */}
-      {showPersonas && personaGroups.length > 0 && (
+      {(!hasCountries || selectedCountry !== null) && showPersonas && personaGroups.length > 0 && (
         <div className="space-y-3">
           {personaGroups.map((group, i) => (
             <PersonaSection
               key={group.key}
               group={group}
               index={i}
-              allAssets={assets}
+              allAssets={filteredAssets}
               onRefine={onRefine}
               onDelete={onDelete}
             />
