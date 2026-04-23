@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { seedDefaultTemplate } from '@/lib/db/dashboards';
 
 /**
  * Creates all database tables with proper constraints, foreign keys, and indexes.
@@ -442,4 +443,7 @@ export async function createTables(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_compute_jobs_pending
     ON compute_jobs (status) WHERE status = 'pending'
   `;
+
+  // Seed default Insights dashboard template
+  await seedDefaultTemplate();
 }

@@ -123,3 +123,65 @@ export async function listTemplates(): Promise<Dashboard[]> {
   const rows = await sql`SELECT * FROM dashboards WHERE is_template = TRUE ORDER BY title`;
   return rows as Dashboard[];
 }
+
+export async function seedDefaultTemplate(): Promise<void> {
+  const sql = getDb();
+  const existing = await sql`SELECT id FROM dashboards WHERE is_template = TRUE AND title = 'Recruitment Pipeline Overview'`;
+  if (existing.length > 0) return;
+
+  const layoutData: DashboardLayoutData = {
+    widgets: [
+      { id: 'tpl-kpi', type: 'kpi-cards', title: 'KPI Cards', config: {} },
+      { id: 'tpl-pipeline', type: 'pipeline-overview', title: 'Pipeline Status', config: {} },
+      { id: 'tpl-urgency', type: 'urgency-breakdown', title: 'Urgency', config: {} },
+      { id: 'tpl-timeline', type: 'campaign-timeline', title: 'Recent Campaigns', config: {} },
+      { id: 'tpl-utm', type: 'utm-funnel', title: 'UTM Breakdown', config: {} },
+      { id: 'tpl-leaderboard', type: 'recruiter-leaderboard', title: 'Recruiter Leaderboard', config: {} },
+      { id: 'tpl-creative', type: 'creative-performance', title: 'Creative Performance', config: {} },
+      { id: 'tpl-workers', type: 'worker-health', title: 'Worker Health', config: {} },
+    ],
+    gridLayouts: {
+      lg: [
+        { i: 'tpl-kpi', x: 0, y: 0, w: 12, h: 2, minW: 6, minH: 2 },
+        { i: 'tpl-pipeline', x: 0, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-urgency', x: 6, y: 2, w: 6, h: 4, minW: 3, minH: 2 },
+        { i: 'tpl-timeline', x: 0, y: 6, w: 12, h: 4, minW: 6, minH: 3 },
+        { i: 'tpl-utm', x: 0, y: 10, w: 6, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-leaderboard', x: 6, y: 10, w: 6, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-creative', x: 0, y: 14, w: 6, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-workers', x: 6, y: 14, w: 6, h: 3, minW: 4, minH: 2 },
+      ],
+      md: [
+        { i: 'tpl-kpi', x: 0, y: 0, w: 8, h: 2, minW: 6, minH: 2 },
+        { i: 'tpl-pipeline', x: 0, y: 2, w: 4, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-urgency', x: 4, y: 2, w: 4, h: 4, minW: 3, minH: 2 },
+        { i: 'tpl-timeline', x: 0, y: 6, w: 8, h: 4, minW: 6, minH: 3 },
+        { i: 'tpl-utm', x: 0, y: 10, w: 4, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-leaderboard', x: 4, y: 10, w: 4, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-creative', x: 0, y: 14, w: 4, h: 4, minW: 4, minH: 3 },
+        { i: 'tpl-workers', x: 4, y: 14, w: 4, h: 3, minW: 4, minH: 2 },
+      ],
+      sm: [
+        { i: 'tpl-kpi', x: 0, y: 0, w: 4, h: 2 },
+        { i: 'tpl-pipeline', x: 0, y: 2, w: 4, h: 4 },
+        { i: 'tpl-urgency', x: 0, y: 6, w: 4, h: 3 },
+        { i: 'tpl-timeline', x: 0, y: 9, w: 4, h: 4 },
+        { i: 'tpl-utm', x: 0, y: 13, w: 4, h: 4 },
+        { i: 'tpl-leaderboard', x: 0, y: 17, w: 4, h: 4 },
+        { i: 'tpl-creative', x: 0, y: 21, w: 4, h: 4 },
+        { i: 'tpl-workers', x: 0, y: 25, w: 4, h: 3 },
+      ],
+    },
+  };
+
+  await sql`
+    INSERT INTO dashboards (title, description, layout_data, created_by, is_template)
+    VALUES (
+      'Recruitment Pipeline Overview',
+      'Pre-built dashboard: KPIs, pipeline status, UTM analytics, recruiter leaderboard, creative performance.',
+      ${JSON.stringify(layoutData)},
+      'system',
+      TRUE
+    )
+  `;
+}
