@@ -479,3 +479,20 @@ export interface TrackedLinksResponse {
   links: TrackedLinkWithAsset[];
   summary: TrackedLinksSummary;
 }
+
+export interface DemographicQuota {
+  category: string;
+  value: string;
+  percentage: number;
+  volume: number;
+}
+
+export interface CountryQuota {
+  country: string;
+  locale: string;
+  total_volume: number;
+  rate: number;
+  currency: string;
+  url?: string;
+  demographics: DemographicQuota[];
+}
