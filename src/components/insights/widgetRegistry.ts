@@ -1,5 +1,5 @@
 /**
- * Widget Registry — 29 widgets / 6 categories.
+ * Widget Registry — 30 widgets / 6 categories.
  * Ported from VYRA, adapted for recruitment pipeline + UTM tracking.
  */
 
@@ -8,7 +8,7 @@ import {
   BarChart3, Activity, Clock, Image, MousePointerClick, Cpu, Timer,
   Globe, AlertTriangle, ListChecks, StickyNote, GitCompare, Trophy,
   Palette, TrendingUp, Grid3x3, Link2, Funnel, Award, TrendingDown,
-  Crosshair, Target, Radar, HeartPulse, Search,
+  Crosshair, Target, Radar, HeartPulse, Search, Megaphone,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { WidgetType, WidgetCategory } from './types';
@@ -201,6 +201,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     component: lazy(() => import('./widgets/HieFormFrictionWidget')),
     category: 'audienceiq', label: 'HIE Diagnostics', icon: AlertTriangle,
     description: 'CRO diagnostics — scroll cliffs, CTA weakness, form friction',
+    defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
+  },
+  'platform-audiences': {
+    component: lazy(() => import('./widgets/PlatformAudiencesWidget')),
+    category: 'audienceiq', label: 'Platform Audiences', icon: Megaphone,
+    description: 'Multi-platform ad audience overview — Google, Meta, LinkedIn, TikTok',
     defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
   },
   'text-note': {

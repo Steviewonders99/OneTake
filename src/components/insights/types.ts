@@ -38,6 +38,7 @@ export type WidgetType =
   | 'hie-heatmap'
   | 'hie-scrollmap'
   | 'hie-form-friction'
+  | 'platform-audiences'
   // Utility
   | 'text-note';
 
