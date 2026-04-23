@@ -24,6 +24,12 @@ export type WidgetType =
   | 'worker-health'
   | 'pipeline-performance'
   | 'region-map'
+  // AudienceIQ
+  | 'contributor-funnel'
+  | 'quality-by-channel'
+  | 'retention-curve'
+  | 'skill-distribution'
+  | 'targeting-vs-reality'
   // Utility
   | 'text-note';
 
@@ -32,6 +38,7 @@ export type WidgetCategory =
   | 'assets'
   | 'utm'
   | 'operations'
+  | 'audienceiq'
   | 'utility';
 
 export interface WidgetInstance {
