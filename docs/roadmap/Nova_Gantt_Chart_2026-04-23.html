@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova Platform Gantt Chart — April 23, 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Roboto', system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #FFFFFF;
+    color: #1A1A1A;
+    padding: 32px 40px;
+    min-width: 1280px;
+  }
+
+  /* ── Header ──────────────────────────────────────────── */
+  .header { margin-bottom: 24px; }
+  .header h1 {
+    font-size: 28px; font-weight: 900; color: #1A1A1A; margin-bottom: 2px;
+    letter-spacing: -0.02em;
+  }
+  .header .subtitle {
+    font-size: 13px; color: #737373; margin-bottom: 0;
+  }
+
+  /* ── Stats Row ───────────────────────────────────────── */
+  .stats-row {
+    display: flex; gap: 0; padding: 0;
+    background: linear-gradient(to right, rgba(3,72,178,1), rgba(170,24,141,1));
+    border-radius: 12px; margin-bottom: 20px; overflow: hidden;
+  }
+  .stat {
+    flex: 1; text-align: center; padding: 16px 12px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  .stat:last-child { border-right: none; }
+  .stat .num { font-size: 24px; font-weight: 900; color: #FFFFFF; }
+  .stat .label {
+    font-size: 9px; color: rgba(255,255,255,0.75); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-top: 2px;
+  }
+
+  /* ── Progress Bar ────────────────────────────────────── */
+  .progress-container { margin-bottom: 20px; }
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .progress-header .pct {
+    font-size: 20px; font-weight: 900; color: #1A1A1A;
+  }
+  .progress-header .pct span {
+    font-size: 12px; font-weight: 400; color: #737373;
+  }
+  .progress-header .day-count {
+    font-size: 12px; color: #737373;
+  }
+  .progress-bar {
+    height: 10px; background: #F0F0F0; border-radius: 5px;
+    overflow: visible; position: relative;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 5px;
+    background: linear-gradient(to right, rgba(3,72,178,1), rgba(170,24,141,1));
+    transition: width 0.3s ease;
+  }
+  .progress-marker {
+    position: absolute; top: -5px; width: 3px; height: 20px;
+    background: #dc2626; border-radius: 2px;
+  }
+  .progress-labels {
+    display: flex; justify-content: space-between; margin-top: 6px;
+    font-size: 9px; color: #737373;
+  }
+  .progress-labels .current { color: #dc2626; font-weight: 700; }
+
+  /* ── Legend ───────────────────────────────────────────── */
+  .legend {
+    display: flex; gap: 20px; margin-bottom: 16px;
+    padding: 10px 16px; background: #FAFAFA; border-radius: 8px;
+    border: 1px solid #F0F0F0;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #555;
+  }
+  .legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+
+  /* ── Gantt Container ─────────────────────────────────── */
+  .gantt-wrap {
+    border: 1px solid #E5E5E5; border-radius: 12px;
+    overflow: hidden;
+  }
+  .gantt { width: 100%; border-collapse: collapse; }
+
+  /* Week header row */
+  .gantt-header-row { background: #FAFAFA; }
+  .gantt-header-row th {
+    font-size: 10px; font-weight: 700; color: #737373;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 10px 4px; text-align: center;
+    border-bottom: 2px solid #E5E5E5;
+  }
+  .gantt-header-row th.task-col {
+    text-align: left; padding-left: 16px;
+    width: 260px; min-width: 260px;
+  }
+  .gantt-header-row th.status-col {
+    width: 80px; min-width: 80px; text-align: center;
+  }
+  .gantt-header-row th.week-col { border-left: 1px solid #E5E5E5; }
+  .gantt-header-row th.current-week {
+    color: #0348B2; background: rgba(3,72,178,0.04);
+  }
+
+  /* Day sub-headers */
+  .day-header-row th {
+    font-size: 8px; color: #B0B0B0; padding: 4px 0; text-align: center;
+    border-bottom: 1px solid #F0F0F0; font-weight: 400;
+  }
+  .day-header-row th.today-col {
+    color: #dc2626; font-weight: 700;
+    background: rgba(220,38,38,0.06);
+  }
+  .day-header-row th.task-col,
+  .day-header-row th.status-col { border-bottom: 1px solid #F0F0F0; }
+
+  /* ── Track Headers (Collapsible) ─────────────────────── */
+  .track-header-row {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .track-header-row:hover { background: #FAFAFA; }
+  .track-header-row td {
+    padding: 0; height: 40px; border-top: 2px solid #E5E5E5;
+  }
+  .track-header-row td.track-label {
+    font-size: 12px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; padding-left: 16px;
+    display: flex; align-items: center; gap: 8px; height: 40px;
+  }
+  .track-header-row td.track-label .chevron {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 4px; font-size: 12px;
+    transition: transform 0.2s ease; font-weight: 700;
+    background: rgba(0,0,0,0.05);
+  }
+  .track-header-row td.track-label .track-count {
+    font-size: 10px; font-weight: 500; color: #737373;
+    background: #F0F0F0; border-radius: 10px; padding: 2px 8px;
+  }
+
+  /* ── Task Rows ───────────────────────────────────────── */
+  .task-row {
+    transition: background 0.1s ease;
+  }
+  .task-row:hover { background: #FAFBFC; }
+  .task-row td {
+    padding: 0; height: 32px; position: relative;
+    border-bottom: 1px solid #F8F8F8;
+  }
+  .task-row td.task-name {
+    font-size: 11px; color: #1A1A1A; padding: 0 8px 0 32px;
+    white-space: nowrap; font-weight: 500; vertical-align: middle;
+  }
+  .task-row td.task-name .detail {
+    font-size: 9px; color: #9CA3AF; margin-left: 6px;
+    font-weight: 400;
+  }
+  .task-row td.task-status {
+    text-align: center; vertical-align: middle;
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-block; font-size: 8px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .status-badge.shipped { background: #DCFCE7; color: #166534; }
+  .status-badge.in-progress { background: #DBEAFE; color: #1E40AF; }
+  .status-badge.planned { background: #F3F4F6; color: #6B7280; }
+  .status-badge.blocked { background: #FEF3C7; color: #92400E; }
+
+  /* ── Bars ─────────────────────────────────────────────── */
+  .bar {
+    position: absolute; top: 7px; height: 18px; border-radius: 4px;
+    font-size: 8px; font-weight: 600; color: white;
+    display: flex; align-items: center; justify-content: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 0 6px; min-width: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .bar.shipped { background: #22c55e; }
+  .bar.in-progress {
+    background: linear-gradient(to right, #0348B2, #1d5dc4);
+  }
+  .bar.planned { background: #E5E5E5; color: #737373; box-shadow: none; }
+  .bar.blocked {
+    background: #FEF9C3; color: #92400E;
+    border: 1px solid #F59E0B; box-shadow: none;
+  }
+
+  /* ── Milestones ──────────────────────────────────────── */
+  .milestone {
+    position: absolute; top: 8px;
+    width: 14px; height: 14px;
+    transform: rotate(45deg); border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .milestone.green { background: #22c55e; }
+  .milestone.blue { background: #3b82f6; }
+  .milestone.amber { background: #F59E0B; }
+  .milestone.red { background: #DC2626; }
+
+  /* ── Today Column ────────────────────────────────────── */
+  td.today-highlight {
+    background: rgba(220,38,38,0.03);
+  }
+
+  /* ── Grid Cells ──────────────────────────────────────── */
+  .gantt td.grid-cell { border-left: 1px solid #F8F8F8; }
+  .gantt td.week-start-cell { border-left: 1px solid #E5E5E5; }
+
+  /* ── Milestone Row ───────────────────────────────────── */
+  .milestone-row td {
+    padding: 0; height: 36px; position: relative;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .milestone-label-row td {
+    padding: 0; height: 18px; position: relative;
+  }
+
+  /* ── Footer ──────────────────────────────────────────── */
+  .footer {
+    margin-top: 20px; padding: 16px 20px; background: #FAFAFA;
+    border-radius: 10px; display: flex; justify-content: space-between;
+    align-items: center; font-size: 11px; color: #737373;
+    border: 1px solid #F0F0F0;
+  }
+  .footer .brand {
+    font-weight: 800;
+    background: linear-gradient(to right, #0348B2, #CD128A);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 14px;
+  }
+
+  /* ── Print ───────────────────────────────────────────── */
+  @media print {
+    body { padding: 12px; min-width: auto; font-size: 9px; }
+    .stats-row { break-inside: avoid; }
+    .gantt-wrap { border: 1px solid #ccc; }
+    .track-header-row td.track-label .chevron { display: none; }
+    .task-row:hover { background: none; }
+    .bar { box-shadow: none; }
+    .footer { break-inside: avoid; }
+    @page { margin: 0.5in; size: landscape; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+    <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(3,72,178,1), rgba(170,24,141,1)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div>
+      <h1>Nova Platform — Gantt Chart</h1>
+      <div class="subtitle">OneForma | Autonomous Recruitment Marketing Pipeline | April 6 - May 16, 2026 | 6-Week Rollout | 30 Working Days</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS ROW -->
+<div class="stats-row">
+  <div class="stat"><div class="num">723</div><div class="label">Commits</div></div>
+  <div class="stat"><div class="num">80K+</div><div class="label">Lines of Code</div></div>
+  <div class="stat"><div class="num">47</div><div class="label">Features</div></div>
+  <div class="stat"><div class="num">5</div><div class="label">Tracks</div></div>
+  <div class="stat"><div class="num">122</div><div class="label">Tests</div></div>
+  <div class="stat"><div class="num">1,054</div><div class="label">Graph Nodes</div></div>
+  <div class="stat"><div class="num">6</div><div class="label">Ad Platforms</div></div>
+  <div class="stat"><div class="num">4</div><div class="label">Portals</div></div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-container">
+  <div class="progress-header">
+    <div class="pct">57% <span>complete</span></div>
+    <div class="day-count">Day 17 of 30 working days</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: 57%;"></div>
+    <div class="progress-marker" style="left: 57%;"></div>
+  </div>
+  <div class="progress-labels">
+    <span>Apr 6 (Day 1)</span>
+    <span>Apr 13 (W2)</span>
+    <span class="current">Apr 23 (TODAY - Day 17)</span>
+    <span>May 5 (SVP Pitch - Day 30)</span>
+    <span>May 16 (W6 End)</span>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background: #22c55e;"></div> Shipped</div>
+  <div class="legend-item"><div class="legend-dot" style="background: linear-gradient(to right, #0348B2, #1d5dc4);"></div> In Progress</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #E5E5E5;"></div> Planned</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #FEF9C3; border: 1px solid #F59E0B;"></div> Blocked</div>
+  <div class="legend-item"><div style="width: 12px; height: 12px; background: #DC2626; transform: rotate(45deg); border-radius: 2px;"></div> Milestone</div>
+  <div class="legend-item"><div style="width: 2px; height: 16px; background: #DC2626; opacity: 0.7;"></div> Today</div>
+</div>
+
+<!-- GANTT CHART -->
+<div class="gantt-wrap">
+<table class="gantt" cellspacing="0">
+
+<!-- Week Headers -->
+<tr class="gantt-header-row">
+  <th class="task-col">Task</th>
+  <th class="status-col">Status</th>
+  <th class="week-col" colspan="5">Week 1 (Apr 6-12)</th>
+  <th class="week-col" colspan="5">Week 2 (Apr 13-19)</th>
+  <th class="week-col current-week" colspan="5">Week 3 (Apr 20-26)</th>
+  <th class="week-col" colspan="5">Week 4 (Apr 27-May 3)</th>
+  <th class="week-col" colspan="5">Week 5 (May 4-10)</th>
+  <th class="week-col" colspan="5">Week 6 (May 11-16)</th>
+</tr>
+
+<!-- Day sub-headers -->
+<tr class="day-header-row">
+  <th class="task-col"></th>
+  <th class="status-col"></th>
+  <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th>
+  <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th>
+  <th>M</th><th>T</th><th class="today-col">W</th><th>T</th><th>F</th>
+  <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th>
+  <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th>
+  <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     TRACK 1: PIPELINE
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" data-track="pipeline" onclick="toggleTrack('pipeline')">
+  <td class="track-label" style="color: #0348B2; border-left: 4px solid #0348B2;">
+    <span class="chevron" id="chevron-pipeline">&#9660;</span>
+    Pipeline
+    <span class="track-count">13 tasks</span>
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 1: Intake Wizard -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Intake Wizard <span class="detail">5-step, schema-driven</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="3" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Intake Wizard</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 2: Cultural Research Engine -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Cultural Research Engine <span class="detail">8-dimension Kimi K2.5</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Research</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 3: Persona Generation Engine -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Persona Generation Engine <span class="detail">Dynamic LLM personas</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Personas</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 4: Image Generation + VQA -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Image Generation + VQA <span class="detail">Seedream + NIM</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td colspan="3" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Seedream + VQA</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 5: Copy Generation -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Copy Generation <span class="detail">3-pillar, per-language</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Copy</div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 6: Composition Engine -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Composition Engine <span class="detail">GLM-5 HTML rendering</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="3" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Composition</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 7: Brand Voice Rewrite -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Brand Voice Rewrite <span class="detail">oneforma.py safe source</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Brand Voice</div></td>
+  <td colspan="1"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 8: Stage 2-3 Overhaul -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Stage 2-3 Overhaul <span class="detail">Scene awareness, copy pillars</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">S2-3 Fix</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 9: Stage 4 Composition v3 -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Stage 4 Composition v3 <span class="detail">Artifact-driven, 12 commits</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">S4v3</div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 10: WordPress Auto-Publish -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">WordPress Auto-Publish <span class="detail">CPT + ACF + Yoast</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">WP Publish</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 11: Stage 4 Template Polish -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Stage 4 Template Polish <span class="detail">10+ templates, VQA tuning</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td class="today-highlight" colspan="1" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;"></div></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="3" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">Templates</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 12: Organic Content Extension -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Organic Content Extension <span class="detail">Social, flyers, email</span></td>
+  <td class="task-status"><span class="status-badge planned">Planned</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar planned" style="left:2px;right:2px;">Organic Content</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Pipeline Row 13: Video Pipeline (Stage 5) -->
+<tr class="task-row track-pipeline">
+  <td class="task-name">Video Pipeline (Stage 5) <span class="detail">Kling API credits needed</span></td>
+  <td class="task-status"><span class="status-badge blocked">Blocked</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;">Kling Credits Needed</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     TRACK 2: INTELLIGENCE
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" data-track="intelligence" onclick="toggleTrack('intelligence')">
+  <td class="track-label" style="color: #AA188D; border-left: 4px solid #AA188D;">
+    <span class="chevron" id="chevron-intelligence">&#9660;</span>
+    Intelligence
+    <span class="track-count">11 tasks</span>
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 1: Persona Refactor -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">Persona Refactor <span class="detail">Kill 8 archetypes, dynamic gen</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Persona</div></td>
+  <td colspan="1"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 2: Creative Quality Matrix -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">Creative Quality Matrix <span class="detail">8-category grading</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Matrix</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 3: Unified Campaign Workspace -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">Unified Campaign Workspace <span class="detail">19 tasks, 93 tests</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Campaign Workspace</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 4: GraphRAG Interest Routing -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">GraphRAG Interest Routing <span class="detail">1,054 nodes, 6 platforms</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">GraphRAG</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 5: AudienceIQ Phase 1 (CRM) -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">AudienceIQ Phase 1 (CRM) <span class="detail">Identity stitch + 5 widgets</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">CRM</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 6: AudienceIQ Phase 2 (Drift) -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">AudienceIQ Phase 2 (Drift) <span class="detail">4-ring drift + health scorer</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td class="today-highlight" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Drift</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 7: AudienceIQ Phase 3 (GA4) -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">AudienceIQ Phase 3 (GA4) <span class="detail">GA4 + GSC + 2 widgets</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td class="today-highlight" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">GA4</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 8: Country Quotas & Demographics -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">Country Quotas & Demographics <span class="detail">Per-country volume/rate/demo</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td class="today-highlight" colspan="1" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;"></div></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">Quotas</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 9: CRM Datalake Integration -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">CRM Datalake Integration <span class="detail">Quality scores, retention</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">Datalake</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 10: AudienceIQ Phase 4 (HIE) -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">AudienceIQ Phase 4 (HIE) <span class="detail">Behavioral tracking</span></td>
+  <td class="task-status"><span class="status-badge planned">Planned</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar planned" style="left:2px;right:2px;">HIE Behavioral</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Intelligence Row 11: AudienceIQ Phase 5 (Ad APIs) -->
+<tr class="task-row track-intelligence">
+  <td class="task-name">AudienceIQ Phase 5 (Ad APIs) <span class="detail">Google, Meta, LinkedIn</span></td>
+  <td class="task-status"><span class="status-badge planned">Planned</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar planned" style="left:2px;right:2px;">Ad APIs</div></td>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     TRACK 3: FRONTEND & PORTALS
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" data-track="frontend" onclick="toggleTrack('frontend')">
+  <td class="track-label" style="color: #0D9488; border-left: 4px solid #0D9488;">
+    <span class="chevron" id="chevron-frontend">&#9660;</span>
+    Frontend & Portals
+    <span class="track-count">8 tasks</span>
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 1: Recruiter Portal -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Recruiter Portal <span class="detail">Creative library + links</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td colspan="3" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Recruiter</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 2: Marketing Workspace -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Marketing Workspace <span class="detail">Command center</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Mktg</div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 3: Designer Portal -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Designer Portal <span class="detail">Gallery + edit + Figma</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Designer</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 4: Agency Portal -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Agency Portal <span class="detail">Magic-link, ad sets</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Agency</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 5: Intake Wizard Redesign -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Intake Wizard Redesign <span class="detail">5-step flow polish</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Redesign</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 6: Media Strategy Editor -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Media Strategy Editor <span class="detail">Autosave, ad set rows</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Media</div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 7: Country Bar + Overview -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Country Bar + Overview <span class="detail">Status badges, 4-col grid</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Country</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Frontend Row 8: Insights Dashboard -->
+<tr class="task-row track-frontend">
+  <td class="task-name">Insights Dashboard <span class="detail">9 AudienceIQ widgets</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Insights</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     TRACK 4: ANALYTICS & TRACKING
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" data-track="analytics" onclick="toggleTrack('analytics')">
+  <td class="track-label" style="color: #CD128A; border-left: 4px solid #CD128A;">
+    <span class="chevron" id="chevron-analytics">&#9660;</span>
+    Analytics & Tracking
+    <span class="track-count">6 tasks</span>
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 1: UTM Link Builder -->
+<tr class="task-row track-analytics">
+  <td class="task-name">UTM Link Builder <span class="detail">Click tracking + /r/[slug]</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">UTM</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 2: GTM Custom Tags -->
+<tr class="task-row track-analytics">
+  <td class="task-name">GTM Custom Tags <span class="detail">8 tags, cross-domain</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">GTM Tags</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 3: Server-Side GTM -->
+<tr class="task-row track-analytics">
+  <td class="task-name">Server-Side GTM <span class="detail">Meta Conversions API</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">sGTM</div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;"></div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 4: ROAS Formula Unification -->
+<tr class="task-row track-analytics">
+  <td class="task-name">ROAS Formula Unification <span class="detail">RPP, CPA, Breakeven</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">ROAS</div></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">Unify</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 5: Command Center (SRC Port) -->
+<tr class="task-row track-analytics">
+  <td class="task-name">Command Center (SRC Port) <span class="detail">KPI, channel mix, RevBrain</span></td>
+  <td class="task-status"><span class="status-badge planned">Planned</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar planned" style="left:2px;right:2px;">Command Center + RevBrain</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Analytics Row 6: go.oneforma.com Short Links -->
+<tr class="task-row track-analytics">
+  <td class="task-name">go.oneforma.com Short Links <span class="detail">Waiting on IT CNAME</span></td>
+  <td class="task-status"><span class="status-badge blocked">Blocked</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;">IT CNAME</div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;"></div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     TRACK 5: INFRASTRUCTURE
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" data-track="infra" onclick="toggleTrack('infra')">
+  <td class="track-label" style="color: #D97706; border-left: 4px solid #F59E0B;">
+    <span class="chevron" id="chevron-infra">&#9660;</span>
+    Infrastructure
+    <span class="track-count">8 tasks</span>
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 1: Security Hardening -->
+<tr class="task-row track-infra">
+  <td class="task-name">Security Hardening <span class="detail">17 commits, auth/IDOR/XSS</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Security (17 commits)</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 2: CI/CD + GitHub Actions -->
+<tr class="task-row track-infra">
+  <td class="task-name">CI/CD + GitHub Actions <span class="detail">Build, lint, test gates</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">CI/CD</div></td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 3: Docker Multi-Arch -->
+<tr class="task-row track-infra">
+  <td class="task-name">Docker Multi-Arch <span class="detail">Azure VM + Apple Silicon</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Docker</div></td>
+  <td colspan="1"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 4: China Eng Handoff -->
+<tr class="task-row track-infra">
+  <td class="task-name">China Eng Handoff <span class="detail">Michael code review</span></td>
+  <td class="task-status"><span class="status-badge shipped">Shipped</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td colspan="1" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;"></div></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar shipped" style="left:2px;right:2px;">Handoff</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 5: Azure Migration Deliverables -->
+<tr class="task-row track-infra">
+  <td class="task-name">Azure Migration Deliverables <span class="detail">Dockerfile, Blob, DB, schema</span></td>
+  <td class="task-status"><span class="status-badge in-progress">In Progress</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="3"></td>
+  <td colspan="2" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;">Azure</div></td>
+  <td class="week-start-cell" colspan="1" style="position:relative;"><div class="bar in-progress" style="left:2px;right:2px;"></div></td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 6: nova.oneforma.com DNS -->
+<tr class="task-row track-infra">
+  <td class="task-name">nova.oneforma.com DNS <span class="detail">IT CNAME request</span></td>
+  <td class="task-status"><span class="status-badge blocked">Blocked</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="2" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;">DNS</div></td>
+  <td colspan="3"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 7: Azure AD SSO (Clerk SAML) -->
+<tr class="task-row track-infra">
+  <td class="task-name">Azure AD SSO (Clerk SAML) <span class="detail">Needs IT admin</span></td>
+  <td class="task-status"><span class="status-badge blocked">Blocked</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="1"></td>
+  <td colspan="3" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;">IT Admin Needed</div></td>
+  <td colspan="1"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Infra Row 8: GPU Infrastructure -->
+<tr class="task-row track-infra">
+  <td class="task-name">GPU Infrastructure <span class="detail">Michael response pending</span></td>
+  <td class="task-status"><span class="status-badge blocked">Blocked</span></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5" style="position:relative;"><div class="bar blocked" style="left:2px;right:2px;">Waiting on Michael</div></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- ════════════════════════════════════════════════════════════
+     MILESTONES
+     ════════════════════════════════════════════════════════════ -->
+<tr class="track-header-row" style="cursor: default;" onclick="">
+  <td class="track-label" style="color: #DC2626; border-left: 4px solid #DC2626;">
+    Milestones
+  </td>
+  <td></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Milestone diamonds row -->
+<tr class="milestone-row">
+  <td style="font-size: 11px; font-weight: 700; color: #737373; padding-left: 32px; vertical-align: middle;">Key Milestones</td>
+  <td></td>
+  <!-- W1D1: Day 1 Demo (green) -->
+  <td class="week-start-cell" style="position:relative;"><div class="milestone green" style="left: calc(50% - 7px);"></div></td>
+  <td colspan="4"></td>
+  <!-- W2 -->
+  <td class="week-start-cell" colspan="4"></td>
+  <!-- W2D5: China Eng Handoff (blue) -->
+  <td style="position:relative;"><div class="milestone blue" style="left: calc(50% - 7px);"></div></td>
+  <!-- W3 -->
+  <td class="week-start-cell" colspan="2"></td>
+  <!-- W3D3: TODAY (red line) -->
+  <td class="today-highlight" style="position:relative;">
+    <div style="position:absolute; top:0; bottom:0; left:50%; width:2px; background:#DC2626; opacity:0.7; z-index:5;"></div>
+  </td>
+  <td colspan="2"></td>
+  <!-- W4D1: nova.oneforma.com (amber) -->
+  <td class="week-start-cell" style="position:relative;"><div class="milestone amber" style="left: calc(50% - 7px);"></div></td>
+  <td colspan="4"></td>
+  <!-- W5D1: SVP Pitch (red) -->
+  <td class="week-start-cell" style="position:relative;"><div class="milestone red" style="left: calc(50% - 7px);"></div></td>
+  <td colspan="4"></td>
+  <!-- W6 -->
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+<!-- Milestone labels row -->
+<tr class="milestone-label-row">
+  <td></td>
+  <td></td>
+  <td class="week-start-cell" style="font-size:7px; color:#22c55e; text-align:center; font-weight:700; vertical-align:top; padding-top:2px;">Day 1<br>Demo</td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="4"></td>
+  <td style="font-size:7px; color:#3b82f6; text-align:center; font-weight:700; vertical-align:top; padding-top:2px;">China<br>Handoff</td>
+  <td class="week-start-cell" colspan="2"></td>
+  <td class="today-highlight" style="font-size:7px; color:#DC2626; text-align:center; font-weight:700; vertical-align:top; padding-top:2px;">TODAY<br>Day 17</td>
+  <td colspan="2"></td>
+  <td class="week-start-cell" style="font-size:7px; color:#F59E0B; text-align:center; font-weight:700; vertical-align:top; padding-top:2px;">nova.<br>oneforma</td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" style="font-size:7px; color:#DC2626; text-align:center; font-weight:700; vertical-align:top; padding-top:2px;">SVP<br>PITCH</td>
+  <td colspan="4"></td>
+  <td class="week-start-cell" colspan="5"></td>
+</tr>
+
+</table>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span class="brand">Nova Platform</span>
+    <span style="color: #D0D0D0;">|</span>
+    <span>OneForma / Centific</span>
+  </div>
+  <div>
+    Generated April 23, 2026 &middot; Steven Junop &middot; Digital Marketing Manager &middot; 47 features across 5 tracks
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     JAVASCRIPT: Collapsible Tracks + Today Line
+     ════════════════════════════════════════════════════════════ -->
+<script>
+function toggleTrack(trackId) {
+  var rows = document.querySelectorAll('.track-' + trackId);
+  var chevron = document.getElementById('chevron-' + trackId);
+  if (!rows.length) return;
+
+  var isExpanded = rows[0].style.display !== 'none';
+
+  rows.forEach(function(row) {
+    row.style.display = isExpanded ? 'none' : 'table-row';
+  });
+
+  if (chevron) {
+    chevron.innerHTML = isExpanded ? '\u25B6' : '\u25BC';
+  }
+}
+
+// Render the TODAY vertical line across the full chart
+document.addEventListener('DOMContentLoaded', function() {
+  var ganttWrap = document.querySelector('.gantt-wrap');
+  if (!ganttWrap) return;
+
+  var todayHeader = document.querySelector('.day-header-row .today-col');
+  if (!todayHeader) return;
+
+  ganttWrap.style.position = 'relative';
+
+  var line = document.createElement('div');
+  line.style.position = 'absolute';
+  line.style.top = '0';
+  line.style.bottom = '0';
+  line.style.width = '2px';
+  line.style.background = '#DC2626';
+  line.style.opacity = '0.45';
+  line.style.zIndex = '10';
+  line.style.pointerEvents = 'none';
+  ganttWrap.appendChild(line);
+
+  function positionLine() {
+    var wr = ganttWrap.getBoundingClientRect();
+    var hr = todayHeader.getBoundingClientRect();
+    line.style.left = (hr.left - wr.left + hr.width / 2) + 'px';
+  }
+
+  positionLine();
+  window.addEventListener('resize', positionLine);
+});
+</script>
+
+</body>
+</html>
