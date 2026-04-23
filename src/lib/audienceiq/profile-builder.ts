@@ -139,17 +139,46 @@ export async function buildConvertedProfile(requestId: string): Promise<ProfileD
 }
 
 export async function buildPaidProfile(requestId: string): Promise<ProfileData> {
-  // Phase 5: will pull from ad platform APIs
+  const { getMergedPaidAudience } = await import('../platforms/normalizer');
+  const merged = await getMergedPaidAudience(30);
+
+  if (merged.platforms_available.length === 0) {
+    return {
+      request_id: requestId,
+      ring: 'paid',
+      demographics: {},
+      skills: {},
+      languages: [],
+      regions: [],
+      sample_size: 0,
+      confidence: 'low',
+      source: 'platforms_unavailable',
+    };
+  }
+
+  const regions = Object.entries(merged.regions).sort((a, b) => b[1] - a[1]).map(([k]) => k);
+  const sampleSize = merged.total_impressions;
+  const confidence = sampleSize >= 10000 ? 'high' : sampleSize >= 1000 ? 'medium' : 'low';
+
   return {
     request_id: requestId,
     ring: 'paid',
-    demographics: {},
+    demographics: {
+      platforms: merged.platforms_available,
+      total_spend: merged.total_spend,
+      total_impressions: merged.total_impressions,
+      total_clicks: merged.total_clicks,
+      total_conversions: merged.total_conversions,
+      age_ranges: merged.demographics.age_ranges,
+      genders: merged.demographics.genders,
+      geo_distribution: merged.regions,
+    },
     skills: {},
     languages: [],
-    regions: [],
-    sample_size: 0,
-    confidence: 'low',
-    source: 'unavailable',
+    regions,
+    sample_size: sampleSize,
+    confidence,
+    source: merged.platforms_available.join('+'),
   };
 }
 
