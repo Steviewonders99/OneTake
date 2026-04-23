@@ -503,6 +503,30 @@ export async function createTables(): Promise<void> {
 
   await sql`CREATE INDEX IF NOT EXISTS idx_health_scores_request ON audience_health_scores(request_id)`;
 
+  // 23. ga4_session_cache — cached GA4 session data for AudienceIQ
+  await sql`
+    CREATE TABLE IF NOT EXISTS ga4_session_cache (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ga4_client_id     TEXT,
+      date              DATE NOT NULL,
+      source            TEXT,
+      medium            TEXT,
+      campaign          TEXT,
+      country           TEXT,
+      city              TEXT,
+      device_category   TEXT,
+      sessions          INT NOT NULL DEFAULT 0,
+      engaged_sessions  INT NOT NULL DEFAULT 0,
+      conversions       INT NOT NULL DEFAULT 0,
+      demographics      JSONB NOT NULL DEFAULT '{}',
+      last_synced_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_ga4_cache_date ON ga4_session_cache(date DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ga4_cache_source ON ga4_session_cache(source) WHERE source IS NOT NULL`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ga4_cache_country ON ga4_session_cache(country) WHERE country IS NOT NULL`;
+
   // ============================================================
   // INDEXES
   // ============================================================
