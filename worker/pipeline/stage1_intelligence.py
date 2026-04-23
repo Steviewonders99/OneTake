@@ -157,11 +157,15 @@ async def run_stage1(context: dict) -> dict:
     # full validation retry loop, we read persona_constraints from a
     # pre-brief extraction pass or fall back to empty constraints.
     # ==================================================================
+    persona_count = context.get("persona_count", 2)
+    country = context.get("country")
+
     logger.info("Step 2: Generating personas (LLM-powered, dynamic)...")
     personas = await _generate_personas_dynamic(
         request=request,
         cultural_research=cultural_research,
         persona_constraints={},  # Task 21 will populate from a pre-brief derivation
+        persona_count=persona_count,
     )
 
     if cultural_research and personas:
@@ -194,6 +198,7 @@ async def run_stage1(context: dict) -> dict:
                 "outfit_variations": {},
                 "signature_accessory": "",
                 "backdrops": [],
+                "country": country,
             })
             persona["actor_id"] = actor_id
             if targeting:
@@ -506,6 +511,7 @@ async def run_stage1(context: dict) -> dict:
                     persona_constraints=persona_constraints,
                     brief_messaging=brief_data.get("messaging_strategy") or {},
                     previous_violations=previous_violations,
+                    persona_count=persona_count,
                 )
 
                 # Re-apply cultural research enrichment on the fresh personas
@@ -605,6 +611,7 @@ async def _generate_personas_dynamic(
     persona_constraints: dict,
     brief_messaging: dict | None = None,
     previous_violations: list[str] | None = None,
+    persona_count: int = 2,
 ) -> list[dict]:
     """Run the dynamic persona generation LLM call.
 
@@ -647,7 +654,7 @@ async def _generate_personas_dynamic(
             p["persona_name"] = p.get("name") or p.get("archetype", "Contributor")
 
     logger.info("Dynamic persona LLM returned %d personas", len(personas))
-    return personas[:3]
+    return personas[:persona_count]
 
 
 def _build_persona_brief_context(personas: list[dict]) -> str:
