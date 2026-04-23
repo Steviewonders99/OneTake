@@ -235,6 +235,8 @@ async def run_stage3(context: dict) -> dict:
     format_matrix: dict = design.get("format_matrix", {})
     channels: list[str] = list(format_matrix.keys()) if format_matrix else DEFAULT_CHANNELS
 
+    country = context.get("country")
+
     copy_count = 0
 
     # If we have personas, generate 3 psychology-angle variations per persona×channel
@@ -341,6 +343,7 @@ async def run_stage3(context: dict) -> dict:
                             "format": "text",
                             "language": language,
                             "blob_url": "",
+                            "country": country,
                             "metadata": {
                                 "copy_data": copy_data,
                                 "eval_score": score,
@@ -378,6 +381,7 @@ async def run_stage3(context: dict) -> dict:
                     "format": "text",
                     "language": language,
                     "blob_url": "",
+                    "country": country,
                     "metadata": {
                         "copy_data": copy_data,
                         "eval_score": score,
