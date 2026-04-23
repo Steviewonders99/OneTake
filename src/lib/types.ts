@@ -202,6 +202,7 @@ export interface ActorProfile {
   outfit_variations: Record<string, unknown> | null;
   signature_accessory: string | null;
   backdrops: string[];
+  country: string | null;
   created_at: string;
 }
 
@@ -219,6 +220,7 @@ export interface GeneratedAsset {
   platform: string;
   format: string;
   language: string;
+  country: string | null;
   content: Record<string, unknown> | null;
   copy_data: Record<string, unknown> | null;
   blob_url: string | null;
@@ -400,7 +402,7 @@ export interface ValidationResult {
 // COMPUTE JOB TYPES
 // ============================================================
 
-export type ComputeJobType = 'generate' | 'regenerate' | 'regenerate_stage' | 'regenerate_asset';
+export type ComputeJobType = 'generate' | 'generate_country' | 'regenerate' | 'regenerate_stage' | 'regenerate_asset';
 export type ComputeJobStatus = 'pending' | 'processing' | 'complete' | 'failed';
 
 export interface ComputeJob {
@@ -408,6 +410,7 @@ export interface ComputeJob {
   request_id: string;
   job_type: ComputeJobType;
   status: ComputeJobStatus;
+  country: string | null;
   stage_target: number | null;
   asset_id: string | null;
   feedback: string | null;
