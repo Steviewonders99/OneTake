@@ -1,0 +1,236 @@
+{
+  "platform": "wechat",
+  "categories": [
+    {
+      "name": "Education",
+      "interests": [
+        {"name": "Education", "subcategory": null, "tier": "standard", "keywords": ["education", "教育", "learning"]},
+        {"name": "K-12", "subcategory": "Education", "tier": "niche", "keywords": ["K-12", "中小学", "primary school", "middle school"]},
+        {"name": "Language Training", "subcategory": "Education", "tier": "niche", "keywords": ["language training", "语言培训", "English learning"]},
+        {"name": "Study Abroad", "subcategory": "Education", "tier": "niche", "keywords": ["study abroad", "留学", "overseas study"]},
+        {"name": "Vocational Training", "subcategory": "Education", "tier": "niche", "keywords": ["vocational training", "职业培训", "skills training"]},
+        {"name": "Higher Education", "subcategory": "Education", "tier": "niche", "keywords": ["higher education", "高等教育", "university"]},
+        {"name": "Early Childhood Education", "subcategory": "Education", "tier": "niche", "keywords": ["early childhood education", "幼儿教育", "preschool"]},
+        {"name": "Arts Training", "subcategory": "Education", "tier": "niche", "keywords": ["arts training", "艺术培训", "music lessons"]}
+      ]
+    },
+    {
+      "name": "Travel & Tourism",
+      "interests": [
+        {"name": "Travel & Tourism", "subcategory": null, "tier": "standard", "keywords": ["travel", "旅游", "tourism"]},
+        {"name": "Outbound Travel", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["outbound travel", "出境游", "international travel"]},
+        {"name": "Domestic Travel", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["domestic travel", "国内游", "local tourism"]},
+        {"name": "Local Trips", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["local trips", "周边游", "weekend getaway"]},
+        {"name": "Self-Driving Tours", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["self-driving tours", "自驾游", "road trip"]},
+        {"name": "Business Travel", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["business travel", "商务旅行", "corporate travel"]},
+        {"name": "Cruises", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["cruises", "邮轮", "cruise ship"]},
+        {"name": "Hotels", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["hotels", "酒店", "accommodation"]},
+        {"name": "Airlines", "subcategory": "Travel & Tourism", "tier": "niche", "keywords": ["airlines", "航空", "flights"]}
+      ]
+    },
+    {
+      "name": "Finance",
+      "interests": [
+        {"name": "Finance", "subcategory": null, "tier": "standard", "keywords": ["finance", "金融", "financial"]},
+        {"name": "Banking", "subcategory": "Finance", "tier": "niche", "keywords": ["banking", "银行", "bank services"]},
+        {"name": "Insurance", "subcategory": "Finance", "tier": "niche", "keywords": ["insurance", "保险", "coverage"]},
+        {"name": "Wealth Management", "subcategory": "Finance", "tier": "niche", "keywords": ["wealth management", "理财", "asset management"]},
+        {"name": "Credit Cards", "subcategory": "Finance", "tier": "niche", "keywords": ["credit cards", "信用卡", "rewards cards"]},
+        {"name": "Loans", "subcategory": "Finance", "tier": "niche", "keywords": ["loans", "贷款", "lending"]},
+        {"name": "Securities", "subcategory": "Finance", "tier": "niche", "keywords": ["securities", "证券", "stock market"]},
+        {"name": "Funds", "subcategory": "Finance", "tier": "niche", "keywords": ["funds", "基金", "mutual funds"]},
+        {"name": "Cryptocurrency", "subcategory": "Finance", "tier": "niche", "keywords": ["cryptocurrency", "加密货币", "digital currency"]}
+      ]
+    },
+    {
+      "name": "Automobile",
+      "interests": [
+        {"name": "Automobile", "subcategory": null, "tier": "standard", "keywords": ["automobile", "汽车", "automotive"]},
+        {"name": "New Cars", "subcategory": "Automobile", "tier": "niche", "keywords": ["new cars", "新车", "car purchase"]},
+        {"name": "Used Cars", "subcategory": "Automobile", "tier": "niche", "keywords": ["used cars", "二手车", "pre-owned"]},
+        {"name": "Car Maintenance", "subcategory": "Automobile", "tier": "niche", "keywords": ["car maintenance", "汽车保养", "auto repair"]},
+        {"name": "Car Accessories", "subcategory": "Automobile", "tier": "niche", "keywords": ["car accessories", "汽车配件", "car parts"]},
+        {"name": "Car Rental", "subcategory": "Automobile", "tier": "niche", "keywords": ["car rental", "租车", "vehicle rental"]},
+        {"name": "Driving School", "subcategory": "Automobile", "tier": "niche", "keywords": ["driving school", "驾校", "driving lessons"]},
+        {"name": "Electric Vehicles", "subcategory": "Automobile", "tier": "niche", "keywords": ["electric vehicles", "电动车", "EV"]}
+      ]
+    },
+    {
+      "name": "Property",
+      "interests": [
+        {"name": "Property", "subcategory": null, "tier": "standard", "keywords": ["property", "房产", "real estate"]},
+        {"name": "New Residential", "subcategory": "Property", "tier": "niche", "keywords": ["new residential", "新房", "new homes"]},
+        {"name": "Second-hand", "subcategory": "Property", "tier": "niche", "keywords": ["second-hand property", "二手房", "resale"]},
+        {"name": "Rental", "subcategory": "Property", "tier": "niche", "keywords": ["rental", "租房", "apartments for rent"]},
+        {"name": "Commercial Property", "subcategory": "Property", "tier": "niche", "keywords": ["commercial property", "商业地产", "office space"]},
+        {"name": "Home Renovation", "subcategory": "Property", "tier": "niche", "keywords": ["home renovation", "装修", "remodeling"]},
+        {"name": "Overseas Property", "subcategory": "Property", "tier": "niche", "keywords": ["overseas property", "海外房产", "foreign real estate"]}
+      ]
+    },
+    {
+      "name": "Household Products",
+      "interests": [
+        {"name": "Household Products", "subcategory": null, "tier": "standard", "keywords": ["household products", "家居用品", "home goods"]},
+        {"name": "Furniture", "subcategory": "Household Products", "tier": "niche", "keywords": ["furniture", "家具", "home furniture"]},
+        {"name": "Home Appliances", "subcategory": "Household Products", "tier": "niche", "keywords": ["home appliances", "家电", "electronics"]},
+        {"name": "Kitchen & Bathroom", "subcategory": "Household Products", "tier": "niche", "keywords": ["kitchen & bathroom", "厨卫", "kitchen fixtures"]},
+        {"name": "Home Decoration", "subcategory": "Household Products", "tier": "niche", "keywords": ["home decoration", "家饰", "interior decor"]},
+        {"name": "Smart Home", "subcategory": "Household Products", "tier": "niche", "keywords": ["smart home", "智能家居", "IoT"]},
+        {"name": "Building Materials", "subcategory": "Household Products", "tier": "niche", "keywords": ["building materials", "建材", "construction materials"]}
+      ]
+    },
+    {
+      "name": "Apparel & Accessories",
+      "interests": [
+        {"name": "Apparel & Accessories", "subcategory": null, "tier": "standard", "keywords": ["apparel", "服饰", "clothing"]},
+        {"name": "Women's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["women's clothing", "女装", "women's fashion"]},
+        {"name": "Men's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["men's clothing", "男装", "men's fashion"]},
+        {"name": "Children's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["children's clothing", "童装", "kids fashion"]},
+        {"name": "Shoes", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["shoes", "鞋子", "footwear"]},
+        {"name": "Bags", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["bags", "箱包", "handbags"]},
+        {"name": "Watches", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["watches", "手表", "timepieces"]},
+        {"name": "Jewelry", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["jewelry", "珠宝", "accessories"]},
+        {"name": "Sportswear", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["sportswear", "运动服", "athletic wear"]}
+      ]
+    },
+    {
+      "name": "Food & Drinks",
+      "interests": [
+        {"name": "Food & Drinks", "subcategory": null, "tier": "standard", "keywords": ["food & drinks", "餐饮", "dining"]},
+        {"name": "Restaurants", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["restaurants", "餐厅", "dining out"]},
+        {"name": "Food Delivery", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["food delivery", "外卖", "takeout"]},
+        {"name": "Cooking", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["cooking", "烹饪", "recipes"]},
+        {"name": "Snacks", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["snacks", "零食", "snack food"]},
+        {"name": "Beverages", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["beverages", "饮料", "drinks"]},
+        {"name": "Alcohol", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["alcohol", "酒", "spirits"]},
+        {"name": "Health Food", "subcategory": "Food & Drinks", "tier": "niche", "keywords": ["health food", "健康食品", "organic food"]}
+      ]
+    },
+    {
+      "name": "Life Services",
+      "interests": [
+        {"name": "Life Services", "subcategory": null, "tier": "standard", "keywords": ["life services", "生活服务", "lifestyle services"]},
+        {"name": "Housekeeping", "subcategory": "Life Services", "tier": "niche", "keywords": ["housekeeping", "家政", "cleaning services"]},
+        {"name": "Moving", "subcategory": "Life Services", "tier": "niche", "keywords": ["moving", "搬家", "relocation"]},
+        {"name": "Photography", "subcategory": "Life Services", "tier": "niche", "keywords": ["photography", "摄影", "photo studio"]},
+        {"name": "Wedding Planning", "subcategory": "Life Services", "tier": "niche", "keywords": ["wedding planning", "婚庆", "wedding services"]},
+        {"name": "Pet Services", "subcategory": "Life Services", "tier": "niche", "keywords": ["pet services", "宠物服务", "pet grooming"]}
+      ]
+    },
+    {
+      "name": "Business Services",
+      "interests": [
+        {"name": "Business Services", "subcategory": null, "tier": "standard", "keywords": ["business services", "商业服务", "B2B"]},
+        {"name": "Enterprise Management", "subcategory": "Business Services", "tier": "niche", "keywords": ["enterprise management", "企业管理", "corporate management"]},
+        {"name": "Marketing", "subcategory": "Business Services", "tier": "niche", "keywords": ["marketing", "营销", "advertising"]},
+        {"name": "Accounting", "subcategory": "Business Services", "tier": "niche", "keywords": ["accounting", "会计", "bookkeeping"]},
+        {"name": "HR & Recruitment", "subcategory": "Business Services", "tier": "niche", "keywords": ["HR", "人力资源", "recruitment"]},
+        {"name": "Logistics", "subcategory": "Business Services", "tier": "niche", "keywords": ["logistics", "物流", "supply chain"]},
+        {"name": "Corporate Training", "subcategory": "Business Services", "tier": "niche", "keywords": ["corporate training", "企业培训", "employee training"]}
+      ]
+    },
+    {
+      "name": "Cosmetics",
+      "interests": [
+        {"name": "Cosmetics", "subcategory": null, "tier": "standard", "keywords": ["cosmetics", "美妆", "beauty products"]},
+        {"name": "Skincare", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["skincare", "护肤", "skin care"]},
+        {"name": "Makeup", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["makeup", "化妆", "cosmetics"]},
+        {"name": "Hair Care", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["hair care", "美发", "shampoo"]},
+        {"name": "Nail Art", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["nail art", "美甲", "manicure"]},
+        {"name": "Medical Aesthetics", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["medical aesthetics", "医美", "cosmetic surgery"]},
+        {"name": "Men's Grooming", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["men's grooming", "男士护理", "men's skincare"]},
+        {"name": "Fragrance", "subcategory": "Cosmetics", "tier": "niche", "keywords": ["fragrance", "香水", "perfume"]}
+      ]
+    },
+    {
+      "name": "Internet & Electronics",
+      "interests": [
+        {"name": "Internet & Electronics", "subcategory": null, "tier": "standard", "keywords": ["internet & electronics", "互联网电子", "technology"]},
+        {"name": "Mobile Phones", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["mobile phones", "手机", "smartphones"]},
+        {"name": "Computers", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["computers", "电脑", "laptops"]},
+        {"name": "Smart Devices", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["smart devices", "智能设备", "wearables"]},
+        {"name": "Software & Apps", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["software", "软件应用", "apps"]},
+        {"name": "E-commerce", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["e-commerce", "电商", "online shopping"]},
+        {"name": "Telecom", "subcategory": "Internet & Electronics", "tier": "niche", "keywords": ["telecom", "通信", "telecommunications"]}
+      ]
+    },
+    {
+      "name": "Sports",
+      "interests": [
+        {"name": "Sports", "subcategory": null, "tier": "standard", "keywords": ["sports", "体育", "athletics"]},
+        {"name": "Fitness", "subcategory": "Sports", "tier": "niche", "keywords": ["fitness", "健身", "gym"]},
+        {"name": "Running", "subcategory": "Sports", "tier": "niche", "keywords": ["running", "跑步", "jogging"]},
+        {"name": "Swimming", "subcategory": "Sports", "tier": "niche", "keywords": ["swimming", "游泳", "swim"]},
+        {"name": "Basketball", "subcategory": "Sports", "tier": "niche", "keywords": ["basketball", "篮球", "NBA"]},
+        {"name": "Football", "subcategory": "Sports", "tier": "niche", "keywords": ["football", "足球", "soccer"]},
+        {"name": "Tennis", "subcategory": "Sports", "tier": "niche", "keywords": ["tennis", "网球", "ATP"]},
+        {"name": "Yoga", "subcategory": "Sports", "tier": "niche", "keywords": ["yoga", "瑜伽", "meditation"]},
+        {"name": "Cycling", "subcategory": "Sports", "tier": "niche", "keywords": ["cycling", "骑行", "bicycle"]},
+        {"name": "Outdoor Sports", "subcategory": "Sports", "tier": "niche", "keywords": ["outdoor sports", "户外运动", "hiking"]}
+      ]
+    },
+    {
+      "name": "Healthcare",
+      "interests": [
+        {"name": "Healthcare", "subcategory": null, "tier": "standard", "keywords": ["healthcare", "医疗", "medical"]},
+        {"name": "Hospitals", "subcategory": "Healthcare", "tier": "niche", "keywords": ["hospitals", "医院", "medical center"]},
+        {"name": "Traditional Chinese Medicine", "subcategory": "Healthcare", "tier": "niche", "keywords": ["traditional Chinese medicine", "中医", "TCM"]},
+        {"name": "Dental", "subcategory": "Healthcare", "tier": "niche", "keywords": ["dental", "牙科", "dentist"]},
+        {"name": "Eye Care", "subcategory": "Healthcare", "tier": "niche", "keywords": ["eye care", "眼科", "ophthalmology"]},
+        {"name": "Mental Health", "subcategory": "Healthcare", "tier": "niche", "keywords": ["mental health", "心理健康", "psychology"]},
+        {"name": "Pharmaceuticals", "subcategory": "Healthcare", "tier": "niche", "keywords": ["pharmaceuticals", "药品", "medicine"]},
+        {"name": "Nutrition", "subcategory": "Healthcare", "tier": "niche", "keywords": ["nutrition", "营养", "dietary supplements"]}
+      ]
+    },
+    {
+      "name": "Maternity & Pregnancy",
+      "interests": [
+        {"name": "Maternity & Pregnancy", "subcategory": null, "tier": "standard", "keywords": ["maternity", "母婴", "pregnancy"]},
+        {"name": "Prenatal Care", "subcategory": "Maternity & Pregnancy", "tier": "niche", "keywords": ["prenatal care", "产前护理", "pregnancy care"]},
+        {"name": "Postnatal Recovery", "subcategory": "Maternity & Pregnancy", "tier": "niche", "keywords": ["postnatal recovery", "产后恢复", "postpartum"]},
+        {"name": "Baby Products", "subcategory": "Maternity & Pregnancy", "tier": "niche", "keywords": ["baby products", "婴儿用品", "baby gear"]},
+        {"name": "Children's Education", "subcategory": "Maternity & Pregnancy", "tier": "niche", "keywords": ["children's education", "儿童教育", "early learning"]},
+        {"name": "Parenting", "subcategory": "Maternity & Pregnancy", "tier": "niche", "keywords": ["parenting", "育儿", "child rearing"]}
+      ]
+    },
+    {
+      "name": "Gaming",
+      "interests": [
+        {"name": "Gaming", "subcategory": null, "tier": "standard", "keywords": ["gaming", "游戏", "video games"]},
+        {"name": "Mobile Games", "subcategory": "Gaming", "tier": "niche", "keywords": ["mobile games", "手游", "phone games"]},
+        {"name": "PC Games", "subcategory": "Gaming", "tier": "niche", "keywords": ["PC games", "电脑游戏", "PC gaming"]},
+        {"name": "Console Games", "subcategory": "Gaming", "tier": "niche", "keywords": ["console games", "主机游戏", "PlayStation"]},
+        {"name": "Strategy", "subcategory": "Gaming", "tier": "niche", "keywords": ["strategy games", "策略游戏", "RTS"]},
+        {"name": "RPG", "subcategory": "Gaming", "tier": "niche", "keywords": ["RPG", "角色扮演", "role-playing"]},
+        {"name": "Action", "subcategory": "Gaming", "tier": "niche", "keywords": ["action games", "动作游戏", "shooter"]},
+        {"name": "Casual", "subcategory": "Gaming", "tier": "niche", "keywords": ["casual games", "休闲游戏", "casual gaming"]},
+        {"name": "Esports", "subcategory": "Gaming", "tier": "niche", "keywords": ["esports", "电竞", "competitive gaming"]}
+      ]
+    },
+    {
+      "name": "Legal Services",
+      "interests": [
+        {"name": "Legal Services", "subcategory": null, "tier": "standard", "keywords": ["legal services", "法律服务", "legal"]},
+        {"name": "Legal Consultation", "subcategory": "Legal Services", "tier": "niche", "keywords": ["legal consultation", "法律咨询", "legal advice"]},
+        {"name": "Lawyers", "subcategory": "Legal Services", "tier": "niche", "keywords": ["lawyers", "律师", "attorneys"]},
+        {"name": "Patent & Trademark", "subcategory": "Legal Services", "tier": "niche", "keywords": ["patent", "专利商标", "intellectual property"]},
+        {"name": "Corporate Law", "subcategory": "Legal Services", "tier": "niche", "keywords": ["corporate law", "公司法", "business law"]},
+        {"name": "Criminal Law", "subcategory": "Legal Services", "tier": "niche", "keywords": ["criminal law", "刑法", "criminal defense"]}
+      ]
+    },
+    {
+      "name": "Leisure & Entertainment",
+      "interests": [
+        {"name": "Leisure & Entertainment", "subcategory": null, "tier": "standard", "keywords": ["leisure", "休闲娱乐", "entertainment"]},
+        {"name": "Movies", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["movies", "电影", "cinema"]},
+        {"name": "Music", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["music", "音乐", "songs"]},
+        {"name": "TV Shows", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["TV shows", "电视剧", "series"]},
+        {"name": "Variety Shows", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["variety shows", "综艺", "entertainment shows"]},
+        {"name": "Reading", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["reading", "阅读", "books"]},
+        {"name": "Photography", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["photography", "摄影", "photos"]},
+        {"name": "Animation", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["animation", "动漫", "anime"]},
+        {"name": "Live Streaming", "subcategory": "Leisure & Entertainment", "tier": "niche", "keywords": ["live streaming", "直播", "live broadcast"]}
+      ]
+    }
+  ]
+}

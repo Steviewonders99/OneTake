@@ -1,0 +1,249 @@
+{
+  "platform": "snapchat",
+  "categories": [
+    {
+      "name": "Adventure Seekers",
+      "interests": [
+        {"name": "Adventure Seekers", "subcategory": null, "tier": "standard", "keywords": ["adventure", "thrill seekers", "adrenaline"]}
+      ]
+    },
+    {
+      "name": "Arts & Culture Mavens",
+      "interests": [
+        {"name": "Arts & Culture Mavens", "subcategory": null, "tier": "standard", "keywords": ["arts", "culture", "creative arts"]},
+        {"name": "Photography", "subcategory": "Arts & Culture Mavens", "tier": "niche", "keywords": ["photography", "photos", "camera"]},
+        {"name": "Reading", "subcategory": "Arts & Culture Mavens", "tier": "niche", "keywords": ["reading", "books", "literature"]}
+      ]
+    },
+    {
+      "name": "Auto Enthusiasts",
+      "interests": [
+        {"name": "Auto Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["auto enthusiasts", "car lovers", "automotive"]},
+        {"name": "Autos & Vehicles", "subcategory": "Auto Enthusiasts", "tier": "niche", "keywords": ["autos", "vehicles", "cars"]}
+      ]
+    },
+    {
+      "name": "Beachgoers & Surfers",
+      "interests": [
+        {"name": "Beachgoers & Surfers", "subcategory": null, "tier": "standard", "keywords": ["beach", "surfing", "ocean"]}
+      ]
+    },
+    {
+      "name": "Beauty Mavens",
+      "interests": [
+        {"name": "Beauty Mavens", "subcategory": null, "tier": "standard", "keywords": ["beauty", "beauty tips", "beauty routines"]},
+        {"name": "Beauty", "subcategory": "Beauty Mavens", "tier": "niche", "keywords": ["beauty products", "makeup", "cosmetics"]}
+      ]
+    },
+    {
+      "name": "College Life",
+      "interests": [
+        {"name": "College Life", "subcategory": null, "tier": "standard", "keywords": ["college", "university", "campus life"]}
+      ]
+    },
+    {
+      "name": "Comics & Animation Fans",
+      "interests": [
+        {"name": "Comics & Animation Fans", "subcategory": null, "tier": "standard", "keywords": ["comics", "animation", "anime"]}
+      ]
+    },
+    {
+      "name": "Cooking Enthusiasts",
+      "interests": [
+        {"name": "Cooking Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["cooking", "chef", "home cooking"]},
+        {"name": "Cooking", "subcategory": "Cooking Enthusiasts", "tier": "niche", "keywords": ["recipes", "meal prep", "culinary"]}
+      ]
+    },
+    {
+      "name": "Do-It-Yourselfers",
+      "interests": [
+        {"name": "Do-It-Yourselfers", "subcategory": null, "tier": "standard", "keywords": ["DIY", "do it yourself", "crafts"]}
+      ]
+    },
+    {
+      "name": "Fashionistas",
+      "interests": [
+        {"name": "Fashionistas", "subcategory": null, "tier": "standard", "keywords": ["fashion", "style", "trendy"]},
+        {"name": "Fashion & Style", "subcategory": "Fashionistas", "tier": "niche", "keywords": ["fashion trends", "outfits", "clothing"]}
+      ]
+    },
+    {
+      "name": "Film & TV Fans",
+      "interests": [
+        {"name": "Film & TV Fans", "subcategory": null, "tier": "standard", "keywords": ["film", "TV", "movies"]},
+        {"name": "Comedy Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["comedy", "sitcoms", "stand-up"]},
+        {"name": "Cordcutters", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["cordcutters", "streaming", "cable cutting"]},
+        {"name": "Crime & Mystery Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["crime", "mystery", "true crime"]},
+        {"name": "Drama Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["drama", "drama series", "dramatic"]},
+        {"name": "Indie & Foreign Film Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["indie film", "foreign film", "art house"]},
+        {"name": "Reality TV Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["reality TV", "reality shows", "unscripted"]},
+        {"name": "Sci-Fi & Fantasy Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["sci-fi", "fantasy", "science fiction"]},
+        {"name": "Streaming Video Fans", "subcategory": "Film & TV Fans", "tier": "niche", "keywords": ["streaming video", "Netflix", "Hulu"]}
+      ]
+    },
+    {
+      "name": "Fitness Enthusiasts",
+      "interests": [
+        {"name": "Fitness Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["fitness", "gym", "workout"]},
+        {"name": "Running", "subcategory": "Fitness Enthusiasts", "tier": "niche", "keywords": ["running", "jogging", "marathon"]},
+        {"name": "Yoga", "subcategory": "Fitness Enthusiasts", "tier": "niche", "keywords": ["yoga", "meditation", "flexibility"]},
+        {"name": "Snow Sports", "subcategory": "Fitness Enthusiasts", "tier": "niche", "keywords": ["snow sports", "skiing", "snowboarding"]},
+        {"name": "Adventure Sports", "subcategory": "Fitness Enthusiasts", "tier": "niche", "keywords": ["adventure sports", "extreme sports", "action sports"]}
+      ]
+    },
+    {
+      "name": "Foodies",
+      "interests": [
+        {"name": "Foodies", "subcategory": null, "tier": "standard", "keywords": ["foodies", "food lovers", "gastronomy"]},
+        {"name": "Fast Food Junkies", "subcategory": "Foodies", "tier": "niche", "keywords": ["fast food", "burgers", "takeout"]},
+        {"name": "Food", "subcategory": "Foodies", "tier": "niche", "keywords": ["food", "dining", "restaurants"]}
+      ]
+    },
+    {
+      "name": "Gamers",
+      "interests": [
+        {"name": "Gamers", "subcategory": null, "tier": "standard", "keywords": ["gamers", "gaming", "video games"]},
+        {"name": "Console Gamers", "subcategory": "Gamers", "tier": "niche", "keywords": ["console gaming", "PlayStation", "Xbox"]},
+        {"name": "PC Gamers", "subcategory": "Gamers", "tier": "niche", "keywords": ["PC gaming", "PC games", "Steam"]},
+        {"name": "Mobile Gamers", "subcategory": "Gamers", "tier": "niche", "keywords": ["mobile gaming", "phone games", "mobile games"]},
+        {"name": "Video Games", "subcategory": "Gamers", "tier": "niche", "keywords": ["video games", "new releases", "game reviews"]}
+      ]
+    },
+    {
+      "name": "Green Living Enthusiasts",
+      "interests": [
+        {"name": "Green Living Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["green living", "sustainability", "eco-friendly"]}
+      ]
+    },
+    {
+      "name": "Hip Trends Followers",
+      "interests": [
+        {"name": "Hip Trends Followers", "subcategory": null, "tier": "standard", "keywords": ["trends", "hip", "trending"]}
+      ]
+    },
+    {
+      "name": "Home Decor Enthusiasts",
+      "interests": [
+        {"name": "Home Decor Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["home decor", "interior design", "decoration"]}
+      ]
+    },
+    {
+      "name": "Investors & Entrepreneurs",
+      "interests": [
+        {"name": "Investors & Entrepreneurs", "subcategory": null, "tier": "standard", "keywords": ["investing", "entrepreneurship", "startups"]}
+      ]
+    },
+    {
+      "name": "Men's Lifestyle",
+      "interests": [
+        {"name": "Men's Lifestyle", "subcategory": null, "tier": "standard", "keywords": ["men's lifestyle", "men's interests", "male lifestyle"]}
+      ]
+    },
+    {
+      "name": "Music Fans",
+      "interests": [
+        {"name": "Music Fans", "subcategory": null, "tier": "standard", "keywords": ["music", "music fans", "music lovers"]},
+        {"name": "Country", "subcategory": "Music Fans", "tier": "niche", "keywords": ["country music", "Nashville", "country"]},
+        {"name": "Concerts & Festivals", "subcategory": "Music Fans", "tier": "niche", "keywords": ["concerts", "music festivals", "live music"]},
+        {"name": "Dance & EDM", "subcategory": "Music Fans", "tier": "niche", "keywords": ["dance music", "EDM", "electronic dance"]},
+        {"name": "Indie", "subcategory": "Music Fans", "tier": "niche", "keywords": ["indie music", "indie artists", "independent music"]},
+        {"name": "Pop", "subcategory": "Music Fans", "tier": "niche", "keywords": ["pop music", "pop", "chart music"]},
+        {"name": "Urban & Hip-Hop", "subcategory": "Music Fans", "tier": "niche", "keywords": ["hip-hop", "rap", "urban music"]},
+        {"name": "R&B", "subcategory": "Music Fans", "tier": "niche", "keywords": ["R&B", "rhythm and blues", "soul"]},
+        {"name": "Rock", "subcategory": "Music Fans", "tier": "niche", "keywords": ["rock music", "rock", "alternative"]},
+        {"name": "Latin", "subcategory": "Music Fans", "tier": "niche", "keywords": ["Latin music", "reggaeton", "salsa"]},
+        {"name": "K-Pop", "subcategory": "Music Fans", "tier": "niche", "keywords": ["K-Pop", "Korean pop", "BTS"]}
+      ]
+    },
+    {
+      "name": "News Junkies",
+      "interests": [
+        {"name": "News Junkies", "subcategory": null, "tier": "standard", "keywords": ["news", "current events", "headlines"]},
+        {"name": "Business News", "subcategory": "News Junkies", "tier": "niche", "keywords": ["business news", "finance news", "markets"]},
+        {"name": "Celebrity News", "subcategory": "News Junkies", "tier": "niche", "keywords": ["celebrity news", "gossip", "entertainment news"]},
+        {"name": "Political News", "subcategory": "News Junkies", "tier": "niche", "keywords": ["political news", "politics", "government"]}
+      ]
+    },
+    {
+      "name": "Nightlife Enthusiasts",
+      "interests": [
+        {"name": "Nightlife Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["nightlife", "clubs", "bars"]}
+      ]
+    },
+    {
+      "name": "Outdoors & Nature Enthusiasts",
+      "interests": [
+        {"name": "Outdoors & Nature Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["outdoors", "nature", "hiking"]}
+      ]
+    },
+    {
+      "name": "Parenting & Family",
+      "interests": [
+        {"name": "Parenting & Family", "subcategory": null, "tier": "standard", "keywords": ["parenting", "family", "kids"]}
+      ]
+    },
+    {
+      "name": "Pet Parents",
+      "interests": [
+        {"name": "Pet Parents", "subcategory": null, "tier": "standard", "keywords": ["pet parents", "pet owners", "fur babies"]},
+        {"name": "Pets & Animals", "subcategory": "Pet Parents", "tier": "niche", "keywords": ["pets", "animals", "pet care"]}
+      ]
+    },
+    {
+      "name": "Philanthropists",
+      "interests": [
+        {"name": "Philanthropists", "subcategory": null, "tier": "standard", "keywords": ["philanthropy", "charity", "giving back"]}
+      ]
+    },
+    {
+      "name": "Pranksters & Meme Watchers",
+      "interests": [
+        {"name": "Pranksters & Meme Watchers", "subcategory": null, "tier": "standard", "keywords": ["pranks", "memes", "viral content"]}
+      ]
+    },
+    {
+      "name": "Math & Science Enthusiasts",
+      "interests": [
+        {"name": "Math & Science Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["math", "science", "STEM"]}
+      ]
+    },
+    {
+      "name": "Sports Fans",
+      "interests": [
+        {"name": "Sports Fans", "subcategory": null, "tier": "standard", "keywords": ["sports", "sports fans", "athletics"]},
+        {"name": "Baseball", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["baseball", "MLB", "batting"]},
+        {"name": "Basketball", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["basketball", "NBA", "hoops"]},
+        {"name": "Beach & Watersports", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["watersports", "beach sports", "surfing"]},
+        {"name": "College Football", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["college football", "NCAA", "CFB"]},
+        {"name": "Combat Sports", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["combat sports", "MMA", "boxing"]},
+        {"name": "Cricket", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["cricket", "IPL", "test cricket"]},
+        {"name": "Football", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["football", "NFL", "American football"]},
+        {"name": "Golf", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["golf", "PGA", "golfing"]},
+        {"name": "Hockey", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["hockey", "NHL", "ice hockey"]},
+        {"name": "Motor Sports", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["motor sports", "racing", "Formula 1"]},
+        {"name": "Skates/Bikes/Boards", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["skateboarding", "BMX", "rollerblading"]},
+        {"name": "Soccer", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["soccer", "football", "MLS"]},
+        {"name": "Tennis", "subcategory": "Sports Fans", "tier": "niche", "keywords": ["tennis", "ATP", "Grand Slam"]}
+      ]
+    },
+    {
+      "name": "Tech Enthusiasts",
+      "interests": [
+        {"name": "Tech Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["tech", "technology", "gadgets"]},
+        {"name": "Technology & Gadgets", "subcategory": "Tech Enthusiasts", "tier": "niche", "keywords": ["gadgets", "tech products", "electronics"]}
+      ]
+    },
+    {
+      "name": "Travel Enthusiasts",
+      "interests": [
+        {"name": "Travel Enthusiasts", "subcategory": null, "tier": "standard", "keywords": ["travel", "vacation", "tourism"]}
+      ]
+    },
+    {
+      "name": "Women's Lifestyle",
+      "interests": [
+        {"name": "Women's Lifestyle", "subcategory": null, "tier": "standard", "keywords": ["women's lifestyle", "women's interests", "female lifestyle"]}
+      ]
+    }
+  ]
+}

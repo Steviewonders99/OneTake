@@ -1,0 +1,223 @@
+{
+  "platform": "reddit",
+  "categories": [
+    {
+      "name": "Animals & Pets",
+      "interests": [
+        {"name": "Animals", "subcategory": null, "tier": "standard", "keywords": ["animals", "wildlife", "nature"]},
+        {"name": "Pets", "subcategory": null, "tier": "standard", "keywords": ["pets", "pet care", "pet owners"]},
+        {"name": "Cats", "subcategory": null, "tier": "standard", "keywords": ["cats", "kittens", "felines"]},
+        {"name": "Dogs", "subcategory": null, "tier": "standard", "keywords": ["dogs", "puppies", "canines"]},
+        {"name": "Wildlife", "subcategory": null, "tier": "standard", "keywords": ["wildlife", "wild animals", "conservation"]}
+      ]
+    },
+    {
+      "name": "Art & Design",
+      "interests": [
+        {"name": "Arts & Crafts", "subcategory": null, "tier": "standard", "keywords": ["arts", "crafts", "handmade"]},
+        {"name": "Design", "subcategory": null, "tier": "standard", "keywords": ["design", "graphic design", "creative"]},
+        {"name": "Fine Art Photography", "subcategory": null, "tier": "standard", "keywords": ["fine art photography", "art photography", "photo art"]},
+        {"name": "Interior & Landscape", "subcategory": null, "tier": "standard", "keywords": ["interior design", "landscape design", "architecture"]},
+        {"name": "Visuals", "subcategory": null, "tier": "standard", "keywords": ["visual art", "digital art", "illustrations"]}
+      ]
+    },
+    {
+      "name": "Automotive",
+      "interests": [
+        {"name": "Car Culture", "subcategory": null, "tier": "standard", "keywords": ["car culture", "car enthusiasts", "auto shows"]},
+        {"name": "Auto Type", "subcategory": null, "tier": "standard", "keywords": ["auto type", "car types", "vehicle classes"]},
+        {"name": "Auto Repair", "subcategory": null, "tier": "standard", "keywords": ["auto repair", "car maintenance", "mechanic"]},
+        {"name": "Electric Vehicles", "subcategory": null, "tier": "standard", "keywords": ["electric vehicles", "EV", "Tesla"]},
+        {"name": "Motorcycles", "subcategory": null, "tier": "standard", "keywords": ["motorcycles", "motorbikes", "riding"]}
+      ]
+    },
+    {
+      "name": "Business & Finance",
+      "interests": [
+        {"name": "Business", "subcategory": null, "tier": "standard", "keywords": ["business", "enterprise", "corporate"]},
+        {"name": "Personal Finance", "subcategory": null, "tier": "standard", "keywords": ["personal finance", "budgeting", "saving"]},
+        {"name": "Career Planning", "subcategory": null, "tier": "standard", "keywords": ["career planning", "job search", "career advice"]},
+        {"name": "Cryptocurrency", "subcategory": null, "tier": "standard", "keywords": ["cryptocurrency", "crypto", "bitcoin"]},
+        {"name": "Investing", "subcategory": null, "tier": "standard", "keywords": ["investing", "stocks", "portfolio"]},
+        {"name": "Entrepreneurship", "subcategory": null, "tier": "standard", "keywords": ["entrepreneurship", "startups", "founders"]}
+      ]
+    },
+    {
+      "name": "Entertainment",
+      "interests": [
+        {"name": "Comics & Graphic Novels", "subcategory": null, "tier": "standard", "keywords": ["comics", "graphic novels", "manga"]},
+        {"name": "Horror", "subcategory": null, "tier": "standard", "keywords": ["horror", "scary", "creepy"]},
+        {"name": "Movies", "subcategory": null, "tier": "standard", "keywords": ["movies", "films", "cinema"]},
+        {"name": "General Entertainment", "subcategory": null, "tier": "standard", "keywords": ["entertainment", "pop culture", "media"]},
+        {"name": "Humor", "subcategory": null, "tier": "standard", "keywords": ["humor", "memes", "funny"]}
+      ]
+    },
+    {
+      "name": "Family & Relationships",
+      "interests": [
+        {"name": "Parenting", "subcategory": null, "tier": "standard", "keywords": ["parenting", "kids", "family"]},
+        {"name": "Dating", "subcategory": null, "tier": "standard", "keywords": ["dating", "relationships", "romance"]},
+        {"name": "Marriage & Civil Unions", "subcategory": null, "tier": "standard", "keywords": ["marriage", "civil unions", "weddings"]},
+        {"name": "Life Advice", "subcategory": null, "tier": "standard", "keywords": ["life advice", "self-improvement", "personal growth"]}
+      ]
+    },
+    {
+      "name": "Food & Drink",
+      "interests": [
+        {"name": "Alcoholic Beverages", "subcategory": null, "tier": "standard", "keywords": ["alcohol", "beer", "wine"]},
+        {"name": "Cooking", "subcategory": null, "tier": "standard", "keywords": ["cooking", "recipes", "home cooking"]},
+        {"name": "Fast Food", "subcategory": null, "tier": "standard", "keywords": ["fast food", "burgers", "takeout"]},
+        {"name": "Coffee & Tea", "subcategory": null, "tier": "standard", "keywords": ["coffee", "tea", "cafe"]},
+        {"name": "Baking", "subcategory": null, "tier": "standard", "keywords": ["baking", "pastry", "bread"]},
+        {"name": "Vegetarian & Vegan", "subcategory": null, "tier": "standard", "keywords": ["vegetarian", "vegan", "plant-based"]}
+      ]
+    },
+    {
+      "name": "Gaming",
+      "interests": [
+        {"name": "Video Gaming", "subcategory": null, "tier": "standard", "keywords": ["video games", "gaming", "gamer"]},
+        {"name": "eSports", "subcategory": null, "tier": "standard", "keywords": ["esports", "competitive gaming", "tournaments"]},
+        {"name": "PC Games", "subcategory": null, "tier": "standard", "keywords": ["PC games", "PC gaming", "Steam"]},
+        {"name": "Tabletop Games", "subcategory": null, "tier": "standard", "keywords": ["tabletop games", "board games", "D&D"]},
+        {"name": "Console Gaming", "subcategory": null, "tier": "standard", "keywords": ["console gaming", "PlayStation", "Xbox"]},
+        {"name": "Indie Gaming", "subcategory": null, "tier": "standard", "keywords": ["indie games", "indie gaming", "indie devs"]},
+        {"name": "Mobile Gaming", "subcategory": null, "tier": "standard", "keywords": ["mobile gaming", "mobile games", "phone games"]}
+      ]
+    },
+    {
+      "name": "Healthy Living",
+      "interests": [
+        {"name": "Fitness & Exercise", "subcategory": null, "tier": "standard", "keywords": ["fitness", "exercise", "gym"]},
+        {"name": "Wellness", "subcategory": null, "tier": "standard", "keywords": ["wellness", "self-care", "wellbeing"]},
+        {"name": "Outdoors", "subcategory": null, "tier": "standard", "keywords": ["outdoors", "nature", "hiking"]},
+        {"name": "Mental Health", "subcategory": null, "tier": "standard", "keywords": ["mental health", "therapy", "mindfulness"]},
+        {"name": "Nutrition", "subcategory": null, "tier": "standard", "keywords": ["nutrition", "diet", "healthy eating"]},
+        {"name": "Yoga", "subcategory": null, "tier": "standard", "keywords": ["yoga", "stretching", "flexibility"]},
+        {"name": "Running", "subcategory": null, "tier": "standard", "keywords": ["running", "jogging", "marathon"]}
+      ]
+    },
+    {
+      "name": "Industries",
+      "interests": [
+        {"name": "Construction", "subcategory": null, "tier": "standard", "keywords": ["construction", "building", "trades"]},
+        {"name": "Healthcare", "subcategory": null, "tier": "standard", "keywords": ["healthcare", "medical", "hospitals"]},
+        {"name": "Legal", "subcategory": null, "tier": "standard", "keywords": ["legal", "law", "lawyers"]},
+        {"name": "Manufacturing", "subcategory": null, "tier": "standard", "keywords": ["manufacturing", "production", "factory"]},
+        {"name": "Retail", "subcategory": null, "tier": "standard", "keywords": ["retail", "stores", "shopping"]},
+        {"name": "Technology", "subcategory": null, "tier": "standard", "keywords": ["technology", "tech industry", "IT"]}
+      ]
+    },
+    {
+      "name": "Moods",
+      "interests": [
+        {"name": "Inspirational", "subcategory": null, "tier": "standard", "keywords": ["inspirational", "inspiration", "uplifting"]},
+        {"name": "Nostalgic", "subcategory": null, "tier": "standard", "keywords": ["nostalgic", "nostalgia", "throwback"]},
+        {"name": "Relaxing", "subcategory": null, "tier": "standard", "keywords": ["relaxing", "calm", "peaceful"]},
+        {"name": "Motivational", "subcategory": null, "tier": "standard", "keywords": ["motivational", "motivation", "hustle"]}
+      ]
+    },
+    {
+      "name": "Music & Audio",
+      "interests": [
+        {"name": "Hip-Hop", "subcategory": null, "tier": "standard", "keywords": ["hip-hop", "rap", "hip hop"]},
+        {"name": "Rock", "subcategory": null, "tier": "standard", "keywords": ["rock", "rock music", "alternative"]},
+        {"name": "Pop", "subcategory": null, "tier": "standard", "keywords": ["pop", "pop music", "chart music"]},
+        {"name": "Electronic", "subcategory": null, "tier": "standard", "keywords": ["electronic", "EDM", "dance music"]},
+        {"name": "Country", "subcategory": null, "tier": "standard", "keywords": ["country", "country music", "Nashville"]},
+        {"name": "Jazz", "subcategory": null, "tier": "standard", "keywords": ["jazz", "jazz music", "smooth jazz"]},
+        {"name": "Podcasts", "subcategory": null, "tier": "standard", "keywords": ["podcasts", "audio shows", "podcast listening"]},
+        {"name": "Classical", "subcategory": null, "tier": "standard", "keywords": ["classical", "classical music", "orchestra"]}
+      ]
+    },
+    {
+      "name": "News & Education",
+      "interests": [
+        {"name": "College Education", "subcategory": null, "tier": "standard", "keywords": ["college", "university", "higher education"]},
+        {"name": "National News", "subcategory": null, "tier": "standard", "keywords": ["national news", "US news", "domestic news"]},
+        {"name": "Science", "subcategory": null, "tier": "standard", "keywords": ["science", "research", "STEM"]},
+        {"name": "World News", "subcategory": null, "tier": "standard", "keywords": ["world news", "international news", "global"]},
+        {"name": "Politics", "subcategory": null, "tier": "standard", "keywords": ["politics", "government", "policy"]},
+        {"name": "History", "subcategory": null, "tier": "standard", "keywords": ["history", "historical", "past events"]}
+      ]
+    },
+    {
+      "name": "Reading",
+      "interests": [
+        {"name": "Books", "subcategory": null, "tier": "standard", "keywords": ["books", "reading", "literature"]},
+        {"name": "Comics", "subcategory": null, "tier": "standard", "keywords": ["comics", "comic books", "webcomics"]},
+        {"name": "Fiction", "subcategory": null, "tier": "standard", "keywords": ["fiction", "novels", "storytelling"]},
+        {"name": "Non-Fiction", "subcategory": null, "tier": "standard", "keywords": ["non-fiction", "nonfiction", "factual"]},
+        {"name": "Poetry", "subcategory": null, "tier": "standard", "keywords": ["poetry", "poems", "verse"]}
+      ]
+    },
+    {
+      "name": "Sports",
+      "interests": [
+        {"name": "Baseball", "subcategory": null, "tier": "standard", "keywords": ["baseball", "MLB", "batting"]},
+        {"name": "Basketball", "subcategory": null, "tier": "standard", "keywords": ["basketball", "NBA", "hoops"]},
+        {"name": "College Sports", "subcategory": null, "tier": "standard", "keywords": ["college sports", "NCAA", "college football"]},
+        {"name": "Cycling", "subcategory": null, "tier": "standard", "keywords": ["cycling", "biking", "bicycle"]},
+        {"name": "Soccer", "subcategory": null, "tier": "standard", "keywords": ["soccer", "football", "MLS"]},
+        {"name": "Football", "subcategory": null, "tier": "standard", "keywords": ["football", "NFL", "American football"]},
+        {"name": "Hockey", "subcategory": null, "tier": "standard", "keywords": ["hockey", "NHL", "ice hockey"]},
+        {"name": "Tennis", "subcategory": null, "tier": "standard", "keywords": ["tennis", "ATP", "Grand Slam"]},
+        {"name": "Golf", "subcategory": null, "tier": "standard", "keywords": ["golf", "PGA", "golfing"]},
+        {"name": "Martial Arts", "subcategory": null, "tier": "standard", "keywords": ["martial arts", "MMA", "UFC"]}
+      ]
+    },
+    {
+      "name": "Style & Fashion",
+      "interests": [
+        {"name": "Fashion Trends", "subcategory": null, "tier": "standard", "keywords": ["fashion trends", "style", "trending fashion"]},
+        {"name": "Beauty", "subcategory": null, "tier": "standard", "keywords": ["beauty", "makeup", "cosmetics"]},
+        {"name": "Men's Fashion", "subcategory": null, "tier": "standard", "keywords": ["men's fashion", "menswear", "male style"]},
+        {"name": "Women's Fashion", "subcategory": null, "tier": "standard", "keywords": ["women's fashion", "womenswear", "female style"]},
+        {"name": "Weddings", "subcategory": null, "tier": "standard", "keywords": ["weddings", "bridal", "wedding planning"]},
+        {"name": "Skincare", "subcategory": null, "tier": "standard", "keywords": ["skincare", "skin care", "skin routine"]}
+      ]
+    },
+    {
+      "name": "Technology & Computing",
+      "interests": [
+        {"name": "Consumer Electronics", "subcategory": null, "tier": "standard", "keywords": ["consumer electronics", "gadgets", "tech products"]},
+        {"name": "Computing", "subcategory": null, "tier": "standard", "keywords": ["computing", "computers", "hardware"]},
+        {"name": "Virtual Reality", "subcategory": null, "tier": "standard", "keywords": ["virtual reality", "VR", "mixed reality"]},
+        {"name": "Programming", "subcategory": null, "tier": "standard", "keywords": ["programming", "coding", "software development"]},
+        {"name": "AI", "subcategory": null, "tier": "standard", "keywords": ["AI", "artificial intelligence", "machine learning"]},
+        {"name": "Cybersecurity", "subcategory": null, "tier": "standard", "keywords": ["cybersecurity", "security", "hacking"]}
+      ]
+    },
+    {
+      "name": "Television & Film",
+      "interests": [
+        {"name": "Animation", "subcategory": null, "tier": "standard", "keywords": ["animation", "animated", "cartoons"]},
+        {"name": "Comedy", "subcategory": null, "tier": "standard", "keywords": ["comedy", "sitcoms", "stand-up"]},
+        {"name": "Drama", "subcategory": null, "tier": "standard", "keywords": ["drama", "drama series", "dramatic"]},
+        {"name": "Reality", "subcategory": null, "tier": "standard", "keywords": ["reality TV", "reality shows", "unscripted"]},
+        {"name": "Science Fiction", "subcategory": null, "tier": "standard", "keywords": ["science fiction", "sci-fi", "futuristic"]},
+        {"name": "Documentary", "subcategory": null, "tier": "standard", "keywords": ["documentary", "documentaries", "docuseries"]},
+        {"name": "Streaming", "subcategory": null, "tier": "standard", "keywords": ["streaming", "Netflix", "streaming services"]}
+      ]
+    },
+    {
+      "name": "Toys & Collectibles",
+      "interests": [
+        {"name": "Action Figures", "subcategory": null, "tier": "standard", "keywords": ["action figures", "figurines", "collectible figures"]},
+        {"name": "Board Games", "subcategory": null, "tier": "standard", "keywords": ["board games", "tabletop", "board gaming"]},
+        {"name": "Collectible Cards", "subcategory": null, "tier": "standard", "keywords": ["collectible cards", "trading cards", "card collecting"]},
+        {"name": "LEGO", "subcategory": null, "tier": "standard", "keywords": ["LEGO", "building blocks", "LEGO sets"]},
+        {"name": "Trading Cards", "subcategory": null, "tier": "standard", "keywords": ["trading cards", "Pokemon cards", "sports cards"]}
+      ]
+    },
+    {
+      "name": "Travel & Geography",
+      "interests": [
+        {"name": "Travel Locations", "subcategory": null, "tier": "standard", "keywords": ["travel locations", "destinations", "places to visit"]},
+        {"name": "Lifestyle", "subcategory": null, "tier": "standard", "keywords": ["lifestyle", "digital nomad", "expat"]},
+        {"name": "Adventure Travel", "subcategory": null, "tier": "standard", "keywords": ["adventure travel", "backpacking", "trekking"]},
+        {"name": "Budget Travel", "subcategory": null, "tier": "standard", "keywords": ["budget travel", "cheap travel", "travel deals"]},
+        {"name": "Camping", "subcategory": null, "tier": "standard", "keywords": ["camping", "campsite", "outdoor camping"]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "platform": "tiktok",
+  "categories": [
+    {
+      "name": "Apparel & Accessories",
+      "interests": [
+        {"name": "Apparel & Accessories", "subcategory": null, "tier": "broad", "keywords": ["clothing", "fashion", "apparel"]},
+        {"name": "Men's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["men's fashion", "menswear", "men's clothing"]},
+        {"name": "Women's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["women's fashion", "womenswear", "women's clothing"]},
+        {"name": "Children's Clothing", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["kids clothing", "children's fashion", "kids wear"]},
+        {"name": "Shoes", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["shoes", "footwear", "sneakers"]},
+        {"name": "Bags & Luggage", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["bags", "luggage", "handbags"]},
+        {"name": "Jewelry & Accessories", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["jewelry", "accessories", "necklaces"]},
+        {"name": "Watches", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["watches", "wristwatches", "timepieces"]},
+        {"name": "Eyewear", "subcategory": "Apparel & Accessories", "tier": "niche", "keywords": ["eyewear", "sunglasses", "glasses"]}
+      ]
+    },
+    {
+      "name": "Apps",
+      "interests": [
+        {"name": "Apps", "subcategory": null, "tier": "broad", "keywords": ["apps", "applications", "mobile apps"]},
+        {"name": "Mobile Apps", "subcategory": "Apps", "tier": "niche", "keywords": ["mobile apps", "smartphone apps", "app store"]},
+        {"name": "Social Apps", "subcategory": "Apps", "tier": "niche", "keywords": ["social apps", "social media apps", "messaging apps"]},
+        {"name": "Utility Apps", "subcategory": "Apps", "tier": "niche", "keywords": ["utility apps", "productivity apps", "tool apps"]}
+      ]
+    },
+    {
+      "name": "Appliances",
+      "interests": [
+        {"name": "Appliances", "subcategory": null, "tier": "broad", "keywords": ["appliances", "home appliances", "electronics"]},
+        {"name": "Kitchen Appliances", "subcategory": "Appliances", "tier": "niche", "keywords": ["kitchen appliances", "cooking appliances", "blender"]},
+        {"name": "Home Appliances", "subcategory": "Appliances", "tier": "niche", "keywords": ["home appliances", "household appliances", "washer"]},
+        {"name": "Small Appliances", "subcategory": "Appliances", "tier": "niche", "keywords": ["small appliances", "countertop appliances", "toaster"]}
+      ]
+    },
+    {
+      "name": "Baby, Kids & Maternity",
+      "interests": [
+        {"name": "Baby, Kids & Maternity", "subcategory": null, "tier": "broad", "keywords": ["baby", "kids", "maternity"]},
+        {"name": "Baby Care", "subcategory": "Baby, Kids & Maternity", "tier": "niche", "keywords": ["baby care", "infant care", "newborn"]},
+        {"name": "Children's Toys", "subcategory": "Baby, Kids & Maternity", "tier": "niche", "keywords": ["children's toys", "kids toys", "toy store"]},
+        {"name": "Maternity", "subcategory": "Baby, Kids & Maternity", "tier": "niche", "keywords": ["maternity", "pregnancy", "expecting"]},
+        {"name": "Parenting", "subcategory": "Baby, Kids & Maternity", "tier": "niche", "keywords": ["parenting", "parenthood", "child rearing"]}
+      ]
+    },
+    {
+      "name": "Beauty & Personal Care",
+      "interests": [
+        {"name": "Beauty & Personal Care", "subcategory": null, "tier": "broad", "keywords": ["beauty", "personal care", "grooming"]},
+        {"name": "Skin Care", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["skincare", "skin care", "moisturizer"]},
+        {"name": "Makeup & Cosmetics", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["makeup", "cosmetics", "beauty products"]},
+        {"name": "Hair Care", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["hair care", "haircare", "shampoo"]},
+        {"name": "Body Care", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["body care", "body lotion", "body wash"]},
+        {"name": "Fragrance", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["fragrance", "perfume", "cologne"]},
+        {"name": "Oral Care", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["oral care", "dental care", "toothpaste"]},
+        {"name": "Men's Care", "subcategory": "Beauty & Personal Care", "tier": "niche", "keywords": ["men's grooming", "men's care", "shaving"]}
+      ]
+    },
+    {
+      "name": "Business Services",
+      "interests": [
+        {"name": "Business Services", "subcategory": null, "tier": "broad", "keywords": ["business services", "B2B", "enterprise"]},
+        {"name": "Business Management", "subcategory": "Business Services", "tier": "niche", "keywords": ["business management", "operations", "project management"]},
+        {"name": "Marketing Services", "subcategory": "Business Services", "tier": "niche", "keywords": ["marketing services", "digital marketing", "advertising agency"]},
+        {"name": "Financial Services", "subcategory": "Business Services", "tier": "niche", "keywords": ["financial services", "accounting", "bookkeeping"]}
+      ]
+    },
+    {
+      "name": "E-commerce",
+      "interests": [
+        {"name": "E-commerce", "subcategory": null, "tier": "broad", "keywords": ["ecommerce", "online shopping", "e-commerce"]},
+        {"name": "Online Shopping", "subcategory": "E-commerce", "tier": "niche", "keywords": ["online shopping", "internet shopping", "buy online"]},
+        {"name": "Deal Hunting", "subcategory": "E-commerce", "tier": "niche", "keywords": ["deals", "coupons", "discounts"]},
+        {"name": "Product Reviews", "subcategory": "E-commerce", "tier": "niche", "keywords": ["product reviews", "unboxing", "haul"]}
+      ]
+    },
+    {
+      "name": "Education",
+      "interests": [
+        {"name": "Education", "subcategory": null, "tier": "broad", "keywords": ["education", "learning", "study"]},
+        {"name": "Language Learning", "subcategory": "Education", "tier": "niche", "keywords": ["language learning", "ESL", "language study"]},
+        {"name": "K-12", "subcategory": "Education", "tier": "niche", "keywords": ["K-12", "school", "primary education"]},
+        {"name": "Vocational Training", "subcategory": "Education", "tier": "niche", "keywords": ["vocational training", "trade school", "certification"]},
+        {"name": "Higher Education", "subcategory": "Education", "tier": "niche", "keywords": ["higher education", "university", "college"]},
+        {"name": "Online Education", "subcategory": "Education", "tier": "niche", "keywords": ["online education", "e-learning", "online courses"]},
+        {"name": "Professional Training", "subcategory": "Education", "tier": "niche", "keywords": ["professional training", "career development", "upskilling"]}
+      ]
+    },
+    {
+      "name": "Financial Services",
+      "interests": [
+        {"name": "Financial Services", "subcategory": null, "tier": "broad", "keywords": ["finance", "financial services", "money"]},
+        {"name": "Investment", "subcategory": "Financial Services", "tier": "niche", "keywords": ["investment", "investing", "stocks"]},
+        {"name": "Cryptocurrency", "subcategory": "Financial Services", "tier": "niche", "keywords": ["cryptocurrency", "crypto", "bitcoin"]},
+        {"name": "Insurance", "subcategory": "Financial Services", "tier": "niche", "keywords": ["insurance", "coverage", "policy"]},
+        {"name": "Loans", "subcategory": "Financial Services", "tier": "niche", "keywords": ["loans", "lending", "borrowing"]},
+        {"name": "Banking", "subcategory": "Financial Services", "tier": "niche", "keywords": ["banking", "bank", "savings"]},
+        {"name": "Credit Cards", "subcategory": "Financial Services", "tier": "niche", "keywords": ["credit cards", "credit", "rewards cards"]},
+        {"name": "Real Estate", "subcategory": "Financial Services", "tier": "niche", "keywords": ["real estate", "property", "housing market"]}
+      ]
+    },
+    {
+      "name": "Food & Beverage",
+      "interests": [
+        {"name": "Food & Beverage", "subcategory": null, "tier": "broad", "keywords": ["food", "beverage", "dining"]},
+        {"name": "Cooking", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["cooking", "recipes", "home cooking"]},
+        {"name": "Restaurants", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["restaurants", "dining out", "food reviews"]},
+        {"name": "Health Food", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["health food", "organic food", "clean eating"]},
+        {"name": "Drinks", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["drinks", "beverages", "smoothies"]},
+        {"name": "Snacks", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["snacks", "snack food", "chips"]},
+        {"name": "Baking", "subcategory": "Food & Beverage", "tier": "niche", "keywords": ["baking", "pastry", "desserts"]}
+      ]
+    },
+    {
+      "name": "Games",
+      "interests": [
+        {"name": "Games", "subcategory": null, "tier": "broad", "keywords": ["games", "gaming", "video games"]},
+        {"name": "Action Games", "subcategory": "Games", "tier": "niche", "keywords": ["action games", "shooter", "combat games"]},
+        {"name": "Adventure Games", "subcategory": "Games", "tier": "niche", "keywords": ["adventure games", "exploration", "story games"]},
+        {"name": "Board Games", "subcategory": "Games", "tier": "niche", "keywords": ["board games", "tabletop", "board gaming"]},
+        {"name": "Card Games", "subcategory": "Games", "tier": "niche", "keywords": ["card games", "TCG", "playing cards"]},
+        {"name": "Casual Games", "subcategory": "Games", "tier": "niche", "keywords": ["casual games", "casual gaming", "hyper casual"]},
+        {"name": "Console Games", "subcategory": "Games", "tier": "niche", "keywords": ["console games", "PlayStation", "Xbox"]},
+        {"name": "PC Games", "subcategory": "Games", "tier": "niche", "keywords": ["PC games", "PC gaming", "Steam"]},
+        {"name": "RPG", "subcategory": "Games", "tier": "niche", "keywords": ["RPG", "role-playing games", "JRPG"]},
+        {"name": "Racing Games", "subcategory": "Games", "tier": "niche", "keywords": ["racing games", "racing", "driving games"]},
+        {"name": "Simulation Games", "subcategory": "Games", "tier": "niche", "keywords": ["simulation games", "sim games", "life sim"]},
+        {"name": "Sports Games", "subcategory": "Games", "tier": "niche", "keywords": ["sports games", "FIFA", "NBA 2K"]},
+        {"name": "Strategy Games", "subcategory": "Games", "tier": "niche", "keywords": ["strategy games", "RTS", "turn-based"]},
+        {"name": "Puzzle Games", "subcategory": "Games", "tier": "niche", "keywords": ["puzzle games", "brain teasers", "word games"]},
+        {"name": "Mobile Games", "subcategory": "Games", "tier": "niche", "keywords": ["mobile games", "mobile gaming", "phone games"]}
+      ]
+    },
+    {
+      "name": "Home Improvement",
+      "interests": [
+        {"name": "Home Improvement", "subcategory": null, "tier": "broad", "keywords": ["home improvement", "DIY", "renovation"]},
+        {"name": "Furniture", "subcategory": "Home Improvement", "tier": "niche", "keywords": ["furniture", "home furniture", "sofas"]},
+        {"name": "Decor", "subcategory": "Home Improvement", "tier": "niche", "keywords": ["home decor", "interior decor", "decoration"]},
+        {"name": "Garden", "subcategory": "Home Improvement", "tier": "niche", "keywords": ["garden", "gardening", "landscaping"]},
+        {"name": "Home Appliances", "subcategory": "Home Improvement", "tier": "niche", "keywords": ["home appliances", "household appliances", "smart home"]}
+      ]
+    },
+    {
+      "name": "Household Products",
+      "interests": [
+        {"name": "Household Products", "subcategory": null, "tier": "broad", "keywords": ["household", "home products", "household goods"]},
+        {"name": "Cleaning", "subcategory": "Household Products", "tier": "niche", "keywords": ["cleaning", "cleaning products", "home cleaning"]},
+        {"name": "Organization", "subcategory": "Household Products", "tier": "niche", "keywords": ["organization", "home organization", "declutter"]},
+        {"name": "Storage", "subcategory": "Household Products", "tier": "niche", "keywords": ["storage", "storage solutions", "containers"]}
+      ]
+    },
+    {
+      "name": "Life Services",
+      "interests": [
+        {"name": "Life Services", "subcategory": null, "tier": "broad", "keywords": ["life services", "lifestyle services", "personal services"]},
+        {"name": "Cleaning Services", "subcategory": "Life Services", "tier": "niche", "keywords": ["cleaning services", "house cleaning", "maid service"]},
+        {"name": "Moving", "subcategory": "Life Services", "tier": "niche", "keywords": ["moving", "relocation", "movers"]},
+        {"name": "Photography", "subcategory": "Life Services", "tier": "niche", "keywords": ["photography", "photo shoots", "portrait photography"]},
+        {"name": "Wedding Planning", "subcategory": "Life Services", "tier": "niche", "keywords": ["wedding planning", "weddings", "bridal"]}
+      ]
+    },
+    {
+      "name": "News & Entertainment",
+      "interests": [
+        {"name": "News & Entertainment", "subcategory": null, "tier": "broad", "keywords": ["news", "entertainment", "pop culture"]},
+        {"name": "Celebrity", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["celebrity", "celebrities", "celebrity news"]},
+        {"name": "TV Shows", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["TV shows", "television", "series"]},
+        {"name": "Movies", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["movies", "films", "cinema"]},
+        {"name": "Anime", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["anime", "manga", "Japanese animation"]},
+        {"name": "Music", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["music", "songs", "artists"]},
+        {"name": "Reading", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["reading", "books", "literature"]},
+        {"name": "Variety Shows", "subcategory": "News & Entertainment", "tier": "niche", "keywords": ["variety shows", "talk shows", "entertainment shows"]}
+      ]
+    },
+    {
+      "name": "Pets",
+      "interests": [
+        {"name": "Pets", "subcategory": null, "tier": "broad", "keywords": ["pets", "pet care", "animals"]},
+        {"name": "Cats", "subcategory": "Pets", "tier": "niche", "keywords": ["cats", "kittens", "cat care"]},
+        {"name": "Dogs", "subcategory": "Pets", "tier": "niche", "keywords": ["dogs", "puppies", "dog care"]},
+        {"name": "Birds", "subcategory": "Pets", "tier": "niche", "keywords": ["birds", "pet birds", "parrots"]},
+        {"name": "Exotic Pets", "subcategory": "Pets", "tier": "niche", "keywords": ["exotic pets", "reptiles", "fish"]}
+      ]
+    },
+    {
+      "name": "Sports & Outdoors",
+      "interests": [
+        {"name": "Sports & Outdoors", "subcategory": null, "tier": "broad", "keywords": ["sports", "outdoors", "athletics"]},
+        {"name": "Basketball", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["basketball", "NBA", "hoops"]},
+        {"name": "Soccer", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["soccer", "football", "FIFA"]},
+        {"name": "Camping", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["camping", "outdoor camping", "campsite"]},
+        {"name": "Extreme Sports", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["extreme sports", "skateboarding", "surfing"]},
+        {"name": "Fitness", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["fitness", "gym", "workout"]},
+        {"name": "Running", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["running", "jogging", "marathon"]},
+        {"name": "Swimming", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["swimming", "swim", "pool"]},
+        {"name": "Yoga", "subcategory": "Sports & Outdoors", "tier": "niche", "keywords": ["yoga", "meditation", "mindfulness"]}
+      ]
+    },
+    {
+      "name": "Tech & Electronics",
+      "interests": [
+        {"name": "Tech & Electronics", "subcategory": null, "tier": "broad", "keywords": ["technology", "electronics", "tech"]},
+        {"name": "Mobile Phones", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["mobile phones", "smartphones", "iPhone"]},
+        {"name": "Computers", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["computers", "laptops", "PC"]},
+        {"name": "Audio", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["audio", "headphones", "speakers"]},
+        {"name": "Cameras", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["cameras", "photography equipment", "DSLR"]},
+        {"name": "Smart Home", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["smart home", "IoT", "home automation"]},
+        {"name": "Wearable Technology", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["wearables", "smartwatch", "fitness tracker"]},
+        {"name": "Gaming Consoles", "subcategory": "Tech & Electronics", "tier": "niche", "keywords": ["gaming consoles", "PlayStation", "Nintendo"]}
+      ]
+    },
+    {
+      "name": "Travel",
+      "interests": [
+        {"name": "Travel", "subcategory": null, "tier": "broad", "keywords": ["travel", "vacation", "tourism"]},
+        {"name": "Domestic Travel", "subcategory": "Travel", "tier": "niche", "keywords": ["domestic travel", "staycation", "road trip"]},
+        {"name": "International Travel", "subcategory": "Travel", "tier": "niche", "keywords": ["international travel", "abroad", "overseas"]},
+        {"name": "Hotels", "subcategory": "Travel", "tier": "niche", "keywords": ["hotels", "accommodation", "resorts"]},
+        {"name": "Air Travel", "subcategory": "Travel", "tier": "niche", "keywords": ["air travel", "flights", "airlines"]},
+        {"name": "Adventure Travel", "subcategory": "Travel", "tier": "niche", "keywords": ["adventure travel", "backpacking", "trekking"]}
+      ]
+    },
+    {
+      "name": "Vehicles & Transportation",
+      "interests": [
+        {"name": "Vehicles & Transportation", "subcategory": null, "tier": "broad", "keywords": ["vehicles", "transportation", "automotive"]},
+        {"name": "Cars", "subcategory": "Vehicles & Transportation", "tier": "niche", "keywords": ["cars", "automobiles", "car reviews"]},
+        {"name": "Motorcycles", "subcategory": "Vehicles & Transportation", "tier": "niche", "keywords": ["motorcycles", "bikes", "motorbikes"]},
+        {"name": "Auto Maintenance", "subcategory": "Vehicles & Transportation", "tier": "niche", "keywords": ["auto maintenance", "car repair", "car care"]},
+        {"name": "Electric Vehicles", "subcategory": "Vehicles & Transportation", "tier": "niche", "keywords": ["electric vehicles", "EV", "Tesla"]}
+      ]
+    }
+  ]
+}
