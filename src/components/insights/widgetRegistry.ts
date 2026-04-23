@@ -1,5 +1,5 @@
 /**
- * Widget Registry — 22 widgets across 6 categories.
+ * Widget Registry — 24 widgets / 6 categories.
  * Ported from VYRA, adapted for recruitment pipeline + UTM tracking.
  */
 
@@ -8,7 +8,7 @@ import {
   BarChart3, Activity, Clock, Image, MousePointerClick, Cpu, Timer,
   Globe, AlertTriangle, ListChecks, StickyNote, GitCompare, Trophy,
   Palette, TrendingUp, Grid3x3, Link2, Funnel, Award, TrendingDown,
-  Crosshair, Target,
+  Crosshair, Target, Radar, HeartPulse,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { WidgetType, WidgetCategory } from './types';
@@ -159,6 +159,18 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     category: 'audienceiq', label: 'Targeting vs Reality', icon: Target,
     description: 'Side-by-side: declared ICP regions/languages/skills vs CRM actuals',
     defaultSize: { w: 12, h: 5 }, minSize: { w: 6, h: 4 },
+  },
+  'drift-radar': {
+    component: lazy(() => import('./widgets/DriftRadarWidget')),
+    category: 'audienceiq', label: 'Drift Radar', icon: Radar,
+    description: 'Four-ring audience drift visualization with severity indicators',
+    defaultSize: { w: 6, h: 5 }, minSize: { w: 4, h: 4 },
+  },
+  'audience-health': {
+    component: lazy(() => import('./widgets/AudienceHealthWidget')),
+    category: 'audienceiq', label: 'Audience Health', icon: HeartPulse,
+    description: 'Health score gauge (0-100) with actionable issue detection',
+    defaultSize: { w: 6, h: 5 }, minSize: { w: 4, h: 4 },
   },
   'text-note': {
     component: lazy(() => import('./widgets/TextNoteWidget')),

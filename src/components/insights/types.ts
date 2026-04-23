@@ -30,6 +30,8 @@ export type WidgetType =
   | 'retention-curve'
   | 'skill-distribution'
   | 'targeting-vs-reality'
+  | 'drift-radar'
+  | 'audience-health'
   // Utility
   | 'text-note';
 
