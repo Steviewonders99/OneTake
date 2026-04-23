@@ -87,7 +87,7 @@ async def claim_next_job(worker_id: str) -> dict[str, Any] | None:
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED
             )
-            RETURNING id, request_id, job_type, stage_target, feedback, created_at
+            RETURNING id, request_id, job_type, country, stage_target, feedback, feedback_data, created_at
             """,
             worker_id,
         )
