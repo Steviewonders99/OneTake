@@ -72,7 +72,10 @@ interface FlatAdSet {
   channel: string;
 }
 
-function flattenAdSets(campaigns: Campaign[]): FlatAdSet[] {
+function flattenAdSets(strategyData: any): FlatAdSet[] {
+  if (!strategyData) return [];
+  const campaigns = strategyData.campaigns ?? strategyData.ad_sets ?? [];
+  if (!Array.isArray(campaigns)) return [];
   const result: FlatAdSet[] = [];
   for (let ci = 0; ci < campaigns.length; ci++) {
     const adSets = campaigns[ci].ad_sets ?? [];
@@ -97,24 +100,26 @@ function buildAllocation(strategyData: StrategyData): Record<string, number> {
   if (strategyData.channel_allocation && Object.keys(strategyData.channel_allocation).length > 0) {
     return { ...strategyData.channel_allocation };
   }
+  const adSets = (strategyData.campaigns ?? []).flatMap((c) => c.ad_sets ?? []);
+  if (!adSets || adSets.length === 0) return { "Other": 1.0 };
   // Fallback: derive from ad set placements — count ALL placements, not just [0]
+  const validPlacements = adSets.flatMap((a: any) => a.placements ?? []).filter(Boolean);
+  if (validPlacements.length === 0) return { "Other": 1.0 };
   const byChannel: Record<string, number> = {};
-  for (const camp of strategyData.campaigns ?? []) {
-    for (const adSet of camp.ad_sets ?? []) {
-      const placements = adSet.placements ?? [];
-      // Collect unique channels from all placements in this ad set
-      const channels = new Set<string>();
-      for (const p of placements) {
-        const ch = toChannel(p);
-        if (ch) channels.add(ch);
-      }
-      // If no placements mapped, use "Other"
-      if (channels.size === 0) channels.add("Other");
-      // Split budget evenly across channels in this ad set
-      const budgetPerChannel = (adSet.daily_budget ?? 0) / channels.size;
-      for (const ch of channels) {
-        byChannel[ch] = (byChannel[ch] ?? 0) + budgetPerChannel;
-      }
+  for (const adSet of adSets) {
+    const placements = adSet.placements ?? [];
+    // Collect unique channels from all placements in this ad set
+    const channels = new Set<string>();
+    for (const p of placements) {
+      const ch = toChannel(p);
+      if (ch) channels.add(ch);
+    }
+    // If no placements mapped, use "Other"
+    if (channels.size === 0) channels.add("Other");
+    // Split budget evenly across channels in this ad set
+    const budgetPerChannel = (adSet.daily_budget ?? 0) / channels.size;
+    for (const ch of channels) {
+      byChannel[ch] = (byChannel[ch] ?? 0) + budgetPerChannel;
     }
   }
   const total = Object.values(byChannel).reduce((s, v) => s + v, 0);
@@ -225,7 +230,7 @@ export default function MediaStrategyEditor({
   }
 
   const allocation = buildAllocation(strategyData);
-  const flatAdSets = flattenAdSets(strategyData.campaigns ?? []);
+  const flatAdSets = flattenAdSets(strategyData);
   const monthlyBudget = activeStrategy?.monthly_budget ?? strategyData.monthly_budget ?? null;
 
   return (
