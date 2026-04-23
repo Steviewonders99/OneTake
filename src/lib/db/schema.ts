@@ -449,6 +449,60 @@ export async function createTables(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_visitor_identity_crm ON visitor_identities(crm_user_id) WHERE crm_user_id IS NOT NULL`;
   await sql`CREATE INDEX IF NOT EXISTS idx_visitor_identity_slug ON visitor_identities(utm_slug) WHERE utm_slug IS NOT NULL`;
 
+  // 20. audience_profiles — unified audience profile per campaign per ring
+  await sql`
+    CREATE TABLE IF NOT EXISTS audience_profiles (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      request_id      UUID NOT NULL REFERENCES intake_requests(id) ON DELETE CASCADE,
+      ring            TEXT NOT NULL CHECK (ring IN ('declared', 'paid', 'organic', 'converted')),
+      demographics    JSONB NOT NULL DEFAULT '{}',
+      skills          JSONB NOT NULL DEFAULT '{}',
+      languages       TEXT[] NOT NULL DEFAULT '{}',
+      regions         TEXT[] NOT NULL DEFAULT '{}',
+      sample_size     INT NOT NULL DEFAULT 0,
+      confidence      TEXT NOT NULL DEFAULT 'low' CHECK (confidence IN ('high', 'medium', 'low')),
+      source          TEXT NOT NULL,
+      captured_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(request_id, ring)
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_audience_profiles_request ON audience_profiles(request_id)`;
+
+  // 21. audience_drift_snapshots — point-in-time drift calculations
+  await sql`
+    CREATE TABLE IF NOT EXISTS audience_drift_snapshots (
+      id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      request_id            UUID NOT NULL REFERENCES intake_requests(id) ON DELETE CASCADE,
+      declared_vs_paid      FLOAT NOT NULL DEFAULT 0,
+      declared_vs_organic   FLOAT NOT NULL DEFAULT 0,
+      paid_vs_converted     FLOAT NOT NULL DEFAULT 0,
+      organic_vs_converted  FLOAT NOT NULL DEFAULT 0,
+      overall_drift         FLOAT NOT NULL DEFAULT 0,
+      severity              TEXT NOT NULL DEFAULT 'low' CHECK (severity IN ('low', 'moderate', 'high')),
+      segment_mismatch      BOOLEAN NOT NULL DEFAULT FALSE,
+      evidence              JSONB NOT NULL DEFAULT '{}',
+      recommendations       TEXT[] NOT NULL DEFAULT '{}',
+      computed_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_drift_snapshots_request ON audience_drift_snapshots(request_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_drift_snapshots_computed ON audience_drift_snapshots(computed_at DESC)`;
+
+  // 22. audience_health_scores — per-campaign health with issues
+  await sql`
+    CREATE TABLE IF NOT EXISTS audience_health_scores (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      request_id      UUID NOT NULL REFERENCES intake_requests(id) ON DELETE CASCADE,
+      score           INT NOT NULL DEFAULT 100,
+      issues          JSONB NOT NULL DEFAULT '[]',
+      computed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_health_scores_request ON audience_health_scores(request_id)`;
+
   // ============================================================
   // INDEXES
   // ============================================================
