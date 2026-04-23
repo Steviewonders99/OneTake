@@ -214,6 +214,11 @@ def translate_targeting_for_platform(targeting_profile: dict, platform: str) -> 
             "hot": {"method": pmap["hot"], "values": interests.get("hot", [])},
             "broad": {"method": pmap["broad"], "values": interests.get("broad", [])},
         },
+        "interests_by_tier": {
+            "hyper": interests.get("hyper", []),
+            "hot": interests.get("hot", []),
+            "broad": interests.get("broad", []),
+        },
         "demographics": {
             "age_min": demographics.get("age_min", 18),
             "age_max": demographics.get("age_max", 65),
