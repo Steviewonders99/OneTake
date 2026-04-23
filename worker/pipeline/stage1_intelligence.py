@@ -319,6 +319,35 @@ async def run_stage1(context: dict) -> dict:
 
         # Save to Neon
         if best_strategy:
+            # Post-process: replace LLM-hallucinated interests with real platform interests
+            try:
+                from platform_interests.router import route_interests
+                strategy_data = best_strategy.get("strategy_data", best_strategy)
+                campaigns = strategy_data.get("campaigns", [])
+                for campaign in campaigns:
+                    for ad_set in campaign.get("ad_sets", []):
+                        platform = ad_set.get("placements", ["meta"])[0] if ad_set.get("placements") else "meta"
+                        # Normalize platform name
+                        platform_family = "meta"
+                        p_lower = platform.lower()
+                        if "tiktok" in p_lower: platform_family = "tiktok"
+                        elif "linkedin" in p_lower: platform_family = "linkedin"
+                        elif "snap" in p_lower: platform_family = "snapchat"
+                        elif "reddit" in p_lower: platform_family = "reddit"
+                        elif "wechat" in p_lower: platform_family = "wechat"
+
+                        concepts = ad_set.get("interests", [])
+                        if concepts:
+                            real_interests = await route_interests(platform_family, concepts)
+                            ad_set["interests_by_tier"] = real_interests
+                            ad_set["interests_original"] = concepts
+                        else:
+                            ad_set["interests_by_tier"] = {"hyper": [], "hot": [], "broad": []}
+
+                logger.info("Interest routing complete for %s strategy", region)
+            except Exception as exc:
+                logger.warning("Interest routing failed (non-fatal): %s — keeping LLM interests", exc)
+
             await save_campaign_strategy(request_id, {
                 "country": region,
                 "tier": best_strategy.get("tier", 1),
