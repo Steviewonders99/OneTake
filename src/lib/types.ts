@@ -496,3 +496,34 @@ export interface CountryQuota {
   url?: string;
   demographics: DemographicQuota[];
 }
+
+// ============================================================
+// INTEREST GRAPH TYPES (GraphRAG Platform Interests)
+// ============================================================
+
+export interface InterestNode {
+  id: string;
+  platform: string;
+  category: string;
+  subcategory: string | null;
+  interest: string;
+  tier: string;
+  keywords: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface InterestEdge {
+  id: string;
+  source_id: string;
+  target_id: string;
+  edge_type: 'equivalent_on' | 'related_to' | 'parent_of' | 'sibling';
+  weight: number;
+  created_at: string;
+}
+
+export interface InterestsByTier {
+  hyper: string[];
+  hot: string[];
+  broad: string[];
+}

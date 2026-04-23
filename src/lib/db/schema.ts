@@ -444,6 +444,41 @@ export async function createTables(): Promise<void> {
     ON compute_jobs (status) WHERE status = 'pending'
   `;
 
+  // interest_nodes — GraphRAG platform interest knowledge graph
+  await sql`
+    CREATE TABLE IF NOT EXISTS interest_nodes (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      platform    TEXT NOT NULL,
+      category    TEXT NOT NULL,
+      subcategory TEXT,
+      interest    TEXT NOT NULL,
+      tier        TEXT DEFAULT 'standard',
+      keywords    TEXT[] DEFAULT '{}',
+      is_active   BOOLEAN DEFAULT TRUE,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(platform, category, interest)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_nodes_platform ON interest_nodes(platform)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_nodes_category ON interest_nodes(platform, category)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_nodes_search ON interest_nodes USING GIN(keywords)`;
+
+  // interest_edges — relationships between interest nodes
+  await sql`
+    CREATE TABLE IF NOT EXISTS interest_edges (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      source_id   UUID NOT NULL REFERENCES interest_nodes(id) ON DELETE CASCADE,
+      target_id   UUID NOT NULL REFERENCES interest_nodes(id) ON DELETE CASCADE,
+      edge_type   TEXT NOT NULL CHECK (edge_type IN ('equivalent_on', 'related_to', 'parent_of', 'sibling')),
+      weight      FLOAT DEFAULT 1.0,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(source_id, target_id, edge_type)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_edges_source ON interest_edges(source_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_edges_target ON interest_edges(target_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_interest_edges_type ON interest_edges(edge_type)`;
+
   // Seed default Insights dashboard template
   await seedDefaultTemplate();
 }
