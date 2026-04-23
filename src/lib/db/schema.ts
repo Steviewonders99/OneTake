@@ -648,6 +648,95 @@ export async function createTables(): Promise<void> {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_hie_scroll_facts_page ON hie_scroll_facts(page_url, fact_date)`;
 
+  // 30. google_ads_cache — raw Google Ads campaign/audience data
+  await sql`
+    CREATE TABLE IF NOT EXISTS google_ads_cache (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      customer_id       TEXT NOT NULL,
+      campaign_id       TEXT NOT NULL,
+      campaign_name     TEXT,
+      ad_group_id       TEXT,
+      ad_group_name     TEXT,
+      impressions       INT NOT NULL DEFAULT 0,
+      clicks            INT NOT NULL DEFAULT 0,
+      conversions       INT NOT NULL DEFAULT 0,
+      spend_micros      BIGINT NOT NULL DEFAULT 0,
+      demographics      JSONB NOT NULL DEFAULT '{}',
+      audience_segments JSONB NOT NULL DEFAULT '[]',
+      geo_targets       JSONB NOT NULL DEFAULT '[]',
+      date              DATE NOT NULL,
+      last_synced_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_google_ads_cache_campaign ON google_ads_cache(campaign_id, date)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_google_ads_cache_date ON google_ads_cache(date DESC)`;
+
+  // 31. meta_ads_cache — raw Meta (Facebook/Instagram) ad data
+  await sql`
+    CREATE TABLE IF NOT EXISTS meta_ads_cache (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ad_account_id     TEXT NOT NULL,
+      campaign_id       TEXT NOT NULL,
+      campaign_name     TEXT,
+      adset_id          TEXT,
+      adset_name        TEXT,
+      ad_id             TEXT,
+      impressions       INT NOT NULL DEFAULT 0,
+      clicks            INT NOT NULL DEFAULT 0,
+      conversions       INT NOT NULL DEFAULT 0,
+      spend             FLOAT NOT NULL DEFAULT 0,
+      audience_insights JSONB NOT NULL DEFAULT '{}',
+      targeting         JSONB NOT NULL DEFAULT '{}',
+      demographics      JSONB NOT NULL DEFAULT '{}',
+      date              DATE NOT NULL,
+      last_synced_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_meta_ads_cache_campaign ON meta_ads_cache(campaign_id, date)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_meta_ads_cache_date ON meta_ads_cache(date DESC)`;
+
+  // 32. linkedin_ads_cache — raw LinkedIn Campaign Manager data
+  await sql`
+    CREATE TABLE IF NOT EXISTS linkedin_ads_cache (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ad_account_id     TEXT NOT NULL,
+      campaign_id       TEXT NOT NULL,
+      campaign_name     TEXT,
+      creative_id       TEXT,
+      impressions       INT NOT NULL DEFAULT 0,
+      clicks            INT NOT NULL DEFAULT 0,
+      conversions       INT NOT NULL DEFAULT 0,
+      spend             FLOAT NOT NULL DEFAULT 0,
+      targeting         JSONB NOT NULL DEFAULT '{}',
+      demographics      JSONB NOT NULL DEFAULT '{}',
+      date              DATE NOT NULL,
+      last_synced_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_linkedin_ads_cache_campaign ON linkedin_ads_cache(campaign_id, date)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_linkedin_ads_cache_date ON linkedin_ads_cache(date DESC)`;
+
+  // 33. tiktok_ads_cache — raw TikTok Marketing API data
+  await sql`
+    CREATE TABLE IF NOT EXISTS tiktok_ads_cache (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      advertiser_id     TEXT NOT NULL,
+      campaign_id       TEXT NOT NULL,
+      campaign_name     TEXT,
+      adgroup_id        TEXT,
+      impressions       INT NOT NULL DEFAULT 0,
+      clicks            INT NOT NULL DEFAULT 0,
+      conversions       INT NOT NULL DEFAULT 0,
+      spend             FLOAT NOT NULL DEFAULT 0,
+      audience          JSONB NOT NULL DEFAULT '{}',
+      demographics      JSONB NOT NULL DEFAULT '{}',
+      date              DATE NOT NULL,
+      last_synced_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_tiktok_ads_cache_campaign ON tiktok_ads_cache(campaign_id, date)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_tiktok_ads_cache_date ON tiktok_ads_cache(date DESC)`;
+
   // ============================================================
   // INDEXES
   // ============================================================
