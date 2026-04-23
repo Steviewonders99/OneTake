@@ -79,11 +79,10 @@ class TestHasCountryQuotas:
         request = {}
         assert has_country_quotas(request) is False
 
-    def test_raises_with_none_form_data(self):
-        """form_data=None causes .get() on None — the function does NOT guard this."""
+    def test_returns_false_with_none_form_data(self):
+        """form_data=None should be handled gracefully."""
         request = {"form_data": None}
-        with pytest.raises(AttributeError):
-            has_country_quotas(request)
+        assert has_country_quotas(request) is False
 
     def test_returns_false_with_quotas_as_string(self):
         """Quotas should be a list, not a string."""

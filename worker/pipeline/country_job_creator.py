@@ -27,7 +27,8 @@ def get_persona_scaling(country_count: int) -> dict:
 
 def has_country_quotas(request: dict) -> bool:
     """Check if an intake request has structured country quotas."""
-    quotas = request.get("form_data", {}).get("country_quotas", [])
+    form_data = request.get("form_data") or {}
+    quotas = form_data.get("country_quotas", []) if isinstance(form_data, dict) else []
     return isinstance(quotas, list) and len(quotas) >= 1
 
 
