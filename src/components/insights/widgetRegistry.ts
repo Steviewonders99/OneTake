@@ -1,5 +1,5 @@
 /**
- * Widget Registry — 24 widgets / 6 categories.
+ * Widget Registry — 26 widgets / 6 categories.
  * Ported from VYRA, adapted for recruitment pipeline + UTM tracking.
  */
 
@@ -8,7 +8,7 @@ import {
   BarChart3, Activity, Clock, Image, MousePointerClick, Cpu, Timer,
   Globe, AlertTriangle, ListChecks, StickyNote, GitCompare, Trophy,
   Palette, TrendingUp, Grid3x3, Link2, Funnel, Award, TrendingDown,
-  Crosshair, Target, Radar, HeartPulse,
+  Crosshair, Target, Radar, HeartPulse, Search,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { WidgetType, WidgetCategory } from './types';
@@ -171,6 +171,18 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     category: 'audienceiq', label: 'Audience Health', icon: HeartPulse,
     description: 'Health score gauge (0-100) with actionable issue detection',
     defaultSize: { w: 6, h: 5 }, minSize: { w: 4, h: 4 },
+  },
+  'ga4-traffic': {
+    component: lazy(() => import('./widgets/Ga4TrafficWidget')),
+    category: 'audienceiq', label: 'GA4 Traffic', icon: BarChart3,
+    description: 'Sessions, traffic sources, and device breakdown from Google Analytics',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'gsc-queries': {
+    component: lazy(() => import('./widgets/GscQueriesWidget')),
+    category: 'audienceiq', label: 'Search Queries', icon: Search,
+    description: 'Top search queries driving traffic from Google Search Console',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
   },
   'text-note': {
     component: lazy(() => import('./widgets/TextNoteWidget')),

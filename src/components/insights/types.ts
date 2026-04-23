@@ -32,6 +32,8 @@ export type WidgetType =
   | 'targeting-vs-reality'
   | 'drift-radar'
   | 'audience-health'
+  | 'ga4-traffic'
+  | 'gsc-queries'
   // Utility
   | 'text-note';
 
