@@ -37,23 +37,22 @@ async def run_pipeline(job: dict) -> None:
     stage_target = job.get("stage_target")
     feedback = job.get("feedback")
 
-    # ── Campaign Splitter: check if multinational RFP needs splitting ──
-    # If 3+ countries, split into per-country child campaigns.
-    # Each child gets its own pipeline run with city-level targeting.
+    # ── Country Job Creator: create per-country jobs on the SAME request ──
+    # If country_quotas exist, create one compute_job per country.
+    # Each country job runs the full pipeline independently.
     if job_type == "generate":
         from neon_client import get_intake_request as _get_request
 
-        from pipeline.campaign_splitter import should_split, split_campaign
+        from pipeline.country_job_creator import has_country_quotas, create_country_jobs
         request = await _get_request(request_id)
-        if await should_split(request):
-            logger.info("Multinational campaign detected — splitting into per-country campaigns")
-            children = await split_campaign(request, request_id)
+        if has_country_quotas(request):
+            logger.info("Multi-country campaign detected — creating per-country jobs")
+            country_jobs = await create_country_jobs(request, request_id)
             logger.info(
-                "Split complete: %d child campaigns. Parent job done. "
-                "Children will be picked up on next poll cycle.",
-                len(children),
+                "Created %d country jobs. Parent job done. "
+                "Country jobs will be picked up on next poll cycle.",
+                len(country_jobs),
             )
-            # Mark parent job as complete (children are independent jobs)
             return
 
     stages = [
@@ -80,6 +79,27 @@ async def run_pipeline(job: dict) -> None:
         "request_id": request_id,
         "feedback": feedback,
     }
+
+    # ── Country Job: inject country context into pipeline ──
+    if job_type == "generate_country":
+        from neon_client import get_intake_request as _get_request
+        request = await _get_request(request_id)
+        country = job.get("country", "")
+        feedback_data = job.get("feedback_data", {})
+        if isinstance(feedback_data, str):
+            import json as _json
+            feedback_data = _json.loads(feedback_data)
+
+        # Inject country + scaling into context so stages can read it
+        context["country"] = country
+        context["persona_count"] = feedback_data.get("persona_count", 2)
+        context["actors_per_persona"] = feedback_data.get("actors_per_persona", 2)
+        context["country_quota"] = feedback_data
+        # Override target_regions to just this country
+        context["target_regions"] = [country]
+        context["form_data"] = request.get("form_data", {})
+        logger.info("Running pipeline for country: %s (personas=%d, actors=%d)",
+                     country, context["persona_count"], context["actors_per_persona"])
 
     # ── Load brief + request data from Neon ──────────────────────
     # Always load if starting at stage > 1 (resume, regenerate, or auto-skip)
@@ -153,10 +173,24 @@ async def run_pipeline(job: dict) -> None:
             )
             raise
 
-    # All stages passed.
-    await update_request_status(request_id, "review")
-    await notify_generation_complete(
-        context.get("request_title", "Unknown"),
-        context.get("asset_count", 0),
-        request_id,
-    )
+    # Status rollup: for country jobs, only move to 'review' when ALL countries are done
+    if job_type == "generate_country":
+        from neon_client import check_all_country_jobs_complete
+        if await check_all_country_jobs_complete(request_id):
+            await update_request_status(request_id, "review")
+            await notify_generation_complete(
+                context.get("request_title", "Unknown"),
+                context.get("asset_count", 0),
+                request_id,
+            )
+            logger.info("All country jobs complete — campaign moved to 'review'")
+        else:
+            logger.info("Country job for %s done, but other countries still processing",
+                        job.get("country", "unknown"))
+    else:
+        await update_request_status(request_id, "review")
+        await notify_generation_complete(
+            context.get("request_title", "Unknown"),
+            context.get("asset_count", 0),
+            request_id,
+        )
