@@ -34,6 +34,10 @@ export type WidgetType =
   | 'audience-health'
   | 'ga4-traffic'
   | 'gsc-queries'
+  // HIE
+  | 'hie-heatmap'
+  | 'hie-scrollmap'
+  | 'hie-form-friction'
   // Utility
   | 'text-note';
 

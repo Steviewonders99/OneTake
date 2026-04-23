@@ -1,5 +1,5 @@
 /**
- * Widget Registry — 26 widgets / 6 categories.
+ * Widget Registry — 29 widgets / 6 categories.
  * Ported from VYRA, adapted for recruitment pipeline + UTM tracking.
  */
 
@@ -183,6 +183,25 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     category: 'audienceiq', label: 'Search Queries', icon: Search,
     description: 'Top search queries driving traffic from Google Search Console',
     defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  // ── HIE Behavioral ────────────────────────────────────────
+  'hie-heatmap': {
+    component: lazy(() => import('./widgets/HieHeatmapWidget')),
+    category: 'audienceiq', label: 'HIE Heatmap', icon: MousePointerClick,
+    description: 'Click density grid for tracked landing pages',
+    defaultSize: { w: 6, h: 5 }, minSize: { w: 4, h: 4 },
+  },
+  'hie-scrollmap': {
+    component: lazy(() => import('./widgets/HieScrollmapWidget')),
+    category: 'audienceiq', label: 'HIE Scrollmap', icon: ListChecks,
+    description: 'Scroll depth distribution with milestone annotations',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'hie-form-friction': {
+    component: lazy(() => import('./widgets/HieFormFrictionWidget')),
+    category: 'audienceiq', label: 'HIE Diagnostics', icon: AlertTriangle,
+    description: 'CRO diagnostics — scroll cliffs, CTA weakness, form friction',
+    defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
   },
   'text-note': {
     component: lazy(() => import('./widgets/TextNoteWidget')),
