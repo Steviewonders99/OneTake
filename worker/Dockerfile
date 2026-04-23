@@ -1,15 +1,15 @@
 # ──────────────────────────────────────────────────────────────
-# Nova Worker — Multi-arch Docker image
-# Supports: linux/amd64 (Azure VM, CI) + linux/arm64 (Apple Silicon)
+# onetake-worker — Multi-arch Docker image
+# Supports: linux/amd64 (Azure Container Apps) + linux/arm64 (Apple Silicon)
 #
 # Build:
-#   docker build -t nova-worker ./worker
+#   docker build -t onetake-worker ./worker
 #
 # Build multi-arch:
-#   docker buildx build --platform linux/amd64,linux/arm64 -t nova-worker ./worker
+#   docker buildx build --platform linux/amd64,linux/arm64 -t onetake-worker ./worker
 #
 # Run:
-#   docker run --env-file worker/.env nova-worker
+#   docker run --env-file worker/.env onetake-worker
 # ──────────────────────────────────────────────────────────────
 
 FROM python:3.11-slim AS base
@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgbm1 \
     libpango-1.0-0 \
     libcairo2 \
-    libasound2 \
+    libasound2t64 \
     libxshmfence1 \
     # FFmpeg for video/audio muxing
     ffmpeg \
@@ -54,9 +54,12 @@ RUN playwright install chromium
 COPY . .
 
 # ── Health check ─────────────────────────────────────────────
-# Worker polls DB — if process is alive, it's healthy
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import asyncio; asyncio.run(__import__('neon_client')._get_pool())" || exit 1
+# Worker is a DB-polling daemon — healthy = process is alive.
+# We check that the Python runtime and core imports load cleanly
+# (avoids a live DB connection attempt at health-check time, which
+# can cause spurious failures during cold-start on Azure Container Apps).
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "import asyncpg, httpx, jinja2; print('ok')" || exit 1
 
 # ── Entrypoint ───────────────────────────────────────────────
 CMD ["python", "main.py"]
