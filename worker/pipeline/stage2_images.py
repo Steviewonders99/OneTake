@@ -262,7 +262,7 @@ async def run_stage2(context: dict) -> dict:
         )
 
     import asyncio
-    IMAGE_CONCURRENCY = 9  # Seedream is paid API — no rate limit, max parallelism
+    from config import IMAGE_CONCURRENCY  # Default: 15 (configurable via env)
 
     # ══════════════════════════════════════════════════════════════
     # PHASE 1: Create ALL 9 actor identity cards IN PARALLEL
