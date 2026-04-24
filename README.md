@@ -16,6 +16,7 @@ AI-powered recruitment marketing platform. Intake form → AI generation pipelin
 - [API Reference / API 参考](#api-reference--api-参考)
 - [Database Schema / 数据库结构](#database-schema--数据库结构)
 - [Pipeline Stages / 生成管线](#pipeline-stages--生成管线)
+- [AudienceIQ — Audience Intelligence](#audienceiq--audience-intelligence)
 - [Roles & Permissions / 角色与权限](#roles--permissions--角色与权限)
 - [Deployment / 部署指南](#deployment--部署指南)
 - [Development Guide / 开发指南](#development-guide--开发指南)
@@ -137,7 +138,7 @@ stateDiagram-v2
                     │  intake_requests  │  compute_jobs (queue) │
                     │  creative_briefs  │  generated_assets     │
                     │  actor_profiles   │  tracked_links        │
-                    │  + 12 more tables │  design_artifacts     │
+                    │  + 34 more tables │  design_artifacts     │
                     └─────────────────────┬─────────────────────┘
                                           │
                ┌──────────────────────────▼──────────────────────────┐
@@ -276,7 +277,7 @@ Edit both files with your credentials. Both **must** share the same `DATABASE_UR
 node scripts/init-db.mjs
 ```
 
-This creates all 18 tables and indexes. Safe to re-run (uses `IF NOT EXISTS`).
+This creates all 40+ tables and indexes. Safe to re-run (uses `IF NOT EXISTS`).
 
 ### 4. Run the application / 启动应用
 
@@ -560,69 +561,71 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 
 ## Database Schema / 数据库结构
 
-31 tables. All use UUID primary keys with `gen_random_uuid()`. Foreign keys cascade on delete. Schema initialized via `scripts/init-db.mjs`.
+40+ tables. All use UUID primary keys with `gen_random_uuid()`. Foreign keys cascade on delete. Schema initialized via `scripts/init-db.mjs`.
 
 ### Core Tables / 核心表
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `intake_requests` | Campaign requests | `title`, `task_type`, `urgency`, `status` (draft→generating→review→approved→sent), `form_data` (JSONB), `created_by`, `campaign_slug` |
-| `creative_briefs` | Stage 1 output | `brief_data` (JSONB — personas, strategy, research), `channel_research` (JSONB), `design_direction` (JSONB), `evaluation_score`, `pillar_primary` |
-| `actor_profiles` | Stage 2 personas | `name`, `face_lock` (JSONB — facial parameters), `prompt_seed`, `outfit_variations` (JSONB), `backdrops[]` |
-| `generated_assets` | All creatives | `asset_type` (base_image/composed_creative/carousel_panel), `platform`, `format`, `blob_url`, `evaluation_score`, `evaluation_passed`, `stage`, `content` (JSONB), `copy_data` (JSONB) |
-| `campaign_strategies` | Media strategies | `country`, `tier`, `monthly_budget`, `strategy_data` (JSONB — campaigns, ad_sets, channel_allocation) |
-
-### Workflow Tables / 流程表
-
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `compute_jobs` | Job queue (worker polls this) | `job_type` (generate/regenerate/regenerate_stage/regenerate_asset), `status` (pending→processing→complete/failed), `stage_target`, `feedback` |
+| `intake_requests` | Campaign intake data | `title`, `task_type`, `urgency`, `status` (draft→generating→review→approved→sent), `form_data` (JSONB), `created_by`, `campaign_slug` |
+| `task_type_schemas` | Dynamic form field definitions | `task_type`, `schema` (JSONB — field definitions), `version`, `is_active` |
+| `option_registry` | Dropdown option values | `registry_name`, `option_value`, `option_label`, `metadata` (JSONB) |
+| `creative_briefs` | AI-generated briefs per campaign | `brief_data` (JSONB — personas, strategy, research), `channel_research` (JSONB), `design_direction` (JSONB), `evaluation_score`, `pillar_primary` |
+| `actor_profiles` | Persona actors with face locks + country | `name`, `face_lock` (JSONB — facial parameters), `prompt_seed`, `outfit_variations` (JSONB), `backdrops[]`, `country` |
+| `generated_assets` | All generated content (images, copy, video) + country | `asset_type` (base_image/composed_creative/carousel_panel), `platform`, `format`, `blob_url`, `evaluation_score`, `evaluation_passed`, `stage`, `content` (JSONB), `copy_data` (JSONB), `country` |
+| `approvals` | Approval decisions | `approved_by`, `status` (approved/changes_requested/rejected), `notes` |
+| `campaign_landing_pages` | Per-country landing page URLs | `request_id` (unique), `job_posting_url`, `landing_page_url`, `ada_form_url`, `country` |
+| `tracked_links` | UTM-tracked short links with click counts + country | `slug` (6-char), `destination_url`, `utm_*` fields, `click_count`, `country` |
+| `designer_uploads` | Designer-uploaded replacement assets | `request_id` (FK), `original_asset_id`, `blob_url` |
+| `magic_links` | Token-based auth for designer/agency portals | `token` (UUID), `expires_at`, `used_at` (single-use tracking) |
+| `compute_jobs` | Job queue with country + generate_country type | `job_type` (generate/regenerate/regenerate_stage/regenerate_asset/generate_country), `status` (pending→processing→complete/failed), `stage_target`, `feedback`, `country` |
+| `campaign_strategies` | Per-country media plans | `country`, `tier`, `monthly_budget`, `strategy_data` (JSONB — campaigns, ad_sets, channel_allocation) |
 | `pipeline_runs` | Stage execution log | `stage`, `stage_name`, `status` (running/passed/failed), `duration_ms`, `error_message` |
-| `approvals` | Approval records | `approved_by`, `status` (approved/changes_requested/rejected), `notes` |
-| `magic_links` | Time-limited designer access | `token` (UUID), `expires_at`, `used_at` (single-use tracking) |
-| `notifications` | Delivery tracking | `channel` (teams/slack/outlook), `recipient`, `status`, `payload` (JSONB) |
-
-### Supporting Tables / 辅助表
-
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `task_type_schemas` | Dynamic form definitions | `task_type`, `schema` (JSONB — field definitions), `version`, `is_active` |
-| `schema_versions` | Schema version history | `schema_id` (FK), `version`, `schema` (JSONB), `change_summary` |
-| `option_registries` | Dropdown/select options | `registry_name`, `option_value`, `option_label`, `metadata` (JSONB) |
-| `user_roles` | RBAC | `clerk_id`, `email`, `role` (admin/recruiter/designer/viewer), `is_active` |
-| `attachments` | Uploaded files | `request_id` (FK), `blob_url`, `extracted_text`, `is_rfp` |
-| `designer_uploads` | Designer final files | `request_id` (FK), `original_asset_id`, `blob_url` |
-| `tracked_links` | UTM short links | `slug` (6-char), `destination_url`, `utm_*` fields, `click_count` |
-| `design_artifacts` | Reusable design elements | `artifact_id`, `category`, `blob_url`, `usage_snippet`, `pillar_affinity[]` |
-| `campaign_landing_pages` | Landing page URLs | `request_id` (unique), `job_posting_url`, `landing_page_url`, `ada_form_url` |
-
-### GraphRAG Tables
-
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `interest_nodes` | Platform advertising interests (1,054 nodes) | `platform`, `interest_name`, `category`, `audience_size_tier`, `metadata` (JSONB) |
-| `interest_edges` | Cross-platform interest mappings (278 edges) | `source_node_id`, `target_node_id`, `edge_type` (equivalent_on/parent_of/related_to), `confidence` |
+| `notification_deliveries` | Outbound notification log | `channel` (teams/slack/outlook), `recipient`, `status`, `payload` (JSONB) |
+| `notifications` | User-facing event feed | `channel`, `recipient`, `status`, `payload` (JSONB) |
+| `user_roles` | RBAC role assignments | `clerk_id`, `email`, `role` (admin/recruiter/designer/viewer), `is_active` |
 
 ### AudienceIQ Tables
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `audience_profiles` | Unified audience identity records | `request_id` (FK), `source` (crm/ga4/gsc), `identity_hash`, `profile_data` (JSONB) |
-| `audience_drift_snapshots` | Four-ring drift measurements | `request_id` (FK), `ring_declared`, `ring_paid`, `ring_organic`, `ring_converted`, `drift_score` |
-| `audience_health_scores` | 100-point audience health scores | `request_id` (FK), `score`, `breakdown` (JSONB), `recommendations` (JSONB) |
+| `crm_sync_cache` | Cached CRM contributor data | `request_id` (FK), `contributor_id`, `synced_at`, `profile_data` (JSONB) |
+| `visitor_identities` | Cross-device identity stitching (UTM → CRM) | `visitor_id`, `utm_source`, `utm_medium`, `utm_campaign`, `crm_id`, `matched_at` |
+| `audience_profiles` | One per campaign per ring (declared/paid/organic/converted) | `request_id` (FK), `ring`, `source` (crm/ga4/gsc), `identity_hash`, `profile_data` (JSONB) |
+| `audience_drift_snapshots` | Point-in-time drift calculations | `request_id` (FK), `ring_declared`, `ring_paid`, `ring_organic`, `ring_converted`, `drift_score` |
+| `audience_health_scores` | Per-campaign health score + issue list | `request_id` (FK), `score`, `breakdown` (JSONB), `recommendations` (JSONB) |
+| `ga4_session_cache` | Cached GA4 session data | `request_id` (FK), `session_id`, `source`, `medium`, `device`, `cached_at` |
 
-### Command Center Tables
+### HIE Tables (Phase 4)
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `normalized_daily_metrics` | Cross-platform daily campaign metrics | `request_id` (FK), `platform`, `date`, `impressions`, `clicks`, `spend`, `conversions` |
-| `attribution_journeys` | Multi-touch attribution paths | `request_id` (FK), `journey_id`, `conversion_value`, `model_type` |
-| `attribution_touchpoints` | Individual touchpoints in journeys | `journey_id` (FK), `channel`, `timestamp`, `weight` |
-| `revbrain_snapshots` | Revenue intelligence snapshots | `request_id` (FK), `snapshot_data` (JSONB), `period_start`, `period_end` |
-| `campaign_dashboards` | Saved dashboard configurations | `request_id` (FK), `layout` (JSONB), `widgets` (JSONB) |
-| `campaign_exports` | Scheduled report exports | `request_id` (FK), `format`, `schedule`, `last_exported_at` |
-| `campaign_share_links` | Shareable dashboard links | `request_id` (FK), `token`, `expires_at`, `permissions` (JSONB) |
-| `roas_config` | ROAS target and threshold config | `request_id` (FK), `target_roas`, `alert_threshold`, `lookback_days` |
+| `hie_sessions` | Behavioral tracking sessions | `visitor_id`, `utm_source`, `utm_medium`, `utm_campaign`, `page_url`, `started_at` |
+| `hie_interaction_events` | Click, form, CTA events | `session_id` (FK), `event_type`, `element_selector`, `timestamp`, `metadata` (JSONB) |
+| `hie_scroll_events` | Scroll depth tracking | `session_id` (FK), `depth_percent`, `page_url`, `timestamp` |
+| `hie_page_snapshots` | Page state snapshots | `session_id` (FK), `snapshot_html`, `trigger_event`, `timestamp` |
+
+### Interest Graph Tables (GraphRAG)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `interest_nodes` | 1,054 real platform interests across 6 platforms (Meta, LinkedIn, TikTok, Reddit, Snapchat, WeChat) | `platform`, `interest_name`, `category`, `audience_size_tier`, `metadata` (JSONB) |
+| `interest_edges` | Cross-platform equivalences (278), hierarchy (740), semantic relationships | `source_node_id`, `target_node_id`, `edge_type` (equivalent_on/parent_of/related_to), `confidence` |
+
+### Command Center Tables (SRC Port)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `normalized_daily_metrics` | Daily metrics by platform/channel/country | `request_id` (FK), `platform`, `date`, `impressions`, `clicks`, `spend`, `conversions`, `country` |
+| `attribution_journeys` | User conversion paths | `request_id` (FK), `journey_id`, `conversion_value`, `model_type` |
+| `attribution_touchpoints` | Individual journey touchpoints | `journey_id` (FK), `channel`, `timestamp`, `weight` |
+| `revbrain_snapshots` | Materialized budget recommendations | `request_id` (FK), `snapshot_data` (JSONB), `period_start`, `period_end` |
+| `campaign_dashboards` | User-created reporting surfaces | `request_id` (FK), `layout` (JSONB), `widgets` (JSONB) |
+| `campaign_exports` | Async report generation (PDF, XLSX, CSV, PPTX) | `request_id` (FK), `format`, `schedule`, `last_exported_at` |
+| `campaign_share_links` | Public sharing with optional passwords | `request_id` (FK), `token`, `expires_at`, `permissions` (JSONB) |
+| `roas_config` | Per-campaign ROAS parameters (RPP, Net RPP, breakeven CPA, fulfillment rate) | `request_id` (FK), `target_roas`, `alert_threshold`, `lookback_days` |
+
+**Total: 40+ tables**
 
 ### Key Indexes / 关键索引
 
@@ -827,6 +830,96 @@ flowchart LR
 |-------|--------|
 | Brief + personas | HTML landing pages per persona |
 | Copy + images | Uploaded to Blob, served via `/lp/[slug]` |
+
+---
+
+## AudienceIQ — Audience Intelligence
+
+AudienceIQ is a recruitment-adapted audience intelligence system that closes the attribution loop. It measures **cost-per-quality-contributor** (not just cost-per-click) by connecting UTM tracking, CRM data, GA4 analytics, and behavioral signals into a four-ring drift detection engine.
+
+### Four-Ring Drift Detection
+
+| Ring | Name | Source | Status |
+|------|------|--------|--------|
+| 1 | Declared ICP | Intake persona data + targeting config | Active |
+| 2 | Paid Audience | Ad platform targeting (Google Ads, Meta, LinkedIn APIs) | Phase 5 (planned) |
+| 3 | Observed Audience | GA4 sessions + HIE behavioral tracking | Active (GA4) / Phase 4 (HIE) |
+| 4 | Converted Audience | CRM contributor profiles + quality scores | Active |
+
+### Drift Calculation
+
+Measures the gap between who you target and who actually converts:
+
+```
+Overall Drift = (
+  declared_vs_paid     × 0.25
+  declared_vs_organic  × 0.20
+  paid_vs_converted    × 0.30  (highest weight — spend waste indicator)
+  organic_vs_converted × 0.25
+)
+
+Severity: low (≤15%), moderate (15-25%), high (>25%)
+```
+
+### Recruitment Health Scoring (100-point system)
+
+Starts at 100, deducts for issues:
+
+| Issue | Max Deduction |
+|-------|---------------|
+| Quality drift | -30 |
+| Retention drift | -25 |
+| Skill mismatch | -25 |
+| Geo mismatch | -20 |
+| CPA burnout | -20 |
+| Form friction | -20 |
+| Landing page mismatch | -20 |
+| Demographic mismatch | -15 |
+| CTR decay | -15 |
+| Scroll cliff | -15 |
+| CTA weakness | -15 |
+
+### AudienceIQ Widgets (9 deployed)
+
+| Widget | Description |
+|--------|-------------|
+| ContributorFunnelWidget | Clicks → signups → active → quality contributor funnel |
+| QualityByChannelWidget | Average quality score per utm_source |
+| RetentionCurveWidget | Contributor retention over 30/60/90 days |
+| SkillDistributionWidget | Declared vs actual skills comparison |
+| TargetingVsRealityWidget | Targeting config vs CRM reality side-by-side |
+| DriftRadarWidget | Four-ring visualization with severity colors |
+| AudienceHealthWidget | Circular gauge (0-100) + issue list |
+| Ga4TrafficWidget | Sessions, traffic sources, device breakdown |
+| GscQueriesWidget | Top search queries + CTR/position from Search Console |
+
+### Implementation Phases
+
+| Phase | Name | Status | What It Does |
+|-------|------|--------|--------------|
+| 1 | CRM Integration | Shipped | Identity stitching (UTM → CRM matching), contributor funnel, quality-by-channel |
+| 2 | Drift Engine | Shipped | Four-ring pairwise drift calculation, 100-point health scoring, issue detection |
+| 3 | GA4 + GSC | Shipped | Session caching, traffic source analysis, search query tracking, organic profile building |
+| 4 | HIE Behavioral | Planned | Scroll depth, CTA clicks, form friction, heatmaps via GTM-deployed JavaScript tag |
+| 5 | Ad Platform APIs | Planned | Google Ads, Meta Marketing API, LinkedIn Campaign Manager — paid audience ring |
+
+### HIE (Human Interaction Events) — Phase 4
+
+Port of VYRA's behavioral tracking layer. A lightweight JavaScript tag deployed via Google Tag Manager captures fine-grained user behavior on landing pages and job posting pages:
+
+- **Scroll events** — depth tracking (25%, 50%, 75%, 100%)
+- **Interaction events** — CTA clicks, form field focus/blur, video plays
+- **Page snapshots** — DOM state at key interaction points
+- **Session stitching** — connects anonymous behavioral data to UTM attribution
+
+**HIE Tables:**
+
+| Table | Purpose |
+|-------|---------|
+| `hie_sessions` | Behavioral tracking sessions with visitor_id + utm params |
+| `hie_interaction_events` | Click, form, CTA, video events with timestamps |
+| `hie_scroll_events` | Scroll depth tracking per page per session |
+| `hie_page_snapshots` | Page state captures at key interaction points |
 
 ---
 
