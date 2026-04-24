@@ -1,8 +1,8 @@
-# Nova
+# OneTake
 
 AI-powered recruitment marketing platform. Intake form → AI generation pipeline → creative review → designer handoff → recruiter distribution → agency export.
 
-**~80K LOC** | Next.js 16 + Python worker | Neon Postgres | Clerk Auth | Vercel
+**~80K LOC** | **282 tests** | **1,054 interest graph nodes** | Next.js 16 + Python worker | Neon Postgres | Clerk Auth | Vercel
 
 ---
 
@@ -27,7 +27,7 @@ AI-powered recruitment marketing platform. Intake form → AI generation pipelin
 
 ## Overview / 概述
 
-Nova automates the creation of recruitment marketing campaigns. A recruiter submits a campaign request through a structured intake form. An AI pipeline generates cultural research, personas, actor images, ad copy, composed creatives, and optional video assets. A marketing manager reviews and approves the package, a designer refines finals, and the approved creatives are distributed to recruiters and ad agencies.
+OneTake automates the creation of recruitment marketing campaigns. A recruiter submits a campaign request through a structured intake form. An AI pipeline generates cultural research, personas, actor images, ad copy, composed creatives, and optional video assets. A marketing manager reviews and approves the package, a designer refines finals, and the approved creatives are distributed to recruiters and ad agencies.
 
 The system has two main subsystems:
 
@@ -93,6 +93,21 @@ stateDiagram-v2
     draft --> rejected: Request rejected
     generating --> draft: Pipeline failed
 ```
+
+### Recent Additions (April 23, 2026)
+
+**Unified Campaign Workspace** — Multi-country campaigns managed from a single view. Country bar navigation with per-country status badges. "All Countries" overview grid. Per-country filtering across all sections (brief, personas, creatives, media strategy, channel mix, videos, cultural research). Replaces the old campaign splitter with per-country compute_jobs on a single intake_request. Persona scaling: 2/2 for 1-2 countries, 1/1 for 3+.
+
+**GraphRAG Platform Interest Routing** — Knowledge graph of 1,054 real advertising interests across 6 platforms (Meta, LinkedIn, TikTok, Reddit, Snapchat, WeChat). Cross-platform intelligence via `equivalent_on` edges (278 mappings). Interest router maps LLM-generated concepts to validated platform interests structured as `{hyper, hot, broad}`. Replaces hallucinated interests.
+
+**AudienceIQ Intelligence Layer** — Four-ring audience drift detection measuring the gap between declared targeting, paid audiences, organic reach, and converted contributors.
+- Phase 1: CRM integration + identity stitching + 5 widgets
+- Phase 2: Four-ring drift engine + 100-point health scorer + 2 widgets
+- Phase 3: GA4 + GSC integration + 2 widgets
+
+**Command Center Schema** — 8 new tables for campaign analytics: normalized_daily_metrics, attribution_journeys, attribution_touchpoints, revbrain_snapshots, campaign_dashboards, campaign_exports, campaign_share_links, roas_config.
+
+**Azure Migration Ready** — Dockerfile for Azure Container Apps, Azure Blob storage adapter (drop-in for Vercel Blob), environment variable manifest for Michael's team.
 
 ---
 
@@ -172,7 +187,6 @@ stateDiagram-v2
 | **Icons** | Lucide React | Consistent icon system |
 | **Auth** | Clerk | SSO, role management, middleware protection |
 | **Database** | Neon Postgres (serverless) | Primary data store + job queue |
-| **Storage** | Vercel Blob | Image, HTML, and file storage |
 | **Hosting** | Vercel | Production deployment |
 | **Notifications** | Microsoft Teams webhooks | Adaptive card notifications |
 | **Worker** | Python 3.11+ | AI pipeline orchestration |
@@ -183,6 +197,9 @@ stateDiagram-v2
 | **Rendering** | Playwright (headless Chromium) | HTML → PNG creative composition |
 | **Rich Text** | TipTap | Inline content editing |
 | **Figma** | figma-api | Push creatives to Figma |
+| **Interest Graph** | PostgreSQL-native GraphRAG (interest_nodes + interest_edges) | Platform interest validation |
+| **Audience Intelligence** | AudienceIQ (CRM + GA4 + drift detection) | Four-ring audience drift analysis |
+| **Blob Storage** | Vercel Blob (default) / Azure Blob Storage (via BLOB_PROVIDER env) | Image, HTML, and file storage |
 | **Testing** | Vitest | Unit and integration tests |
 | **Package** | pnpm | Node dependency management |
 
@@ -543,7 +560,7 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 
 ## Database Schema / 数据库结构
 
-18 tables. All use UUID primary keys with `gen_random_uuid()`. Foreign keys cascade on delete. Schema initialized via `scripts/init-db.mjs`.
+31 tables. All use UUID primary keys with `gen_random_uuid()`. Foreign keys cascade on delete. Schema initialized via `scripts/init-db.mjs`.
 
 ### Core Tables / 核心表
 
@@ -578,6 +595,34 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 | `tracked_links` | UTM short links | `slug` (6-char), `destination_url`, `utm_*` fields, `click_count` |
 | `design_artifacts` | Reusable design elements | `artifact_id`, `category`, `blob_url`, `usage_snippet`, `pillar_affinity[]` |
 | `campaign_landing_pages` | Landing page URLs | `request_id` (unique), `job_posting_url`, `landing_page_url`, `ada_form_url` |
+
+### GraphRAG Tables
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `interest_nodes` | Platform advertising interests (1,054 nodes) | `platform`, `interest_name`, `category`, `audience_size_tier`, `metadata` (JSONB) |
+| `interest_edges` | Cross-platform interest mappings (278 edges) | `source_node_id`, `target_node_id`, `edge_type` (equivalent_on/parent_of/related_to), `confidence` |
+
+### AudienceIQ Tables
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `audience_profiles` | Unified audience identity records | `request_id` (FK), `source` (crm/ga4/gsc), `identity_hash`, `profile_data` (JSONB) |
+| `audience_drift_snapshots` | Four-ring drift measurements | `request_id` (FK), `ring_declared`, `ring_paid`, `ring_organic`, `ring_converted`, `drift_score` |
+| `audience_health_scores` | 100-point audience health scores | `request_id` (FK), `score`, `breakdown` (JSONB), `recommendations` (JSONB) |
+
+### Command Center Tables
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `normalized_daily_metrics` | Cross-platform daily campaign metrics | `request_id` (FK), `platform`, `date`, `impressions`, `clicks`, `spend`, `conversions` |
+| `attribution_journeys` | Multi-touch attribution paths | `request_id` (FK), `journey_id`, `conversion_value`, `model_type` |
+| `attribution_touchpoints` | Individual touchpoints in journeys | `journey_id` (FK), `channel`, `timestamp`, `weight` |
+| `revbrain_snapshots` | Revenue intelligence snapshots | `request_id` (FK), `snapshot_data` (JSONB), `period_start`, `period_end` |
+| `campaign_dashboards` | Saved dashboard configurations | `request_id` (FK), `layout` (JSONB), `widgets` (JSONB) |
+| `campaign_exports` | Scheduled report exports | `request_id` (FK), `format`, `schedule`, `last_exported_at` |
+| `campaign_share_links` | Shareable dashboard links | `request_id` (FK), `token`, `expires_at`, `permissions` (JSONB) |
+| `roas_config` | ROAS target and threshold config | `request_id` (FK), `target_roas`, `alert_threshold`, `lookback_days` |
 
 ### Key Indexes / 关键索引
 
@@ -794,7 +839,7 @@ Roles are stored in `user_roles` table and resolved via `src/lib/permissions.ts`
 ```mermaid
 sequenceDiagram
     participant R as Recruiter
-    participant App as Nova (Next.js)
+    participant App as OneTake (Next.js)
     participant W as Worker (Python)
     participant A as Admin (Marketing)
     participant T as Teams Webhook
