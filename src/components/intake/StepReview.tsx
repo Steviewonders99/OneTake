@@ -1,6 +1,8 @@
 "use client";
 
-import { LayoutGrid, FileText, Users, AlertCircle } from "lucide-react";
+import { LayoutGrid, FileText, Users, AlertCircle, Globe } from "lucide-react";
+
+import type { CountryQuota } from "@/lib/types";
 
 interface StepReviewProps {
   formData: Record<string, unknown>;
@@ -137,6 +139,7 @@ export default function StepReview({
   workMode,
   onEditStep,
 }: StepReviewProps) {
+  const countryQuotas = (formData.country_quotas as CountryQuota[] | undefined) ?? [];
   const missingFields = detectMissingFields(formData, taskType, workMode);
   const compensationModel = asString(formData.compensation_model);
   const compensationRate = formData.compensation_rate;
@@ -320,6 +323,51 @@ export default function StepReview({
             </div>
           )}
         </div>
+
+        {/* ── Section 2.5: Country Quotas ────────────────────────────────── */}
+        {countryQuotas.length > 0 && (
+          <div
+            style={{
+              padding: "28px 32px",
+              borderBottom: "1px solid #E8E8EA",
+            }}
+          >
+            <SectionHeader
+              icon={<Globe size={15} />}
+              title="Country Quotas"
+              stepIndex={2}
+              onEditStep={onEditStep}
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {countryQuotas.map((q: CountryQuota) => (
+                <div
+                  key={q.country}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 16px",
+                    background: "#F5F5F5",
+                    borderRadius: 8,
+                    fontSize: 13,
+                  }}
+                >
+                  <span style={{ fontWeight: 600, color: "#1A1A1A" }}>{q.country}</span>
+                  <div style={{ display: "flex", gap: 16, color: "#737373", fontSize: 12 }}>
+                    <span>{q.total_volume.toLocaleString()} contributors</span>
+                    <span>${q.rate.toFixed(2)}/person</span>
+                    {q.demographics && q.demographics.length > 0 && (
+                      <span>{q.demographics.length} demographic rule{q.demographics.length > 1 ? "s" : ""}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 12, fontSize: 12, color: "#737373", textAlign: "center" }}>
+              {countryQuotas.length} {countryQuotas.length === 1 ? "country" : "countries"} | {countryQuotas.reduce((s: number, q: CountryQuota) => s + q.total_volume, 0).toLocaleString()} total contributors
+            </div>
+          </div>
+        )}
 
         {/* ── Section 3: Requirements ──────────────────────────────────── */}
         <div style={{ padding: "28px 32px" }}>
