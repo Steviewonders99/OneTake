@@ -74,6 +74,7 @@ export async function POST(request: Request) {
 
     // Validate form_data against schema
     const formData = body.form_data ?? {};
+    const countryQuotas = formData.country_quotas as Array<{ country: string; rate: number; total_volume: number }> | undefined;
     const validation = validateFormData(schema, formData);
 
     if (!validation.valid) {
@@ -162,6 +163,32 @@ export async function POST(request: Request) {
     } catch (jobError) {
       // Don't fail the request creation if job queuing fails
       console.error('[api/intake] Failed to auto-queue generation:', jobError);
+    }
+
+    // Auto-populate roas_config from country quotas
+    if (countryQuotas && countryQuotas.length > 0) {
+      try {
+        const { getDb } = await import('@/lib/db');
+        const sql = getDb();
+        for (const quota of countryQuotas as Array<{ country: string; rate: number; total_volume: number }>) {
+          if (!quota.rate || quota.rate <= 0) continue;
+          const rpp = quota.rate * 0.85;
+          const netRpp = rpp;
+          const targetCpa = rpp * 0.20;
+          const breakevenCpa = netRpp * 0.65;
+          const recBudget = targetCpa * 6 * (quota.total_volume || 0);
+          await sql`
+            INSERT INTO roas_config (request_id, country, rpp, net_rpp, fulfillment_rate, recognition_rate, cpa_target_pct, budget_multiplier, target_cpa, breakeven_cpa, recommended_budget)
+            VALUES (${intakeRequest.id}, ${quota.country}, ${rpp}, ${netRpp}, ${0.65}, ${0.85}, ${0.20}, ${6.0}, ${targetCpa}, ${breakevenCpa}, ${recBudget})
+            ON CONFLICT (request_id, country) DO UPDATE SET
+              rpp = EXCLUDED.rpp, net_rpp = EXCLUDED.net_rpp, target_cpa = EXCLUDED.target_cpa,
+              breakeven_cpa = EXCLUDED.breakeven_cpa, recommended_budget = EXCLUDED.recommended_budget,
+              updated_at = NOW()
+          `;
+        }
+      } catch (err) {
+        console.error('[api/intake] ROAS config auto-populate failed (non-fatal):', err);
+      }
     }
 
     return Response.json(intakeRequest, { status: 201 });
