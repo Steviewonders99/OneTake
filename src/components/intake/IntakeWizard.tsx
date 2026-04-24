@@ -192,6 +192,7 @@ export default function IntakeWizard() {
             formData={formData}
             onChange={setFormData}
             confidenceFlags={confidenceFlags}
+            localeLinks={(formData.locale_links as import("./LocaleLinksUpload").LocaleLink[] | undefined) ?? []}
           />
         )}
         {currentStep === 3 && (
