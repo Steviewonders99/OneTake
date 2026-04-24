@@ -2,7 +2,7 @@
 
 AI-powered recruitment marketing platform. Intake form → AI generation pipeline → creative review → designer handoff → recruiter distribution → agency export.
 
-**~80K LOC** | **282 tests** | **1,054 interest graph nodes** | Next.js 16 + Python worker | Neon Postgres | Clerk Auth | Vercel
+**~80K LOC** | **614 tests** | **1,054 interest graph nodes** | **30 widgets** | **41 API endpoints** | **~130 source files** | **40+ DB tables** | Next.js 16 + Python worker | Neon Postgres | Clerk Auth | Vercel
 
 ---
 
@@ -1112,9 +1112,32 @@ test: test additions
 
 ### Testing / 测试
 
+**614 total tests** across TypeScript and Python:
+
+| Suite | Framework | Files | Tests | Coverage |
+|-------|-----------|-------|-------|----------|
+| AudienceIQ + HIE | Vitest | 8 | 81 | Drift calculator, health scorer, HIE ingest/diagnostics, identity stitching, profile builder, normalizer, widget registry |
+| Campaign Workspace | Vitest | 3 | 47 | Country filtering, CountryBar, AllCountriesOverview |
+| GraphRAG Interests | pytest | 2 | 29 | Seeder data integrity (13), router logic (16) |
+| Pipeline (Country) | pytest | 2 | 46 | Country job creator (17), orchestrator routing (29) |
+| Tracked Links | Vitest | 4 | ~50 | URL builder, slug generator, source options, route handler |
+| Figma Integration | Vitest | 5 | ~80 | Client, helpers, roundtrip, flow, routes |
+| Pipeline (Stage 4) | pytest | 2 | ~40 | Composition matrix, compositor prompt, archetype selector |
+| Other | Vitest | 4 | ~40 | Slugify, organic carousel, designer tokens, Neon artifacts |
+| Smoke Tests | pytest | 1 | ~201 | Config, connectivity, pipeline stages |
+
 ```bash
-# Run all tests
+# Run all TypeScript tests (413 tests)
 pnpm test
+
+# Run all Python tests (201 tests)
+cd worker && python3 -m pytest tests/ -v
+
+# Run AudienceIQ tests only
+pnpm test -- --run tests/unit/
+
+# Run GraphRAG tests only
+cd worker && python3 -m pytest tests/test_interest_seeder.py tests/test_interest_router.py -v
 
 # Watch mode
 pnpm test:watch
