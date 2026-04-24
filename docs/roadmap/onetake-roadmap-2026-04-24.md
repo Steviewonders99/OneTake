@@ -1,14 +1,14 @@
-# Nova Platform Roadmap — Updated April 23, 2026
+# OneTake Platform Roadmap — Updated April 24, 2026
 
-> Day 17 of deployment. 723 commits. 80K+ LOC. Production at nova-intake.vercel.app.
+> Day 18 of deployment. 740+ commits. 80K+ LOC. Production at nova-intake.vercel.app.
 
 ---
 
 ## Executive Summary
 
-Nova is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the SVP pitch (target: May 5, Day 30).
+OneTake is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the SVP pitch (target: May 5, Day 30).
 
-**Day 17 status:** Core pipeline deployed. 4 portals live. AudienceIQ intelligence layer shipped. GraphRAG interest routing live with 1,054 real platform interests. Unified Campaign Workspace with country-level navigation built. Azure migration plan approved by China engineering team.
+**Day 18 status:** Core pipeline deployed. 4 portals live. AudienceIQ intelligence layer shipped. GraphRAG interest routing live with 1,054 real platform interests. Unified Campaign Workspace with country-level navigation built. GPT Image 2 live. Michael deliverables shipped. CI fully green (614 tests). Azure migration plan approved by China engineering team.
 
 ---
 
@@ -18,7 +18,7 @@ Nova is a fully autonomous recruitment marketing platform that takes a job descr
 | Stage | Name | Status | Details |
 |---|---|---|---|
 | 1 | Strategic Intelligence | Live | Cultural research, personas, campaign strategy, interest graph routing |
-| 2 | Image Generation | Live | NIM (Seedream), VQA validation, actor identity cards |
+| 2 | Image Generation | Live | GPT Image 2 (via OpenRouter, configurable quality), VQA validation, actor identity cards |
 | 3 | Copy Generation | Live | Per-persona x channel x language, brand voice, cultural adaptation |
 | 4 | Composition Engine | Live | HTML template rendering via GLM-5, VQA gate |
 | 5 | Video Pipeline | Partial | Kling API integration built, credits being loaded |
@@ -40,6 +40,17 @@ Nova is a fully autonomous recruitment marketing platform that takes a job descr
 - **Persona scaling** — 2 personas x 2 actors (1-2 countries), 1 x 1 (3+ countries)
 - **Country job creator** — replaces campaign splitter. One campaign, many compute_jobs.
 - **93 tests** (46 Python + 47 TypeScript)
+
+### Day 18 Ships (NEW — April 24)
+- **GPT Image 2 integration** — switched from Seedream to GPT Image 2 via OpenRouter. Configurable quality (low/medium/high). $0.225/image.
+- **IMAGE_CONCURRENCY configurable** — now 15 (was hardcoded 9)
+- **Michael deliverables complete** — Dockerfile, env manifest, Azure Blob adapter, Command Center schema all shipped
+- **README updated to OneTake** — full AudienceIQ docs + 40+ table inventory
+- **CI fully green** — 614 tests (413 TypeScript + 201 Python), 5 gates
+- **Smoke test fix** — KLING_API_KEY environment variable
+- **Vitest config expanded** — catches all test files
+- **Tracked-links draft/generating status gate** — prevents sharing incomplete links
+- **Ruff lint cleanup** — across all worker files
 
 ### GraphRAG Platform Interest Routing (NEW — April 23)
 - **Knowledge graph**: 1,054 interest nodes across 6 platforms (Meta 312, LinkedIn 274, TikTok 130, Reddit 118, Snapchat 84, WeChat 141)
@@ -91,7 +102,24 @@ Four-ring audience drift detection: "What is the gap between who we target, who 
 
 ## What's Planned (Not Yet Shipped)
 
-### Day 18: Server-Side GTM for Meta Conversions API (NEW)
+### CI/CD to Azure Container Registry (NEW)
+GitHub Actions auto-deploy — every green push builds Docker image and pushes to Azure Container Registry. Eliminates manual deployment steps for the Python worker.
+
+**Needs:** ACR credentials + service principal from Michael's team.
+
+### Microsoft Integrations (via Azure Function Apps + Microsoft Graph API) (NEW)
+- **MS Teams** — production webhook URL for campaign notifications (currently test URL)
+- **Outlook** — automated email notifications to recruiters/stakeholders
+- **SharePoint** — auto-create folders per campaign, push generated assets + documents (briefs, reports, creative packages)
+- **Azure AD / Entra ID** — sync with Clerk auth for role-based permissions per campaign, dynamic recruiter access to specific requests and leads
+
+### OpenAI Direct API Transition (NEW)
+Move from OpenRouter ($0.225/image) to OpenAI API direct ($0.006/image) for GPT Image 2. **37x cost reduction**, same quality. Needs: OpenAI API key setup.
+
+### onetake.oneforma.com Subdomain (NEW)
+Changed from nova.oneforma.com to onetake.oneforma.com. CNAME → cname.vercel-dns.com. Waiting on IT.
+
+### Server-Side GTM for Meta Conversions API
 Server-side Google Tag Manager container enables real conversion tracking via Meta Conversions API. Instead of relying on browser-side pixels (blocked by ad blockers, iOS privacy), server-side events send conversion data directly from the server. This captures:
 - Signup completions (not just landing page visits)
 - Profile completions (the actual conversion event)
@@ -99,7 +127,7 @@ Server-side Google Tag Manager container enables real conversion tracking via Me
 
 Feeds into AudienceIQ Ring 2 (Paid Audience) and enables true ROAS calculation.
 
-### Day 18: CRM Datalake Integration (NEW)
+### CRM Datalake Integration
 Connect the CRM datalake (richer than transactional CRM) into AudienceIQ:
 - Quality scores per contributor
 - Task completion rates
@@ -109,7 +137,7 @@ Connect the CRM datalake (richer than transactional CRM) into AudienceIQ:
 
 Extends the existing `CRM_DATABASE_URL` pattern. Feeds Ring 4 (Converted Audience) with deeper quality signals for drift detection and health scoring.
 
-### Day 19: ROAS Formula Unification (NEW)
+### ROAS Formula Unification
 Unify the revised ROAS and target CPA formulas from `/Users/stevenjunop/Oneformadata/roas_framework.md` into the Command Center + AudienceIQ:
 - Per-country ROAS using locale rates from country_quotas
 - Target CPA benchmarks per campaign type
@@ -129,7 +157,7 @@ Michael (China engineering lead) completed code review April 22. Proposed hybrid
 | Database | Neon Postgres | Azure Postgres Flexible | pg_dump/restore + swap DATABASE_URL (~1 hour) |
 | File Storage | Vercel Blob | Azure Blob | Swap blob.ts (~30 min) |
 | Auth | Clerk | Clerk (no change) | 0 min |
-| Domain | nova-intake.vercel.app | nova.oneforma.com | DNS CNAME (~15 min) |
+| Domain | nova-intake.vercel.app | onetake.oneforma.com | DNS CNAME (~15 min) |
 
 **GPU infrastructure ask**: Steven asked Michael about company GPU access for self-hosted NIM models (Qwen 3.5 397B, Gemma 4 30B, MiniMax 2.7). If available, eliminates API rate limits and external dependencies. If not, continue with NIM key rotation (15 keys).
 
@@ -177,11 +205,15 @@ Breakeven CPA = Net RPP x Fulfillment Rate
 | Item | Owner | Status | Impact | Priority |
 |---|---|---|---|---|
 | `go.oneforma.com` CNAME | IT Admin | Requested | Branded short links | P2 |
+| `onetake.oneforma.com` CNAME | IT Admin | Requested | Production domain (replaces nova.oneforma.com) | P1 |
+| Azure Container Registry credentials | Michael's team | Needed | CI/CD auto-deploy | P1 |
+| Microsoft Graph API app registration | Michael/IT | Needed | Unlocks Teams + Outlook + SharePoint + AD | P1 |
+| OpenAI API key | Steven | Planned | Direct image gen ($0.006/image, 37x savings) | P2 |
 | Azure AD SSO (Clerk SAML) | IT Admin | Not started | Internal team login | P1 |
 | Teams webhook (prod URL) | IT Admin | Not started | Prod notifications | P1 |
 | Kling API credits | Steven | In progress | Stage 5 at scale | P2 |
 | Neon DB password rotation | Steven | Pending | Old creds in git history | P1 |
-| Azure resource provisioning | Michael | Pending response | Azure migration | P1 |
+| Michael Azure deliverables | Michael | Delivered April 24 | Dockerfile, env manifest, blob adapter, schema | P1 |
 | Company GPU access | Michael | Asked April 22 | Self-hosted models | P2 |
 | GA4 property access | Poola/IT | Required | AudienceIQ Phase 3 live data | P2 |
 | Recruiter pilot volunteers | Jenn | Not started | Need 1-2 by Week 3 | P1 |
@@ -191,7 +223,7 @@ Breakeven CPA = Net RPP x Fulfillment Rate
 
 ---
 
-## Specs & Plans Inventory (April 23, 2026)
+## Specs & Plans Inventory (April 24, 2026)
 
 ### Active/Recent Specs (Last 2 Weeks)
 
@@ -252,37 +284,33 @@ Breakeven CPA = Net RPP x Fulfillment Rate
 ## Timeline to SVP Pitch (Day 30 = May 5)
 
 ```
-Day 17 (Apr 23) ─── TODAY
-  ├── Unified Campaign Workspace shipped
-  ├── GraphRAG 1,054 interests live
-  ├── AudienceIQ Phase 1-3 shipped
-  └── Michael's migration plan approved
+Day 18 (Apr 24) — TODAY
+  ├── GPT Image 2 live ($0.225/image, configurable quality)
+  ├── Michael deliverables shipped (Dockerfile, env manifest, blob adapter, schema)
+  ├── CI green (614 tests, 5 gates)
+  ├── README + roadmap updated to OneTake
+  └── Email sent to Michael with 6 questions
 
-Day 18 (Apr 24) — MICHAEL DELIVERABLES + TRACKING
-  ├── Dockerfile for Python worker (Azure Container Apps)
-  ├── Environment variable manifest (all keys mapped to Azure)
-  ├── Azure Blob storage adapter (drop-in for Vercel Blob)
-  ├── Command Center schema (SRC tables for ROAS dashboard)
-  ├── Server-side GTM container for Meta Conversions API
-  └── CRM datalake connection into AudienceIQ
-
-Day 19 (Apr 25)
+Day 19-20 (Apr 25-26)
   ├── Country Quotas implementation (intake wizard)
-  ├── ROAS formula unification (Oneformadata → Command Center)
-  ├── Stage 4 template refinement
-  └── Fix remaining parsing issues (#4-6)
+  ├── Server-side GTM for Meta Conversions API
+  ├── CRM datalake integration
+  └── ROAS formula unification
 
-Day 20-21 (Apr 28-29)
-  ├── Azure migration (Michael's team)
-  ├── nova.oneforma.com DNS
-  └── Command Center port begins
+Day 21-23 (Apr 28-30)
+  ├── Azure deployment (Michael's team provisions resources)
+  ├── CI/CD pipeline to Azure Container Registry
+  ├── Microsoft Graph API setup (Teams, Outlook, SharePoint, AD)
+  ├── Command Center dashboard port
+  └── onetake.oneforma.com DNS
 
-Day 22-24 (Apr 30 - May 2)
-  ├── Command Center live with ROAS
-  ├── 2-3 real campaigns end-to-end
-  └── Recruiter pilot testing
+Day 24-26 (May 1-3)
+  ├── OpenAI direct API transition ($0.006/image)
+  ├── Real campaign testing (3-5 campaigns E2E)
+  ├── Recruiter pilot testing
+  └── Stage 4 template refinement
 
-Day 25-27 (May 3-5)
+Day 27-30 (May 4-5)
   ├── Results compilation
   ├── Demo preparation
   └── SVP pitch (Day 30)
@@ -298,7 +326,7 @@ Day 30+ (Post-pitch)
 
 ## Success Metrics
 
-| Metric | Before Nova | With Nova | Day 17 Status |
+| Metric | Before OneTake | With OneTake | Day 18 Status |
 |---|---|---|---|
 | Time: JD → creative package | 3-5 days | 30 minutes | Achieved |
 | Creatives per campaign | 2-4 | 15-30+ per country | Achieved |
@@ -308,6 +336,8 @@ Day 30+ (Post-pitch)
 | Attribution | Broken (7,600 → 0) | Full UTM → CRM loop | Built (AudienceIQ) |
 | Audience intelligence | None | Four-ring drift detection | Shipped |
 | Platform interest coverage | 0 platforms | 6 platforms | Live |
+| Image generation cost | N/A | $0.04 (Seedream) → $0.225 (GPT Image 2 OpenRouter) → $0.006 (OpenAI direct, planned) | $0.225/image |
+| Test coverage | 0 | 614 total (413 TypeScript + 201 Python) | CI green, 5 gates |
 
 ---
 
