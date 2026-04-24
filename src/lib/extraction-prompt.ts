@@ -72,7 +72,8 @@ You MUST respond with valid JSON matching this exact structure (no markdown, no 
 {
   "detected_task_type": "<task_type key from above>",
   "base_fields": {
-    "<field_key>": "<extracted value>"
+    "<field_key>": "<extracted value>",
+    "country_quotas": [{"country": "...", "locale": "...", "total_volume": 0, "rate": 0, "currency": "USD", "demographics": []}]
   },
   "task_fields": {
     "<field_key>": "<extracted value>"
@@ -106,5 +107,6 @@ You MUST respond with valid JSON matching this exact structure (no markdown, no 
 - The detected_task_type must be one of the task_type keys listed above
 - extracted_details captures additional context that doesn't map directly to form fields
 - **Shared "Job Requirements" fields** (qualifications_required, qualifications_preferred, location_scope, language_requirements, engagement_model, technical_requirements, context_notes) appear at the top of every task type's task_fields. These describe WHO can do the job, where they work, and what they need. Always attempt to populate ALL 7 of these fields using the "Extraction guidance" notes above — even if you must infer conservatively from context. These fields are pre-filled drafts for the recruiter to review and edit, so it is better to offer a reasonable draft than to omit them.
-- For the 7 Job Requirements fields, do NOT add them to fields_missing unless the source text contains essentially no signal at all about who/where/how. Default to populating them.`;
+- For the 7 Job Requirements fields, do NOT add them to fields_missing unless the source text contains essentially no signal at all about who/where/how. Default to populating them.
+- **Country quotas and locale rates**: Look for per-country or per-locale compensation tables in the document. These often appear as columns: Job Title, Locale, Language, Rate/Pay. Also look for demographic requirements or quotas (e.g., "50% female", "ages 18-35", "Middle Eastern descent", skin color specifications). Volume requirements per country or locale. Structure these as "country_quotas" in base_fields — an array of objects: {"country": "...", "locale": "...", "total_volume": 0, "rate": 0, "currency": "USD", "demographics": [{"category": "...", "value": "...", "percentage": 0}]}. If you find a rate table but no volume or demographic data, still extract the countries and rates with total_volume: 0 and empty demographics.`;
 }
