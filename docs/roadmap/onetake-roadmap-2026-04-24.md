@@ -119,13 +119,13 @@ Move from OpenRouter ($0.225/image) to OpenAI API direct ($0.006/image) for GPT 
 ### onetake.oneforma.com Subdomain (NEW)
 Changed from nova.oneforma.com to onetake.oneforma.com. CNAME → cname.vercel-dns.com. Waiting on IT.
 
-### Server-Side GTM for Meta Conversions API
-Server-side Google Tag Manager container enables real conversion tracking via Meta Conversions API. Instead of relying on browser-side pixels (blocked by ad blockers, iOS privacy), server-side events send conversion data directly from the server. This captures:
+### Server-Side GTM for Meta Conversions API (SHIPPED — April 25)
+Server-side Google Tag Manager container deployed with Meta Conversions API. Real conversion tracking live:
 - Signup completions (not just landing page visits)
 - Profile completions (the actual conversion event)
 - Quality contributor status (from CRM datalake feedback loop)
 
-Feeds into AudienceIQ Ring 2 (Paid Audience) and enables true ROAS calculation.
+Feeds into AudienceIQ Ring 2 (Paid Audience) and enables true ROAS calculation. Bypasses ad blockers and iOS privacy restrictions.
 
 ### CRM Datalake Integration
 Connect the CRM datalake (richer than transactional CRM) into AudienceIQ:
@@ -270,9 +270,9 @@ Breakeven CPA = Net RPP x Fulfillment Rate
 | 1 | Interests structure mismatch | **Fixed** (GraphRAG router) |
 | 2 | Missing channel mix | **Fixed** (MediaStrategyEditor null safety) |
 | 3 | Missing campaigns array | **Fixed** (flattenAdSets guard) |
-| 4 | Country code mismatch | Open (partially addressed by unified workspace) |
-| 5 | Budget fields as strings | Open |
-| 6 | Double-encoded JSON | Open |
+| 4 | Country code mismatch | **Fixed** (normalize_country() in country_job_creator) |
+| 5 | Budget fields as strings | **Fixed** (_sanitize_strategy_budgets() strips $, coerces to float) |
+| 6 | Double-encoded JSON | **Fixed** (_ensure_list() for TEXT[] columns) |
 
 ### Other Open Issues
 - Magic link migration needed (from security hardening)
@@ -284,18 +284,21 @@ Breakeven CPA = Net RPP x Fulfillment Rate
 ## Timeline to SVP Pitch (Day 30 = May 5)
 
 ```
-Day 18 (Apr 24) — TODAY
+Day 18 (Apr 24) — SHIPPED
   ├── GPT Image 2 live ($0.225/image, configurable quality)
+  ├── ROAS formula unification (calculator + budget recs + API + 21 tests)
+  ├── Country Quotas & Demographics (intake wizard + pipeline + extraction)
+  ├── All 6 parsing issues fixed
   ├── Michael deliverables shipped (Dockerfile, env manifest, blob adapter, schema)
-  ├── CI green (614 tests, 5 gates)
+  ├── CI green (635 tests, 5 gates)
   ├── README + roadmap updated to OneTake
   └── Email sent to Michael with 6 questions
 
-Day 19-20 (Apr 25-26)
-  ├── Country Quotas implementation (intake wizard)
-  ├── Server-side GTM for Meta Conversions API
-  ├── CRM datalake integration
-  └── ROAS formula unification
+Day 19 (Apr 25) — TODAY
+  ├── Server-side GTM for Meta Pixel — SHIPPED
+  ├── Designer view country support (in progress)
+  ├── Agency view country support
+  └── Recruiter view country support
 
 Day 21-23 (Apr 28-30)
   ├── Azure deployment (Michael's team provisions resources)
