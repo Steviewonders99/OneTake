@@ -16,8 +16,8 @@ def render(
     width: int = 1080,
     height: int = 1080,
 ) -> str:
-    content_left = int(width * 0.45)
-    content_width = int(width * 0.55)
+    content_left = int(width * 0.42)
+    content_width = int(width * 0.58)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,10 +40,11 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .content-zone{{
   position:absolute;top:50%;left:{content_left}px;width:{content_width}px;
   transform:translateY(-50%);
-  z-index:4;padding:40px;
+  z-index:4;padding:40px;color:#FFFFFF;
   display:flex;flex-direction:column;gap:24px;
 }}
 .content-zone .layer-text{{position:static!important;transform:none!important}}
+.content-zone .layer-text div{{color:#FFFFFF!important}}
 .content-zone .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>

@@ -38,8 +38,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 }}
 .grid-left img{{display:block;max-width:100%;max-height:100%;object-fit:contain}}
 .grid-right{{
-  display:flex;flex-direction:column;justify-content:center;
-  padding:40px;gap:24px;
+  display:flex;flex-direction:column;justify-content:space-evenly;align-items:flex-end;
+  padding:32px 40px;gap:24px;
 }}
 .grid-right .layer-text{{position:static!important;transform:none!important}}
 .grid-right .layer-cta{{position:static!important;transform:none!important}}

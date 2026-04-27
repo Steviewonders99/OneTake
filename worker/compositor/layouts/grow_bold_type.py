@@ -1,7 +1,8 @@
 """GROW layout: Bold Type — flexbox column, centered, oversized headline.
 
-Small actor circle (180px, border-radius:50%), then oversized headline
-(56px, weight 800, tight letter-spacing), then CTA below. Padding 60px.
+Large actor circle (240px, border-radius:50%), then oversized headline
+(56px, weight 800, tight letter-spacing), then CTA below. Padding 48px.
+Subtle radial teal tint fills dead space. Visual center shifted up.
 """
 
 
@@ -31,12 +32,13 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .bold-layout{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px;gap:32px;text-align:center;
+  padding:48px;padding-bottom:80px;gap:32px;text-align:center;
+  background:radial-gradient(circle at 50% 30%, rgba(6,182,212,0.06) 0%, transparent 70%);
 }}
 .bold-headline .layer-text{{position:static!important;transform:none!important}}
 .bold-layout .layer-cta{{position:static!important;transform:none!important}}
 .actor-circle{{
-  width:180px;height:180px;border-radius:50%;overflow:hidden;flex-shrink:0;
+  width:240px;height:240px;border-radius:50%;overflow:hidden;flex-shrink:0;
 }}
 .actor-circle img{{display:block;width:100%;height:100%;object-fit:cover}}
 .bold-headline{{

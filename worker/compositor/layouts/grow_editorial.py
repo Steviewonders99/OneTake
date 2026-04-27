@@ -31,13 +31,14 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .editorial-grid{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
   display:grid;grid-template-rows:auto 1fr auto;
-  padding:48px;gap:24px;
+  padding:56px;gap:24px;
 }}
-.editorial-header{{display:flex;flex-direction:column;gap:12px}}
+.editorial-header{{display:flex;flex-direction:column;gap:12px;border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:16px}}
 .editorial-header .layer-text{{position:static!important;transform:none!important}}
 .editorial-footer .layer-cta{{position:static!important;transform:none!important}}
 .editorial-body{{
   overflow:hidden;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
 }}
 .editorial-body img{{display:block;max-width:100%;max-height:100%;object-fit:contain}}
 .editorial-footer{{
