@@ -1,8 +1,8 @@
-"""SHAPE layout: Photo Frame — Pattern A (charcoal wash, brand frame).
+"""SHAPE layout: Photo Frame -- brand frame border with cinematic wash.
 
-Actor fills canvas. Subtle brand frame border (gradient) inset. Dark cinematic
-wash at bottom for text contrast. OneForma logo top-left.
-Purple gradient CTA. Edge glow for depth.
+Actor fills canvas. Subtle brand frame border (gradient #0452BF -> #CD128A).
+Dark cinematic wash at bottom for text contrast. OneForma logo top-left.
+Gradient pill CTA. Brand edge glow.
 """
 
 
@@ -27,11 +27,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor-fill{{
@@ -40,14 +41,14 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
 .cinematic-wash{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
-  background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+  background:linear-gradient(180deg, rgba(0,20,39,0.15) 0%, transparent 40%, rgba(0,20,39,0.65) 100%);
 }}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
 .brand-frame{{
   position:absolute;top:{inset}px;left:{inset}px;
   width:{frame_w}px;height:{frame_h}px;
   border:2px solid transparent;border-radius:12px;
-  background:linear-gradient(135deg,rgb(155,81,224),rgb(224,82,151)) border-box;
+  background:linear-gradient(135deg,#0452BF,#CD128A) border-box;
   -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor;
   mask-composite:exclude;

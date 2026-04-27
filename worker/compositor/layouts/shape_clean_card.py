@@ -1,7 +1,7 @@
-"""SHAPE layout: Clean Card — Pattern C (light, corporate card).
+"""SHAPE layout: Clean Card -- photo-first with centered frosted 2-col card.
 
 Actor photo fills canvas with light white wash. Centered frosted card
-with 2-column grid: left side for text + CTA, right side for context.
+with 2-column grid: left for text + CTA, right for context.
 OneForma logo top-center. Clean corporate feel.
 """
 
@@ -25,11 +25,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor-fill{{
@@ -47,7 +48,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   width:{card_w}px;height:{card_h}px;
   background:rgba(255,255,255,0.9);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-radius:24px;
+  border-radius:20px;
+  border:1px solid rgba(215,224,234,0.3);
   box-shadow:0 8px 32px rgba(0,0,0,0.1);
   z-index:5;overflow:hidden;
   display:grid;grid-template-columns:1fr 1fr;
@@ -57,12 +59,12 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   padding:40px;gap:20px;
 }}
 .card-text .layer-text{{position:static!important;transform:none!important}}
-.card-text .layer-text div{{color:#1A1A1A!important;text-shadow:none!important}}
+.card-text .layer-text div{{color:#001427!important;text-shadow:none!important}}
 .card-text .layer-cta{{position:static!important;transform:none!important}}
 .card-context{{
   display:flex;align-items:center;justify-content:center;
   padding:24px;
-  background:rgba(155,81,224,0.05);
+  background:rgba(4,82,191,0.05);
 }}
 </style>
 </head>

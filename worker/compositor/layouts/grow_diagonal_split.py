@@ -1,8 +1,8 @@
-"""GROW layout: Diagonal Split — Pattern A (cool purple-blue wash).
+"""GROW layout: Diagonal Split -- dynamic diagonal with subtle sapphire wash.
 
-Actor fills canvas. Cool purple-blue wash overlay. Diagonal clip-path
-creates dynamic visual split. Text + CTA on the right side.
-OneForma logo top-center. Edge glow for depth.
+Actor fills canvas. Subtle sapphire wash overlay (25% max).
+Diagonal clip-path creates dynamic visual split.
+Text + CTA on the right side. OneForma logo top-center. Brand edge glow.
 """
 
 
@@ -25,11 +25,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor-fill{{
@@ -38,7 +39,7 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
 .color-wash{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
-  background:linear-gradient(135deg, rgba(155,81,224,0.5), rgba(6,147,227,0.4));
+  background:linear-gradient(135deg, rgba(4,82,191,0.3), rgba(205,18,138,0.2));
 }}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
 .diagonal-mask{{

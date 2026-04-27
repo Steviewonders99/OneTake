@@ -1,11 +1,10 @@
-"""Component registry — facade the renderer calls to resolve IDs to HTML.
+"""Component registry -- facade the renderer calls to resolve IDs to HTML.
 
 Each ``get_*_html`` function returns a positioned ``<div>`` containing the
 rendered layer fragment. The renderer stacks these in z-order to assemble
 the final creative.
 
-Agency-quality update: photo-first layouts, OneForma logo, edge glow,
-purple gradient CTAs, larger typography with text-shadow.
+Brand-correct: all colors, fonts, sizes from worker/brand/oneforma.py.
 """
 from __future__ import annotations
 
@@ -17,43 +16,63 @@ from compositor.components.cta import render_cta
 from compositor.components.overlays import render_overlay_elements
 
 # ---------------------------------------------------------------------------
-# Constants
+# Constants -- from worker/brand/oneforma.py PALETTE + TYPOGRAPHY
 # ---------------------------------------------------------------------------
-_FONT_STACK = "-apple-system,system-ui,'Segoe UI',Roboto,sans-serif"
-_BRAND_GRADIENT = "linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))"
-_CTA_GRADIENT = "linear-gradient(135deg, rgb(155,81,224), rgb(224,82,151))"
+_FONT_STACK = "Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif"
+_BRAND_GRADIENT = "linear-gradient(135deg, #0452BF 0%, #CD128A 100%)"
+_CTA_GRADIENT = "linear-gradient(135deg, #6B21A8, #E91E8C)"
 
-# Text size presets — (headline_px, subheadline_px)
-# Agency-quality: larger, punchier typography
+# Text size presets -- from TYPOGRAPHY scale
+# Maps to (headline_px, subheadline_px, headline_weight, headline_line_height)
 _TEXT_SIZES: Dict[str, tuple] = {
-    "small": (20, 14),
-    "medium": (28, 16),
-    "large": (40, 18),
-    "xlarge": (52, 20),
-    "hero": (64, 22),
+    "small":  (22, 16),   # H3: 22px/500
+    "medium": (32, 16),   # H2: 32px/700
+    "large":  (44, 18),   # H1: 44px/700
+    "xlarge": (64, 20),   # Display: 64px/900
+    "hero":   (64, 22),   # Display alias
 }
 
-# Contrast backdrop CSS snippets
+# Font weight by size preset (from brand typography)
+_TEXT_WEIGHTS: Dict[str, int] = {
+    "small": 500,    # H3
+    "medium": 700,   # H2
+    "large": 700,    # H1
+    "xlarge": 900,   # Display
+    "hero": 900,     # Display
+}
+
+# Line height by size preset (from brand typography)
+_TEXT_LINE_HEIGHTS: Dict[str, float] = {
+    "small": 1.25,   # H3
+    "medium": 1.15,  # H2
+    "large": 1.1,    # H1
+    "xlarge": 1.05,  # Display
+    "hero": 1.05,    # Display
+}
+
+# Contrast backdrop CSS snippets -- frosted glass uses brand border #D7E0EA
 _CONTRAST_BACKDROPS: Dict[str, str] = {
     "none": "",
     "dark_gradient": (
-        "background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.85));"
+        "background:linear-gradient(180deg,rgba(0,20,39,0.6),rgba(0,20,39,0.85));"
         "padding:24px;border-radius:12px"
     ),
     "light_blur": (
         "background:rgba(255,255,255,0.85);"
         "backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);"
-        "padding:24px;border-radius:24px;"
+        "padding:24px;border-radius:20px;"
+        "border:1px solid rgba(215,224,234,0.3);"
         "box-shadow:0 8px 32px rgba(0,0,0,0.1)"
     ),
     "frosted_card": (
         "background:rgba(255,255,255,0.85);"
         "backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);"
-        "padding:32px;border-radius:24px;"
+        "padding:32px;border-radius:20px;"
+        "border:1px solid rgba(215,224,234,0.3);"
         "box-shadow:0 8px 32px rgba(0,0,0,0.1)"
     ),
     "solid_pill": (
-        "background:rgba(0,0,0,0.8);padding:16px 28px;border-radius:9999px"
+        "background:rgba(0,20,39,0.8);padding:16px 28px;border-radius:9999px"
     ),
     "brand_accent": (
         f"background:{_CTA_GRADIENT};padding:20px 28px;border-radius:12px"
@@ -96,7 +115,7 @@ _TEXT_POSITIONS: Dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# OneForma Logo SVG
+# OneForma Logo SVG -- brand pink #CD128A for spiral mark
 # ---------------------------------------------------------------------------
 
 _ONEFORMA_LOGO_WHITE = (
@@ -109,7 +128,7 @@ _ONEFORMA_LOGO_WHITE = (
     'C21 24 23 22 24 18C25 14 23 10 20 8Z" '
     'fill="rgba(255,255,255,0.9)"/>'
     '</svg>'
-    '<span style="font-family:-apple-system,system-ui,\'Segoe UI\',Roboto,sans-serif;'
+    f'<span style="font-family:{_FONT_STACK};'
     'font-size:18px;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.02em">'
     'OneForma</span>'
     '</div>'
@@ -120,13 +139,13 @@ _ONEFORMA_LOGO_DARK = (
     '<svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">'
     '<path d="M20 4C18 4 14 6 12 10C10 14 10 18 12 22C14 26 16 28 20 30'
     'C24 28 26 26 28 22C30 18 30 14 28 10C26 6 22 4 20 4Z" '
-    'fill="none" stroke="rgb(155,81,224)" stroke-width="2.5"/>'
+    'fill="none" stroke="#CD128A" stroke-width="2.5"/>'
     '<path d="M20 8C17 10 15 14 16 18C17 22 19 24 20 26'
     'C21 24 23 22 24 18C25 14 23 10 20 8Z" '
-    'fill="rgb(155,81,224)"/>'
+    'fill="#CD128A"/>'
     '</svg>'
-    '<span style="font-family:-apple-system,system-ui,\'Segoe UI\',Roboto,sans-serif;'
-    'font-size:18px;font-weight:700;color:rgb(155,81,224);letter-spacing:0.02em">'
+    f'<span style="font-family:{_FONT_STACK};'
+    'font-size:18px;font-weight:700;color:#001427;letter-spacing:0.02em">'
     'OneForma</span>'
     '</div>'
 )
@@ -165,7 +184,7 @@ def get_actor_html(
     """Return a positioned ``<div class="layer-actor">`` with ``<img>``.
 
     Actor photos fill their container with object-fit:cover. The layout
-    controls sizing — no percentage-based height here.
+    controls sizing -- no percentage-based height here.
     """
     mask_css = _ACTOR_MASKS.get(mask, "")
     return (
@@ -186,18 +205,20 @@ def get_text_block_html(
     """Return a positioned ``<div class="layer-text">`` with headline/subheadline.
 
     Text over photos gets text-shadow for readability. Headlines use
-    tight letter-spacing (-0.02em) for agency punch.
+    tight letter-spacing (-0.02em) for agency punch. Colors and sizes
+    from brand/oneforma.py TYPOGRAPHY.
     """
     pos_css = _TEXT_POSITIONS.get(position, _TEXT_POSITIONS["top-left"])
 
     h_px, sub_px = _TEXT_SIZES.get(size, _TEXT_SIZES["large"])
+    h_weight = _TEXT_WEIGHTS.get(size, 700)
+    h_line = _TEXT_LINE_HEIGHTS.get(size, 1.1)
 
-    # Text color auto-selection
+    # Text color auto-selection -- brand primary #001427 on light, #FFFFFF on dark
     is_dark_backdrop = contrast_backdrop in _DARK_BACKDROPS
-    text_color = "#FFFFFF" if is_dark_backdrop else "#1A1A1A"
+    text_color = "#FFFFFF" if is_dark_backdrop else "#001427"
 
     # Text shadow for readability over photos
-    # White text always gets shadow; dark text gets subtle shadow on non-frosted
     if text_color == "#FFFFFF":
         text_shadow = "text-shadow:0 2px 12px rgba(0,0,0,0.5)"
     elif contrast_backdrop == "none":
@@ -209,7 +230,7 @@ def get_text_block_html(
 
     # Build inner content
     headline_html = (
-        f'<div style="font-size:{h_px}px;font-weight:700;line-height:1.1;'
+        f'<div style="font-size:{h_px}px;font-weight:{h_weight};line-height:{h_line};'
         f"font-family:{_FONT_STACK};color:{text_color};"
         f'letter-spacing:-0.02em;{text_shadow}">'
         f"{headline}</div>"
@@ -217,7 +238,7 @@ def get_text_block_html(
     sub_html = ""
     if subheadline:
         sub_html = (
-            f'<div style="font-size:{sub_px}px;font-weight:400;line-height:1.4;'
+            f'<div style="font-size:{sub_px}px;font-weight:400;line-height:1.5;'
             f"font-family:{_FONT_STACK};color:{text_color};"
             f'margin-top:8px;opacity:0.9;{text_shadow}">'
             f"{subheadline}</div>"
@@ -265,7 +286,7 @@ def get_cta_html(
     text: str,
     position: str = "bottom-center",
 ) -> str:
-    """Return positioned CTA HTML — delegates to :func:`compositor.components.cta.render_cta`."""
+    """Return positioned CTA HTML -- delegates to :func:`compositor.components.cta.render_cta`."""
     return render_cta(style, text, position)
 
 
@@ -276,6 +297,7 @@ def get_logo_html(variant: str = "white") -> str:
     ----------
     variant:
         ``"white"`` for dark/washed backgrounds, ``"dark"`` for light backgrounds.
+        Dark variant uses brand pink #CD128A for spiral, #001427 for text.
     """
     if variant == "dark":
         return _ONEFORMA_LOGO_DARK
@@ -283,14 +305,15 @@ def get_logo_html(variant: str = "white") -> str:
 
 
 def get_edge_glow_html() -> str:
-    """Return an edge glow overlay div with soft purple/pink inset box-shadow.
+    """Return an edge glow overlay div with brand pink/sapphire inset box-shadow.
 
+    Uses brand colors: #CD128A (pink-80) and #0452BF (sapphire-80).
     Creates depth and cinematic feel without a flat colored border.
     """
     return (
         '<div style="position:absolute;top:0;left:0;width:100%;height:100%;'
         'pointer-events:none;z-index:10;'
-        'box-shadow:inset 0 0 120px rgba(155,81,224,0.15),'
-        'inset 0 0 60px rgba(224,82,151,0.1)">'
+        'box-shadow:inset 0 0 80px rgba(205,18,138,0.08),'
+        'inset 0 0 40px rgba(4,82,191,0.06)">'
         '</div>'
     )

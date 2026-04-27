@@ -1,52 +1,77 @@
-"""Background layer — gradient presets, solid colors, and color wash overlays.
+"""Background layer -- gradient presets, solid colors, and color wash overlays.
 
-Color washes are semi-transparent gradient overlays applied ON TOP of actor
-photos to create the cinematic agency look. The photo IS the background —
-washes add mood without replacing it.
+All colors sourced from worker/brand/oneforma.py PALETTE.
+Washes are SUBTLE (20-35% opacity MAX) -- the actor photo must show through.
 """
 from __future__ import annotations
 
 from typing import Dict
 
 # ---------------------------------------------------------------------------
-# Gradient presets — each is a CSS linear-gradient value
+# Gradient presets -- brand-correct from PALETTE + artifacts
 # ---------------------------------------------------------------------------
 GRADIENT_PRESETS: Dict[str, str] = {
-    "gradient_warm_sunset": "linear-gradient(135deg, #FF8C42, #E05252, #D94F8C)",
-    "gradient_cool_ocean": "linear-gradient(135deg, #2563EB, #0891B2, #10B981)",
-    "gradient_pro_charcoal": "linear-gradient(135deg, #1F2937, #374151, #4B5563)",
-    "gradient_earn_gold": "linear-gradient(135deg, #B8860B, #DAA520, #F4C430)",
-    "gradient_grow_teal": "linear-gradient(135deg, #0D9488, #14B8A6, #2DD4BF)",
-    "gradient_shape_purple": "linear-gradient(135deg, #7C3AED, #6366F1, #4F46E5)",
-    "gradient_brand_accent": "linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))",
-    "gradient_soft_neutral": "linear-gradient(135deg, #E5E7EB, #F3F4F6, #F9FAFB)",
-    "gradient_luminous_dusk": "linear-gradient(135deg, rgb(255,203,112), rgb(199,81,192), rgb(65,88,208))",
-    "gradient_cool_spectrum": "linear-gradient(135deg, rgb(74,234,220), rgb(254,248,76))",
+    # Primary brand gradient: Sapphire -> Pink
+    "gradient_brand_primary": "linear-gradient(135deg, #0452BF 0%, #CD128A 100%)",
+    # Artifact gradient: deep purple -> purple -> pink (gradient_sapphire_pink.css)
+    "gradient_sapphire_pink": "linear-gradient(135deg, #3D1059 0%, #6B21A8 40%, #E91E8C 100%)",
+    # Subtle warm wash (pink-dominant, 20-25% opacity)
+    "gradient_warm_wash": "linear-gradient(135deg, rgba(205,18,138,0.25), rgba(4,82,191,0.2))",
+    # Subtle cool wash (sapphire-dominant, 20-25% opacity)
+    "gradient_cool_wash": "linear-gradient(135deg, rgba(4,82,191,0.25), rgba(35,125,251,0.2))",
+    # Cinematic dark wash using brand dark #001427
+    "gradient_dark_wash": "linear-gradient(180deg, rgba(0,20,39,0.2) 0%, rgba(0,20,39,0.65) 100%)",
+    # Light bottom fade
+    "gradient_light_fade": "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.85) 100%)",
 }
 
+# Legacy aliases -- map old names to new brand-correct gradients
+# so existing configs / tests don't break
+GRADIENT_PRESETS["gradient_warm_sunset"] = GRADIENT_PRESETS["gradient_brand_primary"]
+GRADIENT_PRESETS["gradient_cool_ocean"] = GRADIENT_PRESETS["gradient_cool_wash"]
+GRADIENT_PRESETS["gradient_pro_charcoal"] = GRADIENT_PRESETS["gradient_dark_wash"]
+GRADIENT_PRESETS["gradient_earn_gold"] = GRADIENT_PRESETS["gradient_warm_wash"]
+GRADIENT_PRESETS["gradient_grow_teal"] = GRADIENT_PRESETS["gradient_cool_wash"]
+GRADIENT_PRESETS["gradient_shape_purple"] = GRADIENT_PRESETS["gradient_sapphire_pink"]
+GRADIENT_PRESETS["gradient_brand_accent"] = GRADIENT_PRESETS["gradient_brand_primary"]
+GRADIENT_PRESETS["gradient_soft_neutral"] = "linear-gradient(135deg, #D7E0EA, #F1F4F9, #FFFFFF)"
+GRADIENT_PRESETS["gradient_luminous_dusk"] = GRADIENT_PRESETS["gradient_sapphire_pink"]
+GRADIENT_PRESETS["gradient_cool_spectrum"] = GRADIENT_PRESETS["gradient_cool_wash"]
+
 # ---------------------------------------------------------------------------
-# Solid color presets
+# Solid color presets -- from PALETTE
 # ---------------------------------------------------------------------------
 SOLID_PRESETS: Dict[str, str] = {
     "bg_white": "#FFFFFF",
-    "bg_charcoal": "#32373C",
-    "bg_warm_cream": "#FFF8F0",
-    "bg_cool_gray": "#F1F5F9",
-    "bg_deep_navy": "#0F172A",
-    "bg_soft_sage": "#F0FDF4",
+    "bg_ui": "#F1F4F9",
+    "bg_dark": "#001427",
+    "bg_border": "#D7E0EA",
+    # Legacy aliases
+    "bg_charcoal": "#001427",
+    "bg_warm_cream": "#FDECF7",   # pink-10 as warm cream substitute
+    "bg_cool_gray": "#F1F4F9",
+    "bg_deep_navy": "#001427",
+    "bg_soft_sage": "#D7E7FE",    # sapphire-10
 }
 
 # ---------------------------------------------------------------------------
-# Color wash presets — semi-transparent overlays for photo-first layouts
-# Applied ON TOP of actor photos to create mood
+# Color wash presets -- SUBTLE overlays for photo-first layouts
+# Applied ON TOP of actor photos. Max 20-35% opacity.
 # ---------------------------------------------------------------------------
 WASH_PRESETS: Dict[str, str] = {
-    "wash_purple_pink": "linear-gradient(135deg, rgba(155,81,224,0.4), rgba(224,82,151,0.35))",
-    "wash_purple_blue": "linear-gradient(135deg, rgba(155,81,224,0.5), rgba(6,147,227,0.4))",
-    "wash_dark_cinematic": "linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.6))",
-    "wash_light_clean": "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3))",
-    "wash_warm_gold": "linear-gradient(135deg, rgba(218,165,32,0.3), rgba(224,82,81,0.25))",
-    "wash_cool_teal": "linear-gradient(135deg, rgba(6,147,227,0.35), rgba(13,148,136,0.3))",
+    # Brand pink wash -- subtle
+    "wash_pink_sapphire": "linear-gradient(135deg, rgba(205,18,138,0.25), rgba(4,82,191,0.2))",
+    # Sapphire cool wash -- subtle
+    "wash_sapphire_blue": "linear-gradient(135deg, rgba(4,82,191,0.25), rgba(35,125,251,0.2))",
+    # Dark cinematic -- brand dark #001427
+    "wash_dark_cinematic": "linear-gradient(180deg, rgba(0,20,39,0.2) 0%, rgba(0,20,39,0.65) 100%)",
+    # Light clean -- white fade
+    "wash_light_clean": "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.85))",
+    # Legacy aliases -- point to brand-correct versions
+    "wash_purple_pink": "linear-gradient(135deg, rgba(205,18,138,0.25), rgba(4,82,191,0.2))",
+    "wash_purple_blue": "linear-gradient(135deg, rgba(4,82,191,0.25), rgba(35,125,251,0.2))",
+    "wash_warm_gold": "linear-gradient(135deg, rgba(205,18,138,0.2), rgba(4,82,191,0.15))",
+    "wash_cool_teal": "linear-gradient(135deg, rgba(4,82,191,0.25), rgba(35,125,251,0.2))",
 }
 
 

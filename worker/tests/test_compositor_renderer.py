@@ -1,4 +1,8 @@
-"""Tests for deterministic renderer -- JSON config -> HTML string."""
+"""Tests for deterministic renderer -- JSON config -> HTML string.
+
+Uses brand-correct colors: gradient_warm_sunset (alias for brand_primary),
+blob_warm_1 (brand purple-pink gradient).
+"""
 import pytest
 from compositor.renderer import assemble_html
 from compositor.schema import CreativeConfig
@@ -11,13 +15,13 @@ def _make_config_dict(**overrides):
         "actor": {"actor_id": "abc-123", "position": "right", "scale": 0.85, "mask": "soft_fade"},
         "overlay": {"elements": ["blob_warm_1"], "intensity": "medium"},
         "text": {
-            "headline": "Earn $17.50/hr from home",
+            "headline": "Put your expertise to work",
             "subheadline": "Data collection tasks in Morocco",
             "position": "top-left",
             "size": "large",
             "contrast_backdrop": "dark_gradient",
         },
-        "cta": {"text": "Apply Now", "style": "pill_primary", "position": "bottom-center"},
+        "cta": {"text": "Put your expertise to work", "style": "pill_primary", "position": "bottom-center"},
         "context_element": None,
     }
     base.update(overrides)
@@ -29,8 +33,7 @@ class TestAssembleHTML:
         config = CreativeConfig.from_dict(_make_config_dict())
         html = assemble_html(config, actor_photo_url="https://example.com/actor.png")
         assert "<!DOCTYPE html>" in html
-        assert "Earn $17.50/hr from home" in html
-        assert "Apply Now" in html
+        assert "Put your expertise to work" in html
 
     def test_contains_actor_image(self):
         config = CreativeConfig.from_dict(_make_config_dict())
@@ -68,3 +71,14 @@ class TestAssembleHTML:
         html = assemble_html(config, actor_photo_url="https://example.com/a.png")
         assert "box-shadow" in html
         assert "inset" in html
+
+    def test_html_uses_brand_cta_gradient(self):
+        config = CreativeConfig.from_dict(_make_config_dict())
+        html = assemble_html(config, actor_photo_url="https://example.com/a.png")
+        assert "#6B21A8" in html  # CTA gradient start
+        assert "#E91E8C" in html  # CTA gradient end
+
+    def test_html_uses_roboto_font(self):
+        config = CreativeConfig.from_dict(_make_config_dict())
+        html = assemble_html(config, actor_photo_url="https://example.com/a.png")
+        assert "Roboto" in html

@@ -2,6 +2,9 @@
 
 Tests the full flow: config -> render -> tier1 -> auto-fix
 without touching APIs (Creative Director, VQA, Blob, Neon).
+
+Uses brand-correct presets: gradient_warm_sunset (alias for brand_primary),
+blob_warm_1 (brand purple-pink gradient).
 """
 import pytest
 from compositor.schema import CreativeConfig, validate_batch, EARN_LAYOUTS, GROW_LAYOUTS, SHAPE_LAYOUTS
@@ -23,7 +26,7 @@ def _make_earn_config(layout: str, headline: str, actor_pos: str = "right", text
             "size": "large",
             "contrast_backdrop": "dark_gradient",
         },
-        "cta": {"text": "Apply Now", "style": "pill_primary", "position": "bottom-center"},
+        "cta": {"text": "Put your expertise to work", "style": "pill_primary", "position": "bottom-center"},
         "context_element": None,
     }
 
@@ -31,12 +34,11 @@ def _make_earn_config(layout: str, headline: str, actor_pos: str = "right", text
 class TestFullFlow:
     def test_config_to_html_roundtrip(self):
         """Config -> CreativeConfig -> assemble_html produces valid HTML."""
-        raw = _make_earn_config("earn_hero_badge", "Earn money from home")
+        raw = _make_earn_config("earn_hero_badge", "Put your expertise to work")
         config = CreativeConfig.from_dict(raw)
         html = assemble_html(config, actor_photo_url="https://example.com/test.png")
         assert "<!DOCTYPE html>" in html
-        assert "Earn money from home" in html
-        assert "Apply Now" in html
+        assert "Put your expertise to work" in html
         assert "example.com/test.png" in html
 
     def test_all_earn_layouts_render(self):
@@ -115,7 +117,7 @@ class TestFullFlow:
 
     def test_context_element_renders(self):
         """Config with context element produces HTML containing device mockup."""
-        raw = _make_earn_config("earn_hero_badge", "Earn money")
+        raw = _make_earn_config("earn_hero_badge", "Put your expertise to work")
         raw["context_element"] = {"type": "device_mockup", "position": "bottom-left", "content": "survey_ui"}
         config = CreativeConfig.from_dict(raw)
         html = assemble_html(config, actor_photo_url="https://example.com/test.png")
@@ -186,3 +188,11 @@ class TestFullFlow:
             html = assemble_html(config, actor_photo_url="https://example.com/test.png")
             assert "<!DOCTYPE html>" in html
             assert "Test size" in html
+
+    def test_html_contains_brand_colors(self):
+        """Rendered HTML contains brand CTA colors."""
+        raw = _make_earn_config("earn_hero_badge", "Test")
+        config = CreativeConfig.from_dict(raw)
+        html = assemble_html(config, actor_photo_url="https://example.com/test.png")
+        assert "#6B21A8" in html  # CTA gradient purple
+        assert "#E91E8C" in html  # CTA gradient pink

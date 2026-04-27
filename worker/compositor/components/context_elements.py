@@ -1,7 +1,9 @@
-"""Context element components — show what the contributor will actually do.
+"""Context element components -- show what the contributor will actually do.
 
 Device mockups, task cards, stat badges, and icon clusters that give
 prospective contributors a concrete preview of the work experience.
+
+All colors from worker/brand/oneforma.py PALETTE.
 
 Export :func:`render_context_element` which returns a positioned HTML fragment.
 """
@@ -10,11 +12,14 @@ from __future__ import annotations
 from typing import Dict
 
 # ---------------------------------------------------------------------------
-# Brand constants
+# Brand constants -- from worker/brand/oneforma.py
 # ---------------------------------------------------------------------------
-_FONT_STACK = "-apple-system,system-ui,'Segoe UI',Roboto,sans-serif"
-_BRAND_GRADIENT = "linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))"
-_CHARCOAL = "#32373C"
+_FONT_STACK = "Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif"
+_BRAND_GRADIENT = "linear-gradient(135deg, #0452BF 0%, #CD128A 100%)"
+_TEXT_PRIMARY = "#001427"
+_TEXT_SECONDARY = "#495766"
+_BG_UI = "#F1F4F9"
+_BORDER = "#D7E0EA"
 
 # ---------------------------------------------------------------------------
 # Position CSS map
@@ -41,7 +46,7 @@ def _device_mockup(pos_css: str, content: str) -> str:
         f'<div class="ctx-device-mockup" style="position:absolute;{pos_css}'
         f'width:200px;pointer-events:none">'
         # Phone frame
-        f'<div style="background:#1A1A1A;border-radius:24px;padding:8px;'
+        f'<div style="background:{_TEXT_PRIMARY};border-radius:24px;padding:8px;'
         f'box-shadow:0 8px 32px rgba(0,0,0,0.25)">'
         # Notch
         f'<div style="width:80px;height:6px;background:#000;border-radius:3px;'
@@ -51,15 +56,15 @@ def _device_mockup(pos_css: str, content: str) -> str:
         f'min-height:260px;display:flex;flex-direction:column;gap:12px">'
         # App header
         f'<div style="font-family:{_FONT_STACK};font-size:14px;font-weight:700;'
-        f'color:{_CHARCOAL};letter-spacing:0.04em;text-transform:uppercase">OneForma</div>'
+        f'color:{_TEXT_SECONDARY};letter-spacing:0.04em;text-transform:uppercase">OneForma</div>'
         # Task title
         f'<div style="font-family:{_FONT_STACK};font-size:14px;font-weight:600;'
-        f'color:#1A1A1A;line-height:1.3">{task_title}</div>'
+        f'color:{_TEXT_PRIMARY};line-height:1.3">{task_title}</div>'
         # Progress bars
         f'<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">'
-        f'<div style="height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden">'
+        f'<div style="height:6px;background:{_BG_UI};border-radius:3px;overflow:hidden">'
         f'<div style="width:72%;height:100%;background:{_BRAND_GRADIENT};border-radius:3px"></div></div>'
-        f'<div style="height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden">'
+        f'<div style="height:6px;background:{_BG_UI};border-radius:3px;overflow:hidden">'
         f'<div style="width:45%;height:100%;background:{_BRAND_GRADIENT};border-radius:3px"></div></div>'
         f'</div>'
         # Submit button
@@ -79,19 +84,20 @@ def _task_card(pos_css: str, content: str) -> str:
         f'<div class="ctx-task-card" style="position:absolute;{pos_css}'
         f'width:220px;pointer-events:none">'
         f'<div style="background:#FFFFFF;border-radius:12px;padding:20px;'
-        f'box-shadow:0 4px 16px rgba(0,0,0,0.12);'
+        f'border:1px solid {_BORDER};'
+        f'box-shadow:0 4px 16px rgba(0,0,0,0.08);'
         f'font-family:{_FONT_STACK}">'
         # Label
-        f'<div style="font-size:14px;font-weight:700;color:#737373;'
+        f'<div style="font-size:14px;font-weight:700;color:{_TEXT_SECONDARY};'
         f'letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Your Task</div>'
         # Title
-        f'<div style="font-size:16px;font-weight:700;color:#1A1A1A;'
+        f'<div style="font-size:16px;font-weight:700;color:{_TEXT_PRIMARY};'
         f'line-height:1.3;margin-bottom:12px">{task_title}</div>'
         # Tags
         f'<div style="display:flex;gap:6px;flex-wrap:wrap">'
-        f'<span style="padding:4px 10px;background:#F0FDF4;color:#059669;'
+        f'<span style="padding:4px 10px;background:#D7E7FE;color:#0452BF;'
         f'border-radius:9999px;font-size:14px;font-weight:600">Remote</span>'
-        f'<span style="padding:4px 10px;background:#EFF6FF;color:#2563EB;'
+        f'<span style="padding:4px 10px;background:#FDECF7;color:#CD128A;'
         f'border-radius:9999px;font-size:14px;font-weight:600">Flexible</span>'
         f'</div>'
         f'</div>'
@@ -106,11 +112,12 @@ def _stat_badge(pos_css: str, content: str) -> str:
         f'<div class="ctx-stat-badge" style="position:absolute;{pos_css}'
         f'pointer-events:none">'
         f'<div style="background:#FFFFFF;border-radius:12px;padding:20px 28px;'
-        f'box-shadow:0 4px 16px rgba(0,0,0,0.12);text-align:center;'
+        f'border:1px solid {_BORDER};'
+        f'box-shadow:0 4px 16px rgba(0,0,0,0.08);text-align:center;'
         f'font-family:{_FONT_STACK}">'
-        f'<div style="font-size:32px;font-weight:800;color:#1A1A1A;'
+        f'<div style="font-size:32px;font-weight:900;color:{_TEXT_PRIMARY};'
         f'line-height:1">{stat_value}</div>'
-        f'<div style="font-size:14px;font-weight:500;color:#737373;'
+        f'<div style="font-size:14px;font-weight:500;color:{_TEXT_SECONDARY};'
         f'margin-top:4px">earned this month</div>'
         f'</div>'
         f'</div>'
@@ -121,9 +128,9 @@ def _icon_cluster(pos_css: str, content: str) -> str:
     """Flex-wrapped set of 3 icons in colored rounded squares."""
     _ = content  # unused
     icons = [
-        ("#EFF6FF", "#2563EB", "&#128203;"),   # clipboard
-        ("#FEF3C7", "#D97706", "&#127991;"),   # tag / label
-        ("#F0FDF4", "#059669", "&#128200;"),    # chart
+        ("#D7E7FE", "#0452BF", "&#128203;"),   # clipboard -- sapphire-10/sapphire-80
+        ("#FDECF7", "#CD128A", "&#127991;"),    # tag -- pink-10/pink-80
+        ("#D7E7FE", "#0452BF", "&#128200;"),    # chart -- sapphire-10/sapphire-80
     ]
     icon_html_parts = []
     for bg, fg, emoji in icons:
@@ -166,7 +173,7 @@ def render_context_element(
     el_type:
         One of ``device_mockup``, ``task_card``, ``stat_badge``, ``icon_cluster``.
     position:
-        Placement key — ``bottom-left``, ``bottom-right``, ``center-left``,
+        Placement key -- ``bottom-left``, ``bottom-right``, ``center-left``,
         ``center-right``, or any schema position that has a CSS mapping.
     content:
         Element-specific content (task title, stat value, etc.).

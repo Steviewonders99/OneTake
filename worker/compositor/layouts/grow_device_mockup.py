@@ -1,7 +1,8 @@
-"""GROW layout: Device Mockup — Pattern D (light, device + UI elements).
+"""GROW layout: Device Mockup -- split layout with device UI.
 
-Actor photo fills left 55%. Light/clean right panel with text + device mockup + CTA.
-OneForma logo top-center spanning full width. Subtle wash on photo side.
+Actor photo fills left 55%. Light/clean right panel (#FFFFFF) with text +
+device mockup + CTA. Subtle white fade blends photo into panel.
+OneForma logo top-center. Brand edge glow for depth.
 """
 
 
@@ -24,11 +25,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}}

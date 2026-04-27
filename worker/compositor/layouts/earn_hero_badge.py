@@ -1,8 +1,8 @@
-"""EARN layout: Hero Badge — Pattern A (warm purple-pink wash).
+"""EARN layout: Hero Badge -- photo-first with subtle brand wash.
 
-Actor photo fills 70% right side. Warm purple-pink color wash overlay.
-OneForma logo top-left. Large headline upper-left. Purple gradient CTA bottom-left.
-Edge glow for cinematic depth.
+Actor photo fills 70% right side. Subtle pink-sapphire wash overlay (25% max).
+OneForma logo top-left. Large headline upper-left. Gradient pill CTA bottom-left.
+Brand edge glow for cinematic depth.
 """
 
 
@@ -23,18 +23,19 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor{{position:absolute;top:0;right:0;z-index:2;width:70%;height:100%}}
 .layer-actor img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
 .color-wash{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
-  background:linear-gradient(135deg, rgba(155,81,224,0.4), rgba(224,82,151,0.35));
+  background:linear-gradient(135deg, rgba(205,18,138,0.25), rgba(4,82,191,0.2));
 }}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
 .logo-zone{{position:absolute;top:32px;left:32px;z-index:8}}

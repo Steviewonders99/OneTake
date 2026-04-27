@@ -1,4 +1,12 @@
-"""Tests for component registry — resolves IDs to HTML fragments."""
+"""Tests for component registry -- resolves IDs to HTML fragments.
+
+All assertions use brand-correct colors from worker/brand/oneforma.py:
+- Brand gradient: #0452BF -> #CD128A
+- CTA gradient: #6B21A8 -> #E91E8C
+- Text primary: #001427
+- Logo dark: #CD128A spiral, #001427 text
+- Edge glow: rgba(205,18,138,...) and rgba(4,82,191,...)
+"""
 import pytest
 from compositor.registry import (
     get_background_html,
@@ -13,14 +21,24 @@ from compositor.registry import (
 
 class TestBackgrounds:
     def test_gradient_preset_returns_html(self):
+        html = get_background_html("gradient", "gradient_brand_primary")
+        assert "background" in html
+        assert "linear-gradient" in html
+
+    def test_gradient_warm_sunset_alias(self):
         html = get_background_html("gradient", "gradient_warm_sunset")
         assert "background" in html
         assert "linear-gradient" in html
 
     def test_solid_color_returns_html(self):
+        html = get_background_html("solid", "bg_dark")
+        assert "background" in html
+        assert "#001427" in html
+
+    def test_solid_charcoal_alias(self):
         html = get_background_html("solid", "bg_charcoal")
         assert "background" in html
-        assert "#32373C" in html or "32373C" in html.lower()
+        assert "#001427" in html
 
     def test_unknown_preset_raises(self):
         with pytest.raises(KeyError):
@@ -29,14 +47,27 @@ class TestBackgrounds:
 
 class TestCTA:
     def test_pill_primary_returns_html(self):
-        html = get_cta_html("pill_primary", "Apply Now", "bottom-center")
-        assert "Apply Now" in html
+        html = get_cta_html("pill_primary", "Put your expertise to work", "bottom-center")
+        assert "Put your expertise to work" in html
         assert "border-radius" in html or "rounded" in html
+        # Brand CTA gradient
+        assert "#6B21A8" in html
+        assert "#E91E8C" in html
+
+    def test_pill_primary_uppercase(self):
+        html = get_cta_html("pill_primary", "Test CTA", "bottom-center")
+        assert "text-transform:uppercase" in html
 
     def test_banner_full_returns_html(self):
-        html = get_cta_html("banner_full", "Sign Up Today", "bottom-center")
-        assert "Sign Up Today" in html
+        html = get_cta_html("banner_full", "Find a project", "bottom-center")
+        assert "Find a project" in html
         assert "width" in html
+        assert "#6B21A8" in html
+
+    def test_pill_outline_uses_brand_purple(self):
+        html = get_cta_html("pill_outline", "Test", "bottom-center")
+        assert "#6B21A8" in html
+        assert "border" in html
 
     def test_unknown_style_raises(self):
         with pytest.raises(KeyError):
@@ -69,11 +100,28 @@ class TestTextBlock:
         html = get_text_block_html("Test Headline", "Subline", "top-left", "large", "none")
         assert "Test Headline" in html
         assert "Subline" in html
-        assert "40" in html  # large = 40px (agency-quality)
+        assert "44" in html  # large = H1 = 44px
+
+    def test_text_small_is_22px(self):
+        html = get_text_block_html("H", "S", "top-left", "small", "none")
+        assert "22px" in html
+
+    def test_text_medium_is_32px(self):
+        html = get_text_block_html("H", "S", "top-left", "medium", "none")
+        assert "32px" in html
+
+    def test_text_xlarge_is_64px(self):
+        html = get_text_block_html("H", "S", "top-left", "xlarge", "none")
+        assert "64px" in html
+        assert "900" in html  # Display weight
 
     def test_dark_backdrop_uses_white_text(self):
         html = get_text_block_html("H", "S", "top-left", "large", "dark_gradient")
         assert "#FFFFFF" in html or "white" in html.lower() or "fff" in html.lower()
+
+    def test_light_text_uses_brand_primary(self):
+        html = get_text_block_html("H", "S", "top-left", "large", "none")
+        assert "#001427" in html
 
     def test_text_has_letter_spacing(self):
         html = get_text_block_html("H", "S", "top-left", "large", "none")
@@ -83,6 +131,14 @@ class TestTextBlock:
         html = get_text_block_html("H", "S", "top-left", "large", "dark_gradient")
         assert "text-shadow" in html
 
+    def test_frosted_card_has_brand_border(self):
+        html = get_text_block_html("H", "S", "top-left", "large", "frosted_card")
+        assert "rgba(215,224,234,0.3)" in html
+
+    def test_text_uses_roboto_font(self):
+        html = get_text_block_html("H", "S", "top-left", "large", "none")
+        assert "Roboto" in html
+
 
 class TestLogoHTML:
     def test_white_logo(self):
@@ -90,10 +146,11 @@ class TestLogoHTML:
         assert "OneForma" in html
         assert "rgba(255,255,255" in html
 
-    def test_dark_logo(self):
+    def test_dark_logo_uses_brand_pink(self):
         html = get_logo_html("dark")
         assert "OneForma" in html
-        assert "rgb(155,81,224)" in html
+        assert "#CD128A" in html
+        assert "#001427" in html
 
     def test_default_is_white(self):
         html = get_logo_html()
@@ -105,4 +162,8 @@ class TestEdgeGlow:
         html = get_edge_glow_html()
         assert "box-shadow" in html
         assert "inset" in html
-        assert "rgba(155,81,224" in html
+
+    def test_edge_glow_uses_brand_colors(self):
+        html = get_edge_glow_html()
+        assert "rgba(205,18,138" in html  # Brand pink #CD128A
+        assert "rgba(4,82,191" in html    # Brand sapphire #0452BF

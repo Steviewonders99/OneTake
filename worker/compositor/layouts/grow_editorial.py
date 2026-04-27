@@ -1,7 +1,7 @@
-"""GROW layout: Editorial — Pattern C (light/clean, large headline).
+"""GROW layout: Editorial -- magazine-style with light treatment.
 
 Actor photo fills canvas with very light treatment. White text area at top
-with large serif-inspired headline. OneForma logo top-center. CTA at bottom.
+with large headline. OneForma logo top-center. CTA at bottom.
 Clean, magazine-editorial feel.
 """
 
@@ -23,11 +23,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor-fill{{
@@ -36,7 +37,7 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
 .light-wash{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
-  background:linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 35%, transparent 55%, rgba(0,0,0,0.3) 100%);
+  background:linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 35%, transparent 55%, rgba(0,20,39,0.3) 100%);
 }}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
 .logo-zone{{position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:8}}

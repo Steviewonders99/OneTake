@@ -1,8 +1,8 @@
-"""GROW layout: Bold Type — Pattern C (clean white, large centered text).
+"""GROW layout: Bold Type -- photo-first with centered frosted headline card.
 
-Actor photo fills canvas with light treatment. Large bold headline centered.
-Frosted card contains the text for readability. OneForma logo top-center.
-CTA at bottom. Clean, modern feel.
+Actor photo fills canvas with light treatment. Large bold headline centered
+in a frosted card. OneForma logo top-center. CTA at bottom.
+Clean, modern feel.
 """
 
 
@@ -23,11 +23,12 @@ def render(
 <head>
 <meta charset="utf-8"/>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{width:{width}px;height:{height}px;overflow:hidden}}
 .creative{{
   position:relative;width:{width}px;height:{height}px;overflow:hidden;
-  font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Roboto,-apple-system,system-ui,'Segoe UI',Arial,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-actor-fill{{
@@ -50,7 +51,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .bold-headline{{
   background:rgba(255,255,255,0.85);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-radius:24px;padding:32px 40px;
+  border-radius:20px;padding:32px 40px;
+  border:1px solid rgba(215,224,234,0.3);
   box-shadow:0 8px 32px rgba(0,0,0,0.1);
   max-width:85%;
 }}

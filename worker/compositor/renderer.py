@@ -4,7 +4,7 @@ Pure function with zero side effects. Calls the component registry to resolve
 each layer to an HTML fragment, then passes all fragments to the layout
 renderer which produces the final ``<!DOCTYPE html>`` document.
 
-Agency-quality update: every creative gets the OneForma logo and edge glow.
+Brand-correct: every creative gets the OneForma logo and brand edge glow.
 """
 from __future__ import annotations
 
@@ -23,6 +23,11 @@ from compositor.schema import CreativeConfig
 
 # Backgrounds that are dark/washed and need a white logo
 _DARK_BG_PRESETS = frozenset({
+    # Brand gradients
+    "gradient_brand_primary",
+    "gradient_sapphire_pink",
+    "gradient_dark_wash",
+    # Legacy aliases (point to brand gradients)
     "gradient_warm_sunset",
     "gradient_cool_ocean",
     "gradient_pro_charcoal",
@@ -30,11 +35,16 @@ _DARK_BG_PRESETS = frozenset({
     "gradient_shape_purple",
     "gradient_brand_accent",
     "gradient_luminous_dusk",
+    # Solid dark
+    "bg_dark",
     "bg_charcoal",
     "bg_deep_navy",
+    # Washes
+    "wash_pink_sapphire",
+    "wash_sapphire_blue",
+    "wash_dark_cinematic",
     "wash_purple_pink",
     "wash_purple_blue",
-    "wash_dark_cinematic",
     "wash_warm_gold",
     "wash_cool_teal",
 })
