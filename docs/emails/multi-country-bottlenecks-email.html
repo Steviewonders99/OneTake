@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #ffffff;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 2px solid #e5e5e5;
+    padding-bottom: 6px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #32373c;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  p {
+    margin: 8px 0;
+  }
+  ul {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+  li {
+    margin: 4px 0;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 24px 0;
+  }
+  .highlight-box {
+    background: #f5f5f5;
+    border-left: 4px solid #32373c;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .option-list {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+  .option-list li {
+    margin: 6px 0;
+  }
+  .bold {
+    font-weight: 700;
+  }
+  .bottleneck-number {
+    display: inline-block;
+    background: #32373c;
+    color: #ffffff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(6,147,227,0.08), rgba(155,81,224,0.08));
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<p>Hi Jen and Stefan,</p>
+
+<p>I've been documenting how Nova handles multi-country campaigns and wanted to walk you through the current process and get your thoughts on a few decisions.</p>
+
+<hr class="divider">
+
+<h2>How It Works Today</h2>
+
+<p>When a recruiter submits a campaign targeting multiple countries, Nova automatically splits it into individual per-country campaigns. Each country gets its own:</p>
+
+<ul>
+  <li>Cultural research (local market context, gig economy perception, trust factors)</li>
+  <li>Personas tailored to that country's workforce</li>
+  <li>Media strategy (which channels, how much budget)</li>
+  <li>Images, ad copy, and final creatives &mdash; all localized</li>
+</ul>
+
+<p>So a campaign like Centaurus (16 countries) becomes 16 independent creative packages, each customized for its market.</p>
+
+<hr class="divider">
+
+<h2>What's Working Well</h2>
+
+<ul>
+  <li>Each country gets truly localized creative, not a one-size-fits-all translation</li>
+  <li>Cultural research catches things like <em>"LinkedIn doesn't work for recruitment in Morocco, use Facebook groups"</em> &mdash; that kind of insight drives the media plan automatically</li>
+  <li>The pipeline handles any number of countries with the same intake form</li>
+</ul>
+
+<hr class="divider">
+
+<h2>Where I Need Your Input &mdash; 3 Bottlenecks</h2>
+
+<!-- Bottleneck 1 -->
+<h3><span class="bottleneck-number">1</span> Processing Time</h3>
+
+<p>16 countries currently run one after another. A full Centaurus-size campaign takes 4&ndash;8 hours to fully generate. There are two layers to this:</p>
+
+<div class="highlight-box">
+  <p><span class="bold">Worker constraint</span> &mdash; Countries process sequentially today. When we move to Azure (Michael's team is working on this), we can run countries in parallel. This part is solvable.</p>
+  <p style="margin-top: 10px;"><span class="bold">AI model constraint</span> &mdash; Each country needs dozens of AI calls (cultural research, persona generation, copy writing, image generation, creative composition, quality evaluation). We're using NVIDIA NIM with API key rotation across 15 keys, but each key has rate limits. More parallel workers actually means we hit those rate limits <em>faster</em>, not slower.</p>
+</div>
+
+<p>The real unlock is getting access to company GPU infrastructure to self-host these models (I've already asked Michael about this). Self-hosted means no rate limits &mdash; we process as fast as the hardware allows. Without that, even with parallel workers, a 16-country campaign likely still takes 2&ndash;4 hours due to API throttling.</p>
+
+<p><span class="bold">Question:</span> Is 2&ndash;4 hours acceptable for a campaign of this size, or do you need faster turnaround? That answer helps me prioritize the infrastructure ask.</p>
+
+<!-- Bottleneck 2 -->
+<h3><span class="bottleneck-number">2</span> Review Volume</h3>
+
+<p>16 countries generates roughly <span class="bold">6,000 assets</span> (images, copy variations, final creatives). Nobody is reviewing 6,000 items. How would you want to review these?</p>
+
+<ul class="option-list">
+  <li><span class="bold">By country</span> &mdash; Review Morocco's package, approve it, move to France</li>
+  <li><span class="bold">Top picks only</span> &mdash; Nova surfaces the best 3&ndash;5 creatives per country, you only see those</li>
+  <li><span class="bold">Auto-approve above quality threshold</span> &mdash; AI scores everything, only flags borderline items for human review</li>
+  <li><span class="bold">Some combination of the above</span></li>
+</ul>
+
+<p><span class="bold">Question:</span> What feels right to you given how you and the recruiters actually work?</p>
+
+<!-- Bottleneck 3 -->
+<h3><span class="bottleneck-number">3</span> Per-Country Pay Rates</h3>
+
+<p>Different countries have different contributor rates (e.g., Centaurus pays $10 in Malaysia vs. $37.50 in Canada). Right now these rates aren't connected to the campaign data, which means we can't calculate true cost-per-acquisition or ROAS per country. I'm building this in now.</p>
+
+<p><span class="bold">Question:</span> Do recruiters always have these rates at intake time, or do rates sometimes come later from a different team?</p>
+
+<hr class="divider">
+
+<h2>Why This Matters</h2>
+
+<div class="summary-box">
+  <p>Once we solve these three things, Nova can handle a <span class="bold">30-country campaign</span> as easily as a single-country one. A recruiter submits one form, uploads the rate sheet, and gets back 30 localized creative packages with per-country performance tracking.</p>
+  <p style="margin-top: 8px;">That's the workflow I want to ship within the next two weeks.</p>
+</div>
+
+<p>Would love your thoughts &mdash; even a quick reply on the review workflow question would help me prioritize. Happy to walk through any of this in person if easier.</p>
+
+<p style="margin-top: 24px;">
+  Steven
+</p>
+
+</body>
+</html>

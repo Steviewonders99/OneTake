@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; max-width: 640px; margin: 0 auto; padding: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 6px 10px; background: #f5f5f5; font-size: 10px; text-transform: uppercase; color: #737373; border-bottom: 2px solid #e5e5e5; }
+  td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+  .done { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d; }
+  code { background: #f5f5f5; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<p>Hi Michael,</p>
+
+<p>All four Azure deliverables are ready in the repo. CI is green (614 tests, 5 gates passing).</p>
+
+<table>
+  <tr><th>Deliverable</th><th>Status</th><th>Location</th></tr>
+  <tr><td>Dockerfile</td><td><span class="done">Done</span></td><td><code>worker/Dockerfile</code></td></tr>
+  <tr><td>Env Manifest</td><td><span class="done">Done</span></td><td><code>docs/azure-env-manifest.md</code></td></tr>
+  <tr><td>Azure Blob Adapter</td><td><span class="done">Done</span></td><td><code>src/lib/blob.ts</code> &mdash; set <code>BLOB_PROVIDER=azure</code></td></tr>
+  <tr><td>Command Center Schema</td><td><span class="done">Done</span></td><td><code>migrations/2026-04-23-command-center.sql</code></td></tr>
+</table>
+
+<p><strong>Questions for your team:</strong></p>
+
+<ol>
+  <li><strong>Timeline</strong> &mdash; When can your team start provisioning Azure resources? Our SVP wants OneTake live on <code>onetake.oneforma.com</code> by May 5 (11 days). Happy to adjust to your team's schedule.</li>
+  <li><strong>CI/CD to Azure</strong> &mdash; Can we set up GitHub Actions to auto-deploy to Azure Container Registry? I'd add a deploy step to our existing CI so every green push ships the worker automatically. We'd just need an Azure Container Registry + service principal credentials.</li>
+  <li><strong>Parallel development</strong> &mdash; Can we deploy to Azure while I continue shipping features on Vercel? The architecture supports both running simultaneously (same DB, same codebase). I'd keep pushing to Vercel for rapid iteration, and your team syncs Azure on a cadence that works for you.</li>
+  <li><strong>Microsoft integrations</strong> &mdash; We need Azure Function Apps (or equivalent) for several Microsoft ecosystem integrations:
+    <ul style="margin: 6px 0; font-size: 13px;">
+      <li><strong>MS Teams</strong> &mdash; webhook notifications for campaign status updates (currently using a test webhook URL, need production)</li>
+      <li><strong>Outlook</strong> &mdash; automated email notifications to recruiters and stakeholders</li>
+      <li><strong>SharePoint</strong> &mdash; auto-create folders per campaign, push generated assets and documents (briefs, reports, creative packages)</li>
+      <li><strong>Azure AD / Entra ID</strong> &mdash; sync with our Clerk auth so we can assign roles and permissions per campaign, and give recruiters dynamic access to their specific requests and leads</li>
+    </ul>
+    Can your team provision these, or should I work with IT directly? If you have existing Microsoft Graph API credentials or an app registration we could reuse, that would speed things up significantly.</li>
+  <li><strong>GPUs</strong> &mdash; Any company-owned GPU infrastructure available? Not a blocker, but would eliminate API costs if we can self-host NIM containers.</li>
+  <li><strong>Anything needed from my side?</strong> &mdash; Access credentials, walkthrough call, additional documentation?</li>
+</ol>
+
+<p>Steven</p>
+
+</body>
+</html>

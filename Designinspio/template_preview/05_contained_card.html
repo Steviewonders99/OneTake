@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:0; width:1080px; height:1080px; overflow:hidden; font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif; background:#F8F9FA;">
+  <!-- Organic blob shapes behind card -->
+  <svg style="position:absolute; top:10%; right:5%; width:40%; height:40%; opacity:0.08;" viewBox="0 0 200 200">
+    <defs><linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6B21A8"/><stop offset="100%" stop-color="#E91E8C"/></linearGradient></defs>
+    <ellipse cx="100" cy="100" rx="95" ry="85" fill="url(#bg1)" transform="rotate(-15 100 100)"/>
+  </svg>
+  <svg style="position:absolute; bottom:5%; left:2%; width:30%; height:30%; opacity:0.06;" viewBox="0 0 200 200">
+    <defs><linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E91E8C"/><stop offset="100%" stop-color="#6B21A8"/></linearGradient></defs>
+    <circle cx="100" cy="100" r="90" fill="url(#bg2)"/>
+  </svg>
+  <!-- Headline above card -->
+  <div style="position:absolute; top:60px; left:60px; right:60px; text-align:center; font-size:40px; font-weight:800; color:#1A1A1A; line-height:1.15; z-index:2;">Speak English? Earn $20 CAD/hr.</div>
+  <!-- Photo card -->
+  <div style="position:absolute; top:calc(60px + 70px); left:20px; right:20px; bottom:calc(60px + 40px); background:#FFFFFF; border-radius:20px; overflow:hidden; box-shadow:0 8px 32px rgba(107,33,168,0.12); z-index:1;">
+    <img src="https://nek6dllf79zuiibo.public.blob.vercel-storage.com/requests/11c02668-7934-40f7-b611-72d80f96efba/actor_6af86b06-b3e1-4fc1-9e2f-4c272a898c6d_scene_4_reward_celebration_3e9c3677-kdCK7dj1cqioG0KpFwKeHqHpIHsltT.avif" style="width:100%; height:100%; object-fit:cover;" />
+  </div>
+  <!-- CTA pill overlapping card bottom edge -->
+  <div style="position:absolute; bottom:calc(60px + 20px); left:50%; transform:translateX(-50%); display:inline-block; padding:14px 36px; background:linear-gradient(135deg,#6B21A8,#E91E8C); border-radius:9999px; font-size:15px; font-weight:700; color:#FFFFFF; letter-spacing:0.3px; box-shadow:0 4px 20px rgba(107,33,168,0.3); z-index:3;">Apply in 2 Minutes</div>
+</body>
+</html>

@@ -10,6 +10,41 @@ from __future__ import annotations
 from typing import Any
 
 
+# ── Pillar creative direction — shared context for Stage 3 copy + Stage 4 design
+# Each pillar defines the TONE, FRAMING, and VISUAL FEEL that should be
+# consistent across copy and creatives for the same campaign.
+_PILLAR_CREATIVE_DIRECTION: dict[str, str] = {
+    "earn": (
+        "\n  CREATIVE DIRECTION (EARN pillar):"
+        "\n    Tone: Warm, motivating, financially empowering. Lead with tangible rewards."
+        "\n    Framing: 'Here is what you GET' — compensation, flexibility, immediate value."
+        "\n    Copy hooks: Dollar amounts, hourly rates, 'from home', 'start earning', payment frequency."
+        "\n    Visual feel: Warm gradients (sunset, gold), celebration energy, earnings badges,"
+        "\n      reward iconography. Actor should look satisfied, comfortable, empowered."
+        "\n    DO NOT use: Academic language, credential requirements, career ladder framing."
+    ),
+    "grow": (
+        "\n  CREATIVE DIRECTION (GROW pillar):"
+        "\n    Tone: Aspirational, forward-looking, skill-building. Lead with opportunity."
+        "\n    Framing: 'Here is what you BECOME' — skills gained, portfolio built, career growth."
+        "\n    Copy hooks: 'Learn', 'build your', 'grow', 'career', 'portfolio', 'develop', 'flexible'."
+        "\n    Visual feel: Cool gradients (teal, ocean), editorial magazine quality, device mockups"
+        "\n      showing task UI, skill badges, clean typography. Actor should look focused, learning."
+        "\n    DO NOT use: Hard financial figures as primary hook, gig/micro-task framing."
+    ),
+    "shape": (
+        "\n  CREATIVE DIRECTION (SHAPE pillar):"
+        "\n    Tone: Professional, authoritative, expert-level. Lead with impact and recognition."
+        "\n    Framing: 'Here is why YOU MATTER' — expertise valued, contribution shapes AI, credibility."
+        "\n    Copy hooks: 'Expert', 'specialist', 'your expertise', 'impact', 'shape the future',"
+        "\n      'verified', 'trusted', credential references."
+        "\n    Visual feel: Professional gradients (purple, charcoal), credential bars, verification"
+        "\n      badges, clean corporate cards. Actor should look authoritative, confident, expert."
+        "\n    DO NOT use: 'Anyone can join', 'no experience needed', casual/gig framing."
+    ),
+}
+
+
 def build_project_context(
     request: dict[str, Any],
     brief: dict[str, Any],
@@ -95,13 +130,19 @@ CULTURAL CONTEXT ({region}):
   Trust builders: {trust}
   Platform reality: {platforms}"""
 
-    # ── Campaign strategy ─────────────────────────────────────────
+    # ── Campaign strategy + pillar creative direction ───────────────
     strategy_block = ""
     pillar_weighting = derived.get("pillar_weighting", {}) if isinstance(derived, dict) else {}
     if pillar_weighting:
         primary_pillar = pillar_weighting.get("primary", "earn")
         secondary_pillar = pillar_weighting.get("secondary", "grow")
-        strategy_block = f"\nCAMPAIGN STRATEGY:\n  Primary pillar: {primary_pillar}\n  Secondary pillar: {secondary_pillar}"
+        pillar_direction = _PILLAR_CREATIVE_DIRECTION.get(primary_pillar, "")
+        strategy_block = (
+            f"\nCAMPAIGN STRATEGY:"
+            f"\n  Primary pillar: {primary_pillar.upper()}"
+            f"\n  Secondary pillar: {secondary_pillar.upper()}"
+            f"\n{pillar_direction}"
+        )
     if strategy and isinstance(strategy, dict):
         tier = strategy.get("tier", "")
         split_test = strategy.get("split_test_variable", "")

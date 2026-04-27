@@ -1,0 +1,1685 @@
+[
+  {
+    "template": "Black and White Modern Brand Design Your Story",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1920.0
+    },
+    "layer_count": 13,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1920.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 10287000 0 L 0 0 L 0 18288000 L 10287000 18288000 L 10287000 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 3",
+        "type": "GROUP",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1920.0
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 2,
+        "name": "TextBox 6",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 56.63,
+          "top": 332.81,
+          "width": 961.61,
+          "height": 497.54
+        },
+        "render": "text",
+        "text_content": "BRAND DESIGN"
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 7",
+        "type": "FREEFORM",
+        "position": {
+          "left": 0.0,
+          "top": 474.37,
+          "width": 985.0,
+          "height": 1445.63
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 9382156 0 L 0 0 L 0 13769613 L 9382156 13769613 L 9382156 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "TextBox 8",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 540.0,
+          "top": 1745.63,
+          "width": 461.87,
+          "height": 42.47
+        },
+        "render": "text",
+        "text_content": "reallygreatsite.com"
+      },
+      {
+        "layer": 5,
+        "name": "TextBox 9",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 508.02,
+          "top": 941.25,
+          "width": 504.35,
+          "height": 255.94
+        },
+        "render": "text",
+        "text_content": "WE CREATE BRAND IDENTITIES WITH CLARITY AND CONSISTENCY"
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 10",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 67.63,
+          "top": 1391.08,
+          "width": 412.4,
+          "height": 255.94
+        },
+        "render": "text",
+        "text_content": "DESIGNED TO GROW WITH YOUR BUSINESS"
+      },
+      {
+        "layer": 7,
+        "name": "TextBox 11",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 316.09,
+          "top": 102.22,
+          "width": 447.35,
+          "height": 44.41
+        },
+        "render": "text",
+        "text_content": "STUDIO SHODWE"
+      },
+      {
+        "layer": 8,
+        "name": "TextBox 12",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 67.63,
+          "top": 113.0,
+          "width": 266.6,
+          "height": 30.46
+        },
+        "render": "text",
+        "text_content": "@reallygreatsite"
+      },
+      {
+        "layer": 9,
+        "name": "TextBox 13",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 722.52,
+          "top": 113.0,
+          "width": 289.85,
+          "height": 30.46
+        },
+        "render": "text",
+        "text_content": "@reallygreatsite"
+      },
+      {
+        "layer": 10,
+        "name": "TextBox 14",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 85.77,
+          "top": 939.25,
+          "width": 248.46,
+          "height": 68.79
+        },
+        "render": "text",
+        "text_content": "Designed to stand out"
+      },
+      {
+        "layer": 11,
+        "name": "TextBox 15",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 829.35,
+          "top": 1299.62,
+          "width": 183.02,
+          "height": 68.79
+        },
+        "render": "text",
+        "text_content": "Visual identity"
+      },
+      {
+        "layer": 12,
+        "name": "TextBox 16",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 708.98,
+          "top": 1695.06,
+          "width": 303.39,
+          "height": 52.16
+        },
+        "render": "text",
+        "text_content": "VIEW SERVICES"
+      }
+    ]
+  },
+  {
+    "template": "Blue and Black Simple Financial Consultant Services Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 10,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1350.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 10287000 0 L 10287000 12858750 L 0 12858750 L 0 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Freeform 3",
+        "type": "FREEFORM",
+        "position": {
+          "left": -305.44,
+          "top": 507.51,
+          "width": 1748.41,
+          "height": 968.18
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 16653620 0 L 16653620 9221943 L 0 9221943 L 0 0 Z..."
+      },
+      {
+        "layer": 2,
+        "name": "TextBox 4",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 174.44,
+          "top": 916.13,
+          "width": 731.11,
+          "height": 135.97
+        },
+        "render": "text",
+        "text_content": "Maximize Your Money with Expert Advice! "
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 5",
+        "type": "FREEFORM",
+        "position": {
+          "left": -389.84,
+          "top": 1016.5,
+          "width": 843.09,
+          "height": 737.64
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 8030408 0 L 8030408 7026021 L 0 7026021 L 0 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "Freeform 6",
+        "type": "FREEFORM",
+        "position": {
+          "left": 608.99,
+          "top": 393.59,
+          "width": 843.09,
+          "height": 737.64
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 8030408 0 L 8030408 7026021 L 0 7026021 L 0 0 Z..."
+      },
+      {
+        "layer": 5,
+        "name": "Freeform 7",
+        "type": "FREEFORM",
+        "position": {
+          "left": -322.82,
+          "top": 253.97,
+          "width": 843.09,
+          "height": 737.64
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 8030408 0 L 8030408 7026021 L 0 7026021 L 0 0 Z..."
+      },
+      {
+        "layer": 6,
+        "name": "Freeform 8",
+        "type": "FREEFORM",
+        "position": {
+          "left": -511.52,
+          "top": -583.64,
+          "width": 1748.41,
+          "height": 968.18
+        },
+        "rotation": 180.0,
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 16653621 0 L 16653621 9221942 L 0 9221942 L 0 0 Z..."
+      },
+      {
+        "layer": 7,
+        "name": "Freeform 9",
+        "type": "FREEFORM",
+        "position": {
+          "left": -517.75,
+          "top": -420.48,
+          "width": 994.6,
+          "height": 870.2
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 9473578 0 L 9473578 8288690 L 0 8288690 L 0 0 Z..."
+      },
+      {
+        "layer": 8,
+        "name": "Freeform 10",
+        "type": "FREEFORM",
+        "position": {
+          "left": 383.07,
+          "top": 834.12,
+          "width": 33.18,
+          "height": 27.62
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 316039 0 L 316039 263102 L 0 263102 L 0 0 Z..."
+      },
+      {
+        "layer": 9,
+        "name": "TextBox 11",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 435.27,
+          "top": 823.12,
+          "width": 309.68,
+          "height": 46.33
+        },
+        "render": "text",
+        "text_content": "Rimberio Finance"
+      }
+    ]
+  },
+  {
+    "template": "Blue and Pink Minimalist Creator Lifestyle Instagram Post ",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 7,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1350.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 10287000 0 L 10287000 12858750 L 0 12858750 L 0 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 3",
+        "type": "GROUP",
+        "position": {
+          "left": 0.0,
+          "top": 639.73,
+          "width": 1080.0,
+          "height": 710.27
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 2,
+        "name": "Freeform 6",
+        "type": "FREEFORM",
+        "position": {
+          "left": 229.96,
+          "top": 167.04,
+          "width": 620.09,
+          "height": 1051.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5906330 0 L 5906330 10010731 L 0 10010731 L 0 0 Z..."
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 7",
+        "type": "FREEFORM",
+        "position": {
+          "left": 253.13,
+          "top": 167.04,
+          "width": 734.95,
+          "height": 451.12
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 7000396 0 L 7000396 4296953 L 0 4296953 L 0 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "Group 8",
+        "type": "GROUP",
+        "position": {
+          "left": 277.34,
+          "top": 316.49,
+          "width": 82.8,
+          "height": 82.8
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 406400 0 C 181951 0 0 181951 0 406400 C 0 630849 181951 812800 406400 812800 C..."
+      },
+      {
+        "layer": 5,
+        "name": "Freeform 10",
+        "type": "FREEFORM",
+        "position": {
+          "left": 185.24,
+          "top": 411.43,
+          "width": 267.01,
+          "height": 246.31
+        },
+        "rotation": 33.92,
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 2346150 L 2543252 2346150 L 2543252 0 L 0 0 L 0 2346150 Z..."
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 11",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 298.12,
+          "top": 841.82,
+          "width": 483.76,
+          "height": 120.4
+        },
+        "render": "text",
+        "text_content": "things I haven\u2019t show behind my social media"
+      }
+    ]
+  },
+  {
+    "template": "Blue and Pink Minimalist Creator Lifestyle Instagram Post ",
+    "slide": 1,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 10,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": 106.4,
+          "top": 108.0,
+          "width": 623.86,
+          "height": 650.7
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5942284 0 L 5942284 6197950 L 0 6197950 L 0 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 3",
+        "type": "GROUP",
+        "position": {
+          "left": 117.85,
+          "top": 263.37,
+          "width": 600.97,
+          "height": 485.1
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 863842 0 L 22992 0 C 10294 0 0 10294 0 22992 L 0 692858 C 0 705556 10294 71585..."
+      },
+      {
+        "layer": 2,
+        "name": "Group 5",
+        "type": "GROUP",
+        "position": {
+          "left": 490.48,
+          "top": 543.44,
+          "width": 481.52,
+          "height": 477.93
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 28696 0 L 681866 0 C 689477 0 696775 3023 702157 8405 C 707539 13786 710562 21..."
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 7",
+        "type": "FREEFORM",
+        "position": {
+          "left": 609.41,
+          "top": 461.91,
+          "width": 241.7,
+          "height": 240.6
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 2302233 0 L 2302233 2291681 L 0 2291681 L 0 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "Freeform 8",
+        "type": "FREEFORM",
+        "position": {
+          "left": 771.49,
+          "top": 1081.59,
+          "width": 200.51,
+          "height": 160.41
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 1909862 0 L 1909862 1527890 L 0 1527890 L 0 0 Z..."
+      },
+      {
+        "layer": 5,
+        "name": "Group 9",
+        "type": "GROUP",
+        "position": {
+          "left": 317.25,
+          "top": 932.04,
+          "width": 312.75,
+          "height": 310.42
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 44181 0 L 666381 0 C 690781 0 710562 19780 710562 44181 L 710562 661093 C 7105..."
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 11",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 802.56,
+          "top": 140.17,
+          "width": 169.44,
+          "height": 242.4
+        },
+        "render": "text",
+        "text_content": "What you don\u2019t see"
+      },
+      {
+        "layer": 7,
+        "name": "TextBox 12",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 166.95,
+          "top": 617.51,
+          "width": 232.75,
+          "height": 85.0
+        },
+        "render": "text",
+        "text_content": "Overthinking captions"
+      },
+      {
+        "layer": 8,
+        "name": "TextBox 13",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 1157.0,
+          "width": 175.32,
+          "height": 85.0
+        },
+        "render": "text",
+        "text_content": "Retaking shots"
+      },
+      {
+        "layer": 9,
+        "name": "TextBox 14",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 665.92,
+          "top": 903.0,
+          "width": 273.27,
+          "height": 85.0
+        },
+        "render": "text",
+        "text_content": "Learning from low engagement"
+      }
+    ]
+  },
+  {
+    "template": "Blue and Pink Minimalist Creator Lifestyle Instagram Post ",
+    "slide": 2,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 5,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Group 2",
+        "type": "GROUP",
+        "position": {
+          "left": 278.45,
+          "top": 316.0,
+          "width": 523.1,
+          "height": 698.9
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 35737 0 L 736192 0 C 745671 0 754761 3765 761463 10467 C 768165 17169 771930 2..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 4",
+        "type": "GROUP",
+        "position": {
+          "left": 694.88,
+          "top": 419.38,
+          "width": 213.34,
+          "height": 202.9
+        },
+        "rotation": 343.66,
+        "render": "svg_clipped_image",
+        "clip_path": "M 2542274 0 L 3327883 1591818 L 5084559 1847075 L 3813416 3086125 L 4113492 4835..."
+      },
+      {
+        "layer": 2,
+        "name": "Group 7",
+        "type": "GROUP",
+        "position": {
+          "left": 190.06,
+          "top": 669.62,
+          "width": 213.34,
+          "height": 202.9
+        },
+        "rotation": 13.02,
+        "render": "svg_clipped_image",
+        "clip_path": "M 2542274 0 L 3327883 1591818 L 5084559 1847075 L 3813416 3086125 L 4113492 4835..."
+      },
+      {
+        "layer": 3,
+        "name": "TextBox 10",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 278.45,
+          "top": 180.0,
+          "width": 523.1,
+          "height": 87.0
+        },
+        "render": "text",
+        "text_content": "but i stay"
+      },
+      {
+        "layer": 4,
+        "name": "TextBox 11",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 296.74,
+          "top": 1059.8,
+          "width": 486.53,
+          "height": 103.2
+        },
+        "render": "text",
+        "text_content": " Because growth happens off-camera too."
+      }
+    ]
+  },
+  {
+    "template": "Blue and Yellow Modern Professional We Are Hiring Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 21,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1350.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 10287000 0 L 10287000 12858750 L 0 12858750 L 0 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 3",
+        "type": "GROUP",
+        "position": {
+          "left": -45.21,
+          "top": -56.26,
+          "width": 697.01,
+          "height": 1547.71
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 2,
+        "name": "Group 6",
+        "type": "GROUP",
+        "position": {
+          "left": -10.23,
+          "top": -37.6,
+          "width": 697.01,
+          "height": 1547.71
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 3,
+        "name": "Group 9",
+        "type": "GROUP",
+        "position": {
+          "left": 154.57,
+          "top": 234.56,
+          "width": 697.01,
+          "height": 1547.71
+        },
+        "rotation": 270.0,
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 4,
+        "name": "Group 12",
+        "type": "GROUP",
+        "position": {
+          "left": 303.3,
+          "top": 357.87,
+          "width": 697.01,
+          "height": 1547.71
+        },
+        "rotation": 270.0,
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 5,
+        "name": "TextBox 15",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 99.0,
+          "top": 222.8,
+          "width": 313.88,
+          "height": 119.67
+        },
+        "render": "text",
+        "text_content": "We Are"
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 16",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 99.0,
+          "top": 274.3,
+          "width": 736.06,
+          "height": 271.35
+        },
+        "render": "text",
+        "text_content": "Hiring!"
+      },
+      {
+        "layer": 7,
+        "name": "Freeform 17",
+        "type": "FREEFORM",
+        "position": {
+          "left": 99.76,
+          "top": 104.63,
+          "width": 44.7,
+          "height": 42.91
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 425743 0 L 425743 408713 L 0 408713 L 0 0 Z..."
+      },
+      {
+        "layer": 8,
+        "name": "Group 18",
+        "type": "GROUP",
+        "position": {
+          "left": 99.76,
+          "top": 513.47,
+          "width": 498.33,
+          "height": 78.65
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 9,
+        "name": "TextBox 21",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 156.61,
+          "top": 1157.61,
+          "width": 280.67,
+          "height": 32.47
+        },
+        "render": "text",
+        "text_content": "Our Phone:"
+      },
+      {
+        "layer": 10,
+        "name": "TextBox 22",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 156.61,
+          "top": 1185.47,
+          "width": 230.32,
+          "height": 31.91
+        },
+        "render": "text",
+        "text_content": "+123-456-7890"
+      },
+      {
+        "layer": 11,
+        "name": "Freeform 23",
+        "type": "FREEFORM",
+        "position": {
+          "left": 98.17,
+          "top": 1170.15,
+          "width": 40.98,
+          "height": 40.98
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 390333 0 L 0 0 L 0 390333 L 390333 390333 L 390333 0 Z..."
+      },
+      {
+        "layer": 12,
+        "name": "Freeform 24",
+        "type": "FREEFORM",
+        "position": {
+          "left": 374.06,
+          "top": 1175.72,
+          "width": 39.35,
+          "height": 39.35
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 374810 0 L 374810 374810 L 0 374810 L 0 0 Z..."
+      },
+      {
+        "layer": 13,
+        "name": "Freeform 25",
+        "type": "FREEFORM",
+        "position": {
+          "left": 99.76,
+          "top": 687.49,
+          "width": 125.58,
+          "height": 68.73
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 1196165 0 L 1196165 654629 L 0 654629 L 0 0 Z..."
+      },
+      {
+        "layer": 14,
+        "name": "TextBox 26",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 158.65,
+          "top": 103.48,
+          "width": 190.28,
+          "height": 43.43
+        },
+        "render": "text",
+        "text_content": "Borcelle."
+      },
+      {
+        "layer": 15,
+        "name": "TextBox 27",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 125.84,
+          "top": 523.99,
+          "width": 344.92,
+          "height": 51.2
+        },
+        "render": "text",
+        "text_content": "Content Creator"
+      },
+      {
+        "layer": 16,
+        "name": "TextBox 28",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 98.17,
+          "top": 1106.46,
+          "width": 368.86,
+          "height": 37.51
+        },
+        "render": "text",
+        "text_content": "Send your CV + portfolio to:"
+      },
+      {
+        "layer": 17,
+        "name": "TextBox 29",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 422.11,
+          "top": 1159.23,
+          "width": 280.67,
+          "height": 32.47
+        },
+        "render": "text",
+        "text_content": "Our Social:"
+      },
+      {
+        "layer": 18,
+        "name": "TextBox 30",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 422.11,
+          "top": 1187.09,
+          "width": 230.32,
+          "height": 31.91
+        },
+        "render": "text",
+        "text_content": "@reallygreatsite"
+      },
+      {
+        "layer": 19,
+        "name": "Freeform 31",
+        "type": "FREEFORM",
+        "position": {
+          "left": 865.31,
+          "top": 70.26,
+          "width": 125.58,
+          "height": 68.73
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 1196165 0 L 1196165 654628 L 0 654628 L 0 0 Z..."
+      },
+      {
+        "layer": 20,
+        "name": "Freeform 32",
+        "type": "FREEFORM",
+        "position": {
+          "left": 865.31,
+          "top": 1161.03,
+          "width": 125.58,
+          "height": 68.73
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 1196165 0 L 1196165 654628 L 0 654628 L 0 0 Z..."
+      }
+    ]
+  },
+  {
+    "template": "Gray and Orange Modern We Are Hiring Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 7,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Group 2",
+        "type": "GROUP",
+        "position": {
+          "left": 700.88,
+          "top": 199.35,
+          "width": 433.12,
+          "height": 707.52
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 1,
+        "name": "Group 5",
+        "type": "GROUP",
+        "position": {
+          "left": 700.88,
+          "top": -537.97,
+          "width": 433.12,
+          "height": 707.52
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 2,
+        "name": "Group 8",
+        "type": "GROUP",
+        "position": {
+          "left": 94.2,
+          "top": 830.23,
+          "width": 592.56,
+          "height": 707.52
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 11",
+        "type": "FREEFORM",
+        "position": {
+          "left": 566.67,
+          "top": 284.9,
+          "width": 698.83,
+          "height": 1134.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 6656332 0 L 6656332 10801350 L 0 10801350 L 0 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "TextBox 12",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 294.97,
+          "width": 553.68,
+          "height": 236.31
+        },
+        "render": "text",
+        "text_content": "WE ARE HIRING"
+      },
+      {
+        "layer": 5,
+        "name": "TextBox 13",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 607.1,
+          "width": 553.68,
+          "height": 179.14
+        },
+        "render": "text",
+        "text_content": "PROFESSIONAL GRAPHIC\nDESIGNER"
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 14",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 180.55,
+          "width": 361.97,
+          "height": 41.47
+        },
+        "render": "text",
+        "text_content": "SALFORD & CO."
+      }
+    ]
+  },
+  {
+    "template": "Purple And Pink Modern Software Development Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 21,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Freeform 2",
+        "type": "FREEFORM",
+        "position": {
+          "left": -76.1,
+          "top": 479.19,
+          "width": 1243.25,
+          "height": 1092.5
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 11841931 0 L 11841931 10406097 L 0 10406097 L 0 0 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Freeform 3",
+        "type": "FREEFORM",
+        "position": {
+          "left": -79.83,
+          "top": 583.31,
+          "width": 843.96,
+          "height": 725.8
+        },
+        "rotation": 237.64,
+        "render": "svg_clipped_image",
+        "clip_path": "M 8038681 6913265 L 0 6913265 L 0 0 L 8038681 0 L 8038681 6913265 Z..."
+      },
+      {
+        "layer": 2,
+        "name": "Freeform 4",
+        "type": "FREEFORM",
+        "position": {
+          "left": 312.77,
+          "top": 583.31,
+          "width": 843.96,
+          "height": 725.8
+        },
+        "rotation": 128.43,
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 6913265 L 8038681 6913265 L 8038681 0 L 0 0 L 0 6913265 Z..."
+      },
+      {
+        "layer": 3,
+        "name": "Group 5",
+        "type": "GROUP",
+        "position": {
+          "left": -202.15,
+          "top": 1027.6,
+          "width": 1495.35,
+          "height": 466.97
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 4,
+        "name": "Freeform 8",
+        "type": "FREEFORM",
+        "position": {
+          "left": 44.47,
+          "top": 998.63,
+          "width": 1002.1,
+          "height": 238.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 9545031 0 L 9545031 2266945 L 0 2266945 L 0 0 Z..."
+      },
+      {
+        "layer": 5,
+        "name": "Freeform 9",
+        "type": "FREEFORM",
+        "position": {
+          "left": 145.26,
+          "top": 936.73,
+          "width": 800.53,
+          "height": 212.5
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 7625009 0 L 7625009 2024093 L 0 2024093 L 0 0 Z..."
+      },
+      {
+        "layer": 6,
+        "name": "Freeform 10",
+        "type": "FREEFORM",
+        "position": {
+          "left": 272.43,
+          "top": 665.72,
+          "width": 546.18,
+          "height": 350.24
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5202345 0 L 5202345 3336004 L 0 3336004 L 0 0 Z..."
+      },
+      {
+        "layer": 7,
+        "name": "Group 11",
+        "type": "GROUP",
+        "position": {
+          "left": 340.14,
+          "top": 689.59,
+          "width": 410.77,
+          "height": 257.34
+        },
+        "render": "image"
+      },
+      {
+        "layer": 8,
+        "name": "Freeform 13",
+        "type": "FREEFORM",
+        "position": {
+          "left": 272.43,
+          "top": 1009.31,
+          "width": 546.18,
+          "height": 88.75
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5202345 0 L 5202345 845381 L 0 845381 L 0 0 Z..."
+      },
+      {
+        "layer": 9,
+        "name": "Group 14",
+        "type": "GROUP",
+        "position": {
+          "left": 279.01,
+          "top": 278.91,
+          "width": 503.44,
+          "height": 77.96
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 10,
+        "name": "Group 17",
+        "type": "GROUP",
+        "position": {
+          "left": 341.44,
+          "top": 1184.64,
+          "width": 397.13,
+          "height": 73.23
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 11,
+        "name": "Freeform 20",
+        "type": "FREEFORM",
+        "position": {
+          "left": 343.95,
+          "top": 200.15,
+          "width": 41.37,
+          "height": 47.76
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 394092 0 L 394092 454940 L 0 454940 L 0 0 Z..."
+      },
+      {
+        "layer": 12,
+        "name": "TextBox 21",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 115.76,
+          "top": 363.87,
+          "width": 829.94,
+          "height": 146.29
+        },
+        "render": "text",
+        "text_content": "Software Solutions Tailored for You"
+      },
+      {
+        "layer": 13,
+        "name": "TextBox 22",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 89.47,
+          "top": 531.63,
+          "width": 882.53,
+          "height": 72.09
+        },
+        "render": "text",
+        "text_content": "Your vision deserves more than just code\u2014it needs intelligent, scalable, and future-ready software."
+      },
+      {
+        "layer": 14,
+        "name": "Freeform 23",
+        "type": "FREEFORM",
+        "position": {
+          "left": -460.54,
+          "top": -250.11,
+          "width": 629.2,
+          "height": 629.2
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5993115 0 L 5993115 5993115 L 0 5993115 L 0 0 Z..."
+      },
+      {
+        "layer": 15,
+        "name": "Freeform 24",
+        "type": "FREEFORM",
+        "position": {
+          "left": 911.34,
+          "top": -250.11,
+          "width": 629.2,
+          "height": 629.2
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5993115 0 L 5993115 5993115 L 0 5993115 L 0 0 Z..."
+      },
+      {
+        "layer": 16,
+        "name": "TextBox 25",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 301.85,
+          "top": 297.27,
+          "width": 457.77,
+          "height": 40.6
+        },
+        "render": "text",
+        "text_content": "Innovate, Build, Scale"
+      },
+      {
+        "layer": 17,
+        "name": "TextBox 26",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 387.03,
+          "top": 1191.58,
+          "width": 316.99,
+          "height": 53.35
+        },
+        "render": "text",
+        "text_content": "LEARN MORE"
+      },
+      {
+        "layer": 18,
+        "name": "TextBox 27",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 395.44,
+          "top": 206.55,
+          "width": 322.08,
+          "height": 36.96
+        },
+        "render": "text",
+        "text_content": "Hanover And Tyke"
+      },
+      {
+        "layer": 19,
+        "name": "Freeform 28",
+        "type": "FREEFORM",
+        "position": {
+          "left": -149.32,
+          "top": 800.12,
+          "width": 432.0,
+          "height": 22.14
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 4114800 0 L 4114800 210884 L 0 210884 L 0 0 Z..."
+      },
+      {
+        "layer": 20,
+        "name": "Freeform 29",
+        "type": "FREEFORM",
+        "position": {
+          "left": 797.32,
+          "top": 800.12,
+          "width": 432.0,
+          "height": 22.14
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 4114800 0 L 0 0 L 0 210884 L 4114800 210884 L 4114800 0 Z..."
+      }
+    ]
+  },
+  {
+    "template": "Purple and Black Modern Tech Talk Event Promotion Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 13,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Group 2",
+        "type": "GROUP",
+        "position": {
+          "left": 108.0,
+          "top": 535.65,
+          "width": 864.0,
+          "height": 706.35
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 66793 0 L 615432 0 C 652320 0 682224 29904 682224 66793 L 682224 490948 C 6822..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 4",
+        "type": "GROUP",
+        "position": {
+          "left": 275.76,
+          "top": 1141.98,
+          "width": 526.78,
+          "height": 133.8
+        },
+        "render": "svg_gradient_shape"
+      },
+      {
+        "layer": 2,
+        "name": "Group 7",
+        "type": "GROUP",
+        "position": {
+          "left": 323.37,
+          "top": 1177.21,
+          "width": 224.75,
+          "height": 60.61
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 3,
+        "name": "Freeform 10",
+        "type": "FREEFORM",
+        "position": {
+          "left": 594.75,
+          "top": 1191.5,
+          "width": 35.37,
+          "height": 35.37
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 336927 0 L 336927 336928 L 0 336928 L 0 0 Z..."
+      },
+      {
+        "layer": 4,
+        "name": "Freeform 11",
+        "type": "FREEFORM",
+        "position": {
+          "left": 488.24,
+          "top": 1187.52,
+          "width": 40.92,
+          "height": 40.92
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 389724 0 L 389724 389725 L 0 389725 L 0 0 Z..."
+      },
+      {
+        "layer": 5,
+        "name": "Freeform 12",
+        "type": "FREEFORM",
+        "position": {
+          "left": 108.0,
+          "top": 84.67,
+          "width": 34.79,
+          "height": 33.7
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 331376 0 L 331376 320989 L 0 320989 L 0 0 Z..."
+      },
+      {
+        "layer": 6,
+        "name": "TextBox 13",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 233.22,
+          "width": 796.24,
+          "height": 132.92
+        },
+        "render": "text",
+        "text_content": "TECH TALK"
+      },
+      {
+        "layer": 7,
+        "name": "TextBox 14",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 166.93,
+          "top": 94.26,
+          "width": 168.13,
+          "height": 24.11
+        },
+        "render": "text",
+        "text_content": "Liceria & Co."
+      },
+      {
+        "layer": 8,
+        "name": "TextBox 15",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 763.11,
+          "top": 85.67,
+          "width": 204.35,
+          "height": 21.37
+        },
+        "render": "text",
+        "text_content": "@reallygreatsite"
+      },
+      {
+        "layer": 9,
+        "name": "TextBox 16",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 313.04,
+          "top": 1192.99,
+          "width": 199.66,
+          "height": 29.06
+        },
+        "render": "text",
+        "text_content": "REGISTER"
+      },
+      {
+        "layer": 10,
+        "name": "TextBox 17",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 648.18,
+          "top": 1206.16,
+          "width": 151.36,
+          "height": 22.28
+        },
+        "render": "text",
+        "text_content": "+123-456-7890"
+      },
+      {
+        "layer": 11,
+        "name": "TextBox 18",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 648.18,
+          "top": 1184.52,
+          "width": 151.36,
+          "height": 21.01
+        },
+        "render": "text",
+        "text_content": "TELEPHONE"
+      },
+      {
+        "layer": 12,
+        "name": "TextBox 19",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 369.11,
+          "width": 796.24,
+          "height": 134.12
+        },
+        "render": "text",
+        "text_content": "EVENT"
+      }
+    ]
+  },
+  {
+    "template": "Purple and Yellow Modern Tech Support Service Instagram Post",
+    "slide": 0,
+    "canvas": {
+      "width": 1080.0,
+      "height": 1349.33
+    },
+    "layer_count": 15,
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Group 2",
+        "type": "GROUP",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1080.0,
+          "height": 1350.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 1309219 0 L 1309219 1636523 L 0 1636523 Z..."
+      },
+      {
+        "layer": 1,
+        "name": "Group 4",
+        "type": "GROUP",
+        "position": {
+          "left": 108.0,
+          "top": 73.0,
+          "width": 809.39,
+          "height": 809.39
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 2,
+        "name": "Freeform 7",
+        "type": "FREEFORM",
+        "position": {
+          "left": 256.46,
+          "top": 106.0,
+          "width": 769.23,
+          "height": 1244.0
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 7326941 0 L 7326941 11849100 L 0 11849100 L 0 0 Z..."
+      },
+      {
+        "layer": 3,
+        "name": "Group 8",
+        "type": "GROUP",
+        "position": {
+          "left": 0.0,
+          "top": 0.0,
+          "width": 1079.39,
+          "height": 1350.0
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 4,
+        "name": "Group 11",
+        "type": "GROUP",
+        "position": {
+          "left": -469.76,
+          "top": 385.59,
+          "width": 1027.73,
+          "height": 293.39
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 5,
+        "name": "Freeform 14",
+        "type": "FREEFORM",
+        "position": {
+          "left": 149.12,
+          "top": 390.27,
+          "width": 1350.0,
+          "height": 569.45
+        },
+        "rotation": 270.0,
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 12858750 0 L 12858750 5424054 L 0 5424054 L 0 0 Z..."
+      },
+      {
+        "layer": 6,
+        "name": "AutoShape 15",
+        "type": "AUTO_SHAPE",
+        "position": {
+          "left": 108.0,
+          "top": 551.5,
+          "width": 180.32,
+          "height": 0.0
+        },
+        "render": "filled_shape"
+      },
+      {
+        "layer": 7,
+        "name": "Group 16",
+        "type": "GROUP",
+        "position": {
+          "left": 574.03,
+          "top": 675.0,
+          "width": 135.99,
+          "height": 135.99
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 8,
+        "name": "Group 19",
+        "type": "GROUP",
+        "position": {
+          "left": 108.0,
+          "top": 740.63,
+          "width": 533.07,
+          "height": 141.76
+        },
+        "render": "svg_solid_shape"
+      },
+      {
+        "layer": 9,
+        "name": "Freeform 24",
+        "type": "FREEFORM",
+        "position": {
+          "left": 602.0,
+          "top": 700.81,
+          "width": 80.05,
+          "height": 84.38
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 762494 0 L 762494 803682 L 0 803682 L 0 0 Z..."
+      },
+      {
+        "layer": 10,
+        "name": "Freeform 25",
+        "type": "FREEFORM",
+        "position": {
+          "left": -76.07,
+          "top": 944.39,
+          "width": 588.76,
+          "height": 490.28
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 5607985 0 L 5607985 4669922 L 0 4669922 L 0 0 Z..."
+      },
+      {
+        "layer": 11,
+        "name": "Freeform 26",
+        "type": "FREEFORM",
+        "position": {
+          "left": 790.86,
+          "top": -106.87,
+          "width": 432.0,
+          "height": 359.74
+        },
+        "render": "svg_clipped_image",
+        "clip_path": "M 0 0 L 4114800 0 L 4114800 3426506 L 0 3426506 L 0 0 Z..."
+      },
+      {
+        "layer": 12,
+        "name": "TextBox 27",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 108.0,
+          "top": 410.22,
+          "width": 449.97,
+          "height": 78.8
+        },
+        "render": "text",
+        "text_content": "Tech Trouble?"
+      },
+      {
+        "layer": 13,
+        "name": "TextBox 28",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 110.82,
+          "top": 484.22,
+          "width": 389.29,
+          "height": 48.07
+        },
+        "render": "text",
+        "text_content": "I\u2019m Just a Call Away."
+      },
+      {
+        "layer": 14,
+        "name": "TextBox 29",
+        "type": "TEXT_BOX",
+        "position": {
+          "left": 110.82,
+          "top": 563.5,
+          "width": 355.0,
+          "height": 92.33
+        },
+        "render": "text",
+        "text_content": "24/7 IT support when you need it most."
+      }
+    ]
+  }
+]

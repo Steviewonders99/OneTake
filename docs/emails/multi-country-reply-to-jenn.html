@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #ffffff;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 2px solid #e5e5e5;
+    padding-bottom: 6px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #32373c;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  p {
+    margin: 8px 0;
+  }
+  ul {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+  li {
+    margin: 4px 0;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 24px 0;
+  }
+  .highlight-box {
+    background: #f5f5f5;
+    border-left: 4px solid #32373c;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .bold {
+    font-weight: 700;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th {
+    background: #32373c;
+    color: #ffffff;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  tr:nth-child(even) td {
+    background: #fafafa;
+  }
+  .tier-label {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  .tier-full { background: #0693e3; }
+  .tier-regional { background: #7c3aed; }
+  .tier-english { background: #737373; }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(6,147,227,0.08), rgba(155,81,224,0.08));
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+  .cut-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .keep { background: #dcfce7; color: #166534; }
+  .cut { background: #fee2e2; color: #991b1b; }
+  .reduce { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+
+<p>Hi Jen,</p>
+
+<p>Great feedback across the board. Let me break down exactly what the system generates per country right now, then walk through my recommendation on what to keep, cut, and generalize. The core tension is: <em>we need enough content variety to actually optimize ad performance (A/B test headlines, test different visuals, find winners by channel) &mdash; but nobody should be reviewing thousands of items to get there.</em></p>
+
+<hr class="divider">
+
+<h2>What Is a Persona (and Why It Matters)</h2>
+
+<p>Before the breakdown, quick context on how personas work because they drive everything downstream.</p>
+
+<p>A persona is <span class="bold">a real-person representation of who qualifies for this specific job</span>. It's not a generic marketing avatar &mdash; it's derived directly from the job requirements the recruiter submits in the intake form. The intake captures 7 structured fields:</p>
+
+<ul>
+  <li><span class="bold">Required qualifications</span> &mdash; credentials, degrees, certifications, years of experience</li>
+  <li><span class="bold">Preferred qualifications</span> &mdash; nice-to-haves that strengthen an application</li>
+  <li><span class="bold">Location scope</span> &mdash; geographic requirements and exclusions</li>
+  <li><span class="bold">Language requirements</span> &mdash; languages, proficiency levels, modality notes</li>
+  <li><span class="bold">Engagement model</span> &mdash; duration, commitment, compensation structure</li>
+  <li><span class="bold">Equipment &amp; tools</span> &mdash; hardware, software, reference material access</li>
+  <li><span class="bold">Context notes</span> &mdash; creative-team brief on the project's real audience and tone</li>
+</ul>
+
+<p>From these, the AI derives <span class="bold">persona constraints</span>: what the minimum credentials are, which career stages / tiers are acceptable, what age range fits, and which archetypes are explicitly excluded (so we never target people who don't qualify). It then generates <span class="bold">3 distinct personas</span> &mdash; each matching a different acceptable tier from the job requirements, grounded in the cultural research for that country.</p>
+
+<div class="highlight-box">
+  <p><span class="bold">Example:</span> If the job requires "licensed dermatologist OR dermatology resident OR clinical-year medical student with documented dermatology rotation," the system generates 3 personas: a practicing dermatologist, a second-year resident, and a clinical-year student. Each gets different messaging (the resident cares about supplemental income during training; the practicing physician cares about shaping AI clinical tools). The system will NOT generate a generic "gig worker" persona because that archetype is excluded by the qualification constraints.</p>
+</div>
+
+<p>Every piece of content downstream &mdash; images, copy, creatives &mdash; is built for a specific persona. This is why the ads feel targeted instead of generic: the copy speaks to a resident's specific frustrations, not "join our platform."</p>
+
+<hr class="divider">
+
+<h2>Exact Per-Country Output Today</h2>
+
+<p>When Nova processes a single country, here's what it produces. The numbers below assume a typical setup: <span class="bold">4 strategy-recommended channels, 1 language, pillar weighting active</span> (top 2 of 3 brand pillars). Dual-language countries produce more copy but the same number of images and creatives.</p>
+
+<table>
+  <tr>
+    <th>Deliverable</th>
+    <th>Quantity</th>
+    <th>What It Is</th>
+  </tr>
+  <tr>
+    <td><span class="bold">Cultural Research</span></td>
+    <td>1 report</td>
+    <td>AI researches 8 dimensions: gig economy perception, trust factors, economic context, tech literacy, cultural sensitivities, language nuance, AI fatigue, platform behavior. This is what makes the rest of the pipeline country-aware.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Media Strategy</span></td>
+    <td>1 plan</td>
+    <td>Channel mix (which platforms to run ads on), budget allocation across channels, split test recommendations, persona weighting. Derived from the cultural research &mdash; e.g., Morocco gets Facebook groups + WhatsApp, Germany gets LinkedIn + Xing.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Personas</span></td>
+    <td>3</td>
+    <td>Derived from job requirements (see above). Each persona matches a different acceptable career stage / credential tier, grounded in the country's cultural research. Drives all downstream content.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Actors</span></td>
+    <td>9</td>
+    <td>3 actors per persona (visual diversity within each target profile). Each actor gets a region-aware identity card: appearance, outfit, work setting &mdash; all derived from the persona's credential tier and cultural context.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Scene Images</span></td>
+    <td>36</td>
+    <td>9 actors &times; 4 scenes each (working, break/transition, different angle, reward moment). AI-generated, quality-gated (only images scoring above 0.85 pass). Scenes are derived from the job's work environment and tools.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Ad Copy Variants</span></td>
+    <td>24</td>
+    <td>3 personas &times; 4 channels &times; 1 language &times; 2 brand pillars = 24 copy assets. Each copy variant speaks to a specific persona's psychology through a specific brand pillar (Earn, Grow, or Shape). Only generates for channels in that country's media strategy.</td>
+  </tr>
+  <tr>
+    <td><span class="bold">Composed Creatives</span></td>
+    <td>72</td>
+    <td>9 actors &times; 2 pillars &times; 4 platforms = 72 final ad units. Image + copy + layout, rendered to platform-specific dimensions (Instagram feed, LinkedIn banner, etc.). Only composes for platforms in that country's media strategy. Scored and quality-gated.</td>
+  </tr>
+  <tr>
+    <td style="background: #f5f5f5;"><span class="bold">Total per country</span></td>
+    <td style="background: #f5f5f5;"><span class="bold">~133</span></td>
+    <td style="background: #f5f5f5;">Single-language country with 4 channels. Dual-language countries add ~24 more copy variants.</td>
+  </tr>
+</table>
+
+<h3>Per-Channel Breakdown</h3>
+
+<p>Since everything is scoped to the strategy-recommended channels, here's what each channel actually receives:</p>
+
+<table>
+  <tr>
+    <th>Asset Type</th>
+    <th>Per Channel</th>
+    <th>Formula</th>
+  </tr>
+  <tr>
+    <td>Ad Copy Variants</td>
+    <td><span class="bold">6</span></td>
+    <td>3 personas &times; 2 brand pillars (single-language). 12 for dual-language.</td>
+  </tr>
+  <tr>
+    <td>Composed Creatives</td>
+    <td><span class="bold">18</span></td>
+    <td>9 actors &times; 2 brand pillars</td>
+  </tr>
+  <tr>
+    <td style="background: #f5f5f5;"><span class="bold">Total per channel</span></td>
+    <td style="background: #f5f5f5;"><span class="bold">24</span></td>
+    <td style="background: #f5f5f5;">6 copy + 18 creatives per platform</td>
+  </tr>
+</table>
+
+<p>For Centaurus at 16 countries with an average of 4 channels each, that's <span class="bold">~2,100 total assets</span>. Still a lot &mdash; but it's across 16 countries, and only a small subset needs human review.</p>
+
+<hr class="divider">
+
+<h2>Why We Generate This Much</h2>
+
+<p>Quick context on the logic before I recommend cuts. The volume isn't there to overwhelm reviewers &mdash; it's there to give the ad platform enough variations to optimize against. When you run paid ads, the platform (Meta, Google, LinkedIn) tests different combinations of headlines, images, and descriptions to find what converts best. If you give it 1 creative, it runs that. If you give it 15 variations, it finds the winner in the first 48 hours and shifts budget to it automatically.</p>
+
+<p><span class="bold">The goal isn't for Miguel to review 2,100 items. It's for Miguel to approve ~40 items, and the ad platform to optimize across them.</span></p>
+
+<hr class="divider">
+
+<h2>Recommendation: 3-Tier Country System</h2>
+
+<p>Not every country needs the full treatment. I'm proposing we tier countries based on campaign value and localization needs:</p>
+
+<table>
+  <tr>
+    <th>Tier</th>
+    <th>Treatment</th>
+    <th>What Gets Generated</th>
+    <th>Human Review</th>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-full">Tier 1</span><br>Full Localization</td>
+    <td>Countries where local-language ads measurably outperform English, or where contributor volume targets are highest</td>
+    <td>Full pipeline: local-language cultural research, media strategy, personas, images, copy in local language, composed creatives</td>
+    <td>Top 5 creatives surfaced per country</td>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-regional">Tier 2</span><br>Regional Cluster</td>
+    <td>Countries grouped by shared language/culture (e.g., LATAM Spanish, Balkans). One pipeline run per cluster, adapted per country at copy level only</td>
+    <td>Shared cultural research + media strategy per cluster, shared actor visuals, country-specific copy (local references, city names, rates)</td>
+    <td>Top 5 creatives per cluster</td>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-english">Tier 3</span><br>English + Targeting</td>
+    <td>Anglophone countries or markets where English CTR is comparable. No localization &mdash; differentiation comes from targeting and rates only</td>
+    <td>English copy, shared global actor pool, country-specific media strategy (channels/budget only)</td>
+    <td>Top 5 creatives (shared set)</td>
+  </tr>
+</table>
+
+<h3>Applied to Centaurus (16 Countries)</h3>
+
+<table>
+  <tr>
+    <th>Tier</th>
+    <th>Countries</th>
+    <th>Logic</th>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-full">Tier 1</span></td>
+    <td>Germany, Italy, Poland, Morocco*</td>
+    <td>High volume targets, local language proven higher CTR in recruitment, cultural context matters significantly. Morocco is a strong candidate if French/Arabic CTR data supports it.</td>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-regional">Tier 2</span></td>
+    <td>Chile + Colombia (LATAM Spanish), Bulgaria + Romania + Croatia (Balkans), Czech Republic + Greece</td>
+    <td>Shared language or close cultural clusters. One creative set per cluster, swap city names / rates / local references in copy.</td>
+  </tr>
+  <tr>
+    <td><span class="tier-label tier-english">Tier 3</span></td>
+    <td>United States, Canada (EN + FR), Ireland, South Africa, Malaysia</td>
+    <td>English-speaking or English-as-business-language markets. Canada FR could upgrade to Tier 2 if French CTR data warrants it.</td>
+  </tr>
+</table>
+
+<div class="highlight-box">
+  <p><span class="bold">Volume reduction:</span></p>
+  <p>Current: 16 countries &times; ~133 assets = <span class="bold">~2,100 assets</span>, all requiring review</p>
+  <p>Proposed: 4 Tier 1 + 3 clusters + 1 English set = <span class="bold">8 pipeline runs instead of 16</span></p>
+  <p>Total generated: ~1,100 assets (still enough to optimize against)</p>
+  <p>Total for human review: <span class="bold">~40 items</span> (top 5 per tier/cluster)</p>
+</div>
+
+<hr class="divider">
+
+<h2>What to Cut / Generalize &mdash; Specific Recommendations</h2>
+
+<table>
+  <tr>
+    <th>Component</th>
+    <th>Current</th>
+    <th>Recommendation</th>
+    <th></th>
+  </tr>
+  <tr>
+    <td><span class="bold">Cultural Research</span></td>
+    <td>1 per country (16 total)</td>
+    <td>1 per Tier 1 country + 1 per Tier 2 cluster + 1 global = 8 total</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Media Strategy</span></td>
+    <td>1 per country (16 total)</td>
+    <td>Keep per-country &mdash; channel mix genuinely varies (LinkedIn in DE vs Facebook in MA vs Google in US). This is lightweight and high-value.</td>
+    <td><span class="cut-tag keep">Keep</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Personas</span></td>
+    <td>3 per country (48 total)</td>
+    <td>3 global personas derived from the job requirements, culturally adapted at copy level per country. The qualifications don't change by country &mdash; the messaging does. No need for 48 unique personas.</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Actor Images</span></td>
+    <td>36 per country (576 total)</td>
+    <td>Regional actor pools: 1 LATAM set, 1 European set, 1 APAC set, 1 MENA/Africa set. ~144 total instead of 576.</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Copy Variants</span></td>
+    <td>24 per country (384 total)</td>
+    <td>Already only generates for strategy-recommended channels. With tiering (shared personas + English for Tier 2/3): ~24 per Tier 1 country, shared set for clusters. ~200 total.</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Composed Creatives</span></td>
+    <td>72 per country (1,152 total)</td>
+    <td>Already only composes for strategy-recommended platforms. With tiering + top-scoring combinations only: ~36 per Tier 1, shared set per cluster. ~400 total.</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+  <tr>
+    <td><span class="bold">Channel count per country</span></td>
+    <td>3&ndash;5 (from strategy)</td>
+    <td>Can further cut to top 2 highest-use channels per country based on the media strategy's channel recommendation. If the research says Morocco is 80% Facebook, 15% Instagram, 5% WhatsApp &mdash; generate for Facebook + Instagram only, skip WhatsApp. Each channel removed cuts 6 copy + 18 creatives = 24 fewer assets per country.</td>
+    <td><span class="cut-tag reduce">Reduce</span></td>
+  </tr>
+</table>
+
+<div class="highlight-box">
+  <p><span class="bold">Net result:</span> From ~2,100 assets down to ~750&ndash;1,000 generated assets. From "review everything" down to ~40 curated items for human eyes. Still enough variation for ad platform optimization.</p>
+</div>
+
+<hr class="divider">
+
+<h2>On Language</h2>
+
+<p>Your point about English readability for SOWs is important. Here's how I'd approach it:</p>
+
+<ul>
+  <li><span class="bold">All internal-facing content stays in English</span> &mdash; briefs, strategies, review comments, approval notes. Nothing changes there.</li>
+  <li><span class="bold">Ad copy is where language matters.</span> The contributor sees the ad in their feed. If it's in their language, CTR goes up &mdash; but only in markets where that's true. Some markets (Malaysia, South Africa, anglophone countries) perform fine in English.</li>
+  <li><span class="bold">My recommendation: start with English everywhere, then promote countries to local-language as we get CTR data.</span> We can flip a country from Tier 3 to Tier 1 in the system with one setting change. This way we're not guessing &mdash; we run English first, measure, and localize where the data says it matters.</li>
+</ul>
+
+<p>This also sidesteps the platform translation question entirely. Ad creative language is independent of whether OneForma's interface is translated.</p>
+
+<hr class="divider">
+
+<h2>On Rates + Legal</h2>
+
+<p>Understood on the legal sensitivity. Two things I'll do:</p>
+
+<ul>
+  <li><span class="bold">Rate validation gate:</span> I'll build a check into the pipeline that flags any country where the submitted rate falls below a configurable threshold. This catches the "recruiter published without checking" problem before creatives even generate. If a rate looks wrong, the system pauses that country and notifies the recruiter to verify.</li>
+  <li><span class="bold">Legal review:</span> I'll reach out to Zenobia to understand the current guidance on per-region rate floors. Once I have that, I can encode the thresholds directly into the system so it's enforced automatically, not dependent on someone remembering to check.</li>
+</ul>
+
+<p>Stefan &mdash; if there are specific countries or rate structures that have caused issues before, I'd love to know which ones so I can prioritize those in the validation logic.</p>
+
+<hr class="divider">
+
+<h2>On Cost vs. Return</h2>
+
+<p>Agreed that we need to track this. The tiered system actually makes this straightforward:</p>
+
+<ul>
+  <li>Each country has a known contributor rate (from the rate sheet)</li>
+  <li>Each country has a media strategy with recommended ad spend</li>
+  <li>We track ad performance per country (CTR, CPA, completions)</li>
+  <li>ROAS = (Completions &times; Fulfillment Rate &times; Net Rate) / Ad Spend</li>
+</ul>
+
+<p>Countries that don't justify their ad spend get demoted or cut from future campaigns. Countries that outperform get promoted to Tier 1 for full localization. The system learns over time which markets are worth the investment.</p>
+
+<hr class="divider">
+
+<div class="summary-box">
+  <p><span class="bold">TL;DR:</span></p>
+  <ul style="margin: 8px 0;">
+    <li>Each country currently gets ~133 assets (research + strategy + 36 images + 24 copy + 72 creatives). Copy and creatives only generate for the channels in that country's media strategy &mdash; not every platform</li>
+    <li>Personas are derived from the job requirements &mdash; they represent real people who actually qualify, not generic marketing avatars. All content is built for those specific profiles</li>
+    <li>Can further reduce by generating for only the top 2 highest-use channels per country (each channel cut removes 24 assets)</li>
+    <li>Proposing a 3-tier system: full localization for 4&ndash;5 priority countries, regional clusters for similar markets, English-only for anglophone markets</li>
+    <li>Human review drops from ~2,100 items to ~40 curated picks</li>
+    <li>Pipeline runs cut in half (8 instead of 16)</li>
+    <li>Start in English, promote countries to local-language based on CTR data</li>
+    <li>Rate validation built into the pipeline to catch legal issues before generation</li>
+    <li>Will connect with Zenobia on rate floor guidance</li>
+  </ul>
+</div>
+
+<p>Happy to walk through any of this in more detail. If the tiering approach makes sense directionally, I can have it implemented this week.</p>
+
+<p style="margin-top: 24px;">
+  Steven
+</p>
+
+</body>
+</html>

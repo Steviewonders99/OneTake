@@ -179,6 +179,20 @@ ROAS = (Completions x FR x Net RPP) / Ad Spend
 Breakeven CPA = Net RPP x Fulfillment Rate
 ```
 
+### Week 3-4: LLM Provider Routing + Recruiter Edit Hub (NEW — April 27)
+Dual-provider routing: new campaign requests go through **OpenRouter** (paid, no rate limit, ~$2.88/country LLM cost, 3-4 min pipeline). Edit requests go through **NIM** (free, 40 RPM is plenty for single-asset tweaks).
+
+**Edit Hub** — lightweight inline editing in the Recruiter View for approved campaigns:
+- **Edit copy** — change headline/body on one creative (1 GLM-5 call → re-render)
+- **Edit locale** — re-render asset for a different language (1 Gemma copy + 1 GLM-5 composition)
+- **Edit CTA** — update CTA text/URL across a set of creatives
+- **Edit image** — swap actor/backdrop on one image (1 image gen + 1 VQA)
+- **Edit layout** — change template/platform format on one composition
+
+Recruiter selects asset → picks what to change → types new value → submits → done in 5-10 seconds. All edits routed through NIM (free). No pipeline re-run needed.
+
+**Spec target:** Late April / early May. Implementation after SVP pitch prep.
+
 ### Week 4: Stage 4 Template Polish
 - Refine HTML creative templates for agency-quality output
 - Fix remaining Stage 4 parsing issues (#4 country code mismatch, #5 budget strings, #6 double-encoded JSON)
@@ -309,6 +323,8 @@ Day 21-23 (Apr 28-30)
 
 Day 24-26 (May 1-3)
   ├── OpenAI direct API transition ($0.006/image)
+  ├── LLM provider routing (OpenRouter for gen, NIM for edits)
+  ├── Recruiter Edit Hub spec + build
   ├── Real campaign testing (3-5 campaigns E2E)
   ├── Recruiter pilot testing
   └── Stage 4 template refinement
@@ -333,7 +349,7 @@ Day 30+ (Post-pitch)
 |---|---|---|---|
 | Time: JD → creative package | 3-5 days | 30 minutes | Achieved |
 | Creatives per campaign | 2-4 | 15-30+ per country | Achieved |
-| Cost per campaign | Agency + designer time | ~$0 (NIM free tier) | Achieved |
+| Cost per campaign | Agency + designer time | ~$0 NIM (free) / ~$23 OpenRouter (full speed) | Achieved |
 | Countries per campaign | 1 at a time | 16+ simultaneous | Built (unified workspace) |
 | Interest targeting | Manual guesswork | 1,054 real platform interests | Live (GraphRAG) |
 | Attribution | Broken (7,600 → 0) | Full UTM → CRM loop | Built (AudienceIQ) |

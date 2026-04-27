@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; max-width: 640px; margin: 0 auto; padding: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 6px 10px; background: #f5f5f5; font-size: 10px; text-transform: uppercase; color: #737373; border-bottom: 2px solid #e5e5e5; }
+  td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+  .done { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d; }
+  .next { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: #dbeafe; color: #1d4ed8; }
+  code { background: #f5f5f5; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<p>Hi Michael,</p>
+
+<p>Thanks for the ACR access — confirmed I can see <code>novacert.azurecr.io</code> on the isolated old subscription. Quick update and a few items to align on.</p>
+
+<p><strong>What's ready on my side:</strong></p>
+
+<table>
+  <tr><th>Item</th><th>Status</th><th>Detail</th></tr>
+  <tr><td>Worker Dockerfile</td><td><span class="done">Ready</span></td><td>Multi-arch (<code>amd64</code> + <code>arm64</code>), Python 3.11, Playwright + FFmpeg included</td></tr>
+  <tr><td>ACR credentials</td><td><span class="done">Received</span></td><td><code>novacert.azurecr.io</code></td></tr>
+  <tr><td>Env Manifest</td><td><span class="done">Shipped</span></td><td><code>docs/azure-env-manifest.md</code> — every variable documented</td></tr>
+  <tr><td>Azure Blob Adapter</td><td><span class="done">Shipped</span></td><td><code>src/lib/blob.ts</code> — set <code>BLOB_PROVIDER=azure</code></td></tr>
+</table>
+
+<p><strong>What we need provisioned next:</strong></p>
+
+<table>
+  <tr><th>Resource</th><th>Status</th><th>Notes</th></tr>
+  <tr><td>Container Apps Environment</td><td><span class="next">Needed</span></td><td>Same subscription as the ACR. This is the hosting environment for the worker container.</td></tr>
+  <tr><td>Container App (<code>onetake-worker</code>)</td><td><span class="next">Needed</span></td><td>Pulls from <code>novacert.azurecr.io</code>. No inbound traffic — the worker only polls outbound to Neon Postgres and external APIs.</td></tr>
+  <tr><td>Env vars on Container App</td><td><span class="next">Needed</span></td><td>I'll send the exact key/value pairs once the Container App exists. The full list is in the env manifest.</td></tr>
+</table>
+
+<p><strong>Architecture (simple):</strong></p>
+
+<pre style="background: #f5f5f5; padding: 12px; border-radius: 8px; font-size: 12px; font-family: ui-monospace, monospace; overflow-x: auto;">
+Vercel (unchanged)              Azure (isolated old subscription)
+┌──────────────────┐            ┌────────────────────────────┐
+│  Next.js frontend│            │  novacert.azurecr.io (ACR) │
+│  nova-intake     │            │  └── onetake-worker image  │
+└───────┬──────────┘            │                            │
+        │                       │  Container Apps Env        │
+        │  polls                │  └── onetake-worker        │
+        ▼                       │      (polls same DB) ──┐   │
+   Neon Postgres (PG 17)  ◄────┼─────────────────────────┘   │
+   eastus2.azure.neon.tech      └────────────────────────────┘
+</pre>
+
+<p>Frontend stays on Vercel. Worker runs on Azure Container Apps. Both hit the same Neon Postgres 17 database. No Azure frontend infra needed.</p>
+
+<p><strong>Questions:</strong></p>
+
+<ol>
+  <li><strong>Container Apps Environment</strong> — Can your team create one in the same subscription as the ACR? I can push the worker image to <code>novacert.azurecr.io</code> today, but need the Container App to deploy it.</li>
+  <li><strong>ACR pull access</strong> — Will the Container App use managed identity to pull from the ACR, or should I set up an admin credential / service principal?</li>
+  <li><strong>GitHub Actions CI/CD</strong> — I'd like to set up a workflow so every green push auto-builds and pushes to <code>novacert.azurecr.io</code>. Do you have a preferred service principal, or should I create one scoped to the ACR?</li>
+  <li><strong>Resource group name</strong> — What's the resource group the ACR lives in? I'll use the same one for the Container Apps Environment to keep networking simple.</li>
+</ol>
+
+<p>Happy to jump on a quick call if easier. Once the Container App is up, I can have the worker running on Azure same day.</p>
+
+<p>Steven</p>
+
+</body>
+</html>
