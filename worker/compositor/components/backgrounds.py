@@ -1,4 +1,9 @@
-"""Background layer — gradient presets and solid colors."""
+"""Background layer — gradient presets, solid colors, and color wash overlays.
+
+Color washes are semi-transparent gradient overlays applied ON TOP of actor
+photos to create the cinematic agency look. The photo IS the background —
+washes add mood without replacing it.
+"""
 from __future__ import annotations
 
 from typing import Dict
@@ -31,6 +36,19 @@ SOLID_PRESETS: Dict[str, str] = {
     "bg_soft_sage": "#F0FDF4",
 }
 
+# ---------------------------------------------------------------------------
+# Color wash presets — semi-transparent overlays for photo-first layouts
+# Applied ON TOP of actor photos to create mood
+# ---------------------------------------------------------------------------
+WASH_PRESETS: Dict[str, str] = {
+    "wash_purple_pink": "linear-gradient(135deg, rgba(155,81,224,0.4), rgba(224,82,151,0.35))",
+    "wash_purple_blue": "linear-gradient(135deg, rgba(155,81,224,0.5), rgba(6,147,227,0.4))",
+    "wash_dark_cinematic": "linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.6))",
+    "wash_light_clean": "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3))",
+    "wash_warm_gold": "linear-gradient(135deg, rgba(218,165,32,0.3), rgba(224,82,81,0.25))",
+    "wash_cool_teal": "linear-gradient(135deg, rgba(6,147,227,0.35), rgba(13,148,136,0.3))",
+}
+
 
 def render_background(
     bg_type: str,
@@ -43,10 +61,10 @@ def render_background(
     Parameters
     ----------
     bg_type:
-        One of ``gradient``, ``solid``, ``scene_blur``, ``scene_photo``.
+        One of ``gradient``, ``solid``, ``wash``, ``scene_blur``, ``scene_photo``.
     preset:
-        A key from :data:`GRADIENT_PRESETS` or :data:`SOLID_PRESETS`, or
-        a URL/path for scene types.
+        A key from :data:`GRADIENT_PRESETS`, :data:`SOLID_PRESETS`,
+        :data:`WASH_PRESETS`, or a URL/path for scene types.
     width, height:
         Canvas dimensions (used for scene sizing).
 
@@ -71,6 +89,14 @@ def render_background(
             )
         return f"background: {SOLID_PRESETS[preset]}"
 
+    if bg_type == "wash":
+        if preset not in WASH_PRESETS:
+            raise KeyError(
+                f"Unknown wash preset '{preset}'. "
+                f"Available: {sorted(WASH_PRESETS)}"
+            )
+        return f"background: {WASH_PRESETS[preset]}"
+
     if bg_type in ("scene_blur", "scene_photo"):
         # preset is a URL or path to the scene image
         return (
@@ -80,5 +106,5 @@ def render_background(
 
     raise KeyError(
         f"Unknown background type '{bg_type}'. "
-        f"Must be one of: gradient, solid, scene_blur, scene_photo"
+        f"Must be one of: gradient, solid, wash, scene_blur, scene_photo"
     )

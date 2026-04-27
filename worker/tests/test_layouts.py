@@ -9,13 +9,18 @@ MOCK_OVERLAY = '<div class="layer-overlay"></div>'
 MOCK_TEXT = '<div class="layer-text">Test Headline</div>'
 MOCK_CTA = '<div class="layer-cta">Apply Now</div>'
 MOCK_CTX = '<div class="context-element">Context</div>'
+MOCK_LOGO = '<div class="logo">OneForma</div>'
+MOCK_GLOW = '<div class="edge-glow"></div>'
 
 
 class TestAllLayouts:
     @pytest.mark.parametrize("layout_id", list(LAYOUT_RENDERERS.keys()))
     def test_layout_returns_valid_html(self, layout_id):
         render_fn = LAYOUT_RENDERERS[layout_id]
-        html = render_fn(MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX)
+        html = render_fn(
+            MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX,
+            logo_html=MOCK_LOGO, edge_glow_html=MOCK_GLOW,
+        )
         assert "<!DOCTYPE html>" in html
         assert "Test Headline" in html
         assert "Apply Now" in html
@@ -24,9 +29,40 @@ class TestAllLayouts:
     @pytest.mark.parametrize("layout_id", list(LAYOUT_RENDERERS.keys()))
     def test_layout_respects_dimensions(self, layout_id):
         render_fn = LAYOUT_RENDERERS[layout_id]
-        html = render_fn(MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX, width=1200, height=627)
+        html = render_fn(
+            MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX,
+            logo_html=MOCK_LOGO, edge_glow_html=MOCK_GLOW,
+            width=1200, height=627,
+        )
         assert "1200" in html
         assert "627" in html
+
+    @pytest.mark.parametrize("layout_id", list(LAYOUT_RENDERERS.keys()))
+    def test_layout_includes_logo(self, layout_id):
+        render_fn = LAYOUT_RENDERERS[layout_id]
+        html = render_fn(
+            MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX,
+            logo_html=MOCK_LOGO, edge_glow_html=MOCK_GLOW,
+        )
+        assert "OneForma" in html
+
+    @pytest.mark.parametrize("layout_id", list(LAYOUT_RENDERERS.keys()))
+    def test_layout_includes_edge_glow(self, layout_id):
+        render_fn = LAYOUT_RENDERERS[layout_id]
+        html = render_fn(
+            MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX,
+            logo_html=MOCK_LOGO, edge_glow_html=MOCK_GLOW,
+        )
+        assert "edge-glow" in html
+
+    @pytest.mark.parametrize("layout_id", list(LAYOUT_RENDERERS.keys()))
+    def test_layout_backward_compat_defaults(self, layout_id):
+        """Layouts still work when logo_html and edge_glow_html default to empty."""
+        render_fn = LAYOUT_RENDERERS[layout_id]
+        html = render_fn(
+            MOCK_BG, MOCK_ACTOR, MOCK_OVERLAY, MOCK_TEXT, MOCK_CTA, MOCK_CTX,
+        )
+        assert "<!DOCTYPE html>" in html
 
     def test_all_12_layouts_registered(self):
         assert len(LAYOUT_RENDERERS) == 12

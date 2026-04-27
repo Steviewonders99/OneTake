@@ -1,7 +1,8 @@
-"""SHAPE layout: Multi Grid — CSS grid 2-row layout.
+"""SHAPE layout: Multi Grid — Pattern B (frosted card with stats).
 
-Top row = 2-column grid (actor left, context right).
-Bottom row = text + overlay + CTA with padding.
+Actor photo fills canvas. Frosted card in center-bottom area with text + CTA.
+Context element positioned to the right. OneForma logo top-center.
+Purple-pink wash for warmth. Edge glow for depth.
 """
 
 
@@ -12,11 +13,13 @@ def render(
     text_html: str,
     cta_html: str,
     context_html: str,
+    logo_html: str = "",
+    edge_glow_html: str = "",
     width: int = 1080,
     height: int = 1080,
 ) -> str:
-    top_height = int(height * 0.55)
-    bottom_height = height - top_height
+    card_margin = 48
+    card_w = width - card_margin * 2
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,46 +32,50 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
-.multi-grid{{
+.layer-actor-fill{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;
-  display:grid;grid-template-rows:{top_height}px {bottom_height}px;
 }}
-.grid-top{{
-  display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;
+.layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
+.color-wash{{
+  position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
+  background:linear-gradient(135deg, rgba(155,81,224,0.35), rgba(224,82,151,0.25));
 }}
-.grid-top-left{{overflow:hidden}}
-.grid-top-left img{{display:block;width:100%;height:100%;object-fit:cover}}
-.grid-top-right{{
-  display:flex;align-items:center;justify-content:center;padding:24px;
+.layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
+.logo-zone{{position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:8}}
+.frosted-card{{
+  position:absolute;bottom:{card_margin}px;left:{card_margin}px;
+  width:{card_w}px;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:24px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  z-index:5;
+  padding:36px;
+  display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
 }}
-.grid-bottom{{
-  position:relative;padding:32px 40px;
-  display:flex;flex-direction:column;justify-content:center;gap:20px;
+.card-content{{
+  display:flex;flex-direction:column;gap:16px;
 }}
-.grid-bottom-overlay{{
-  position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;
-}}
-.grid-bottom-content{{position:relative;z-index:2}}
-.grid-bottom-content .layer-text{{position:static!important;transform:none!important}}
-.grid-bottom-content .layer-cta{{position:static!important;transform:none!important}}
+.card-content .layer-text{{position:static!important;transform:none!important}}
+.card-content .layer-text div{{color:#1A1A1A!important;text-shadow:none!important}}
+.card-content .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>
 <div class="creative">
   <div class="layer-bg">{background_html}</div>
-  <div class="multi-grid">
-    <div class="grid-top">
-      <div class="grid-top-left">{actor_html}</div>
-      <div class="grid-top-right">{context_html}</div>
+  <div class="layer-actor-fill">{actor_html}</div>
+  <div class="color-wash"></div>
+  <div class="layer-overlay">{overlay_html}</div>
+  <div class="logo-zone">{logo_html}</div>
+  <div class="frosted-card">
+    <div class="card-content">
+      {text_html}
+      {cta_html}
     </div>
-    <div class="grid-bottom">
-      <div class="grid-bottom-overlay">{overlay_html}</div>
-      <div class="grid-bottom-content">
-        {text_html}
-        {cta_html}
-      </div>
-    </div>
+    {context_html}
   </div>
+  {edge_glow_html}
 </div>
 </body>
 </html>"""

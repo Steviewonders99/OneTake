@@ -1,7 +1,7 @@
-"""GROW layout: Device Mockup — CSS grid 2-column.
+"""GROW layout: Device Mockup — Pattern D (light, device + UI elements).
 
-Left column = actor, right column = text + context element (device mockup) + CTA.
-Overlay spans full canvas.
+Actor photo fills left 55%. Light/clean right panel with text + device mockup + CTA.
+OneForma logo top-center spanning full width. Subtle wash on photo side.
 """
 
 
@@ -12,9 +12,13 @@ def render(
     text_html: str,
     cta_html: str,
     context_html: str,
+    logo_html: str = "",
+    edge_glow_html: str = "",
     width: int = 1080,
     height: int = 1080,
 ) -> str:
+    left_w = int(width * 0.55)
+    right_w = width - left_w
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,35 +32,39 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}}
-.grid-container{{
-  position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
-  display:grid;grid-template-columns:1fr 1fr;gap:0;
+.logo-zone{{position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:8}}
+.photo-side{{
+  position:absolute;top:0;left:0;width:{left_w}px;height:{height}px;
+  z-index:3;overflow:hidden;
 }}
-.grid-left{{
-  display:flex;align-items:flex-end;justify-content:center;
-  overflow:hidden;padding:20px;
+.photo-side img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
+.photo-wash{{
+  position:absolute;top:0;left:0;width:{left_w}px;height:{height}px;z-index:4;
+  background:linear-gradient(90deg, transparent 60%, rgba(255,255,255,0.9) 100%);
 }}
-.grid-left img{{display:block;max-width:100%;max-height:100%;object-fit:contain}}
-.grid-right{{
-  display:flex;flex-direction:column;justify-content:space-evenly;align-items:flex-end;
-  padding:32px 40px;gap:24px;
+.content-side{{
+  position:absolute;top:0;right:0;width:{right_w}px;height:{height}px;
+  z-index:5;
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  padding:48px 40px;gap:28px;
 }}
-.grid-right .layer-text{{position:static!important;transform:none!important}}
-.grid-right .layer-cta{{position:static!important;transform:none!important}}
+.content-side .layer-text{{position:static!important;transform:none!important}}
+.content-side .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>
 <div class="creative">
   <div class="layer-bg">{background_html}</div>
   <div class="layer-overlay">{overlay_html}</div>
-  <div class="grid-container">
-    <div class="grid-left">{actor_html}</div>
-    <div class="grid-right">
-      {text_html}
-      {context_html}
-      {cta_html}
-    </div>
+  <div class="logo-zone">{logo_html}</div>
+  <div class="photo-side">{actor_html}</div>
+  <div class="photo-wash"></div>
+  <div class="content-side">
+    {text_html}
+    {context_html}
+    {cta_html}
   </div>
+  {edge_glow_html}
 </div>
 </body>
 </html>"""

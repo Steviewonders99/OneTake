@@ -3,6 +3,8 @@ import pytest
 from compositor.registry import (
     get_background_html,
     get_cta_html,
+    get_edge_glow_html,
+    get_logo_html,
     get_overlay_html,
     get_text_block_html,
     get_actor_html,
@@ -67,8 +69,40 @@ class TestTextBlock:
         html = get_text_block_html("Test Headline", "Subline", "top-left", "large", "none")
         assert "Test Headline" in html
         assert "Subline" in html
-        assert "32" in html  # large = 32px
+        assert "40" in html  # large = 40px (agency-quality)
 
     def test_dark_backdrop_uses_white_text(self):
         html = get_text_block_html("H", "S", "top-left", "large", "dark_gradient")
         assert "#FFFFFF" in html or "white" in html.lower() or "fff" in html.lower()
+
+    def test_text_has_letter_spacing(self):
+        html = get_text_block_html("H", "S", "top-left", "large", "none")
+        assert "letter-spacing" in html
+
+    def test_text_has_text_shadow(self):
+        html = get_text_block_html("H", "S", "top-left", "large", "dark_gradient")
+        assert "text-shadow" in html
+
+
+class TestLogoHTML:
+    def test_white_logo(self):
+        html = get_logo_html("white")
+        assert "OneForma" in html
+        assert "rgba(255,255,255" in html
+
+    def test_dark_logo(self):
+        html = get_logo_html("dark")
+        assert "OneForma" in html
+        assert "rgb(155,81,224)" in html
+
+    def test_default_is_white(self):
+        html = get_logo_html()
+        assert "rgba(255,255,255" in html
+
+
+class TestEdgeGlow:
+    def test_edge_glow_returns_html(self):
+        html = get_edge_glow_html()
+        assert "box-shadow" in html
+        assert "inset" in html
+        assert "rgba(155,81,224" in html

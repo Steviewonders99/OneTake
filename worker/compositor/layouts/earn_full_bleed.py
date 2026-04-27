@@ -1,7 +1,8 @@
-"""EARN layout: Full Bleed — actor photo fills entire canvas.
+"""EARN layout: Full Bleed — Pattern A (dark cinematic wash, text bottom).
 
-Bottom gradient bar (0 -> 0.8 black, 50% height) provides text contrast.
-Text + CTA positioned in bottom content zone over the gradient.
+Actor photo fills 100% canvas. Dark cinematic gradient wash from top to bottom.
+OneForma logo top-center. Text and CTA in bottom content zone.
+Edge glow for cinematic depth.
 """
 
 
@@ -12,10 +13,11 @@ def render(
     text_html: str,
     cta_html: str,
     context_html: str,
+    logo_html: str = "",
+    edge_glow_html: str = "",
     width: int = 1080,
     height: int = 1080,
 ) -> str:
-    grad_height = height // 2
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,35 +33,37 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-actor-bleed{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;
 }}
-.layer-actor-bleed img{{display:block;width:100%;height:100%;object-fit:cover}}
-.layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3}}
-.gradient-bar{{
-  position:absolute;bottom:0;left:0;width:100%;height:{grad_height}px;
-  background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.6) 50%,transparent 100%);
-  z-index:4;
+.layer-actor-bleed img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
+.cinematic-wash{{
+  position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
+  background:linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.75) 100%);
 }}
+.layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
+.logo-zone{{position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:8}}
 .content-zone{{
-  position:absolute;bottom:0;left:0;width:100%;z-index:5;
-  padding:40px;display:flex;flex-direction:column;gap:20px;
+  position:absolute;bottom:0;left:0;width:100%;z-index:6;
+  padding:48px;display:flex;flex-direction:column;gap:20px;
   color:#FFFFFF;
 }}
 .content-zone .layer-text{{position:static!important;transform:none!important}}
 .content-zone .layer-text div{{color:#FFFFFF!important}}
 .content-zone .layer-cta{{position:static!important;transform:none!important}}
-.layer-context{{position:absolute;top:5%;left:5%;z-index:5}}
+.layer-context{{position:absolute;top:32px;right:32px;z-index:7}}
 </style>
 </head>
 <body>
 <div class="creative">
   <div class="layer-bg">{background_html}</div>
   <div class="layer-actor-bleed">{actor_html}</div>
+  <div class="cinematic-wash"></div>
   <div class="layer-overlay">{overlay_html}</div>
-  <div class="gradient-bar"></div>
+  <div class="logo-zone">{logo_html}</div>
   <div class="content-zone">
     {text_html}
     {cta_html}
   </div>
   <div class="layer-context">{context_html}</div>
+  {edge_glow_html}
 </div>
 </body>
 </html>"""

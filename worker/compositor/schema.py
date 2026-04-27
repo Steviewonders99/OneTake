@@ -71,6 +71,7 @@ VALID_TEXT_SIZES = frozenset({
     "medium",
     "large",
     "xlarge",
+    "hero",
 })
 
 VALID_CTA_STYLES = frozenset({
@@ -84,6 +85,7 @@ VALID_CTA_STYLES = frozenset({
 VALID_BACKGROUND_TYPES = frozenset({
     "gradient",
     "solid",
+    "wash",
     "image",
     "pattern",
 })

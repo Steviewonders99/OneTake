@@ -1,8 +1,8 @@
-"""GROW layout: Bold Type — flexbox column, centered, oversized headline.
+"""GROW layout: Bold Type — Pattern C (clean white, large centered text).
 
-Large actor circle (240px, border-radius:50%), then oversized headline
-(56px, weight 800, tight letter-spacing), then CTA below. Padding 48px.
-Subtle radial teal tint fills dead space. Visual center shifted up.
+Actor photo fills canvas with light treatment. Large bold headline centered.
+Frosted card contains the text for readability. OneForma logo top-center.
+CTA at bottom. Clean, modern feel.
 """
 
 
@@ -13,6 +13,8 @@ def render(
     text_html: str,
     cta_html: str,
     context_html: str,
+    logo_html: str = "",
+    edge_glow_html: str = "",
     width: int = 1080,
     height: int = 1080,
 ) -> str:
@@ -28,22 +30,29 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
-.layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}}
-.bold-layout{{
+.layer-actor-fill{{
+  position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;
+}}
+.layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
+.light-wash{{
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;
+  background:linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.5) 100%);
+}}
+.layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4}}
+.logo-zone{{position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:8}}
+.bold-layout{{
+  position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:48px;padding-bottom:80px;gap:32px;text-align:center;
-  background:radial-gradient(circle at 50% 30%, rgba(6,182,212,0.06) 0%, transparent 70%);
+  padding:48px;padding-bottom:120px;gap:28px;text-align:center;
 }}
 .bold-headline .layer-text{{position:static!important;transform:none!important}}
 .bold-layout .layer-cta{{position:static!important;transform:none!important}}
-.actor-circle{{
-  width:240px;height:240px;border-radius:50%;overflow:hidden;flex-shrink:0;
-}}
-.actor-circle img{{display:block;width:100%;height:100%;object-fit:cover}}
 .bold-headline{{
-  font-size:56px;font-weight:800;line-height:1.05;
-  letter-spacing:-0.02em;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:24px;padding:32px 40px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  max-width:85%;
 }}
 .bold-context{{margin-top:8px}}
 </style>
@@ -51,13 +60,16 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 <body>
 <div class="creative">
   <div class="layer-bg">{background_html}</div>
+  <div class="layer-actor-fill">{actor_html}</div>
+  <div class="light-wash"></div>
   <div class="layer-overlay">{overlay_html}</div>
+  <div class="logo-zone">{logo_html}</div>
   <div class="bold-layout">
-    <div class="actor-circle">{actor_html}</div>
     <div class="bold-headline">{text_html}</div>
     <div class="bold-context">{context_html}</div>
     {cta_html}
   </div>
+  {edge_glow_html}
 </div>
 </body>
 </html>"""

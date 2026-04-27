@@ -57,3 +57,14 @@ class TestAssembleHTML:
         html = assemble_html(config, actor_photo_url="https://example.com/a.png", width=1200, height=627)
         assert "1200" in html
         assert "627" in html
+
+    def test_contains_oneforma_logo(self):
+        config = CreativeConfig.from_dict(_make_config_dict())
+        html = assemble_html(config, actor_photo_url="https://example.com/a.png")
+        assert "OneForma" in html
+
+    def test_contains_edge_glow(self):
+        config = CreativeConfig.from_dict(_make_config_dict())
+        html = assemble_html(config, actor_photo_url="https://example.com/a.png")
+        assert "box-shadow" in html
+        assert "inset" in html
