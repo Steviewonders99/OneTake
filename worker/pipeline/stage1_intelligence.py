@@ -98,6 +98,17 @@ async def run_stage1(context: dict) -> dict:
     form_data: dict = request.get("form_data", {})
     task_type: str = request.get("task_type", "data annotation")
 
+    # Run deterministic pillar classification on form data
+    from compositor.pillar_router import classify_pillar
+
+    pillar_classification = classify_pillar(form_data)
+    logger.info(
+        "[stage1] Pillar router: primary=%s, secondary=%s, confidence=%.2f",
+        pillar_classification["primary"],
+        pillar_classification["secondary"],
+        pillar_classification["confidence"],
+    )
+
     # ==================================================================
     # STEP 0: WORDPRESS JOB PUBLISH (before any AI generation)
     # Publish the JD to WordPress immediately so the job posting URL
@@ -380,6 +391,18 @@ async def run_stage1(context: dict) -> dict:
 
     brief_prompt = build_brief_prompt(request, persona_context=persona_context)
 
+    # Inject deterministic pillar router suggestion so the LLM has a strong default
+    pillar_suggestion = (
+        f"\n\nPILLAR ROUTER SUGGESTION (deterministic classification):\n"
+        f"Primary: {pillar_classification['primary']}\n"
+        f"Secondary: {pillar_classification['secondary']}\n"
+        f"Reasoning: {pillar_classification['reasoning']}\n"
+        f"You may adjust this if the job context warrants a different pillar, "
+        f"but the router's classification is based on qualification level, "
+        f"compensation tier, and engagement model.\n"
+    )
+    brief_prompt += pillar_suggestion
+
     # Inject marketing skills into system prompt for 397B model
     from prompts.marketing_skills import get_skills_for_stage
     skills_context = get_skills_for_stage("brief")
@@ -454,6 +477,7 @@ async def run_stage1(context: dict) -> dict:
 
         logger.info("Retrying with %d feedback items", len(feedback))
         brief_prompt = build_brief_prompt(request, feedback=feedback, persona_context=persona_context)
+        brief_prompt += pillar_suggestion
         brief_text = await generate_text(enhanced_system, brief_prompt, thinking=True)
         brief_data = _parse_json(brief_text)
 
@@ -597,6 +621,14 @@ async def run_stage1(context: dict) -> dict:
             "[stage1] Invalid pillar_secondary from LLM: %r, storing as NULL",
             pillar_secondary_raw,
         )
+
+    # Fallback to pillar router if LLM didn't provide valid pillars
+    if not pillar_primary:
+        pillar_primary = pillar_classification["primary"]
+        logger.info("[stage1] Using pillar router default: primary=%s", pillar_primary)
+    if not pillar_secondary:
+        pillar_secondary = pillar_classification["secondary"]
+        logger.info("[stage1] Using pillar router default: secondary=%s", pillar_secondary)
 
     await save_brief(
         request_id,

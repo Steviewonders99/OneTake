@@ -223,6 +223,7 @@ async def get_brief(request_id: str) -> dict[str, Any] | None:
             """
             SELECT id, request_id, brief_data, design_direction,
                    evaluation_score, evaluation_data, content_languages,
+                   pillar_primary, pillar_secondary, derived_requirements,
                    created_at
             FROM creative_briefs
             WHERE request_id = $1

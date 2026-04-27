@@ -164,7 +164,35 @@ async def run_stage4(context: dict) -> dict:
     logger.info("Stage 4 (design_agent) start: request_id=%s country=%s", request_id, country)
 
     # ── 1. Resolve pillar + language ────────────────────────────────────
-    pillar = brief.get("pillar_primary", "earn")
+    # Extract pillar — try DB column first, then derived_requirements, then fallback
+    pillar = brief.get("pillar_primary")
+    secondary_pillar = brief.get("pillar_secondary")
+    pillar_weighting = {}
+    if not pillar:
+        # Stage 3 pattern: extract from derived_requirements inside brief_data
+        brief_data = brief.get("brief_data", {})
+        if isinstance(brief_data, str):
+            import json as _json
+            try:
+                brief_data = _json.loads(brief_data)
+            except (json.JSONDecodeError, TypeError):
+                brief_data = {}
+        derived = brief_data.get("derived_requirements", {})
+        if isinstance(derived, str):
+            try:
+                derived = json.loads(derived)
+            except (json.JSONDecodeError, TypeError):
+                derived = {}
+        pillar_weighting = derived.get("pillar_weighting", {})
+        pillar = pillar_weighting.get("primary", "earn")
+        if not secondary_pillar:
+            secondary_pillar = pillar_weighting.get("secondary")
+
+    if pillar not in ("earn", "grow", "shape"):
+        pillar = "earn"
+
+    logger.info("Stage 4 pillar resolved: primary=%s, secondary=%s", pillar, secondary_pillar)
+
     language = form_data.get("primary_language", "en") if form_data else "en"
 
     # ── 2. Load actors ──────────────────────────────────────────────────
