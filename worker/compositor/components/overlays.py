@@ -108,21 +108,21 @@ BADGE_SETS: Dict[str, str] = {
         '<div style="position:absolute;{pos};display:inline-flex;align-items:center;'
         'gap:6px;padding:8px 16px;background:#059669;color:#FFFFFF;'
         'border-radius:9999px;font-family:-apple-system,system-ui,sans-serif;'
-        'font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);'
+        'font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);'
         'opacity:{opacity};pointer-events:none">{content}</div>'
     ),
     "badge_skills": (
         '<div style="position:absolute;{pos};display:inline-flex;align-items:center;'
         'gap:6px;padding:8px 16px;background:#2563EB;color:#FFFFFF;'
         'border-radius:10px;font-family:-apple-system,system-ui,sans-serif;'
-        'font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);'
+        'font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);'
         'opacity:{opacity};pointer-events:none">{content}</div>'
     ),
     "badge_verification": (
         '<div style="position:absolute;{pos};display:inline-flex;align-items:center;'
         'gap:6px;padding:8px 16px;background:#FFFFFF;color:#1A1A1A;'
         'border-radius:10px;font-family:-apple-system,system-ui,sans-serif;'
-        'font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);'
+        'font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);'
         'opacity:{opacity};pointer-events:none">'
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" '
         'stroke-width="3" stroke-linecap="round" stroke-linejoin="round">'

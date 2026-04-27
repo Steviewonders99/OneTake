@@ -34,6 +34,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-actor-fill img{{display:block;width:100%;height:100%;object-fit:cover}}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3}}
 .layer-text-top{{position:absolute;top:5%;left:5%;max-width:60%;z-index:4}}
+.layer-text-top .layer-text{{position:static!important;transform:none!important}}
+.credential-bar .layer-cta{{position:static!important;transform:none!important}}
 .credential-bar{{
   position:absolute;bottom:0;left:0;width:100%;height:{bar_height}px;
   background:rgba(255,255,255,0.95);

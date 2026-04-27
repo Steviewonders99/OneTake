@@ -43,6 +43,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   z-index:4;padding:40px;
   display:flex;flex-direction:column;gap:24px;
 }}
+.content-zone .layer-text{{position:static!important;transform:none!important}}
+.content-zone .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>

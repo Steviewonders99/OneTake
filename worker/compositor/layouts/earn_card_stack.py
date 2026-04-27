@@ -45,6 +45,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   padding:32px;
   display:flex;flex-direction:column;justify-content:center;gap:20px;
 }}
+.card-stack .layer-text{{position:static!important;transform:none!important}}
+.card-stack .layer-cta{{position:static!important;transform:none!important}}
 .layer-context{{position:absolute;top:5%;right:5%;z-index:5}}
 </style>
 </head>

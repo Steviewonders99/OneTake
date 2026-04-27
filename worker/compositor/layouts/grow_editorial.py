@@ -34,6 +34,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   padding:48px;gap:24px;
 }}
 .editorial-header{{display:flex;flex-direction:column;gap:12px}}
+.editorial-header .layer-text{{position:static!important;transform:none!important}}
+.editorial-footer .layer-cta{{position:static!important;transform:none!important}}
 .editorial-body{{
   overflow:hidden;display:flex;align-items:center;justify-content:center;
 }}

@@ -50,7 +50,7 @@ def _device_mockup(pos_css: str, content: str) -> str:
         f'<div style="background:#FFFFFF;border-radius:16px;padding:16px;'
         f'min-height:260px;display:flex;flex-direction:column;gap:12px">'
         # App header
-        f'<div style="font-family:{_FONT_STACK};font-size:11px;font-weight:700;'
+        f'<div style="font-family:{_FONT_STACK};font-size:14px;font-weight:700;'
         f'color:{_CHARCOAL};letter-spacing:0.04em;text-transform:uppercase">OneForma</div>'
         # Task title
         f'<div style="font-family:{_FONT_STACK};font-size:14px;font-weight:600;'
@@ -64,7 +64,7 @@ def _device_mockup(pos_css: str, content: str) -> str:
         f'</div>'
         # Submit button
         f'<div style="margin-top:auto;padding:10px 0;background:{_BRAND_GRADIENT};'
-        f'color:#FFFFFF;font-family:{_FONT_STACK};font-size:12px;font-weight:600;'
+        f'color:#FFFFFF;font-family:{_FONT_STACK};font-size:14px;font-weight:600;'
         f'text-align:center;border-radius:9999px">Submit Task</div>'
         f'</div>'  # end screen
         f'</div>'  # end frame
@@ -82,7 +82,7 @@ def _task_card(pos_css: str, content: str) -> str:
         f'box-shadow:0 4px 16px rgba(0,0,0,0.12);'
         f'font-family:{_FONT_STACK}">'
         # Label
-        f'<div style="font-size:10px;font-weight:700;color:#737373;'
+        f'<div style="font-size:14px;font-weight:700;color:#737373;'
         f'letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Your Task</div>'
         # Title
         f'<div style="font-size:16px;font-weight:700;color:#1A1A1A;'
@@ -90,9 +90,9 @@ def _task_card(pos_css: str, content: str) -> str:
         # Tags
         f'<div style="display:flex;gap:6px;flex-wrap:wrap">'
         f'<span style="padding:4px 10px;background:#F0FDF4;color:#059669;'
-        f'border-radius:9999px;font-size:11px;font-weight:600">Remote</span>'
+        f'border-radius:9999px;font-size:14px;font-weight:600">Remote</span>'
         f'<span style="padding:4px 10px;background:#EFF6FF;color:#2563EB;'
-        f'border-radius:9999px;font-size:11px;font-weight:600">Flexible</span>'
+        f'border-radius:9999px;font-size:14px;font-weight:600">Flexible</span>'
         f'</div>'
         f'</div>'
         f'</div>'
@@ -110,7 +110,7 @@ def _stat_badge(pos_css: str, content: str) -> str:
         f'font-family:{_FONT_STACK}">'
         f'<div style="font-size:32px;font-weight:800;color:#1A1A1A;'
         f'line-height:1">{stat_value}</div>'
-        f'<div style="font-size:11px;font-weight:500;color:#737373;'
+        f'<div style="font-size:14px;font-weight:500;color:#737373;'
         f'margin-top:4px">earned this month</div>'
         f'</div>'
         f'</div>'

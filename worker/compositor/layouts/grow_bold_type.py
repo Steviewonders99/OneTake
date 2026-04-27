@@ -33,6 +33,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:60px;gap:32px;text-align:center;
 }}
+.bold-headline .layer-text{{position:static!important;transform:none!important}}
+.bold-layout .layer-cta{{position:static!important;transform:none!important}}
 .actor-circle{{
   width:180px;height:180px;border-radius:50%;overflow:hidden;flex-shrink:0;
 }}

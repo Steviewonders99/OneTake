@@ -44,6 +44,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   display:flex;flex-direction:column;justify-content:center;
   padding:36px;gap:20px;
 }}
+.card-content .layer-text{{position:static!important;transform:none!important}}
+.card-content .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>

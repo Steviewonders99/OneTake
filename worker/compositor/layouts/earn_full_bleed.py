@@ -41,7 +41,10 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .content-zone{{
   position:absolute;bottom:0;left:0;width:100%;z-index:5;
   padding:40px;display:flex;flex-direction:column;gap:20px;
+  color:#FFFFFF;
 }}
+.content-zone .layer-text{{position:static!important;transform:none!important}}
+.content-zone .layer-cta{{position:static!important;transform:none!important}}
 .layer-context{{position:absolute;top:5%;left:5%;z-index:5}}
 </style>
 </head>

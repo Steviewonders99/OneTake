@@ -44,6 +44,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   z-index:3;display:flex;flex-direction:column;justify-content:center;
   padding:40px;gap:24px;
 }}
+.split-right .layer-text{{position:static!important;transform:none!important}}
+.split-right .layer-cta{{position:static!important;transform:none!important}}
 .layer-context{{position:absolute;bottom:5%;right:5%;z-index:5}}
 </style>
 </head>

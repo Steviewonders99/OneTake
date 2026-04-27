@@ -21,7 +21,7 @@ _BRAND_GRADIENT = "linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))"
 
 # Text size presets — (headline_px, subheadline_px)
 _TEXT_SIZES: Dict[str, tuple] = {
-    "small": (16, 12),
+    "small": (16, 14),
     "medium": (22, 14),
     "large": (32, 16),
     "hero": (48, 18),
@@ -114,19 +114,10 @@ def get_actor_html(
     mask: str = "none",
 ) -> str:
     """Return a positioned ``<div class="layer-actor">`` with ``<img>`` and CSS mask."""
-    pos_css = _ACTOR_POSITIONS.get(position, _ACTOR_POSITIONS["right"])
     mask_css = _ACTOR_MASKS.get(mask, "")
-
-    # Scale expressed as a percentage of container height
-    scale_pct = int(scale * 100)
-
-    img_style = f"display:block;height:{scale_pct}%;width:auto;object-fit:contain"
-    if mask_css:
-        img_style = f"{img_style};{mask_css}"
-
     return (
-        f'<div class="layer-actor" data-position="{position}" style="{pos_css}">'
-        f'<img src="{photo_url}" style="{img_style}" alt="actor"/>'
+        f'<div class="layer-actor" data-position="{position}">'
+        f'<img src="{photo_url}" style="display:block;width:100%;height:100%;object-fit:cover;{mask_css}" alt="actor"/>'
         f"</div>"
     )
 

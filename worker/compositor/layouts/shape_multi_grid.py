@@ -49,6 +49,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;
 }}
 .grid-bottom-content{{position:relative;z-index:2}}
+.grid-bottom-content .layer-text{{position:static!important;transform:none!important}}
+.grid-bottom-content .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>

@@ -41,6 +41,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   display:flex;flex-direction:column;justify-content:center;
   padding:40px;gap:24px;
 }}
+.grid-right .layer-text{{position:static!important;transform:none!important}}
+.grid-right .layer-cta{{position:static!important;transform:none!important}}
 </style>
 </head>
 <body>
