@@ -94,6 +94,14 @@ MLX_SERVER_HEALTH_POLL_S = float(os.environ.get("MLX_SERVER_HEALTH_POLL_S", "2.0
 COMPOSE_CONCURRENCY = int(os.environ.get("COMPOSE_CONCURRENCY", "15"))  # Paid OpenRouter — no rate limit
 
 # ---------------------------------------------------------------------------
+# Stage 4 Graphic Design Agent
+# ---------------------------------------------------------------------------
+STAGE4_ENGINE = os.environ.get("STAGE4_ENGINE", "design_agent")
+CREATIVE_DIRECTOR_MODEL = os.environ.get("CREATIVE_DIRECTOR_MODEL", "qwen/qwen3.5-397b-a17b")
+CREATIVE_DIRECTOR_FALLBACK = os.environ.get("CREATIVE_DIRECTOR_FALLBACK", "google/gemma-3-27b-it")
+BATCH_VQA_MODEL = os.environ.get("BATCH_VQA_MODEL", "google/gemma-4-31b-it")
+
+# ---------------------------------------------------------------------------
 # Kling 3.0 (Video Generation)
 # ---------------------------------------------------------------------------
 KLING_ACCESS_KEY = os.environ.get("KLING_ACCESS_KEY", "")
