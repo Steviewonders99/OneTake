@@ -55,6 +55,7 @@ VALID_POSITIONS = frozenset({
     "top-left",
     "top-right",
     "top-center",
+    "inline",
 })
 
 VALID_MASKS = frozenset({
@@ -74,10 +75,10 @@ VALID_TEXT_SIZES = frozenset({
 
 VALID_CTA_STYLES = frozenset({
     "pill_primary",
-    "pill_secondary",
-    "outline",
-    "ghost",
-    "gradient",
+    "pill_outline",
+    "banner_full",
+    "floating_circle",
+    "inline_text",
 })
 
 VALID_BACKGROUND_TYPES = frozenset({

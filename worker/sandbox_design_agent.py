@@ -59,6 +59,84 @@ FALLBACK_BRIEF = {
 }
 
 # Offline test configs (skip LLM)
+OFFLINE_CONFIGS_GROW = [
+    {
+        "layout": "grow_device_mockup",
+        "background": {"type": "gradient", "preset": "gradient_cool_ocean"},
+        "actor": {"actor_id": "test-sophie", "position": "left", "scale": 0.85, "mask": "soft_fade"},
+        "overlay": {"elements": ["blob_cool_1"], "intensity": "light"},
+        "text": {"headline": "Speak English? Earn $20 CAD/hr.", "subheadline": "Learn new skills while earning", "position": "top-right", "size": "large", "contrast_backdrop": "none"},
+        "cta": {"text": "Start Learning", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": {"type": "device_mockup", "position": "bottom-right", "content": "Selfie video recording task"},
+    },
+    {
+        "layout": "grow_editorial",
+        "background": {"type": "solid", "preset": "bg_cool_gray"},
+        "actor": {"actor_id": "test-sophie", "position": "center", "scale": 0.8, "mask": "none"},
+        "overlay": {"elements": ["frame_subtle_outline"], "intensity": "medium"},
+        "text": {"headline": "Record short selfie videos from home", "subheadline": "Build your portfolio with real-world AI tasks", "position": "top-center", "size": "xlarge", "contrast_backdrop": "none"},
+        "cta": {"text": "Explore Tasks", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": None,
+    },
+    {
+        "layout": "grow_diagonal_split",
+        "background": {"type": "gradient", "preset": "gradient_grow_teal"},
+        "actor": {"actor_id": "test-sophie", "position": "left", "scale": 1.0, "mask": "none"},
+        "overlay": {"elements": ["bar_diagonal_accent"], "intensity": "medium"},
+        "text": {"headline": "Join 10,000+ contributors worldwide", "subheadline": "Flexible tasks that grow your skills", "position": "top-right", "size": "large", "contrast_backdrop": "light_blur"},
+        "cta": {"text": "Join Now", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": {"type": "icon_cluster", "position": "bottom-right", "content": "skills"},
+    },
+    {
+        "layout": "grow_bold_type",
+        "background": {"type": "solid", "preset": "bg_white"},
+        "actor": {"actor_id": "test-sophie", "position": "center", "scale": 0.65, "mask": "circle_crop"},
+        "overlay": {"elements": [], "intensity": "light"},
+        "text": {"headline": "Flexible data tasks that fit your schedule", "subheadline": "", "position": "center", "size": "xlarge", "contrast_backdrop": "none"},
+        "cta": {"text": "Get Started", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": None,
+    },
+]
+
+OFFLINE_CONFIGS_SHAPE = [
+    {
+        "layout": "shape_portrait_cred",
+        "background": {"type": "gradient", "preset": "gradient_shape_purple"},
+        "actor": {"actor_id": "test-sophie", "position": "center", "scale": 0.9, "mask": "none"},
+        "overlay": {"elements": ["badge_verification"], "intensity": "light"},
+        "text": {"headline": "Speak English? Earn $20 CAD/hr.", "subheadline": "Verified tasks from a trusted platform", "position": "top-left", "size": "large", "contrast_backdrop": "light_blur"},
+        "cta": {"text": "Get Verified", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": None,
+    },
+    {
+        "layout": "shape_multi_grid",
+        "background": {"type": "solid", "preset": "bg_cool_gray"},
+        "actor": {"actor_id": "test-sophie", "position": "left", "scale": 0.8, "mask": "none"},
+        "overlay": {"elements": ["frame_accent_border"], "intensity": "medium"},
+        "text": {"headline": "Record short selfie videos from home", "subheadline": "Professional tasks for skilled contributors", "position": "top-right", "size": "large", "contrast_backdrop": "none"},
+        "cta": {"text": "View Tasks", "style": "pill_primary", "position": "bottom-center"},
+        "context_element": {"type": "task_card", "position": "bottom-right", "content": "Record a 30s selfie video"},
+    },
+    {
+        "layout": "shape_clean_card",
+        "background": {"type": "solid", "preset": "bg_white"},
+        "actor": {"actor_id": "test-sophie", "position": "left", "scale": 0.75, "mask": "none"},
+        "overlay": {"elements": ["frame_subtle_outline"], "intensity": "medium"},
+        "text": {"headline": "Join 10,000+ contributors worldwide", "subheadline": "Trusted by professionals in 50+ countries", "position": "top-right", "size": "medium", "contrast_backdrop": "none"},
+        "cta": {"text": "Learn More", "style": "pill_outline", "position": "bottom-center"},
+        "context_element": {"type": "stat_badge", "position": "bottom-right", "content": "$2,400"},
+    },
+    {
+        "layout": "shape_photo_frame",
+        "background": {"type": "gradient", "preset": "gradient_pro_charcoal"},
+        "actor": {"actor_id": "test-sophie", "position": "center", "scale": 1.0, "mask": "none"},
+        "overlay": {"elements": ["frame_accent_border"], "intensity": "medium"},
+        "text": {"headline": "Flexible data tasks that fit your schedule", "subheadline": "Work on your terms, build your expertise", "position": "bottom-left", "size": "large", "contrast_backdrop": "dark_gradient"},
+        "cta": {"text": "Explore Opportunities", "style": "inline_text", "position": "inline"},
+        "context_element": None,
+    },
+]
+
 OFFLINE_CONFIGS = [
     {
         "layout": "earn_hero_badge",
@@ -174,8 +252,13 @@ async def run_sandbox(offline: bool = False):
 
     # ── Get configs (LLM or offline) ───────────────────────────────
     if offline:
-        logger.info("OFFLINE MODE — using hardcoded test configs")
-        configs_raw = OFFLINE_CONFIGS
+        pillar_arg = "earn"
+        for arg in sys.argv:
+            if arg.startswith("--pillar="):
+                pillar_arg = arg.split("=")[1]
+        config_map = {"earn": OFFLINE_CONFIGS, "grow": OFFLINE_CONFIGS_GROW, "shape": OFFLINE_CONFIGS_SHAPE}
+        configs_raw = config_map.get(pillar_arg, OFFLINE_CONFIGS)
+        logger.info("OFFLINE MODE — using %s pillar configs (%d creatives)", pillar_arg, len(configs_raw))
     else:
         logger.info("Calling Creative Director LLM...")
         from ai.creative_director import generate_creative_configs
@@ -191,7 +274,7 @@ async def run_sandbox(offline: bool = False):
             configs_raw = OFFLINE_CONFIGS
 
     # ── Validate ───────────────────────────────────────────────────
-    errors = validate_batch(configs_raw, pillar="earn", copy_variants=headlines)
+    errors = validate_batch(configs_raw, pillar=pillar_arg if offline else "earn", copy_variants=headlines)
     if errors:
         logger.warning("Batch validation errors: %s", errors)
         logger.info("Proceeding anyway for visual inspection...")

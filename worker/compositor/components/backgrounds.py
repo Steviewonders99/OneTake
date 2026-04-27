@@ -15,6 +15,8 @@ GRADIENT_PRESETS: Dict[str, str] = {
     "gradient_shape_purple": "linear-gradient(135deg, #7C3AED, #6366F1, #4F46E5)",
     "gradient_brand_accent": "linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))",
     "gradient_soft_neutral": "linear-gradient(135deg, #E5E7EB, #F3F4F6, #F9FAFB)",
+    "gradient_luminous_dusk": "linear-gradient(135deg, rgb(255,203,112), rgb(199,81,192), rgb(65,88,208))",
+    "gradient_cool_spectrum": "linear-gradient(135deg, rgb(74,234,220), rgb(254,248,76))",
 }
 
 # ---------------------------------------------------------------------------

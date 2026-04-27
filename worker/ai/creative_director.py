@@ -117,7 +117,7 @@ CULTURAL CONTEXT:
             "actor": {"actor_id": "<actor_id>", "position": "<position>", "scale": 0.85, "mask": "soft_fade|none|circle_crop|diagonal_slice|gradient_fade"},
             "overlay": {"elements": ["<element_id>"], "intensity": "light|medium|heavy"},
             "text": {"headline": "<from copy variants>", "subheadline": "<short context>", "position": "<position>", "size": "small|medium|large|xlarge", "contrast_backdrop": "<backdrop_style>"},
-            "cta": {"text": "<cta_text>", "style": "pill_primary|pill_secondary|outline|ghost|gradient", "position": "<position>"},
+            "cta": {"text": "<cta_text>", "style": "pill_primary|pill_outline|banner_full|floating_circle|inline_text", "position": "<position>"},
             "context_element": None,
         },
         indent=2,

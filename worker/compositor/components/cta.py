@@ -53,7 +53,7 @@ def render_cta(style: str, text: str, position: str = "bottom-center") -> str:
         btn = (
             f'<span style="display:inline-block;padding:12px 32px;'
             f"background:{_CHARCOAL};color:#FFFFFF;font-family:{_FONT_STACK};"
-            f"font-size:14px;font-weight:600;border-radius:{_PILL_RADIUS};"
+            f"font-size:16px;font-weight:600;border-radius:{_PILL_RADIUS};"
             f'letter-spacing:0.02em">'
             f"{text}</span>"
         )
@@ -63,7 +63,7 @@ def render_cta(style: str, text: str, position: str = "bottom-center") -> str:
         btn = (
             f'<span style="display:inline-block;padding:12px 32px;'
             f"background:transparent;color:{_CHARCOAL};font-family:{_FONT_STACK};"
-            f"font-size:14px;font-weight:600;border-radius:{_PILL_RADIUS};"
+            f"font-size:16px;font-weight:600;border-radius:{_PILL_RADIUS};"
             f"border:2px solid {_CHARCOAL};"
             f'letter-spacing:0.02em">'
             f"{text}</span>"
@@ -74,7 +74,7 @@ def render_cta(style: str, text: str, position: str = "bottom-center") -> str:
         btn = (
             f'<div style="width:100%;padding:14px 0;'
             f"background:{_CHARCOAL};color:#FFFFFF;font-family:{_FONT_STACK};"
-            f"font-size:14px;font-weight:600;text-align:center;"
+            f"font-size:16px;font-weight:600;text-align:center;"
             f'letter-spacing:0.02em">'
             f"{text}</div>"
         )
@@ -84,7 +84,7 @@ def render_cta(style: str, text: str, position: str = "bottom-center") -> str:
         btn = (
             f'<span style="display:inline-flex;align-items:center;justify-content:center;'
             f"width:64px;height:64px;border-radius:50%;background:{_BRAND_GRADIENT};"
-            f"color:#FFFFFF;font-family:{_FONT_STACK};font-size:11px;font-weight:700;"
+            f"color:#FFFFFF;font-family:{_FONT_STACK};font-size:14px;font-weight:700;"
             f'text-align:center;line-height:1.2">'
             f"{text}</span>"
         )
@@ -94,7 +94,7 @@ def render_cta(style: str, text: str, position: str = "bottom-center") -> str:
         btn = (
             f'<span style="display:inline-block;padding:8px 0;'
             f"background:transparent;color:{_CHARCOAL};font-family:{_FONT_STACK};"
-            f'font-size:14px;font-weight:600;letter-spacing:0.02em">'
+            f'font-size:16px;font-weight:600;letter-spacing:0.02em">'
             f"{text} &#8594;</span>"
         )
         return _wrap_positioned(btn, position)
