@@ -9,7 +9,9 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from compositor.components.backgrounds import render_background
+from compositor.components.context_elements import render_context_element
 from compositor.components.cta import render_cta
+from compositor.components.overlays import render_overlay_elements
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -177,24 +179,25 @@ def get_overlay_html(
     elements: Optional[List[str]] = None,
     intensity: str = "medium",
 ) -> str:
-    """Return a decorative overlay div.
+    """Return a decorative overlay div with SVG blobs, gradient bars, etc.
 
-    This is a placeholder — Task 3 will add real geometric/pattern overlays.
-    For now, returns an empty overlay container with opacity based on intensity.
+    Delegates to :func:`compositor.components.overlays.render_overlay_elements`
+    which resolves element IDs to concrete HTML and wraps them in a
+    ``<div class="layer-overlay">``.
     """
-    opacity_map = {"light": 0.15, "medium": 0.3, "heavy": 0.5}
-    opacity = opacity_map.get(intensity, 0.3)
+    return render_overlay_elements(elements or [], intensity)
 
-    el_list = elements or []
-    data_attr = f' data-elements="{",".join(el_list)}"' if el_list else ""
 
-    return (
-        f'<div class="layer-overlay" style="'
-        f"position:absolute;top:0;left:0;width:100%;height:100%;"
-        f'pointer-events:none;opacity:{opacity}"{data_attr}>'
-        f"<!-- overlay placeholder — Task 3 -->"
-        f"</div>"
-    )
+def get_context_element_html(
+    el_type: str,
+    position: str,
+    content: str = "",
+) -> str:
+    """Return positioned HTML for a context element (device mockup, task card, etc.).
+
+    Delegates to :func:`compositor.components.context_elements.render_context_element`.
+    """
+    return render_context_element(el_type, position, content)
 
 
 def get_cta_html(
