@@ -35,7 +35,7 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3}}
 .gradient-bar{{
   position:absolute;bottom:0;left:0;width:100%;height:{grad_height}px;
-  background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);
+  background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.6) 50%,transparent 100%);
   z-index:4;
 }}
 .content-zone{{
@@ -44,6 +44,7 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
   color:#FFFFFF;
 }}
 .content-zone .layer-text{{position:static!important;transform:none!important}}
+.content-zone .layer-text div{{color:#FFFFFF!important}}
 .content-zone .layer-cta{{position:static!important;transform:none!important}}
 .layer-context{{position:absolute;top:5%;left:5%;z-index:5}}
 </style>

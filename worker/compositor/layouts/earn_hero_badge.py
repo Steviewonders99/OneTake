@@ -28,8 +28,8 @@ body{{width:{width}px;height:{height}px;overflow:hidden}}
 }}
 .layer-bg{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}}
 .layer-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}}
-.layer-actor{{position:absolute;bottom:0;right:0;z-index:3;max-width:55%;max-height:90%}}
-.layer-actor img{{display:block;max-width:100%;max-height:100%;object-fit:contain}}
+.layer-actor{{position:absolute;bottom:0;right:0;z-index:3;width:55%;height:90%}}
+.layer-actor img{{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}}
 .layer-text{{position:absolute;top:8%;left:5%;max-width:50%;z-index:4}}
 .layer-cta{{position:absolute;bottom:8%;left:5%;z-index:5}}
 .layer-context{{position:absolute;top:5%;right:5%;z-index:5}}
