@@ -15,22 +15,22 @@ from typing import Any, Dict, List, Optional
 EARN_LAYOUTS = frozenset({
     "earn_hero_badge",
     "earn_split_stat",
-    "earn_testimonial_card",
-    "earn_minimal_cta",
+    "earn_full_bleed",
+    "earn_card_stack",
 })
 
 GROW_LAYOUTS = frozenset({
+    "grow_device_mockup",
     "grow_editorial",
-    "grow_career_path",
-    "grow_community_grid",
-    "grow_opportunity_map",
+    "grow_diagonal_split",
+    "grow_bold_type",
 })
 
 SHAPE_LAYOUTS = frozenset({
-    "shape_impact_counter",
-    "shape_mission_statement",
-    "shape_data_viz",
-    "shape_contributor_spotlight",
+    "shape_portrait_cred",
+    "shape_multi_grid",
+    "shape_clean_card",
+    "shape_photo_frame",
 })
 
 ALL_LAYOUTS = EARN_LAYOUTS | GROW_LAYOUTS | SHAPE_LAYOUTS

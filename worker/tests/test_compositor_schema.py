@@ -93,7 +93,7 @@ class TestBatchValidation:
         assert any("duplicate" in e.lower() for e in errors)
 
     def test_cross_pillar_layout_rejected(self):
-        configs = [_make_config(layout="grow_editorial")]
+        configs = [_make_config(layout="grow_device_mockup")]
         errors = validate_batch(configs, pillar="earn", copy_variants=["Earn $17.50/hr from home"])
         assert any("pillar" in e.lower() for e in errors)
 
