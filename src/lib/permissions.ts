@@ -1,5 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { getUserRole } from '@/lib/db/user-roles';
+import { getUserRole, isAllowedDomain } from '@/lib/db/user-roles';
 import type { UserRole } from '@/lib/types';
 
 export interface AuthContext {
@@ -20,6 +20,11 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     // currentUser may fail in some contexts
   }
 
+  // Domain restriction: reject users from non-allowed email domains
+  if (email && !isAllowedDomain(email)) {
+    return null;
+  }
+
   const userRole = await getUserRole(userId, email);
   const role = (userRole?.role as UserRole) ?? 'viewer';
 
@@ -31,6 +36,7 @@ export function canAccessRequest(
   requestCreatedBy: string | null
 ): boolean {
   if (authCtx.role === 'admin') return true;
+  if (authCtx.role === 'lead_recruiter') return true;
   if (authCtx.role === 'recruiter') {
     return requestCreatedBy === authCtx.userId;
   }
@@ -48,6 +54,10 @@ export function canEditRequest(
     return requestCreatedBy === authCtx.userId && requestStatus === 'draft';
   }
   return false;
+}
+
+export function canRequestPaid(authCtx: AuthContext): boolean {
+  return authCtx.role === 'admin' || authCtx.role === 'lead_recruiter';
 }
 
 export function getNavForRole(role: UserRole): {
@@ -75,6 +85,18 @@ export function getNavForRole(role: UserRole): {
               { href: '/admin/users', label: 'Users', icon: 'Users' },
               { href: '/admin/schemas', label: 'Schemas', icon: 'FileCode' },
               { href: '/admin/pipeline', label: 'Workers', icon: 'Activity' },
+            ],
+          },
+        ],
+      };
+    case 'lead_recruiter':
+      return {
+        sections: [
+          {
+            title: 'Pipeline',
+            links: [
+              ...base,
+              { href: '/intake/new', label: 'New Request', icon: 'PlusCircle' },
             ],
           },
         ],
