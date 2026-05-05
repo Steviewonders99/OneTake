@@ -123,6 +123,8 @@ export interface IntakeRequest {
   engagement_model: string | null;
   technical_requirements: string | null;
   context_notes: string | null;
+  // ─── Pipeline Mode (organic-only vs full paid+organic) ─────────
+  pipeline_mode: 'organic' | 'full' | null;
 }
 
 // ============================================================

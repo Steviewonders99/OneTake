@@ -8,10 +8,10 @@ interface Asset {
   asset_type: string;
   platform: string;
   language: string;
-  country: string;
-  content: Record<string, unknown>;
-  copy_data: Record<string, unknown>;
-  blob_url?: string;
+  country: string | null;
+  content: Record<string, unknown> | null;
+  copy_data: Record<string, unknown> | null;
+  blob_url?: string | null;
 }
 
 interface OrganicMaterialsProps {
@@ -72,7 +72,7 @@ export function OrganicMaterials({ assets, requestId }: OrganicMaterialsProps) {
               <h4 className="text-sm font-medium text-[#1A1A1A] mb-2">WordPress Posts</h4>
               <div className="grid gap-3">
                 {wpPosts.map(asset => {
-                  const content = asset.content as Record<string, string>;
+                  const content = (asset.content || {}) as Record<string, string>;
                   return (
                     <div key={asset.id} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
@@ -98,7 +98,7 @@ export function OrganicMaterials({ assets, requestId }: OrganicMaterialsProps) {
               <h4 className="text-sm font-medium text-[#1A1A1A] mb-2">Job Portal Copy</h4>
               <div className="grid gap-3">
                 {portalCopy.map(asset => {
-                  const content = asset.content as Record<string, string>;
+                  const content = (asset.content || {}) as Record<string, string>;
                   return (
                     <div key={asset.id} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
@@ -132,13 +132,14 @@ export function OrganicMaterials({ assets, requestId }: OrganicMaterialsProps) {
               <h4 className="text-sm font-medium text-[#1A1A1A] mb-2">Social Graphics</h4>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {socialGraphics.map(asset => {
-                  const content = asset.content as Record<string, unknown>;
+                  const content = (asset.content || {}) as Record<string, unknown>;
+                  const htmlContent = typeof content.html === 'string' ? content.html : undefined;
                   return (
                     <div key={asset.id} className="card p-3">
                       <div className="aspect-square bg-[#F5F5F5] rounded-lg mb-2 overflow-hidden">
-                        {content.html && (
+                        {htmlContent && (
                           <iframe
-                            srcDoc={content.html as string}
+                            srcDoc={htmlContent}
                             className="w-full h-full border-0 pointer-events-none"
                             sandbox=""
                           />
@@ -159,7 +160,7 @@ export function OrganicMaterials({ assets, requestId }: OrganicMaterialsProps) {
               <h4 className="text-sm font-medium text-[#1A1A1A] mb-2">Captions</h4>
               <div className="grid gap-3">
                 {socialCaptions.map(asset => {
-                  const content = asset.content as Record<string, string>;
+                  const content = (asset.content || {}) as Record<string, string>;
                   const caption = content.caption || '';
                   return (
                     <div key={asset.id} className="card p-4">
@@ -192,13 +193,14 @@ export function OrganicMaterials({ assets, requestId }: OrganicMaterialsProps) {
           {flyers.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {flyers.map(asset => {
-                const content = asset.content as Record<string, unknown>;
+                const content = (asset.content || {}) as Record<string, unknown>;
+                const htmlContent = typeof content.html === 'string' ? content.html : undefined;
                 return (
                   <div key={asset.id} className="card p-4">
                     <div className="aspect-[3/4] bg-[#F5F5F5] rounded-lg mb-3 overflow-hidden">
-                      {content.html && (
+                      {htmlContent && (
                         <iframe
-                          srcDoc={content.html as string}
+                          srcDoc={htmlContent}
                           className="w-full h-full border-0 pointer-events-none"
                           sandbox=""
                         />

@@ -16,10 +16,12 @@ import {
   Copy,
   AlertCircle,
   Globe,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
-import { StatusBadge, UrgencyBadge } from "@/components/StatusBadge";
+import { StatusBadge, UrgencyBadge, PipelineModeBadge } from "@/components/StatusBadge";
+import { OrganicMaterials } from "@/components/campaign/OrganicMaterials";
 import PipelineProgress from "@/components/PipelineProgress";
 import ChannelCard from "@/components/ChannelCard";
 import ActorCard from "@/components/ActorCard";
@@ -292,6 +294,23 @@ export default function IntakeDetailPage({
     }
   }
 
+  async function handleRequestPaid() {
+    setActionLoading("paid");
+    try {
+      const res = await fetch(`/api/intake/${id}/request-paid`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to request paid media");
+      }
+      toast.success("Paid media upgrade requested! Pipeline will re-run with full mode.");
+      window.location.reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to request paid media");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   // Loading state
   if (loading && !data) {
     return (
@@ -332,6 +351,17 @@ export default function IntakeDetailPage({
   const { request, brief, actors, assets, pipelineRuns } = data;
 
   const countryQuotas = (request?.form_data?.country_quotas as CountryQuota[] | undefined) ?? [];
+
+  const pipelineMode = request.pipeline_mode ?? 'full';
+  const isOrganic = pipelineMode === 'organic';
+
+  const organicAssetTypes = ['wp_job_post', 'job_portal_copy', 'flyer', 'flyer_copy', 'social_caption', 'social_graphic'];
+  const organicAssets = assets.filter(a => organicAssetTypes.includes(a.asset_type));
+
+  const canUpgradeToPaid =
+    isOrganic &&
+    (request.status === 'review' || request.status === 'approved') &&
+    (role === 'lead_recruiter' || role === 'admin');
 
   // Recruiter sees a simplified read-only view
   if (role === "recruiter") {
@@ -470,6 +500,21 @@ export default function IntakeDetailPage({
               <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
                 <StatusBadge status={request.status} />
                 <UrgencyBadge urgency={request.urgency} />
+                <PipelineModeBadge mode={pipelineMode === 'full' ? 'full' : 'organic'} />
+                {canUpgradeToPaid && (
+                  <button
+                    onClick={handleRequestPaid}
+                    disabled={actionLoading === "paid"}
+                    className="btn-primary flex items-center gap-2 cursor-pointer"
+                  >
+                    {actionLoading === "paid" ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <TrendingUp size={16} />
+                    )}
+                    Request Paid Media
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -597,8 +642,21 @@ export default function IntakeDetailPage({
               </LiveSection>
             )}
 
+            {/* ═══ Organic Materials — job posts, social, flyers ═══ */}
+            {(role === "admin" || role === "designer" || role === null) && (
+              <LiveSection
+                id="section-organic"
+                title="Organic Materials"
+                subtitle="Job posts, social content, and print-ready flyers"
+                accentColor="#22c55e"
+                visible
+              >
+                <OrganicMaterials assets={organicAssets} requestId={id} />
+              </LiveSection>
+            )}
+
             {/* ═══ Campaign Brief — Strategy, media, regional intel ═══ */}
-            {brief && briefData && (role === "admin" || role === "designer" || role === null) && (
+            {!isOrganic && brief && briefData && (role === "admin" || role === "designer" || role === null) && (
               <LiveSection
                 id="section-workspace"
                 title="Campaign Workspace"
@@ -628,7 +686,7 @@ export default function IntakeDetailPage({
             )}
 
             {/* ═══ Personas & Creatives — Persona cards with channel gallery ═══ */}
-            {brief && briefData && (role === "admin" || role === "designer" || role === null) && (
+            {!isOrganic && brief && briefData && (role === "admin" || role === "designer" || role === null) && (
               <LiveSection
                 id="section-images"
                 title="Personas & Creatives"
@@ -712,8 +770,8 @@ export default function IntakeDetailPage({
               </LiveSection>
             )}
 
-            {/* Video Assets */}
-            {assets.filter(a => (a.asset_type as string) === "video").length > 0 && (
+            {/* Video Assets — paid mode only */}
+            {!isOrganic && assets.filter(a => (a.asset_type as string) === "video").length > 0 && (
               <LiveSection
                 id="section-videos"
                 title="Video Assets"
