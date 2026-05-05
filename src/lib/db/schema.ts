@@ -750,6 +750,14 @@ export async function createTables(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_meta_ads_cache_campaign ON meta_ads_cache(campaign_id, date)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_meta_ads_cache_date ON meta_ads_cache(date DESC)`;
 
+  await sql`
+    DO $$ BEGIN
+      ALTER TABLE meta_ads_cache ADD CONSTRAINT meta_ads_cache_uq
+        UNIQUE(ad_account_id, campaign_id, adset_id, date);
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `;
+
   // 32. linkedin_ads_cache — raw LinkedIn Campaign Manager data
   await sql`
     CREATE TABLE IF NOT EXISTS linkedin_ads_cache (
@@ -791,6 +799,67 @@ export async function createTables(): Promise<void> {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_tiktok_ads_cache_campaign ON tiktok_ads_cache(campaign_id, date)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_tiktok_ads_cache_date ON tiktok_ads_cache(date DESC)`;
+
+  // 34. reddit_ads_cache — raw Reddit Ads campaign data
+  await sql`
+    CREATE TABLE IF NOT EXISTS reddit_ads_cache (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ad_account_id   TEXT NOT NULL,
+      campaign_id     TEXT NOT NULL,
+      campaign_name   TEXT,
+      ad_group_id     TEXT,
+      ad_group_name   TEXT,
+      impressions     INT NOT NULL DEFAULT 0,
+      clicks          INT NOT NULL DEFAULT 0,
+      conversions     INT NOT NULL DEFAULT 0,
+      spend           FLOAT NOT NULL DEFAULT 0,
+      ecpm            FLOAT,
+      cpc             FLOAT,
+      ctr             FLOAT,
+      demographics    JSONB NOT NULL DEFAULT '{}',
+      raw_data        JSONB NOT NULL DEFAULT '{}',
+      date            DATE NOT NULL,
+      last_synced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_reddit_ads_cache_campaign ON reddit_ads_cache(campaign_id, date)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_reddit_ads_cache_date ON reddit_ads_cache(date DESC)`;
+
+  await sql`
+    DO $$ BEGIN
+      ALTER TABLE reddit_ads_cache ADD CONSTRAINT reddit_ads_cache_uq
+        UNIQUE(ad_account_id, campaign_id, ad_group_id, date);
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `;
+
+  // 35. brevo_campaign_metrics — email campaign performance (separate from ad normalization)
+  await sql`
+    CREATE TABLE IF NOT EXISTS brevo_campaign_metrics (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      request_id      UUID REFERENCES intake_requests(id) ON DELETE CASCADE,
+      campaign_id     TEXT NOT NULL,
+      campaign_name   TEXT,
+      subject         TEXT,
+      date            DATE NOT NULL,
+      sends           INT DEFAULT 0,
+      delivered       INT DEFAULT 0,
+      opens           INT DEFAULT 0,
+      unique_opens    INT DEFAULT 0,
+      clicks          INT DEFAULT 0,
+      unique_clicks   INT DEFAULT 0,
+      bounces         INT DEFAULT 0,
+      unsubscribes    INT DEFAULT 0,
+      spam_reports    INT DEFAULT 0,
+      open_rate       FLOAT,
+      click_rate      FLOAT,
+      bounce_rate     FLOAT,
+      raw_data        JSONB NOT NULL DEFAULT '{}',
+      synced_at       TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(request_id, campaign_id, date)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_brevo_metrics_request ON brevo_campaign_metrics(request_id, date)`;
 
   // ============================================================
   // INDEXES
