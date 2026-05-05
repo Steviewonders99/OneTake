@@ -123,6 +123,12 @@ export async function createTables(): Promise<void> {
     END $$
   `;
 
+  // Edit lock: prevents concurrent edits on the same campaign
+  await sql`
+    ALTER TABLE intake_requests
+      ADD COLUMN IF NOT EXISTS edit_lock JSONB DEFAULT NULL
+  `;
+
   // 5. attachments — FK to intake_requests
   await sql`
     CREATE TABLE IF NOT EXISTS attachments (
