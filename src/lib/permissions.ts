@@ -60,6 +60,20 @@ export function canRequestPaid(authCtx: AuthContext): boolean {
   return authCtx.role === 'admin' || authCtx.role === 'lead_recruiter';
 }
 
+export function canEditCampaign(
+  authCtx: AuthContext,
+  requestCreatedBy: string | null,
+  requestStatus: string
+): boolean {
+  if (!['review', 'approved', 'sent'].includes(requestStatus)) return false;
+  if (authCtx.role === 'admin') return true;
+  if (authCtx.role === 'lead_recruiter') return true;
+  if (authCtx.role === 'recruiter') {
+    return requestCreatedBy === authCtx.userId;
+  }
+  return false;
+}
+
 export function getNavForRole(role: UserRole): {
   sections: { title: string; links: { href: string; label: string; icon: string }[] }[];
 } {
