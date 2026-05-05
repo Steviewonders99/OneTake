@@ -33,6 +33,12 @@ async def _run_stage4_routed(context: dict) -> dict:
         return await run_stage4_legacy(context)
 
 
+async def _run_media_strategy(context: dict) -> dict:
+    """Run only the media strategy portion of Stage 1 for paid upgrades."""
+    from pipeline.stage1_intelligence import run_campaign_strategy_standalone
+    return await run_campaign_strategy_standalone(context)
+
+
 async def run_pipeline(job: dict) -> None:
     """Run the full Creative OS pipeline for a compute job.
 
@@ -75,6 +81,24 @@ async def run_pipeline(job: dict) -> None:
         (6, "Landing Page Generation", run_stage6),
     ]
 
+    # ── Organic pipeline: use organic Stage 3 + 4, skip 5 + 6 ──
+    if job_type in ("generate", "generate_country"):
+        try:
+            from neon_client import get_intake_request as _get_request_mode
+            _req_mode = await _get_request_mode(request_id)
+            if _req_mode.get("pipeline_mode", "organic") == "organic":
+                from pipeline.stage3_organic_copy import run_stage3_organic
+                from pipeline.stage4_organic_compose import run_stage4_organic
+                stages = [
+                    (1, "Strategic Intelligence", run_stage1),
+                    (2, "Character-Driven Image Generation", run_stage2),
+                    (3, "Organic Copy Generation", run_stage3_organic),
+                    (4, "Organic Composition", run_stage4_organic),
+                ]
+                logger.info("Running ORGANIC pipeline for request %s", request_id)
+        except ImportError:
+            logger.warning("Organic pipeline modules not yet available, using default stages")
+
     # If regenerating a specific stage, only run that one.
     if job_type == "regenerate_stage" and stage_target is not None:
         target = int(stage_target)
@@ -111,6 +135,28 @@ async def run_pipeline(job: dict) -> None:
         context["form_data"] = request.get("form_data", {})
         logger.info("Running pipeline for country: %s (personas=%d, actors=%d)",
                      country, context["persona_count"], context["actors_per_persona"])
+
+    # ── Paid upgrade: run paid-only stages on existing organic campaign ──
+    if job_type == "generate_paid":
+        from neon_client import get_intake_request as _get_request
+        request = await _get_request(request_id)
+        feedback_data = job.get("feedback_data", {})
+        if isinstance(feedback_data, str):
+            import json as _json
+            feedback_data = _json.loads(feedback_data)
+        context["paid_config"] = feedback_data
+        context["form_data"] = request.get("form_data", {})
+        context["target_regions"] = request.get("target_regions", [])
+
+        # Paid stages only — organic foundation already exists
+        stages = [
+            (1, "Media Strategy Generation", _run_media_strategy),
+            (3, "Paid Copy Generation", run_stage3),
+            (4, "Paid Layout Composition", _run_stage4_routed),
+            (5, "Video Generation", run_video_stage),
+            (6, "Landing Page Generation", run_stage6),
+        ]
+        logger.info("Running PAID pipeline upgrade for request %s", request_id)
 
     # ── Load brief + request data from Neon ──────────────────────
     # Always load if starting at stage > 1 (resume, regenerate, or auto-skip)

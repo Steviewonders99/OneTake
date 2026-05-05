@@ -236,7 +236,7 @@ export default function StepDetails({ formData, onChange, confidenceFlags, local
       <div style={{ marginBottom: 36 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1A1A1A", margin: 0 }}>Project Details</h2>
         <p style={{ fontSize: 13, color: "#737373", margin: "4px 0 0 0" }}>
-          Title, volume, targeting, and budget
+          Title, volume, targeting, and compensation
         </p>
       </div>
 
@@ -379,11 +379,11 @@ export default function StepDetails({ formData, onChange, confidenceFlags, local
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
           <DollarSign size={16} color="#737373" />
           <span style={{ fontSize: 13, fontWeight: 700, color: "#737373", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Compensation &amp; Budget
+            Compensation
           </span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px 32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px 32px" }}>
 
           {/* 8. Compensation Model */}
           <div>
@@ -413,19 +413,6 @@ export default function StepDetails({ formData, onChange, confidenceFlags, local
             <MoneyInput
               value={formData.compensation_rate as number | undefined}
               onChange={(val) => s("compensation_rate", val)}
-              placeholder="0.00"
-            />
-          </div>
-
-          {/* 10. Monthly Ad Budget */}
-          <div>
-            <label style={labelStyle}>
-              Monthly Ad Budget
-              <ConfidenceBadge flag={confidenceFlags["monthly_budget"]} />
-            </label>
-            <MoneyInput
-              value={formData.monthly_budget as number | undefined}
-              onChange={(val) => s("monthly_budget", val)}
               placeholder="0.00"
             />
           </div>

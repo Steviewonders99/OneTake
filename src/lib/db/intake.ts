@@ -12,6 +12,7 @@ export async function createIntakeRequest(data: {
   form_data: Record<string, unknown>;
   schema_version: number;
   campaign_slug?: string | null;
+  pipeline_mode?: string | null;
   qualifications_required?: string | null;
   qualifications_preferred?: string | null;
   location_scope?: string | null;
@@ -25,6 +26,7 @@ export async function createIntakeRequest(data: {
     INSERT INTO intake_requests (
       title, task_type, urgency, target_languages, target_regions,
       volume_needed, created_by, form_data, schema_version, campaign_slug,
+      pipeline_mode,
       qualifications_required, qualifications_preferred, location_scope,
       language_requirements, engagement_model, technical_requirements, context_notes
     )
@@ -39,6 +41,7 @@ export async function createIntakeRequest(data: {
       ${JSON.stringify(data.form_data)},
       ${data.schema_version},
       ${data.campaign_slug ?? null},
+      ${data.pipeline_mode ?? 'organic'},
       ${data.qualifications_required ?? null},
       ${data.qualifications_preferred ?? null},
       ${data.location_scope ?? null},

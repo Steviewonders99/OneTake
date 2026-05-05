@@ -140,6 +140,7 @@ export async function POST(request: Request) {
       form_data: formData,
       schema_version: schema.version,
       campaign_slug: slugify(body.title) || null,
+      pipeline_mode: 'organic',
       qualifications_required,
       qualifications_preferred,
       location_scope,
