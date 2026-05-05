@@ -2,7 +2,7 @@
 
 AI-powered recruitment marketing platform. Intake form → AI generation pipeline → creative review → designer handoff → recruiter distribution → agency export.
 
-**~80K LOC** | **614 tests** | **1,054 interest graph nodes** | **30 widgets** | **41 API endpoints** | **~130 source files** | **40+ DB tables** | Next.js 16 + Python worker | Neon Postgres | Clerk Auth | Vercel
+**~105K LOC** | **614 tests** | **1,054 interest graph nodes** | **30 widgets** | **48 API endpoints** | **~145 source files** | **40+ DB tables** | Next.js 16 + Python worker | Neon/Azure Postgres | Clerk Auth | Vercel + Azure
 
 ---
 
@@ -28,14 +28,14 @@ AI-powered recruitment marketing platform. Intake form → AI generation pipelin
 
 ## Overview / 概述
 
-OneTake automates the creation of recruitment marketing campaigns. A recruiter submits a campaign request through a structured intake form. An AI pipeline generates cultural research, personas, actor images, ad copy, composed creatives, and optional video assets. A marketing manager reviews and approves the package, a designer refines finals, and the approved creatives are distributed to recruiters and ad agencies.
+OneTake automates the creation of recruitment marketing campaigns. A recruiter submits a campaign request through a structured intake form. An AI pipeline generates cultural research, personas, actor images, organic content (job posts, social graphics, flyers with QR codes), and — when a lead recruiter upgrades to paid — ad copy, video, and landing pages. A marketing manager reviews and approves the package, a designer refines finals, and the approved creatives are distributed to recruiters and ad agencies.
 
 The system has two main subsystems:
 
-1. **Web application** (Next.js) — Intake forms, review dashboards, designer portal, recruiter workspace, agency handoff, admin tools.
+1. **Web application** (Next.js) — Intake forms, review dashboards, designer portal, recruiter workspace, agency handoff, admin tools, inline asset editing.
 2. **Compute worker** (Python) — Polls a job queue, runs a multi-stage AI generation pipeline, uploads results to blob storage.
 
-Both subsystems share the same Neon Postgres database. The database acts as both the data store and the message bus (via the `compute_jobs` table).
+Both subsystems share a Postgres database (Neon serverless + Azure PG 17.9 Flexible Server). The database acts as both the data store and the message bus (via the `compute_jobs` table).
 
 ### End-to-End Workflow / 端到端流程
 
@@ -95,7 +95,15 @@ stateDiagram-v2
     generating --> draft: Pipeline failed
 ```
 
-### Recent Additions (April 23, 2026)
+### Recent Additions (May 5, 2026)
+
+**Organic-First Pipeline with Paid Upgrade** — Every intake request defaults to `organic` mode, producing job posts (WordPress + Indeed/LinkedIn Jobs/Glassdoor), social graphics, social captions, and flyers with QR codes (→ Aidaform with UTM tracking). Lead recruiters can upgrade approved campaigns to `full` mode, which adds media strategy, ad copy, paid carousel panels, video, and landing pages — reusing the existing research, personas, and actor images as foundation. No redundant pipeline re-runs.
+
+**Asset Edit Hub** — Inline campaign editing system. Recruiters select assets, describe changes in plain English, and the system surgically edits just those assets. Four action types: `copy_update` (Gemma 3 27B batch revision), `link_update` (URL + QR code regeneration), `locale_add` (new countries via Excel upload → organic pipeline per country), `targeted_edit` (specific asset text changes). All edits are immediate, fully audited (edit_history with original_value snapshots), and batch-rollbackable with one-click Undo. Concurrent edit lock prevents race conditions.
+
+**Azure Infrastructure Live** — Worker running on Azure Container Apps (2 vCPU / 4 GiB), PostgreSQL 17.9 Flexible Server (full admin access — self-service migrations), ACR with GitHub Actions CI/CD auto-deploy, Graph API permissions admin-consented, Clerk Microsoft OAuth ready.
+
+### Previous Additions (April 23, 2026)
 
 **Unified Campaign Workspace** — Multi-country campaigns managed from a single view. Country bar navigation with per-country status badges. "All Countries" overview grid. Per-country filtering across all sections (brief, personas, creatives, media strategy, channel mix, videos, cultural research). Replaces the old campaign splitter with per-country compute_jobs on a single intake_request. Persona scaling: 2/2 for 1-2 countries, 1/1 for 3+.
 
@@ -334,6 +342,8 @@ centric-intake/
 │   │   │   ├── registries/           #   Option registry lookups
 │   │   │   ├── compute/              #   Job status polling
 │   │   │   ├── revise/               #   AI revision requests
+│   │   │   ├── intake/[id]/edit/     #   Batch asset editing + rollback
+│   │   │   ├── intake/[id]/request-paid/ # Paid media upgrade
 │   │   │   └── auth/                 #   Auth context endpoint
 │   │   ├── intake/                   # Intake form + detail pages
 │   │   ├── admin/                    # Admin portal pages
@@ -350,6 +360,10 @@ centric-intake/
 │   │   ├── CreativeHtmlEditor.tsx    #   Live HTML creative editor
 │   │   ├── EditableField.tsx         #   Inline editable fields
 │   │   ├── RecruiterWorkspace.tsx    #   Recruiter creative library
+│   │   ├── campaign/                 #   Campaign workspace components
+│   │   │   ├── OrganicMaterials.tsx  #     Organic deliverables (4 tabs)
+│   │   │   ├── EditMode.tsx          #     Inline edit mode (select + instruct + undo)
+│   │   │   └── ...                   #     Country bar, filters, etc.
 │   │   ├── designer/                 #   Designer-specific components
 │   │   │   ├── gallery/              #     Asset gallery + lightbox
 │   │   │   ├── figma/                #     Figma integration UI
@@ -372,6 +386,9 @@ centric-intake/
 │   │   │   └── schemas.ts            #     Dynamic form schema CRUD
 │   │   ├── auth.ts                   #   requireAuth(), requireRole()
 │   │   ├── permissions.ts            #   Role-based access helpers
+│   │   ├── edit-classifier.ts       #   Edit instruction → action type routing
+│   │   ├── edit-executor.ts         #   Batch edit execution + rollback engine
+│   │   ├── excel-parser.ts          #   Locale Excel parsing for locale_add
 │   │   ├── sanitize.ts              #   DOMPurify HTML sanitization
 │   │   ├── types.ts                  #   Shared TypeScript types (~430 lines)
 │   │   ├── blob.ts                   #   Vercel Blob upload helper
@@ -395,10 +412,12 @@ centric-intake/
 │   │   ├── orchestrator.py           #   Stage sequencing + error handling
 │   │   ├── stage1_intelligence.py    #   Cultural research + brief + strategy
 │   │   ├── stage2_images.py          #   Actor generation + image creation
-│   │   ├── stage3_copy.py            #   Ad copy generation per persona/channel
-│   │   ├── stage4_compose_v3.py      #   HTML composition + Playwright render
-│   │   ├── stage5_video.py           #   Video generation (Kling)
-│   │   └── stage6_landing_pages.py   #   Landing page HTML generation
+│   │   ├── stage3_copy.py            #   Paid ad copy generation per persona/channel
+│   │   ├── stage3_organic_copy.py    #   Organic copy (WP posts, portals, flyers, captions)
+│   │   ├── stage4_compose_v3.py      #   Paid HTML composition + Playwright render
+│   │   ├── stage4_organic_compose.py #   Organic compositions (social graphics + flyers + QR)
+│   │   ├── stage5_video.py           #   Video generation (Kling) — paid only
+│   │   └── stage6_landing_pages.py   #   Landing page HTML generation — paid only
 │   ├── ai/                           # Model clients
 │   │   ├── seedream.py               #   Seedream image generation
 │   │   ├── compositor.py             #   Playwright HTML→PNG rendering
@@ -554,6 +573,9 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 |--------|------|------|-------------|
 | `GET` | `/api/compute/status/[id]` | Clerk | Poll compute job status |
 | `POST` | `/api/revise` | Clerk | Request AI revision of asset |
+| `POST` | `/api/intake/[id]/edit` | Clerk + canEdit | Batch edit campaign assets (copy, links, locales) |
+| `POST` | `/api/intake/[id]/edit/rollback` | Clerk + canEdit | Rollback a batch edit by batch_id |
+| `POST` | `/api/intake/[id]/request-paid` | Lead recruiter | Upgrade organic campaign to paid mode |
 | `GET/POST` | `/api/tracked-links` | Clerk | Manage UTM tracked links |
 | `GET` | `/api/auth/me` | Clerk | Current user context + role |
 
@@ -567,23 +589,23 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `intake_requests` | Campaign intake data | `title`, `task_type`, `urgency`, `status` (draft→generating→review→approved→sent), `form_data` (JSONB), `created_by`, `campaign_slug` |
+| `intake_requests` | Campaign intake data | `title`, `task_type`, `urgency`, `status` (draft→generating→review→approved→sent), `pipeline_mode` (organic/full), `form_data` (JSONB), `created_by`, `campaign_slug`, `edit_lock` (JSONB) |
 | `task_type_schemas` | Dynamic form field definitions | `task_type`, `schema` (JSONB — field definitions), `version`, `is_active` |
 | `option_registry` | Dropdown option values | `registry_name`, `option_value`, `option_label`, `metadata` (JSONB) |
 | `creative_briefs` | AI-generated briefs per campaign | `brief_data` (JSONB — personas, strategy, research), `channel_research` (JSONB), `design_direction` (JSONB), `evaluation_score`, `pillar_primary` |
 | `actor_profiles` | Persona actors with face locks + country | `name`, `face_lock` (JSONB — facial parameters), `prompt_seed`, `outfit_variations` (JSONB), `backdrops[]`, `country` |
-| `generated_assets` | All generated content (images, copy, video) + country | `asset_type` (base_image/composed_creative/carousel_panel), `platform`, `format`, `blob_url`, `evaluation_score`, `evaluation_passed`, `stage`, `content` (JSONB), `copy_data` (JSONB), `country` |
+| `generated_assets` | All generated content (images, copy, video) + country | `asset_type` (base_image/composed_creative/carousel_panel/wp_job_post/job_portal_copy/flyer/flyer_copy/social_caption/social_graphic), `platform`, `format`, `blob_url`, `evaluation_score`, `evaluation_passed`, `stage`, `version`, `content` (JSONB — includes `edit_history`), `copy_data` (JSONB), `country` |
 | `approvals` | Approval decisions | `approved_by`, `status` (approved/changes_requested/rejected), `notes` |
 | `campaign_landing_pages` | Per-country landing page URLs | `request_id` (unique), `job_posting_url`, `landing_page_url`, `ada_form_url`, `country` |
 | `tracked_links` | UTM-tracked short links with click counts + country | `slug` (6-char), `destination_url`, `utm_*` fields, `click_count`, `country` |
 | `designer_uploads` | Designer-uploaded replacement assets | `request_id` (FK), `original_asset_id`, `blob_url` |
 | `magic_links` | Token-based auth for designer/agency portals | `token` (UUID), `expires_at`, `used_at` (single-use tracking) |
-| `compute_jobs` | Job queue with country + generate_country type | `job_type` (generate/regenerate/regenerate_stage/regenerate_asset/generate_country), `status` (pending→processing→complete/failed), `stage_target`, `feedback`, `country` |
+| `compute_jobs` | Job queue with country + generate_country type | `job_type` (generate/generate_country/regenerate/regenerate_stage/regenerate_asset/resume_from/generate_paid), `status` (pending→processing→complete/failed), `stage_target`, `feedback`, `country` |
 | `campaign_strategies` | Per-country media plans | `country`, `tier`, `monthly_budget`, `strategy_data` (JSONB — campaigns, ad_sets, channel_allocation) |
 | `pipeline_runs` | Stage execution log | `stage`, `stage_name`, `status` (running/passed/failed), `duration_ms`, `error_message` |
 | `notification_deliveries` | Outbound notification log | `channel` (teams/slack/outlook), `recipient`, `status`, `payload` (JSONB) |
 | `notifications` | User-facing event feed | `channel`, `recipient`, `status`, `payload` (JSONB) |
-| `user_roles` | RBAC role assignments | `clerk_id`, `email`, `role` (admin/recruiter/designer/viewer), `is_active` |
+| `user_roles` | RBAC role assignments | `clerk_id`, `email`, `role` (admin/lead_recruiter/recruiter/designer/viewer), `is_active` |
 
 ### AudienceIQ Tables
 
@@ -640,6 +662,16 @@ Approval types: `marketing` (admin only), `designer` (admin/designer), `final` (
 ## Pipeline Stages / 生成管线
 
 The worker runs stages sequentially. Each stage writes results to the database and uploads files to Vercel Blob. The frontend polls `/api/intake/[id]/progress` to render results as they arrive.
+
+### Pipeline Modes
+
+| Mode | Trigger | Stages | Outputs |
+|------|---------|--------|---------|
+| **Organic** (default) | Any recruiter submits intake | 1 (no media strategy), 2, 3 organic, 4 organic | WP posts, job portal copy, social graphics, social captions, flyers + QR codes |
+| **Paid** (upgrade) | Lead recruiter clicks "Request Paid Media" | Media strategy, 3 paid, 4 paid, 5, 6 | Ad copy, carousel panels, video, landing pages |
+
+Organic pipeline files: `stage3_organic_copy.py`, `stage4_organic_compose.py`
+Paid pipeline reuses: `stage3_copy.py`, `stage4_compose_v3.py` / `stage4_design_agent.py`, `stage5_video.py`, `stage6_landing_pages.py`
 
 ```mermaid
 flowchart TD
@@ -967,21 +999,23 @@ sequenceDiagram
     App->>AG: Agency package + ZIP available
 ```
 
-| Capability | Admin | Recruiter | Designer | Viewer |
-|-----------|:-----:|:---------:|:--------:|:------:|
-| View all requests | Yes | Own only | Via magic link | Yes |
-| Create intake request | Yes | Yes | No | No |
-| Edit draft requests | Yes | Own only | No | No |
-| Delete draft requests | Yes | Own only | No | No |
-| Approve (marketing stage) | Yes | No | No | No |
-| Approve (designer stage) | Yes | No | Yes | No |
-| Approve (final stage) | Yes | No | No | No |
-| Upload designer finals | Yes | No | Yes (magic link) | No |
-| View admin panel | Yes | No | No | No |
-| Manage users/roles | Yes | No | No | No |
-| View recruiter workspace | Yes | Yes | No | No |
-| Create tracked links | Yes | Yes | No | No |
-| Connect Figma | Yes | Own drafts | No | No |
+| Capability | Admin | Lead Recruiter | Recruiter | Designer | Viewer |
+|-----------|:-----:|:--------------:|:---------:|:--------:|:------:|
+| View all requests | Yes | Yes | Own only | Via magic link | Yes |
+| Create intake request | Yes | Yes | Yes | No | No |
+| Edit draft requests | Yes | Yes | Own only | No | No |
+| Delete draft requests | Yes | Yes | Own only | No | No |
+| Edit approved campaign assets | Yes | Yes | Own only | No | No |
+| Request paid media upgrade | Yes | Yes | No | No | No |
+| Approve (marketing stage) | Yes | No | No | No | No |
+| Approve (designer stage) | Yes | No | No | Yes | No |
+| Approve (final stage) | Yes | No | No | No | No |
+| Upload designer finals | Yes | No | No | Yes (magic link) | No |
+| View admin panel | Yes | No | No | No | No |
+| Manage users/roles | Yes | No | No | No | No |
+| View recruiter workspace | Yes | Yes | Yes | No | No |
+| Create tracked links | Yes | Yes | Yes | No | No |
+| Connect Figma | Yes | Own drafts | Own drafts | No | No |
 
 **Magic links:** Designers access campaigns via time-limited tokens (7-day expiry, single-use on submit). No Clerk account required.
 

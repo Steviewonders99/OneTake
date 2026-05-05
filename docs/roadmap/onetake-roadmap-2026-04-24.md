@@ -1,6 +1,6 @@
-# OneTake Platform Roadmap — Updated April 24, 2026
+# OneTake Platform Roadmap — Updated May 5, 2026
 
-> Day 18 of deployment. 740+ commits. 80K+ LOC. Production at nova-intake.vercel.app.
+> Day 30 of deployment. 825+ commits. ~105K LOC. **Organic-first pipeline + Asset Edit Hub shipped. Worker LIVE on Azure. Full DB admin confirmed.**
 
 ---
 
@@ -8,7 +8,7 @@
 
 OneTake is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the SVP pitch (target: May 5, Day 30).
 
-**Day 18 status:** Core pipeline deployed. 4 portals live. AudienceIQ intelligence layer shipped. GraphRAG interest routing live with 1,054 real platform interests. Unified Campaign Workspace with country-level navigation built. GPT Image 2 live. Michael deliverables shipped. CI fully green (614 tests). Azure migration plan approved by China engineering team.
+**Day 30 status:** Two major features shipped — **Organic-First Pipeline** (default organic intake → WP posts, social graphics, flyers with QR codes; lead recruiter can upgrade to paid) and **Asset Edit Hub** (batch inline editing with copy revision, link/QR updates, Excel-based locale additions, one-click rollback). Azure PG full admin confirmed. Infrastructure fully verified. 22 commits in a single session.
 
 ---
 
@@ -90,10 +90,65 @@ Four-ring audience drift detection: "What is the gap between who we target, who 
 - **Persona scaling rule**: Dynamic persona/actor counts based on country count
 - **Implementation**: Plan written, ready for execution
 
+### Day 23 Ships (April 29): Azure Infrastructure Provisioned
+- **Azure resource group provisioned by IT** — ACR, Container App, Log Analytics, Container Apps Environment, SSL cert
+- **Custom domain live:** `onetake.oneforma.com` with SSL certificate and CORS (`*.oneforma.com`, `*.centific.com`)
+- **Worker image pushed to ACR** — `novacert.azurecr.io/onetake-worker:latest` + `:1b0c28d` (linux/amd64)
+- **GitHub Actions CI/CD wired to ACR** — `ACR_USERNAME`/`ACR_PASSWORD` secrets set, auto-push on merge to main
+- **App Registration active** — `azc-sp-onetake-dev-deployment` (client ID: `53dce4f5-8c80-4ed8-be44-625ea0966d22`)
+- **Full IT spec + follow-up email sent** — env manifest, networking, database specs, Container App config
+
+### Day 24 Ships (April 30): WORKER LIVE ON AZURE
+- **PostgreSQL 17.9 delivered by IT** — `onetake-pg-west01.postgres.database.azure.com`, connected, all features verified
+- **Schema migration complete** — 31 tables, 76 indexes, 0 errors. Exact replica of Neon schema on Azure PG
+- **Firewall self-managed** — dev IP (73.1.31.109) added via `az` CLI
+- **Container App configured** — 4 secrets (DATABASE_URL, OPENROUTER_API_KEY, NVIDIA_NIM_API_KEY, BLOB_READ_WRITE_TOKEN) + 3 plain env vars (APP_URL, WORKER_ID, POLL_INTERVAL_SECONDS)
+- **Image swapped** — nginx test container replaced with `novacert.azurecr.io/onetake-worker:latest`
+- **Resources bumped** — 2 vCPU / 4 GiB (up from 0.5 / 1 GiB)
+- **Worker running** — PID 1, polling every 30s, NIM inference mode, connection pool created
+- **Docker image fixed** — added `numpy` to `requirements-docker.txt` (deglosser dependency), rebuilt + pushed
+- **Admin user seeded** — `steven.junop@centific.com` = admin on Azure PG
+- **Graph API permissions discovered already admin-consented** — `User.Read.All`, `Group.Read.All`, `Mail.Send`, `Files.ReadWrite.All`, `Sites.Selected`, `Team.ReadBasic.All` — all live
+- **App Registration owner access confirmed** — Steven, Michael, Pengfei are owners. Can modify redirect URIs, generate secrets
+- **Clerk OAuth redirect URI added** — `https://allowing-hedgehog-42.clerk.accounts.dev/v1/oauth_callback` on app registration
+- **Clerk client secret generated** — ready to configure in Clerk dashboard
+- **Domain restriction shipped** — `isAllowedDomain()` gates auto-provisioning + `requireRole()` + `getAuthContext()`. Defaults to `centific.com,oneforma.com`. Env var configurable.
+- **`onetake.oneforma.com` added to Vercel** — pending DNS verification (TXT + CNAME records sent to IT)
+- **IT reply email drafted** — PG17 ack, Graph API correction (dropped `ChannelMessage.Send`), OAuth instead of SAML, DNS records for Vercel
+- **IT helpdesk SAML ticket drafted** — step-by-step Enterprise Application setup guide for Azure AD admin
+
+### Day 30 Ships (May 5): Organic-First Pipeline + Asset Edit Hub (22 commits)
+
+**Organic-First Pipeline with Paid Upgrade — 12 commits:**
+- **Pipeline mode routing** — `pipeline_mode` column on `intake_requests` (organic/full). Orchestrator swaps stages based on mode.
+- **Organic Stage 3** — `stage3_organic_copy.py`: WP job posts, Indeed/LinkedIn Jobs/Glassdoor copy, flyer copy, social captions per persona × locale
+- **Organic Stage 4** — `stage4_organic_compose.py`: social graphics (LinkedIn, IG, Facebook) + print flyers with QR codes via GLM-5 HTML composition
+- **QR code generator** — `worker/utils/qr_generator.py`: QR → Aidaform (with UTM), fallback to job posting. Tracked links per locale.
+- **Stage 1 organic mode** — Skips media strategy generation for organic. `run_campaign_strategy_standalone()` for paid upgrades.
+- **Lead recruiter role** — New `lead_recruiter` role in DB + permissions. Can view all campaigns + request paid upgrade.
+- **Request Paid API** — `POST /api/intake/[id]/request-paid`: auto-calculate budget from RPP formula, create `generate_paid` job
+- **Frontend** — `OrganicMaterials.tsx` (4 tabs: Job Posts, Social, Flyers, Tracked Links), `PipelineModeBadge`, "Request Paid Media" button (lead_recruiter/admin only)
+- **Paid sections hidden** — Media Strategy, Paid Creatives, Videos pills hidden until paid upgrade
+
+**Asset Edit Hub — 9 commits:**
+- **Edit classifier** — `edit-classifier.ts`: keyword routing → copy_update / link_update / locale_add / targeted_edit
+- **Edit executor** — `edit-executor.ts`: Gemma 3 27B copy revision, link/QR update, batch rollback (original_value snapshots)
+- **Edit API** — `POST /api/intake/[id]/edit`: multipart (Excel upload), edit lock, classification, execution, Teams notification, 207 partial success
+- **Rollback API** — `POST /api/intake/[id]/edit/rollback`: revert all assets by batch_id
+- **Excel parser** — `excel-parser.ts`: parse locale Excel (country, url, label) for locale_add
+- **EditMode frontend** — `EditMode.tsx`: "Edit Campaign" toggle, asset checkboxes, instruction bar, Excel upload, Apply button, Undo with rollback
+- **Bulletproofing** — Edit lock (5 min expiry), max 50 assets/batch, 2000 char instruction limit, asset ownership verification, concurrent edit prevention
+
+**Azure Admin + IT (earlier Day 29-30):**
+- **Azure PG full admin confirmed** — `sqladm` has `azure_pg_admin` role, self-service migrations
+- **Azure Function named** — `onetake-fn-west01` submitted to IT
+- **Entra ID application** — Custom app, no user assignment required
+- **DNS request finalized** — 3 Cloudflare records for Vercel subdomains
+
 ### Infrastructure & Security
 - 17-commit security hardening (auth bypass, IDOR, XSS, secrets, CSP)
-- GitHub Actions CI: build, lint, test, Python lint, Docker build
-- Multi-arch Dockerfile (Azure VM + Apple Silicon)
+- GitHub Actions CI: build, lint, test, Python lint, Docker build + ACR push
+- Multi-arch Dockerfile (Azure Container Apps + Apple Silicon)
 - WordPress auto-publish with Yoast SEO
 - UTM tracked link builder with click tracking
 - Teams + Outlook webhook notifications
@@ -102,22 +157,30 @@ Four-ring audience drift detection: "What is the gap between who we target, who 
 
 ## What's Planned (Not Yet Shipped)
 
-### CI/CD to Azure Container Registry (NEW)
-GitHub Actions auto-deploy — every green push builds Docker image and pushes to Azure Container Registry. Eliminates manual deployment steps for the Python worker.
+### CI/CD to Azure Container Registry (SHIPPED — April 29)
+GitHub Actions auto-deploy — every green push to main builds Docker image and pushes to `novacert.azurecr.io/onetake-worker`. ACR credentials set as GitHub secrets. First image pushed manually April 29.
 
-**Needs:** ACR credentials + service principal from Michael's team.
+### onetake.oneforma.com Custom Domain (SHIPPED — April 29)
+IT provisioned `onetake.oneforma.com` with SSL certificate on Azure Container Apps. CORS configured for `*.oneforma.com` and `*.centific.com`. Live and verified.
 
-### Microsoft Integrations (via Azure Function Apps + Microsoft Graph API) (NEW)
-- **MS Teams** — production webhook URL for campaign notifications (currently test URL)
-- **Outlook** — automated email notifications to recruiters/stakeholders
-- **SharePoint** — auto-create folders per campaign, push generated assets + documents (briefs, reports, creative packages)
-- **Azure AD / Entra ID** — sync with Clerk auth for role-based permissions per campaign, dynamic recruiter access to specific requests and leads
+### Microsoft Integrations (PERMISSIONS GRANTED — April 30)
+All Graph API permissions already admin-consented on app registration `azc-sp-onetake-dev-deployment`:
+- **SharePoint** — `Sites.Selected` granted (need IT to grant access to specific OneForma18 site). Auto-create per-campaign folders.
+- **MS Teams** — Using webhooks (working). `Team.ReadBasic.All` granted. Dropped `ChannelMessage.Send` (RSC permission, not needed — webhooks are simpler).
+- **Outlook** — `Mail.Send` granted (application-level). Waiting on shared mailbox from IT (`noreply@oneforma.com`).
+- **Azure AD / Entra ID** — `User.Read.All` + `Group.Read.All` granted. User/group lookup ready.
 
-### OpenAI Direct API Transition (NEW)
+### Clerk Authentication (OAUTH READY — April 30)
+Pivoted from SAML ($50/mo Clerk Pro) to **Microsoft OAuth** (free Clerk tier):
+- App registration redirect URI added: `https://allowing-hedgehog-42.clerk.accounts.dev/v1/oauth_callback`
+- Client secret generated, ready to configure in Clerk dashboard
+- Sign-in audience: Single tenant (Centific/OneForma only)
+- Domain restriction enforced at app level: `isAllowedDomain()` in `user-roles.ts` + `permissions.ts` + `auth.ts`
+- Defaults to `centific.com,oneforma.com`, configurable via `ALLOWED_EMAIL_DOMAINS` env var
+- SAML helpdesk ticket also drafted as future upgrade path if needed
+
+### OpenAI Direct API Transition
 Move from OpenRouter ($0.225/image) to OpenAI API direct ($0.006/image) for GPT Image 2. **37x cost reduction**, same quality. Needs: OpenAI API key setup.
-
-### onetake.oneforma.com Subdomain (NEW)
-Changed from nova.oneforma.com to onetake.oneforma.com. CNAME → cname.vercel-dns.com. Waiting on IT.
 
 ### Server-Side GTM for Meta Conversions API (SHIPPED — April 25)
 Server-side Google Tag Manager container deployed with Meta Conversions API. Real conversion tracking live:
@@ -147,17 +210,20 @@ Unify the revised ROAS and target CPA formulas from `/Users/stevenjunop/Oneforma
 ### Fixed: WordPress Taxonomy Posting (April 23)
 WordPress auto-publish now correctly assigns custom post types, ACF fields, and taxonomy terms. Previously posts were going to wrong categories.
 
-### Week 3-4: Azure Migration (4 days estimated)
-Michael (China engineering lead) completed code review April 22. Proposed hybrid deployment:
+### Azure Migration (COMPLETE — April 30)
+Michael (China engineering lead) completed code review April 22. Pengfei and IT provisioned full infrastructure April 28-29. Worker went live April 30.
 
-| Component | Current | Target | Effort |
+| Component | Current | Target | Status |
 |---|---|---|---|
-| Frontend (Next.js) | Vercel | Vercel (no change) | 0 min |
-| Python Worker | Local MLX poller | Azure Container Apps | Add Dockerfile (~2 hours) |
-| Database | Neon Postgres | Azure Postgres Flexible | pg_dump/restore + swap DATABASE_URL (~1 hour) |
-| File Storage | Vercel Blob | Azure Blob | Swap blob.ts (~30 min) |
-| Auth | Clerk | Clerk (no change) | 0 min |
-| Domain | nova-intake.vercel.app | onetake.oneforma.com | DNS CNAME (~15 min) |
+| Frontend (Next.js) | Vercel | Vercel (no change) | **No change needed** |
+| Python Worker | Local MLX poller | Azure Container Apps | **LIVE** — polling every 30s, 2 vCPU / 4 GiB |
+| Database | Neon Postgres 17.8 | Azure Postgres Flexible 17 | **LIVE** — PG 17.9, 31 tables, 76 indexes migrated |
+| File Storage | Vercel Blob | Azure Blob | Dual-provider adapter ready in `blob.ts` (using Vercel Blob for now) |
+| Auth | Clerk | Clerk + Microsoft OAuth | **READY** — OAuth credentials generated, configure in Clerk dashboard |
+| Domain | nova-intake.vercel.app | onetake.oneforma.com | **Pending DNS** — added to Vercel, TXT + CNAME records sent to IT |
+| CI/CD | Manual | GitHub Actions → ACR | **LIVE** — auto-push on merge to main |
+| Container App | — | onetake-py-worker | **LIVE** — revision 5, running onetake-worker:latest |
+| Log Analytics | — | onetake-logworkspace | **Provisioned** |
 
 **GPU infrastructure ask**: Steven asked Michael about company GPU access for self-hosted NIM models (Qwen 3.5 397B, Gemma 4 30B, MiniMax 2.7). If available, eliminates API rate limits and external dependencies. If not, continue with NIM key rotation (15 keys).
 
@@ -218,37 +284,58 @@ Recruiter selects asset → picks what to change → types new value → submits
 
 | Item | Owner | Status | Impact | Priority |
 |---|---|---|---|---|
-| `go.oneforma.com` CNAME | IT Admin | Requested | Branded short links | P2 |
-| `onetake.oneforma.com` CNAME | IT Admin | Requested | Production domain (replaces nova.oneforma.com) | P1 |
-| Azure Container Registry credentials | Michael's team | Needed | CI/CD auto-deploy | P1 |
-| Microsoft Graph API app registration | Michael/IT | Needed | Unlocks Teams + Outlook + SharePoint + AD | P1 |
+| DNS: `onetake.oneforma.com` + `go.oneforma.com` → Vercel | IT (Cloudflare) | **Requested May 5** — 3 records (2 CNAME + 1 TXT) | Unified frontend + branded tracked links | P1 |
+| Azure Function `onetake-fn-west01` | IT | **Requested May 5** — name submitted | Serverless compute for scheduled tasks | P1 |
+| Entra ID custom app (no user assignment) | IT | **Requested May 5** | Azure AD integration for function auth | P1 |
+| Azure PG admin password — set strong password | Steven | **URGENT** — currently weak test value | Security: Container App secret must be updated | P0 |
+| Configure Clerk Microsoft OAuth | Steven | **Ready** — credentials in hand | "Sign in with Microsoft" button | P1 |
+| SharePoint site-specific access grant | IT | **Requested Apr 30** | `Sites.Selected` needs per-site grant | P1 |
+| Shared mailbox for Outlook | IT | **Asked Apr 29** | Automated email delivery (`Mail.Send` already consented) | P1 |
 | OpenAI API key | Steven | Planned | Direct image gen ($0.006/image, 37x savings) | P2 |
-| Azure AD SSO (Clerk SAML) | IT Admin | Not started | Internal team login | P1 |
-| Teams webhook (prod URL) | IT Admin | Not started | Prod notifications | P1 |
 | Kling API credits | Steven | In progress | Stage 5 at scale | P2 |
 | Neon DB password rotation | Steven | Pending | Old creds in git history | P1 |
-| Michael Azure deliverables | Michael | Delivered April 24 | Dockerfile, env manifest, blob adapter, schema | P1 |
 | Company GPU access | Michael | Asked April 22 | Self-hosted models | P2 |
 | GA4 property access | Poola/IT | Required | AudienceIQ Phase 3 live data | P2 |
-| Recruiter pilot volunteers | Jenn | Not started | Need 1-2 by Week 3 | P1 |
+| Recruiter pilot volunteers | Jenn | Not started | Need 1-2 by beta launch | P1 |
 | Ad platform API accounts | Steven/IT | Required | AudienceIQ Phase 5 + GraphRAG backfill | P3 |
-| Reddit API app | Steven | Can do today | Seed 152 interests via API | P3 |
-| TikTok advertiser account | Centific | No account | Backfill 706 TikTok interests | P3 |
+| Frontend `db.ts` swap for Azure | Steven | Planned | Replace `@neondatabase/serverless` with `pg` when frontend points to Azure PG | P2 |
+
+### Resolved (since last update)
+| Item | Resolved | Notes |
+|---|---|---|
+| Azure PG full admin access verified | **May 5** | `sqladm` + `azure_pg_admin` role. Can CREATE/ALTER/DROP tables, indexes, schemas, roles. Extensions available. No IT dependency for migrations. |
+| Azure PG connectivity from dev machine | **May 5** | Port 5432 reachable, firewall rule `StevenDev` (73.1.31.109) active, AAD + password auth enabled |
+| Azure PostgreSQL 17 Flexible Server | **Apr 30** | PG 17.9 delivered, connected, schema migrated (31 tables, 76 indexes) |
+| Container App env vars (8 required) | **Apr 30** | 4 secrets + 3 plain vars set via `az containerapp` |
+| Swap nginx → onetake-worker image | **Apr 30** | Worker LIVE, polling every 30s, 2 vCPU / 4 GiB |
+| Graph API permissions (admin consent) | **Apr 30** | Already consented: User.Read.All, Group.Read.All, Mail.Send, Files.ReadWrite.All, Sites.Selected, Team.ReadBasic.All |
+| Clerk auth credentials | **Apr 30** | OAuth redirect URI added, client secret generated. Steven is app registration owner. |
+| Domain restriction (security) | **Apr 30** | `isAllowedDomain()` belt & suspenders — auto-provision gated + requireRole check |
+| Docker numpy fix | **Apr 30** | Added numpy to requirements-docker.txt, rebuilt + pushed |
+| `onetake.oneforma.com` domain | **Apr 29** | Live with SSL + CORS on Azure Container Apps |
+| Azure Container Registry credentials | **Apr 29** | ACR_USERNAME/ACR_PASSWORD set in GitHub secrets |
+| Azure resource group provisioning | **Apr 29** | ACR + Container App + Log Analytics + Environment |
+| App Registration (Graph API) | **Apr 29** | `azc-sp-onetake-dev-deployment` created by IT |
+| Michael Azure deliverables | **Apr 24** | Dockerfile, env manifest, blob adapter, schema |
+| All 6 media strategy parsing issues | **Apr 24** | Fixed: interests, channel mix, campaigns, country codes, budgets, JSON |
 
 ---
 
-## Specs & Plans Inventory (April 24, 2026)
+## Specs & Plans Inventory (April 29, 2026)
 
 ### Active/Recent Specs (Last 2 Weeks)
 
 | Date | Spec | Status | LOC Impact |
 |---|---|---|---|
+| Apr 29 | Azure Deployment + IT Integration | **Shipped** | ACR push, CI/CD secrets, env manifest, IT spec doc |
+| Apr 29 | Container App Configuration Spec | **Shipped** | `docs/it-response-azure-container-app.md` |
+| Apr 25 | Server-Side GTM for Meta Pixel | **Shipped** | Conversion tracking live |
 | Apr 23 | GraphRAG Platform Interest Routing | **Shipped** | +1,054 graph nodes, router, 6 seed files |
 | Apr 23 | Unified Campaign Workspace | **Shipped** | +4 components, workspace refactor, country jobs |
 | Apr 23 | AudienceIQ Design (Phase 1-3) | **Shipped** | +9 widgets, 10 tables, drift engine, health scorer |
 | Apr 22 | Country Quotas & Demographics | Spec complete | CountryQuotaTable component, intake wizard |
 | Apr 22 | Multi-Country Architecture | Documented | Architecture reference doc |
-| Apr 16 | CI/Docker Design | **Shipped** | Dockerfile, GitHub Actions |
+| Apr 16 | CI/Docker Design | **Shipped** | Dockerfile, GitHub Actions, ACR push |
 | Apr 16 | Security Hardening | **Shipped** | 17 commits |
 
 ### All Plans (45 total)
@@ -295,7 +382,7 @@ Recruiter selects asset → picks what to change → types new value → submits
 
 ---
 
-## Timeline to SVP Pitch (Day 30 = May 5)
+## Timeline to Beta Launch & SVP Pitch (Day 30 = May 5)
 
 ```
 Day 18 (Apr 24) — SHIPPED
@@ -308,33 +395,84 @@ Day 18 (Apr 24) — SHIPPED
   ├── README + roadmap updated to OneTake
   └── Email sent to Michael with 6 questions
 
-Day 19 (Apr 25) — TODAY
-  ├── Server-side GTM for Meta Pixel — SHIPPED
-  ├── Designer view country support (in progress)
+Day 19 (Apr 25) — SHIPPED
+  ├── Server-side GTM for Meta Pixel
+  ├── Designer view country support
   ├── Agency view country support
   └── Recruiter view country support
 
-Day 21-23 (Apr 28-30)
-  ├── Azure deployment (Michael's team provisions resources)
-  ├── CI/CD pipeline to Azure Container Registry
-  ├── Microsoft Graph API setup (Teams, Outlook, SharePoint, AD)
-  ├── Command Center dashboard port
-  └── onetake.oneforma.com DNS
+Day 23 (Apr 29) — SHIPPED: Azure Infrastructure
+  ├── IT provisioned full Azure resource group (ACR, Container App, Log Analytics)
+  ├── onetake.oneforma.com LIVE with SSL + CORS
+  ├── Worker Docker image built + pushed to novacert.azurecr.io
+  ├── GitHub Actions CI/CD → ACR auto-deploy configured
+  ├── Azure CLI authenticated (steven.junop@centific.com)
+  ├── Full IT spec + follow-up email sent
+  └── 832 tests passing (413 TS + 419 Python)
 
-Day 24-26 (May 1-3)
+Day 24 (Apr 30) — SHIPPED ★ WORKER LIVE ON AZURE
+  ├── PostgreSQL 17.9 delivered by IT — connected + verified
+  ├── Schema migrated: 31 tables, 76 indexes, 0 errors
+  ├── Container App: 4 secrets + 3 env vars set
+  ├── Image swapped: nginx → onetake-worker:latest (2 vCPU / 4 GiB)
+  ├── Worker LIVE — polling Azure PG every 30s
+  ├── Docker fixed (numpy for deglosser) — rebuilt + pushed
+  ├── Admin user seeded on Azure PG
+  ├── Graph API permissions discovered already admin-consented (6 permissions)
+  ├── App registration: owner access, OAuth redirect URI added, client secret generated
+  ├── Domain restriction shipped (belt & suspenders: isAllowedDomain())
+  ├── onetake.oneforma.com added to Vercel — DNS verification sent to IT
+  ├── IT reply email drafted (PG17 ack, Graph API correction, OAuth pivot, DNS)
+  └── IT helpdesk SAML ticket drafted (future upgrade path)
+
+Day 25-28 (May 1-4) — BETA PREP
+  ├── Configure Clerk Microsoft OAuth in dashboard
+  ├── End-to-end test: intake form → Azure worker → pipeline → creatives
   ├── OpenAI direct API transition ($0.006/image)
   ├── LLM provider routing (OpenRouter for gen, NIM for edits)
-  ├── Recruiter Edit Hub spec + build
-  ├── Real campaign testing (3-5 campaigns E2E)
-  ├── Recruiter pilot testing
-  └── Stage 4 template refinement
+  ├── Real campaign testing (3-5 campaigns E2E on Azure)
+  ├── Stage 4 template refinement
+  ├── Recruiter pilot testing with Jenn
+  └── Results compilation
 
-Day 27-30 (May 4-5)
-  ├── Results compilation
-  ├── Demo preparation
-  └── SVP pitch (Day 30)
+Day 29-30 (May 4-5) — ORGANIC PIPELINE + EDIT HUB + INFRA ★★
+  ├── ORGANIC-FIRST PIPELINE (12 commits)
+  │   ├── pipeline_mode routing (organic default, full after paid upgrade)
+  │   ├── Organic Stage 3: WP posts, portal copy, flyer copy, social captions
+  │   ├── Organic Stage 4: social graphics + flyers with QR codes (Aidaform + UTM)
+  │   ├── QR generator utility (tracked URLs per locale)
+  │   ├── Stage 1 skips media strategy for organic
+  │   ├── Lead recruiter role + canRequestPaid() permission
+  │   ├── Request Paid API + auto-budget from RPP formula
+  │   └── Frontend: OrganicMaterials tabs, PipelineModeBadge, Request Paid button
+  │
+  ├── ASSET EDIT HUB (9 commits)
+  │   ├── Edit classifier (keyword routing → 4 action types)
+  │   ├── Edit executor (Gemma copy revision, link/QR update, batch rollback)
+  │   ├── Edit API (multipart, edit lock, Teams notification)
+  │   ├── Rollback API (revert by batch_id)
+  │   ├── Excel parser (locale additions)
+  │   ├── EditMode frontend (checkboxes, instruction bar, undo)
+  │   └── Bulletproofing (lock, rate limits, ownership verification)
+  │
+  ├── AZURE INFRASTRUCTURE
+  │   ├── PG full admin access confirmed (self-service migrations)
+  │   ├── Azure Function onetake-fn-west01 submitted
+  │   ├── Entra ID custom app (no user assignment)
+  │   └── DNS request finalized (3 Cloudflare records)
+  │
+  └── 22 commits, 0 new TypeScript errors
 
-Day 30+ (Post-pitch)
+Day 30+ (May 5+) — POST-BETA
+  ├── First real campaigns running on Azure infrastructure
+  ├── Demo to SVP (Stefan)
+  └── VYRA integration pitch deck
+
+Day 30+ (Post-launch)
+  ├── Clerk SAML SSO upgrade (if needed — $50/mo Clerk Pro)
+  ├── SharePoint auto-sync (Sites.Selected site grant from IT)
+  ├── Outlook automated notifications (waiting on shared mailbox)
+  ├── Recruiter Edit Hub
   ├── AudienceIQ Phase 4 (HIE behavioral)
   ├── AudienceIQ Phase 5 (ad platform APIs)
   ├── Organic content extension
@@ -345,7 +483,7 @@ Day 30+ (Post-pitch)
 
 ## Success Metrics
 
-| Metric | Before OneTake | With OneTake | Day 18 Status |
+| Metric | Before OneTake | With OneTake | Day 24 Status |
 |---|---|---|---|
 | Time: JD → creative package | 3-5 days | 30 minutes | Achieved |
 | Creatives per campaign | 2-4 | 15-30+ per country | Achieved |
@@ -356,7 +494,17 @@ Day 30+ (Post-pitch)
 | Audience intelligence | None | Four-ring drift detection | Shipped |
 | Platform interest coverage | 0 platforms | 6 platforms | Live |
 | Image generation cost | N/A | $0.04 (Seedream) → $0.225 (GPT Image 2 OpenRouter) → $0.006 (OpenAI direct, planned) | $0.225/image |
-| Test coverage | 0 | 614 total (413 TypeScript + 201 Python) | CI green, 5 gates |
+| Test coverage | 0 | 832 total (413 TypeScript + 419 Python) | CI green, 5 gates |
+| Infrastructure | Local laptop | Enterprise Azure (ACR + Container Apps + PG 17.9 + SSL) | **Worker LIVE** — polling Azure PG |
+| CI/CD | Manual deploy | GitHub Actions → ACR auto-push on merge | Live |
+| Auth | None | Clerk + Microsoft OAuth + domain restriction | Ready (configure in dashboard) |
+| Graph API | None | 6 permissions admin-consented | Live |
+| Azure DB | None | PG 17.9, 31 tables, 76 indexes | **Full admin — self-service migrations** |
+| Pipeline modes | 1 (all-or-nothing) | 2 (organic default → paid upgrade) | **Shipped Day 30** |
+| Organic deliverables | 0 | 6 types (WP post, portal copy, flyer, flyer copy, social caption, social graphic) | **Shipped Day 30** |
+| Asset editing | Manual re-run | Inline batch edit + rollback (4 action types) | **Shipped Day 30** |
+| Commits | 0 | 825+ | Day 30 |
+| LOC | 0 | ~105,000 | Day 30 |
 
 ---
 
@@ -366,7 +514,8 @@ Day 30+ (Post-pitch)
 |---|---|---|
 | **Steven Junop** | Digital Marketing Manager / Platform Builder | Leading |
 | **Jenn** | Steven's manager | Impressed Day 1, collaborating |
-| **Michael** | China eng lead | Code reviewed, migration plan approved |
+| **Michael** | China eng lead | Code reviewed, migration plan approved, Azure architecture designed |
+| **Pengfei** | IT / Infrastructure | Provisioned full Azure resource group — unprecedented turnaround |
 | **Miguel** | Designer | Daily portal testing |
 | **Marketing Coordinator** | Stealth ally | Aligned on automation |
 | **Stefan** | SVP (target for pitch) | Set 30-day delivery goal |
