@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
 import { StatusBadge, UrgencyBadge, PipelineModeBadge } from "@/components/StatusBadge";
+import { EditMode } from "@/components/campaign/EditMode";
 import { OrganicMaterials } from "@/components/campaign/OrganicMaterials";
 import PipelineProgress from "@/components/PipelineProgress";
 import ChannelCard from "@/components/ChannelCard";
@@ -93,6 +94,7 @@ export default function IntakeDetailPage({
 }) {
   const { id } = use(params);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +122,7 @@ export default function IntakeDetailPage({
           if (meRes.ok) {
             const me = await meRes.json();
             setRole(me.role ?? null);
+            setCurrentUserId(me.userId ?? null);
           }
         } catch {
           // Role defaults to null → full view renders as fallback
@@ -350,6 +353,17 @@ export default function IntakeDetailPage({
 
   const { request, brief, actors, assets, pipelineRuns } = data;
 
+  // Compute canEdit client-side (mirrors canEditCampaign from permissions.ts)
+  const canEdit = (() => {
+    if (!['review', 'approved', 'sent'].includes(request.status)) return false;
+    if (role === 'admin') return true;
+    if (role === 'lead_recruiter') return true;
+    if (role === 'recruiter') return request.created_by === currentUserId;
+    return false;
+  })();
+
+  const allAssetIds = assets.map((a) => a.id);
+
   const countryQuotas = (request?.form_data?.country_quotas as CountryQuota[] | undefined) ?? [];
 
   const pipelineMode = request.pipeline_mode ?? 'full';
@@ -501,6 +515,14 @@ export default function IntakeDetailPage({
                 <StatusBadge status={request.status} />
                 <UrgencyBadge urgency={request.urgency} />
                 <PipelineModeBadge mode={pipelineMode === 'full' ? 'full' : 'organic'} />
+                {canEdit && (
+                  <EditMode
+                    requestId={request.id}
+                    campaignTitle={request.title}
+                    allAssetIds={allAssetIds}
+                    onEditComplete={() => window.location.reload()}
+                  />
+                )}
                 {canUpgradeToPaid && (
                   <button
                     onClick={handleRequestPaid}
