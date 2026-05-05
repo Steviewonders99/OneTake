@@ -297,7 +297,11 @@ Recruiter selects asset → picks what to change → types new value → submits
 | Company GPU access | Michael | Asked April 22 | Self-hosted models | P2 |
 | GA4 property access | Poola/IT | Required | AudienceIQ Phase 3 live data | P2 |
 | Recruiter pilot volunteers | Jenn | Not started | Need 1-2 by beta launch | P1 |
-| Ad platform API accounts | Steven/IT | Required | AudienceIQ Phase 5 + GraphRAG backfill | P3 |
+| Meta Ads API credentials | Steven | **Ready May 6** | Wave 1 platform sync → normalized_daily_metrics | P1 |
+| Reddit Ads API credentials | Steven | **Ready May 6** | Wave 1 platform sync (NEW — not in original stubs) | P1 |
+| Brevo API credentials | Steven | **Ready May 6** | Wave 1 email campaign metrics | P1 |
+| Google Ads API credentials | Steven | **Ready May 11** | Wave 2 platform sync | P1 |
+| TikTok Ads API credentials | Steven | **Ready May 11** | Wave 2 platform sync | P1 |
 | Frontend `db.ts` swap for Azure | Steven | Planned | Replace `@neondatabase/serverless` with `pg` when frontend points to Azure PG | P2 |
 
 ### Resolved (since last update)
@@ -327,6 +331,9 @@ Recruiter selects asset → picks what to change → types new value → submits
 
 | Date | Spec | Status | LOC Impact |
 |---|---|---|---|
+| May 5 | Organic-First Pipeline + Paid Upgrade | **Shipped** | 12 commits, pipeline_mode routing, organic Stage 3+4, QR codes, lead_recruiter role |
+| May 5 | Asset Edit Hub | **Shipped** | 9 commits, edit classifier/executor, batch rollback, EditMode frontend |
+| May 5 | Data Normalization Layer | **In Progress** | Meta + Reddit + Brevo sync → normalized_daily_metrics → ROAS |
 | Apr 29 | Azure Deployment + IT Integration | **Shipped** | ACR push, CI/CD secrets, env manifest, IT spec doc |
 | Apr 29 | Container App Configuration Spec | **Shipped** | `docs/it-response-azure-container-app.md` |
 | Apr 25 | Server-Side GTM for Meta Pixel | **Shipped** | Conversion tracking live |
@@ -463,12 +470,33 @@ Day 29-30 (May 4-5) — ORGANIC PIPELINE + EDIT HUB + INFRA ★★
   │
   └── 22 commits, 0 new TypeScript errors
 
-Day 30+ (May 5+) — POST-BETA
+Day 30 (May 5) — DATA NORMALIZATION LAYER ★
+  ├── Both databases migrated (Neon + Azure PG — 31 tables, 76 indexes, 142 CHECKs)
+  ├── 21/21 prod tests passed (constraints, pipeline modes, edit flow, rollback, lock)
+  ├── Ad platform integration timeline set:
+  │   ├── May 6 (Day 31): Meta Ads + Reddit Ads + Brevo (email) — credentials live
+  │   ├── May 11 (Day 36): Google Ads + TikTok Ads — credentials arriving Monday
+  │   └── Normalization layer: all platforms → normalized_daily_metrics → ROAS calculations
+  └── Normalization spec + implementation in progress
+
+Day 31 (May 6) — AD PLATFORM SYNC (Wave 1)
+  ├── Meta Ads API → meta_ads_cache → normalized_daily_metrics
+  ├── Reddit Ads API → reddit_ads_cache → normalized_daily_metrics (NEW platform)
+  ├── Brevo email API → brevo_campaign_cache → normalized_daily_metrics (email as channel)
+  ├── Feed REAL data to Azure PG
+  └── ROAS calculations go live (actual CPA, effective CPA, ROI)
+
+Day 36 (May 11) — AD PLATFORM SYNC (Wave 2)
+  ├── Google Ads API → google_ads_cache → normalized_daily_metrics
+  ├── TikTok Ads API → tiktok_ads_cache → normalized_daily_metrics
+  └── Full 5-platform unified performance dashboard
+
+Day 36+ (Post Wave 2)
   ├── First real campaigns running on Azure infrastructure
-  ├── Demo to SVP (Stefan)
+  ├── Demo to SVP (Stefan) with REAL ROAS data
   └── VYRA integration pitch deck
 
-Day 30+ (Post-launch)
+Day 36+ (Post-launch)
   ├── Clerk SAML SSO upgrade (if needed — $50/mo Clerk Pro)
   ├── SharePoint auto-sync (Sites.Selected site grant from IT)
   ├── Outlook automated notifications (waiting on shared mailbox)
