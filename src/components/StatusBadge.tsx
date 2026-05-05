@@ -127,3 +127,14 @@ export function TaskTypeBadge({ taskType }: { taskType: string }) {
     </span>
   );
 }
+
+export function PipelineModeBadge({ mode }: { mode: 'organic' | 'full' }) {
+  if (mode === 'full') {
+    return (
+      <span className="badge badge-sent text-xs">organic + paid</span>
+    );
+  }
+  return (
+    <span className="badge text-xs">organic</span>
+  );
+}
