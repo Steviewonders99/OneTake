@@ -106,6 +106,23 @@ export async function createTables(): Promise<void> {
       ADD COLUMN IF NOT EXISTS figma_sync JSONB DEFAULT NULL
   `;
 
+  // Pipeline mode: organic (default) or full (after paid upgrade)
+  await sql`
+    ALTER TABLE intake_requests
+      ADD COLUMN IF NOT EXISTS pipeline_mode TEXT NOT NULL DEFAULT 'organic',
+      ADD COLUMN IF NOT EXISTS paid_requested_by TEXT,
+      ADD COLUMN IF NOT EXISTS paid_requested_at TIMESTAMPTZ
+  `;
+
+  await sql`
+    DO $$ BEGIN
+      ALTER TABLE intake_requests
+        ADD CONSTRAINT intake_requests_pipeline_mode_check
+        CHECK (pipeline_mode IN ('organic', 'full'));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `;
+
   // 5. attachments — FK to intake_requests
   await sql`
     CREATE TABLE IF NOT EXISTS attachments (
@@ -190,6 +207,20 @@ export async function createTables(): Promise<void> {
       version INT NOT NULL DEFAULT 1,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+
+  // Expand asset_type for organic deliverables
+  await sql`
+    ALTER TABLE generated_assets DROP CONSTRAINT IF EXISTS generated_assets_asset_type_check
+  `;
+  await sql`
+    ALTER TABLE generated_assets ADD CONSTRAINT generated_assets_asset_type_check
+      CHECK (asset_type IN (
+        'base_image', 'composed_creative', 'carousel_panel', 'landing_page',
+        'organic_carousel', 'copy', 'video',
+        'wp_job_post', 'job_portal_copy', 'flyer', 'flyer_copy',
+        'social_caption', 'social_graphic'
+      ))
   `;
 
   // 9. approvals — FK to intake_requests
@@ -348,6 +379,15 @@ export async function createTables(): Promise<void> {
     )
   `;
 
+  // Add generate_paid job type
+  await sql`
+    ALTER TABLE compute_jobs DROP CONSTRAINT IF EXISTS compute_jobs_job_type_check
+  `;
+  await sql`
+    ALTER TABLE compute_jobs ADD CONSTRAINT compute_jobs_job_type_check
+      CHECK (job_type IN ('generate', 'generate_country', 'regenerate', 'regenerate_stage', 'regenerate_asset', 'resume_from', 'generate_paid'))
+  `;
+
   // 15. campaign_strategies — media plan per country
   await sql`
     CREATE TABLE IF NOT EXISTS campaign_strategies (
@@ -380,6 +420,15 @@ export async function createTables(): Promise<void> {
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       updated_at  TIMESTAMPTZ DEFAULT NOW()
     )
+  `;
+
+  // Add lead_recruiter role
+  await sql`
+    ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check
+  `;
+  await sql`
+    ALTER TABLE user_roles ADD CONSTRAINT user_roles_role_check
+      CHECK (role IN ('admin', 'recruiter', 'lead_recruiter', 'designer', 'viewer'))
   `;
 
   // 17. dashboards — custom analytics dashboard layouts

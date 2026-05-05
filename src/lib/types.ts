@@ -425,7 +425,7 @@ export interface ComputeJob {
 // USER ROLE TYPES
 // ============================================================
 
-export type UserRole = 'admin' | 'recruiter' | 'designer' | 'viewer';
+export type UserRole = 'admin' | 'recruiter' | 'lead_recruiter' | 'designer' | 'viewer';
 
 export interface UserRoleRecord {
   id: string;
