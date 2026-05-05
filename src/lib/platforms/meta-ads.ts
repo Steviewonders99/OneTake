@@ -7,7 +7,8 @@
  */
 
 import { getDb } from '@/lib/db';
-import type { PlatformSyncResult, PlatformConnectionStatus, NormalizedAudienceData } from './types';
+import type { PlatformSyncResult, PlatformConnectionStatus, NormalizedAudienceData, DailyMetricRow, PlatformNormalizeResult } from './types';
+import { normalizeToDaily } from './normalizer';
 
 export function isMetaAdsConnected(): boolean {
   return !!(process.env.META_ADS_ACCESS_TOKEN && process.env.META_ADS_AD_ACCOUNT_ID);
@@ -30,20 +31,70 @@ export async function getMetaAdsStatus(): Promise<PlatformConnectionStatus> {
   };
 }
 
-export async function syncMetaAds(days: number = 30): Promise<PlatformSyncResult> {
+export async function syncMetaAds(requestId?: string, days: number = 7): Promise<PlatformSyncResult> {
   const start = Date.now();
   if (!isMetaAdsConnected()) {
-    return { platform: 'meta_ads', success: false, rows_synced: 0, errors: 0, duration_ms: 0, message: 'Meta Ads not configured. Set META_ADS_* env vars.' };
+    return { platform: 'meta_ads', success: false, rows_synced: 0, errors: 0, duration_ms: 0, message: 'Meta Ads not configured.' };
   }
 
-  return {
-    platform: 'meta_ads',
-    success: false,
-    rows_synced: 0,
-    errors: 0,
-    duration_ms: Date.now() - start,
-    message: 'Meta Ads sync endpoint wired. Implement Facebook Marketing API call when credentials are available.',
-  };
+  const sql = getDb();
+  const token = process.env.META_ADS_ACCESS_TOKEN!;
+  const accountId = process.env.META_ADS_AD_ACCOUNT_ID!;
+
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const sinceStr = since.toISOString().split('T')[0];
+  const untilStr = new Date().toISOString().split('T')[0];
+
+  try {
+    const url = `https://graph.facebook.com/v21.0/act_${accountId}/insights?` +
+      `fields=campaign_id,campaign_name,adset_id,adset_name,impressions,clicks,spend,actions,cpc,cpm,ctr` +
+      `&time_range={"since":"${sinceStr}","until":"${untilStr}"}` +
+      `&time_increment=1` +
+      `&level=adset` +
+      `&limit=500` +
+      `&access_token=${token}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.text();
+      return { platform: 'meta_ads', success: false, rows_synced: 0, errors: 1, duration_ms: Date.now() - start, message: `Meta API error: ${err.slice(0, 200)}` };
+    }
+
+    const data = await res.json();
+    const rows = data.data || [];
+    let synced = 0;
+
+    for (const row of rows) {
+      const conversions = (row.actions || [])
+        .filter((a: { action_type: string }) => a.action_type === 'offsite_conversion' || a.action_type === 'lead')
+        .reduce((sum: number, a: { value: string }) => sum + parseInt(a.value || '0'), 0);
+
+      await sql`
+        INSERT INTO meta_ads_cache (
+          ad_account_id, campaign_id, campaign_name, adset_id, adset_name,
+          impressions, clicks, conversions, spend, date
+        ) VALUES (
+          ${accountId}, ${row.campaign_id}, ${row.campaign_name},
+          ${row.adset_id || null}, ${row.adset_name || null},
+          ${parseInt(row.impressions || '0')}, ${parseInt(row.clicks || '0')},
+          ${conversions}, ${parseFloat(row.spend || '0')},
+          ${row.date_start}
+        )
+        ON CONFLICT (ad_account_id, campaign_id, adset_id, date)
+        DO UPDATE SET
+          impressions = EXCLUDED.impressions, clicks = EXCLUDED.clicks,
+          conversions = EXCLUDED.conversions, spend = EXCLUDED.spend,
+          campaign_name = EXCLUDED.campaign_name, adset_name = EXCLUDED.adset_name,
+          last_synced_at = NOW()
+      `;
+      synced++;
+    }
+
+    return { platform: 'meta_ads', success: true, rows_synced: synced, errors: 0, duration_ms: Date.now() - start, message: `Synced ${synced} rows from Meta Ads` };
+  } catch (e) {
+    return { platform: 'meta_ads', success: false, rows_synced: 0, errors: 1, duration_ms: Date.now() - start, message: String(e) };
+  }
 }
 
 export async function getNormalizedMetaAds(days: number = 30): Promise<NormalizedAudienceData | null> {
@@ -74,4 +125,32 @@ export async function getNormalizedMetaAds(days: number = 30): Promise<Normalize
     interests: [],
     audience_segments: [],
   };
+}
+
+export async function normalizeMetaAds(requestId?: string): Promise<PlatformNormalizeResult> {
+  const sql = getDb();
+
+  const rows = await sql`
+    SELECT mac.campaign_name, mac.impressions, mac.clicks, mac.conversions,
+           mac.spend, mac.date::text, ir.id as request_id
+    FROM meta_ads_cache mac
+    LEFT JOIN intake_requests ir ON mac.campaign_name ILIKE '%' || ir.campaign_slug || '%'
+  ` as any[];
+
+  const dailyRows: DailyMetricRow[] = rows.map((r: any) => ({
+    request_id: r.request_id || null,
+    country: 'GLOBAL',
+    date: r.date,
+    platform: 'meta_ads',
+    channel: 'facebook_feed',
+    impressions: r.impressions,
+    clicks: r.clicks,
+    spend: r.spend,
+    conversions: r.conversions,
+    conversion_value: 0,
+    signups: 0,
+    profile_completes: 0,
+  }));
+
+  return normalizeToDaily(dailyRows, 'meta_ads');
 }
