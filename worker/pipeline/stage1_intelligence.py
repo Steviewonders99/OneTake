@@ -92,6 +92,7 @@ async def run_stage1(context: dict) -> dict:
     request_id: str = context["request_id"]
     request = await get_intake_request(request_id)
     context["request_title"] = request.get("title", "Untitled")
+    context["pipeline_mode"] = request.get("pipeline_mode", "organic")
 
     target_regions: list[str] = request.get("target_regions", [])
     target_languages: list[str] = request.get("target_languages", [])
@@ -225,156 +226,162 @@ async def run_stage1(context: dict) -> dict:
             logger.warning("Could not save actor stub / targeting for '%s': %s", persona_label, exc)
 
     # ==================================================================
-    # STEP 3b: CAMPAIGN STRATEGY ENGINE (budget cascade + strategy per country)
-    # Generate media-buying strategy per country: budget allocation,
-    # campaign structure, ad set splits, split test variable.
-    # Uses generate-then-evaluate loop with feedback (max 3 retries).
+    # STEP 3b: CAMPAIGN STRATEGY ENGINE (PAID ONLY)
+    # Skip for organic pipeline — no media strategy needed
     # ==================================================================
-    from ai.campaign_evaluator import MAX_RETRIES as STRATEGY_MAX_RETRIES
-    from ai.campaign_evaluator import PASS_THRESHOLD as STRATEGY_THRESHOLD
-    from ai.campaign_evaluator import evaluate_campaign_strategy as eval_strategy
-    from prompts.campaign_strategy import (
-        calculate_budget_cascade,
-        generate_campaign_strategy,
-    )
+    pipeline_mode = context.get("pipeline_mode", "organic")
+    if pipeline_mode != "organic":
+        from ai.campaign_evaluator import MAX_RETRIES as STRATEGY_MAX_RETRIES
+        from ai.campaign_evaluator import PASS_THRESHOLD as STRATEGY_THRESHOLD
+        from ai.campaign_evaluator import evaluate_campaign_strategy as eval_strategy
+        from prompts.campaign_strategy import (
+            calculate_budget_cascade,
+            generate_campaign_strategy,
+        )
 
-    monthly_budget = form_data.get("monthly_budget")
+        monthly_budget = form_data.get("monthly_budget")
 
-    # Get channel strategy from personas or defaults
-    channel_strategy = []
-    for p in personas:
-        channel_strategy.extend(p.get("best_channels", []))
-    channel_strategy = list(set(channel_strategy)) or ["ig_feed", "facebook_feed"]
+        # Get channel strategy from personas or defaults
+        channel_strategy = []
+        for p in personas:
+            channel_strategy.extend(p.get("best_channels", []))
+        channel_strategy = list(set(channel_strategy)) or ["ig_feed", "facebook_feed"]
 
-    # Build country list with opportunity scores from cultural research
-    countries_data = []
-    for region in target_regions:
-        research = cultural_research.get(region, {})
-        # Derive opportunity score from research richness
-        opp_score = min(1.0, 0.3 + len(json.dumps(research, default=str)) / 10000)
-        countries_data.append({"country": region, "market_opportunity_score": round(opp_score, 2)})
+        # Build country list with opportunity scores from cultural research
+        countries_data = []
+        for region in target_regions:
+            research = cultural_research.get(region, {})
+            # Derive opportunity score from research richness
+            opp_score = min(1.0, 0.3 + len(json.dumps(research, default=str)) / 10000)
+            countries_data.append({"country": region, "market_opportunity_score": round(opp_score, 2)})
 
-    # Calculate budget cascade
-    budget_data = calculate_budget_cascade(
-        total_monthly=monthly_budget,
-        countries=countries_data,
-        personas=personas,
-    )
-    logger.info(
-        "Budget cascade: mode=%s, countries=%d, deferred=%d, flags=%d",
-        budget_data["budget_mode"],
-        len(budget_data["country_allocations"]),
-        len(budget_data["deferred_markets"]),
-        len(budget_data["flags"]),
-    )
+        # Calculate budget cascade
+        budget_data = calculate_budget_cascade(
+            total_monthly=monthly_budget,
+            countries=countries_data,
+            personas=personas,
+        )
+        logger.info(
+            "Budget cascade: mode=%s, countries=%d, deferred=%d, flags=%d",
+            budget_data["budget_mode"],
+            len(budget_data["country_allocations"]),
+            len(budget_data["deferred_markets"]),
+            len(budget_data["flags"]),
+        )
 
-    # Generate strategy per active country
-    all_strategies = {}
-    for region in target_regions:
-        country_alloc = budget_data["country_allocations"].get(region, {})
-        if not country_alloc and budget_data["budget_mode"] == "fixed":
-            logger.info("Skipping deferred market: %s", region)
-            continue
-
-        country_budget_for_llm = {
-            "budget_mode": budget_data["budget_mode"],
-            "total_monthly": monthly_budget,
-            "country_monthly": country_alloc.get("monthly") if isinstance(country_alloc, dict) else None,
-            "persona_allocations": country_alloc.get("persona_allocations", {}) if isinstance(country_alloc, dict) else {},
-        }
-
-        # Generate + evaluate with feedback loop
-        feedback = []
-        best_strategy = {}
-        best_score = 0.0
-
-        for attempt in range(STRATEGY_MAX_RETRIES):
-            strategy = await generate_campaign_strategy(
-                country=region,
-                personas=personas,
-                cultural_research=cultural_research.get(region, {}),
-                channel_strategy=channel_strategy,
-                budget_data=country_budget_for_llm,
-                task_type=task_type,
-                task_description=form_data.get("task_description") or form_data.get("description", ""),
-                feedback=feedback if feedback else None,
-            )
-
-            if not strategy:
-                logger.warning("Empty strategy for %s (attempt %d)", region, attempt + 1)
+        # Generate strategy per active country
+        all_strategies = {}
+        for region in target_regions:
+            country_alloc = budget_data["country_allocations"].get(region, {})
+            if not country_alloc and budget_data["budget_mode"] == "fixed":
+                logger.info("Skipping deferred market: %s", region)
                 continue
 
-            eval_result = eval_strategy(
-                strategy=strategy,
-                personas=personas,
-                channel_strategy=channel_strategy,
-                budget_mode=budget_data["budget_mode"],
-            )
-
-            score = eval_result["overall_score"]
-            logger.info(
-                "Strategy eval for %s: %.2f (%s, attempt %d/%d)",
-                region, score, "PASS" if eval_result["passed"] else "FAIL",
-                attempt + 1, STRATEGY_MAX_RETRIES,
-            )
-
-            if score > best_score:
-                best_score = score
-                best_strategy = strategy
-                best_strategy["_evaluation"] = eval_result
-
-            if eval_result["passed"]:
-                break
-
-            feedback = eval_result["issues"]
-
-        # Save to Neon
-        if best_strategy:
-            # Post-process: replace LLM-hallucinated interests with real platform interests
-            try:
-                from platform_interests.router import route_interests
-                strategy_data = best_strategy.get("strategy_data", best_strategy)
-                campaigns = strategy_data.get("campaigns", [])
-                for campaign in campaigns:
-                    for ad_set in campaign.get("ad_sets", []):
-                        platform = ad_set.get("placements", ["meta"])[0] if ad_set.get("placements") else "meta"
-                        # Normalize platform name
-                        platform_family = "meta"
-                        p_lower = platform.lower()
-                        if "tiktok" in p_lower: platform_family = "tiktok"
-                        elif "linkedin" in p_lower: platform_family = "linkedin"
-                        elif "snap" in p_lower: platform_family = "snapchat"
-                        elif "reddit" in p_lower: platform_family = "reddit"
-                        elif "wechat" in p_lower: platform_family = "wechat"
-
-                        concepts = ad_set.get("interests", [])
-                        if concepts:
-                            real_interests = await route_interests(platform_family, concepts)
-                            ad_set["interests_by_tier"] = real_interests
-                            ad_set["interests_original"] = concepts
-                        else:
-                            ad_set["interests_by_tier"] = {"hyper": [], "hot": [], "broad": []}
-
-                logger.info("Interest routing complete for %s strategy", region)
-            except Exception as exc:
-                logger.warning("Interest routing failed (non-fatal): %s — keeping LLM interests", exc)
-
-            await save_campaign_strategy(request_id, {
-                "country": region,
-                "tier": best_strategy.get("tier", 1),
-                "monthly_budget": country_alloc.get("monthly") if isinstance(country_alloc, dict) else None,
+            country_budget_for_llm = {
                 "budget_mode": budget_data["budget_mode"],
-                "strategy_data": best_strategy,
-                "evaluation_score": best_score,
-                "evaluation_data": best_strategy.get("_evaluation"),
-                "evaluation_passed": best_score >= STRATEGY_THRESHOLD,
-            })
-            all_strategies[region] = best_strategy
-            logger.info("Saved campaign strategy for %s (score=%.2f)", region, best_score)
+                "total_monthly": monthly_budget,
+                "country_monthly": country_alloc.get("monthly") if isinstance(country_alloc, dict) else None,
+                "persona_allocations": country_alloc.get("persona_allocations", {}) if isinstance(country_alloc, dict) else {},
+            }
 
-    context["campaign_strategies"] = all_strategies
-    context["budget_data"] = budget_data
-    logger.info("Campaign strategy generation complete: %d country strategies", len(all_strategies))
+            # Generate + evaluate with feedback loop
+            feedback = []
+            best_strategy = {}
+            best_score = 0.0
+
+            for attempt in range(STRATEGY_MAX_RETRIES):
+                strategy = await generate_campaign_strategy(
+                    country=region,
+                    personas=personas,
+                    cultural_research=cultural_research.get(region, {}),
+                    channel_strategy=channel_strategy,
+                    budget_data=country_budget_for_llm,
+                    task_type=task_type,
+                    task_description=form_data.get("task_description") or form_data.get("description", ""),
+                    feedback=feedback if feedback else None,
+                )
+
+                if not strategy:
+                    logger.warning("Empty strategy for %s (attempt %d)", region, attempt + 1)
+                    continue
+
+                eval_result = eval_strategy(
+                    strategy=strategy,
+                    personas=personas,
+                    channel_strategy=channel_strategy,
+                    budget_mode=budget_data["budget_mode"],
+                )
+
+                score = eval_result["overall_score"]
+                logger.info(
+                    "Strategy eval for %s: %.2f (%s, attempt %d/%d)",
+                    region, score, "PASS" if eval_result["passed"] else "FAIL",
+                    attempt + 1, STRATEGY_MAX_RETRIES,
+                )
+
+                if score > best_score:
+                    best_score = score
+                    best_strategy = strategy
+                    best_strategy["_evaluation"] = eval_result
+
+                if eval_result["passed"]:
+                    break
+
+                feedback = eval_result["issues"]
+
+            # Save to Neon
+            if best_strategy:
+                # Post-process: replace LLM-hallucinated interests with real platform interests
+                try:
+                    from platform_interests.router import route_interests
+                    strategy_data = best_strategy.get("strategy_data", best_strategy)
+                    campaigns = strategy_data.get("campaigns", [])
+                    for campaign in campaigns:
+                        for ad_set in campaign.get("ad_sets", []):
+                            platform = ad_set.get("placements", ["meta"])[0] if ad_set.get("placements") else "meta"
+                            # Normalize platform name
+                            platform_family = "meta"
+                            p_lower = platform.lower()
+                            if "tiktok" in p_lower: platform_family = "tiktok"
+                            elif "linkedin" in p_lower: platform_family = "linkedin"
+                            elif "snap" in p_lower: platform_family = "snapchat"
+                            elif "reddit" in p_lower: platform_family = "reddit"
+                            elif "wechat" in p_lower: platform_family = "wechat"
+
+                            concepts = ad_set.get("interests", [])
+                            if concepts:
+                                real_interests = await route_interests(platform_family, concepts)
+                                ad_set["interests_by_tier"] = real_interests
+                                ad_set["interests_original"] = concepts
+                            else:
+                                ad_set["interests_by_tier"] = {"hyper": [], "hot": [], "broad": []}
+
+                    logger.info("Interest routing complete for %s strategy", region)
+                except Exception as exc:
+                    logger.warning("Interest routing failed (non-fatal): %s — keeping LLM interests", exc)
+
+                await save_campaign_strategy(request_id, {
+                    "country": region,
+                    "tier": best_strategy.get("tier", 1),
+                    "monthly_budget": country_alloc.get("monthly") if isinstance(country_alloc, dict) else None,
+                    "budget_mode": budget_data["budget_mode"],
+                    "strategy_data": best_strategy,
+                    "evaluation_score": best_score,
+                    "evaluation_data": best_strategy.get("_evaluation"),
+                    "evaluation_passed": best_score >= STRATEGY_THRESHOLD,
+                })
+                all_strategies[region] = best_strategy
+                logger.info("Saved campaign strategy for %s (score=%.2f)", region, best_score)
+
+        context["campaign_strategies"] = all_strategies
+        context["budget_data"] = budget_data
+        logger.info("Campaign strategy generation complete: %d country strategies", len(all_strategies))
+    else:
+        logger.info("ORGANIC mode — skipping media strategy generation")
+        all_strategies = {}
+        budget_data = {}
+        context["campaign_strategies"] = {}
+        context["budget_data"] = {}
 
     # ==================================================================
     # STEP 3: GENERATE BRIEF FROM PERSONAS (messaging built ON their psychology)
@@ -880,3 +887,75 @@ def _load_cached_research(regions: list[str]) -> dict | None:
             logger.info("No cached research for %s — will need live research.", region)
             return None
     return result
+
+
+async def run_campaign_strategy_standalone(context: dict) -> dict:
+    """Run ONLY the campaign strategy engine for paid upgrades.
+
+    Assumes brief, personas, and cultural_research already exist in the DB
+    from the prior organic pipeline run.
+    """
+    request_id = context["request_id"]
+    request = await get_intake_request(request_id)
+
+    # Load existing brief data
+    from neon_client import get_brief
+    existing_brief = await get_brief(request_id)
+    if not existing_brief:
+        logger.error("No brief found for paid upgrade — organic pipeline must run first")
+        return {"campaign_strategies": {}, "budget_data": {}}
+
+    brief_data = existing_brief.get("brief_data", {})
+    if isinstance(brief_data, str):
+        import json
+        brief_data = json.loads(brief_data)
+
+    personas = brief_data.get("personas", [])
+    cultural_research = brief_data.get("cultural_research", {})
+
+    # Populate context for strategy generation
+    context["personas"] = personas
+    context["cultural_research"] = cultural_research
+    context["brief"] = brief_data
+    context["pipeline_mode"] = "full"
+
+    # Run the campaign strategy engine
+    from ai.campaign_evaluator import evaluate_campaign_strategy as eval_strategy
+    from prompts.campaign_strategy import (
+        calculate_budget_cascade,
+        generate_campaign_strategy,
+    )
+
+    # Extract channel strategy from personas
+    channel_strategy = {}
+    for p in personas:
+        for ch in p.get("best_channels", []):
+            channel_strategy[ch] = channel_strategy.get(ch, 0) + 1
+
+    target_regions = context.get("target_regions", request.get("target_regions", []))
+    countries_data = {r: {"richness": 1.0} for r in target_regions}
+    budget_data = calculate_budget_cascade(request, countries_data)
+
+    all_strategies = {}
+    for region in target_regions:
+        try:
+            strategy = await generate_campaign_strategy(
+                request, personas, cultural_research.get(region, {}),
+                budget_data, region, channel_strategy
+            )
+            result = eval_strategy(strategy, request, region)
+            if result["passed"]:
+                all_strategies[region] = strategy
+                from neon_client import save_campaign_strategy
+                await save_campaign_strategy(request_id, region, strategy)
+                logger.info("Strategy for %s passed evaluation", region)
+            else:
+                logger.warning("Strategy for %s failed evaluation, skipping", region)
+        except Exception as e:
+            logger.warning("Strategy generation failed for %s: %s", region, e)
+
+    context["campaign_strategies"] = all_strategies
+    context["budget_data"] = budget_data
+    logger.info("Paid media strategy complete: %d country strategies", len(all_strategies))
+
+    return {"campaign_strategies": all_strategies, "budget_data": budget_data}
