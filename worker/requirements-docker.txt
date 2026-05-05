@@ -10,6 +10,8 @@ playwright>=1.48.0
 
 # Image processing (lightweight only)
 Pillow>=10.0.0
+numpy>=1.24.0
+qrcode[pil]==8.0
 
 # NOTE: The following are EXCLUDED from Docker builds:
 # - mlx, mlx-lm, mlx-vlm (Apple Silicon only — no Metal in containers)
