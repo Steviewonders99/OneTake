@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, DragEvent } from "react";
 import { Upload, ClipboardPaste, Loader2 } from "lucide-react";
 import { ExtractionResult } from "@/lib/types";
+import { ExtractionLoader } from "./ExtractionLoader";
 
 interface StepStartProps {
   onExtracted: (result: ExtractionResult) => void;
@@ -95,109 +96,9 @@ export default function StepStart({ onExtracted, onSkip, onExtractingChange, onR
   const border = "#E8E8EA";
   const charcoal = "#32373C";
 
-  // ── Extraction loading screen ──────────────────────────────────────
+  // ── Extraction loading screen (OnForma brand) ─────────────────────
   if (extracting) {
-    return (
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "80px 40px",
-          minHeight: "60vh",
-        }}
-      >
-        {/* Gradient accent line */}
-        <div
-          style={{
-            width: 60,
-            height: 3,
-            borderRadius: 2,
-            background: "linear-gradient(135deg, #7C3AED, #6D28D9)",
-            marginBottom: 32,
-          }}
-        />
-
-        {/* Bouncing dots */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: i % 2 === 0 ? "#6D28D9" : "#CD128A",
-                animation: `novaBounce 1.4s ease-in-out ${i * 0.16}s infinite`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Status text */}
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: "#1A1A1A",
-            margin: "0 0 8px",
-            fontFamily: "inherit",
-          }}
-        >
-          Nova is analyzing your brief
-        </h2>
-        <p
-          style={{
-            fontSize: 14,
-            color: "#8A8A8E",
-            margin: 0,
-            textAlign: "center",
-            maxWidth: 400,
-            lineHeight: 1.6,
-          }}
-        >
-          Extracting task type, requirements, qualifications, and compensation details using Gemma 4...
-        </p>
-
-        {/* Subtle progress stages */}
-        <div
-          style={{
-            marginTop: 32,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            fontSize: 12,
-            color: "#B0B0B5",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#6D28D9", animation: "novaPulse 2s ease-in-out infinite" }} />
-            Reading document structure...
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, animationDelay: "0.5s" }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8A8A8E", animation: "novaPulse 2s ease-in-out 0.5s infinite" }} />
-            Identifying key requirements...
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8A8A8E", animation: "novaPulse 2s ease-in-out 1s infinite" }} />
-            Mapping to intake fields...
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes novaBounce {
-            0%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-14px); }
-          }
-          @keyframes novaPulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
-          }
-        `}</style>
-      </div>
-    );
+    return <ExtractionLoader />;
   }
 
   return (
@@ -441,8 +342,8 @@ We need 500 dermatology study participants in 12 US metro areas. Must have diagn
               style={{
                 marginTop: 20,
                 padding: "14px 18px",
-                background: "rgba(109,40,217,0.04)",
-                border: "1px solid rgba(109,40,217,0.12)",
+                background: "rgba(6,147,227,0.04)",
+                border: "1px solid rgba(6,147,227,0.12)",
                 borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
@@ -452,20 +353,19 @@ We need 500 dermatology study participants in 12 US metro areas. Must have diagn
               <Loader2
                 size={20}
                 style={{
-                  color: purple,
+                  color: "#0693E3",
                   animation: "spin 0.8s linear infinite",
                   flexShrink: 0,
                 }}
               />
               <div>
                 <div
-                  style={{ fontSize: 12, fontWeight: 600, color: purple }}
+                  style={{ fontSize: 12, fontWeight: 600, color: "#0693E3" }}
                 >
-                  Gemma 4 is reading your brief...
+                  Analyzing your brief...
                 </div>
                 <div style={{ fontSize: 11, color: muted }}>
-                  Extracting task type, requirements, regions, compensation, and
-                  more
+                  Extracting task type, requirements, regions, and compensation
                 </div>
               </div>
             </div>
