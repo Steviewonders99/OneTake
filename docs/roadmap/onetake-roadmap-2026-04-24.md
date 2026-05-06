@@ -1,14 +1,14 @@
-# OneTake Platform Roadmap — Updated May 5, 2026
+# OneTake Platform Roadmap — Updated May 6, 2026
 
-> Day 30 of deployment. 825+ commits. ~105K LOC. **Organic-first pipeline + Asset Edit Hub shipped. Worker LIVE on Azure. Full DB admin confirmed.**
+> Day 31 of deployment. 850+ commits. ~108K LOC. **Domains live. Normalization layer shipped. Demo Friday May 9.**
 
 ---
 
 ## Executive Summary
 
-OneTake is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the SVP pitch (target: May 5, Day 30).
+OneTake is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the Friday demo (May 9, Day 34).
 
-**Day 30 status:** Two major features shipped — **Organic-First Pipeline** (default organic intake → WP posts, social graphics, flyers with QR codes; lead recruiter can upgrade to paid) and **Asset Edit Hub** (batch inline editing with copy revision, link/QR updates, Excel-based locale additions, one-click rollback). Azure PG full admin confirmed. Infrastructure fully verified. 22 commits in a single session.
+**Day 31 status:** `onetake.oneforma.com` DNS **LIVE** (CNAME locked in Cloudflare). `pro.oneforma.com` CNAME live, TXT verification pending IT. Data normalization layer shipped — Meta Ads, Reddit Ads, Brevo sync clients + orchestrator route + `normalizeToDaily()` pipeline ready for real credentials. Extraction speed 3x faster (Kimi K2.5 primary, 30s timeout). Intake wizard sizing standardized + OnForma-branded loader with fun facts + progress timeline. **Friday demo (May 9) is the target — everything this week serves that.**
 
 ---
 
@@ -284,8 +284,8 @@ Recruiter selects asset → picks what to change → types new value → submits
 
 | Item | Owner | Status | Impact | Priority |
 |---|---|---|---|---|
-| DNS: `onetake.oneforma.com` → Vercel | IT (Cloudflare) | **LIVE May 6** — locked in Cloudflare | Unified frontend domain | DONE |
-| DNS: `pro.oneforma.com` → Vercel | IT (Cloudflare) | **Requested May 6** — switched from `go` (was in use) | Branded tracked links (`pro.oneforma.com/r/xxxxx`) | P1 |
+| DNS: `onetake.oneforma.com` → Vercel | IT (Cloudflare) | **LIVE May 6** — CNAME locked, DNS propagated | Unified frontend domain | DONE |
+| DNS: `pro.oneforma.com` → Vercel | IT (Cloudflare) | **CNAME live, TXT pending** — `vc-domain-verify=pro.oneforma.com,31524e3ba6945d18ead8` sent to IT | Branded tracked links | P1 |
 | Azure Function `onetake-fn-west01` | IT | **Requested May 5** — name submitted | Serverless compute for scheduled tasks | P1 |
 | Entra ID custom app (no user assignment) | IT | **Requested May 5** | Azure AD integration for function auth | P1 |
 | Azure PG admin password — set strong password | Steven | **URGENT** — currently weak test value | Security: Container App secret must be updated | P0 |
@@ -308,8 +308,14 @@ Recruiter selects asset → picks what to change → types new value → submits
 ### Resolved (since last update)
 | Item | Resolved | Notes |
 |---|---|---|
-| Azure PG full admin access verified | **May 5** | `sqladm` + `azure_pg_admin` role. Can CREATE/ALTER/DROP tables, indexes, schemas, roles. Extensions available. No IT dependency for migrations. |
-| Azure PG connectivity from dev machine | **May 5** | Port 5432 reachable, firewall rule `StevenDev` (73.1.31.109) active, AAD + password auth enabled |
+| `onetake.oneforma.com` DNS | **May 6** | CNAME + TXT propagated, locked in Cloudflare |
+| Data normalization layer | **May 6** | 8 commits: Meta + Reddit + Brevo clients, normalizeToDaily(), sync orchestrator, reddit_ads_cache + brevo_campaign_metrics tables |
+| Intake wizard sizing | **May 6** | All steps standardized to same container (maxWidth 1600, uniform padding) |
+| Extraction speed | **May 6** | Kimi K2.5 primary (was Gemma 4 31B), max_tokens 2048 (was 8192), 30s timeout (was 90s) |
+| Extraction loader rebrand | **May 6** | OnForma gradient, fun facts, progress timeline (replaced Nova/purple) |
+| `go.oneforma.com` → `pro.oneforma.com` | **May 6** | `go` was in use, all references updated to `pro` |
+| Azure PG full admin access verified | **May 5** | `sqladm` + `azure_pg_admin` role. Self-service migrations. |
+| Azure PG connectivity from dev machine | **May 5** | Port 5432 reachable, firewall rule `StevenDev` active |
 | Azure PostgreSQL 17 Flexible Server | **Apr 30** | PG 17.9 delivered, connected, schema migrated (31 tables, 76 indexes) |
 | Container App env vars (8 required) | **Apr 30** | 4 secrets + 3 plain vars set via `az containerapp` |
 | Swap nginx → onetake-worker image | **Apr 30** | Worker LIVE, polling every 30s, 2 vCPU / 4 GiB |
@@ -334,7 +340,7 @@ Recruiter selects asset → picks what to change → types new value → submits
 |---|---|---|---|
 | May 5 | Organic-First Pipeline + Paid Upgrade | **Shipped** | 12 commits, pipeline_mode routing, organic Stage 3+4, QR codes, lead_recruiter role |
 | May 5 | Asset Edit Hub | **Shipped** | 9 commits, edit classifier/executor, batch rollback, EditMode frontend |
-| May 5 | Data Normalization Layer | **In Progress** | Meta + Reddit + Brevo sync → normalized_daily_metrics → ROAS |
+| May 5 | Data Normalization Layer | **Shipped** | 8 commits: Meta + Reddit + Brevo sync clients, normalizeToDaily(), orchestrator |
 | Apr 29 | Azure Deployment + IT Integration | **Shipped** | ACR push, CI/CD secrets, env manifest, IT spec doc |
 | Apr 29 | Container App Configuration Spec | **Shipped** | `docs/it-response-azure-container-app.md` |
 | Apr 25 | Server-Side GTM for Meta Pixel | **Shipped** | Conversion tracking live |
@@ -480,28 +486,55 @@ Day 30 (May 5) — DATA NORMALIZATION LAYER ★
   │   └── Normalization layer: all platforms → normalized_daily_metrics → ROAS calculations
   └── Normalization spec + implementation in progress
 
-Day 31 (May 6) — AD PLATFORM SYNC (Wave 1)
-  ├── Meta Ads API → meta_ads_cache → normalized_daily_metrics
-  ├── Reddit Ads API → reddit_ads_cache → normalized_daily_metrics (NEW platform)
-  ├── Brevo email API → brevo_campaign_cache → normalized_daily_metrics (email as channel)
-  ├── Feed REAL data to Azure PG
-  └── ROAS calculations go live (actual CPA, effective CPA, ROI)
+Day 31 (May 6) — NORMALIZATION + DOMAINS + POLISH ★★
+  ├── DATA NORMALIZATION LAYER (8 commits)
+  │   ├── reddit_ads_cache + brevo_campaign_metrics tables
+  │   ├── Meta Ads client completed (real Marketing API v21 call)
+  │   ├── Reddit Ads client created (full sync + normalize)
+  │   ├── Brevo email client created (separate brevo_campaign_metrics table)
+  │   ├── normalizeToDaily() helper (cache → normalized_daily_metrics with UTM matching)
+  │   ├── Sync orchestrator: POST /api/platforms/sync
+  │   ├── DailyMetricRow + PlatformNormalizeResult types
+  │   └── .env.example updated (Reddit + Brevo vars)
+  │
+  ├── DOMAINS
+  │   ├── onetake.oneforma.com — DNS propagated (CNAME + TXT verified)
+  │   ├── pro.oneforma.com — CNAME live, TXT verification sent to IT
+  │   └── go.oneforma.com → pro.oneforma.com (go was in use)
+  │
+  ├── INTAKE WIZARD POLISH
+  │   ├── Standardized step container sizing (all steps same maxWidth + padding)
+  │   ├── OnForma-branded extraction loader (replaced off-brand Nova/purple)
+  │   ├── 14 rotating recruiter fun facts during extraction
+  │   ├── 4-step animated progress timeline (document → requirements → regions → fields)
+  │   └── Extraction 3x faster (Kimi K2.5 primary, max_tokens 8192→2048, timeout 90s→30s)
+  │
+  └── Waiting on: pro.oneforma.com TXT record from IT, ad platform credentials
+
+Day 32-33 (May 7-8) — DEMO PREP
+  ├── Feed REAL data to Azure PG via platform sync
+  ├── ROAS calculations go live with real spend/conversions
+  ├── End-to-end organic pipeline test on Azure worker
+  ├── pro.oneforma.com verification (when IT adds TXT)
+  ├── Deploy to production (Vercel + update Azure Container App)
+  └── Dry-run demo walkthrough
+
+Day 34 (May 9) — FRIDAY DEMO ★★★
+  ├── Live demo with real campaigns + real ROAS data
+  ├── Organic pipeline: intake → WP post + social graphics + flyers + QR codes
+  ├── Edit hub: recruiter edits copy → instant update → undo
+  ├── Dashboard: cross-platform performance (Meta + Reddit + Brevo)
+  └── onetake.oneforma.com + pro.oneforma.com branded URLs
 
 Day 36 (May 11) — AD PLATFORM SYNC (Wave 2)
   ├── Google Ads API → google_ads_cache → normalized_daily_metrics
   ├── TikTok Ads API → tiktok_ads_cache → normalized_daily_metrics
   └── Full 5-platform unified performance dashboard
 
-Day 36+ (Post Wave 2)
-  ├── First real campaigns running on Azure infrastructure
-  ├── Demo to SVP (Stefan) with REAL ROAS data
-  └── VYRA integration pitch deck
-
-Day 36+ (Post-launch)
+Day 36+ (Post-demo)
   ├── Clerk SAML SSO upgrade (if needed — $50/mo Clerk Pro)
   ├── SharePoint auto-sync (Sites.Selected site grant from IT)
   ├── Outlook automated notifications (waiting on shared mailbox)
-  ├── Recruiter Edit Hub
   ├── AudienceIQ Phase 4 (HIE behavioral)
   ├── AudienceIQ Phase 5 (ad platform APIs)
   ├── Organic content extension
@@ -532,8 +565,11 @@ Day 36+ (Post-launch)
 | Pipeline modes | 1 (all-or-nothing) | 2 (organic default → paid upgrade) | **Shipped Day 30** |
 | Organic deliverables | 0 | 6 types (WP post, portal copy, flyer, flyer copy, social caption, social graphic) | **Shipped Day 30** |
 | Asset editing | Manual re-run | Inline batch edit + rollback (4 action types) | **Shipped Day 30** |
-| Commits | 0 | 825+ | Day 30 |
-| LOC | 0 | ~105,000 | Day 30 |
+| Ad platform sync | 0 platforms | 3 ready (Meta, Reddit, Brevo) + 2 Wave 2 (Google, TikTok) | **Shipped Day 31** — awaiting credentials |
+| Extraction speed | ~90s (Gemma 4 31B) | ~10s (Kimi K2.5) | **3x faster Day 31** |
+| Custom domains | nova-intake.vercel.app | onetake.oneforma.com + pro.oneforma.com | **onetake LIVE, pro pending TXT** |
+| Commits | 0 | 850+ | Day 31 |
+| LOC | 0 | ~108,000 | Day 31 |
 
 ---
 
