@@ -166,7 +166,7 @@ Copy uses persona voice, cultural research, brand guidelines, and pillar messagi
 - Generated per-locale
 - Destination priority: Aidaform URL (if exists for campaign) → job posting page URL
 - Must include UTM parameters: `utm_source=flyer&utm_medium=print&utm_campaign={slug}&utm_content={locale}`
-- Routed through tracked link system (`pro.oneforma.com/r/xxxxx`) for attribution
+- Routed through tracked link system (`apply.oneforma.com/r/xxxxx`) for attribution
 
 **Tracked links per locale:**
 - Created for each country/locale in the campaign

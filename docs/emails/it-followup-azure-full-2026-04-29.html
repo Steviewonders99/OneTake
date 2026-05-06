@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follow-Up — Azure Setup + Microsoft Integrations</title>
+<style>
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  h3 {
+    color: #1a1a1a;
+    margin-top: 28px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 6px;
+  }
+  ul, ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #e5e5e5;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+  .section-label {
+    display: inline-block;
+    background: #32373c;
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .done { background: #16a34a; }
+  .requested { background: #2563eb; }
+  .question { background: #d97706; }
+  hr {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 24px 0;
+  }
+</style>
+</head>
+<body>
+
+<p>Hi team,</p>
+
+<p>First &mdash; a huge thank you to Pengfei and Michael. The turnaround time on this has been nothing short of incredible. From the app registration to a fully provisioned resource group with ACR, Container App, custom domain, SSL, and Log Analytics &mdash; all configured and ready to go. I&rsquo;ve genuinely never seen infrastructure move this fast. The level of support and collaboration here is unprecedented, and it&rsquo;s a big part of why this project is shipping at the pace it is. Thank you both.</p>
+
+<p>We&rsquo;ve already verified access and confirmed everything is working. Quick update on where we are and a few questions.</p>
+
+<hr>
+
+<h3>1. Container Image &mdash; Pushed</h3>
+
+<p>Our worker image is now live in the registry:</p>
+<ul>
+  <li><code>novacert.azurecr.io/onetake-worker:latest</code></li>
+  <li><code>novacert.azurecr.io/onetake-worker:1b0c28d</code></li>
+</ul>
+<p>GitHub Actions CI/CD is configured to automatically build and push on every merge to main, so the ACR will always have the latest image. The nginx test container can be swapped for <code>onetake-worker:latest</code> whenever you&rsquo;re ready.</p>
+
+<hr>
+
+<h3>2. Database &mdash; PostgreSQL 17</h3>
+
+<p>We&rsquo;re currently running <strong>PostgreSQL 17.8</strong> on Neon, so we&rsquo;d like <strong>PostgreSQL 17</strong> on Azure Flexible Server to maintain version parity. Requirements are minimal:</p>
+<ul>
+  <li>No extensions needed (built-in features only: JSONB, gen_random_uuid, GIN indexes, FOR UPDATE SKIP LOCKED)</li>
+  <li>Burstable tier is fine to start</li>
+  <li>32 GB storage</li>
+  <li>Enforce SSL (<code>sslmode=require</code>)</li>
+  <li>Single-node, no HA needed at this stage</li>
+</ul>
+<p>Once provisioned, we just need the connection string:<br>
+<code>postgresql://&lt;user&gt;:&lt;password&gt;@&lt;server&gt;.postgres.database.azure.com:5432/&lt;dbname&gt;?sslmode=require</code></p>
+
+<hr>
+
+<h3>3. Container App Configuration</h3>
+
+<p>The worker is a background polling daemon (no HTTP listener). It polls the database for jobs, processes them using external AI APIs, and writes results back. Configuration needs:</p>
+<ul>
+  <li><strong>Image:</strong> <code>novacert.azurecr.io/onetake-worker:latest</code></li>
+  <li><strong>CPU / Memory:</strong> 2 vCPU / 4 GiB (preferred) &mdash; currently set to 0.5 / 1 GiB</li>
+  <li><strong>Min replicas:</strong> 1 (always-on)</li>
+  <li><strong>Ingress:</strong> Can be disabled &mdash; the worker has no HTTP endpoint</li>
+  <li><strong>Environment variables:</strong> 8 required (listed below). We&rsquo;ll provide all secret values &mdash; just need to know where to set them (Container App env vars or Key Vault references).</li>
+</ul>
+
+<table>
+  <tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td>Secret</td><td>PostgreSQL connection string (from #2 above)</td></tr>
+  <tr><td><code>OPENROUTER_API_KEY</code></td><td>Secret</td><td>AI model API key (we provide)</td></tr>
+  <tr><td><code>NVIDIA_NIM_API_KEY</code></td><td>Secret</td><td>NVIDIA inference API key (we provide)</td></tr>
+  <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Secret</td><td>File storage token (we provide)</td></tr>
+  <tr><td><code>TEAMS_WEBHOOK_URL</code></td><td>Secret</td><td>MS Teams webhook (we provide)</td></tr>
+  <tr><td><code>APP_URL</code></td><td>Plain</td><td><code>https://onetake.oneforma.com</code></td></tr>
+  <tr><td><code>WORKER_ID</code></td><td>Plain</td><td><code>worker-0</code></td></tr>
+  <tr><td><code>POLL_INTERVAL_SECONDS</code></td><td>Plain</td><td><code>30</code></td></tr>
+</table>
+
+<hr>
+
+<h3>4. Clerk SSO &mdash; Azure AD / Entra ID Integration</h3>
+
+<p>Our frontend uses <a href="https://clerk.com">Clerk</a> for authentication. We need to connect Clerk to Centific&rsquo;s Azure AD (Entra ID) so the team can sign in with their Microsoft accounts via SAML SSO. This requires:</p>
+<ul>
+  <li>An <strong>Enterprise Application</strong> in Azure AD configured as a SAML identity provider for Clerk</li>
+  <li>Clerk provides the <strong>ACS URL</strong> and <strong>Entity ID</strong> &mdash; we just need someone with Azure AD admin access to create the Enterprise App and paste in those values</li>
+  <li>Once connected, any <code>@centific.com</code> / <code>@oneforma.com</code> user can sign into OneTake with their existing Microsoft credentials</li>
+</ul>
+<p><strong>Question:</strong> Can you help us set up the SAML Enterprise Application, or should we coordinate directly with whoever manages Azure AD / Entra ID? Happy to provide the Clerk SAML configuration values.</p>
+
+<hr>
+
+<h3>5. Active Directory / Microsoft Graph API Access</h3>
+
+<p>The app registration (<code>azc-sp-onetake-dev-deployment</code>) currently has the default <code>User.Read</code> permission. For the features on our roadmap, we&rsquo;ll need additional Microsoft Graph API permissions:</p>
+
+<p><strong>SharePoint (campaign asset organization):</strong></p>
+<ul>
+  <li>When a campaign is approved, the app auto-creates a folder structure in SharePoint and uploads the approved creatives, briefs, and tracking documents</li>
+  <li>Permissions needed: <code>Sites.ReadWrite.All</code> or <code>Files.ReadWrite.All</code> (application-level)</li>
+  <li>Target site: <a href="https://digitaltechedge.sharepoint.com/sites/OneForma18">OneForma18</a></li>
+  <li>Target folder: <a href="https://digitaltechedge.sharepoint.com/sites/OneForma18/Shared%20Documents/Forms/AllItems.aspx?FolderCTID=0x0120008D99DCDAB00BE74FA6D883C68CBAD848&id=%2Fsites%2FOneForma18%2FShared%20Documents%2FMarketing%2F%F0%9F%97%82%EF%B8%8F%20Projects%2F02%5FActive%20AI%20Projects">Marketing / Projects / 02_Active AI Projects</a></li>
+  <li>The app will create per-campaign subfolders (e.g., <code>02_Active AI Projects/2026-04-29 Job Name/Creatives/</code>) with briefs, creatives, copy docs, and tracking links</li>
+</ul>
+
+<p><strong>Teams Notifications (richer than webhooks):</strong></p>
+<ul>
+  <li>Currently using incoming webhooks, but Graph API enables adaptive cards, channel posting, and activity feed notifications</li>
+  <li>Permissions needed: <code>ChannelMessage.Send</code>, <code>Team.ReadBasic.All</code></li>
+</ul>
+
+<p><strong>Outlook (automated email delivery):</strong></p>
+<ul>
+  <li>Send approval notifications, designer briefs, and agency packages via Outlook</li>
+  <li>Permissions needed: <code>Mail.Send</code> (application-level, scoped to a service account / shared mailbox)</li>
+</ul>
+
+<p><strong>Active Directory (user/group lookup):</strong></p>
+<ul>
+  <li>Look up team members, roles, and org structure for routing and access control</li>
+  <li>Permissions needed: <code>User.Read.All</code>, <code>Group.Read.All</code> (application-level)</li>
+</ul>
+
+<p><strong>Questions:</strong></p>
+<ol>
+  <li>Can we get these Graph API permissions added to the <code>azc-sp-onetake-dev-deployment</code> app registration? They&rsquo;ll need admin consent.</li>
+  <li>We&rsquo;ll be writing to the existing <a href="https://digitaltechedge.sharepoint.com/sites/OneForma18/Shared%20Documents/Forms/AllItems.aspx?FolderCTID=0x0120008D99DCDAB00BE74FA6D883C68CBAD848&id=%2Fsites%2FOneForma18%2FShared%20Documents%2FMarketing%2F%F0%9F%97%82%EF%B8%8F%20Projects%2F02%5FActive%20AI%20Projects">OneForma18 &gt; Marketing &gt; Projects &gt; 02_Active AI Projects</a> folder &mdash; can the app registration be scoped to that site, or does it need tenant-wide <code>Sites.ReadWrite.All</code>?</li>
+  <li>For Outlook, is there a shared mailbox we can send from (e.g., <code>marketing@oneforma.com</code> or <code>noreply@oneforma.com</code>)?</li>
+</ol>
+
+<hr>
+
+<h3>Summary &mdash; What We Need From IT</h3>
+
+<table>
+  <tr><th>Item</th><th>Status</th><th>Action</th></tr>
+  <tr><td>Resource group + ACR + Container App</td><td><span class="section-label done">Done</span></td><td>Thank you</td></tr>
+  <tr><td>Worker image in ACR</td><td><span class="section-label done">Done</span></td><td>Pushed today</td></tr>
+  <tr><td>PostgreSQL 17 Flexible Server</td><td><span class="section-label requested">Requested</span></td><td>Please provision</td></tr>
+  <tr><td>Container App env vars</td><td><span class="section-label requested">Ready</span></td><td>We provide values once DB is up</td></tr>
+  <tr><td>Swap nginx for worker image</td><td><span class="section-label requested">Ready</span></td><td>Can do once env vars are set</td></tr>
+  <tr><td>Clerk SAML Enterprise App</td><td><span class="section-label requested">Requested</span></td><td>Need Azure AD admin</td></tr>
+  <tr><td>Graph API permissions</td><td><span class="section-label requested">Requested</span></td><td>Need admin consent</td></tr>
+  <tr><td>SharePoint Graph API access to OneForma18</td><td><span class="section-label requested">Requested</span></td><td>Need <code>Sites.ReadWrite.All</code> on <a href="https://digitaltechedge.sharepoint.com/sites/OneForma18">OneForma18</a></td></tr>
+  <tr><td>Shared mailbox for Outlook</td><td><span class="section-label question">Question</span></td><td>For automated email delivery</td></tr>
+</table>
+
+<p>I&rsquo;ve attached a full technical spec document with networking requirements, optional environment variables, and CI/CD details for reference.</p>
+
+<p>Happy to jump on a call to walk through any of this.</p>
+
+<p>Again &mdash; massive thanks to Pengfei and Michael for making all of this possible. The speed and quality of the infrastructure work has been exceptional. Really proud of what this team is building together.</p>
+
+<p>Thanks,<br>
+Steven Junop<br>
+Digital Marketing Manager &mdash; OneForma / Centific</p>
+
+</body>
+</html>

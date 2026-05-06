@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reply — PG17 Received + Graph API Correction</title>
+<style>
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  h3 {
+    color: #1a1a1a;
+    margin-top: 28px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 6px;
+  }
+  ul, ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #e5e5e5;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+  .done { color: #16a34a; font-weight: 600; }
+  .pending { color: #d97706; font-weight: 600; }
+  hr {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 24px 0;
+  }
+  .sig {
+    margin-top: 24px;
+    color: #737373;
+  }
+</style>
+</head>
+<body>
+
+<p>Hi team,</p>
+
+<p>Thank you for provisioning the PostgreSQL server — we've already connected and verified everything is working. Quick update on where things stand and one correction on the Graph API permissions.</p>
+
+<hr>
+
+<h3>1. PostgreSQL 17 — Connected & Verified</h3>
+
+<p>We've connected to <code>onetake-pg-west01.postgres.database.azure.com</code> and confirmed:</p>
+<ul>
+  <li>PostgreSQL 17.9 — running perfectly</li>
+  <li>All features we need are working (JSONB, gen_random_uuid, GIN indexes, FOR UPDATE SKIP LOCKED)</li>
+  <li>Added our development IP to the firewall (73.1.31.109)</li>
+  <li>We'll run the schema migration and seed data this week</li>
+</ul>
+
+<p>Thank you — this was the main blocker.</p>
+
+<hr>
+
+<h3>2. Container App — We'll Handle Configuration</h3>
+
+<p>Thank you for confirming we can manage the Container App settings ourselves. We'll:</p>
+<ul>
+  <li>Set the 8 environment variables (DATABASE_URL + 7 others)</li>
+  <li>Swap the image from nginx to <code>novacert.azurecr.io/onetake-worker:latest</code></li>
+  <li>Adjust CPU/memory to 2 vCPU / 4 GiB</li>
+</ul>
+
+<p>We'll do this once the schema migration is verified. No action needed from IT.</p>
+
+<hr>
+
+<h3>3. Graph API Permissions — Correction</h3>
+
+<p>You're right that <code>ChannelMessage.Send</code> doesn't appear in the standard application permissions list — it's a resource-specific consent (RSC) permission that works differently. <strong>We don't need it.</strong> We're already using Teams incoming webhooks for notifications, which work well and require no Graph API permissions.</p>
+
+<p><strong>Updated permissions request (4 instead of 5):</strong></p>
+
+<table>
+  <tr><th>Permission</th><th>Type</th><th>Purpose</th></tr>
+  <tr><td><code>Sites.ReadWrite.All</code></td><td>Application</td><td>Auto-organize campaign assets in SharePoint</td></tr>
+  <tr><td><code>Mail.Send</code></td><td>Application</td><td>Send approval notifications via Outlook</td></tr>
+  <tr><td><code>User.Read.All</code></td><td>Application</td><td>Look up team members for routing</td></tr>
+  <tr><td><code>Group.Read.All</code></td><td>Application</td><td>Look up team groups for access control</td></tr>
+</table>
+
+<p>These are all standard application permissions in the Azure AD portal under <strong>API Permissions &rarr; Microsoft Graph &rarr; Application permissions</strong>. They'll need admin consent after being added.</p>
+
+<p>Can these be added to the existing <code>azc-sp-onetake-dev-deployment</code> app registration (client ID: <code>53dce4f5-8c80-4ed8-be44-625ea0966d22</code>)?</p>
+
+<hr>
+
+<h3>4. Clerk Authentication — OAuth Instead of SAML</h3>
+
+<p>Regarding the Clerk SSO request — we've evaluated the options and can use <strong>Microsoft OAuth</strong> (social login) instead of SAML. This is simpler to set up and doesn't require a SAML Enterprise Application.</p>
+
+<p>What we need on the existing app registration (<code>azc-sp-onetake-dev-deployment</code>):</p>
+<ul>
+  <li><strong>Add a redirect URI:</strong> <code>https://allowing-hedgehog-42.clerk.accounts.dev/v1/oauth_callback</code></li>
+  <li><strong>Platform:</strong> Web</li>
+  <li><strong>Supported account types:</strong> Accounts in this organizational directory only (Single tenant)</li>
+  <li><strong>Generate a client secret</strong> (we'll add it to Clerk's dashboard)</li>
+</ul>
+
+<p>This lets the team sign in with their Microsoft credentials through our app. We handle access control at the application level.</p>
+
+<p>If you're able to add the redirect URI and generate a client secret on the app registration, that's all we need. Otherwise, happy to submit a formal request to IThelpdesk.</p>
+
+<hr>
+
+<h3>5. DNS &mdash; Unified Frontend Domain</h3>
+
+<p>The OneTake frontend is hosted on Vercel. We'd like <code>onetake.oneforma.com</code> to serve the frontend app (the Azure Container App handles backend processing only). This requires two DNS records in Cloudflare:</p>
+
+<table>
+  <tr><th>Type</th><th>Name</th><th>Value</th><th>Purpose</th></tr>
+  <tr><td><strong>TXT</strong></td><td><code>_vercel.oneforma.com</code></td><td><code>vc-domain-verify=onetake.oneforma.com,5a5c1fefd9ed1454687b</code></td><td>Domain ownership verification</td></tr>
+  <tr><td><strong>CNAME</strong></td><td><code>onetake</code></td><td><code>cname.vercel-dns.com</code></td><td>Point frontend to Vercel</td></tr>
+</table>
+
+<p>Once these are added, the app will be accessible at <code>https://onetake.oneforma.com</code> with automatic SSL via Vercel.</p>
+
+<hr>
+
+<h3>6. Still Outstanding</h3>
+
+<table>
+  <tr><th>Item</th><th>Status</th></tr>
+  <tr><td>Graph API permissions (4 listed above)</td><td class="pending">Needs admin consent</td></tr>
+  <tr><td>OAuth redirect URI on app registration</td><td class="pending">Needs to be added (see #4)</td></tr>
+  <tr><td>DNS records for <code>onetake.oneforma.com</code> (see #5)</td><td class="pending">1 TXT + 1 CNAME in Cloudflare</td></tr>
+  <tr><td><code>go.oneforma.com</code> CNAME &rarr; <code>cname.vercel-dns.com</code></td><td class="pending">Separate DNS request &mdash; still pending</td></tr>
+  <tr><td>Shared mailbox (<code>noreply@oneforma.com</code> or similar)</td><td class="pending">For automated Outlook notifications</td></tr>
+  <tr><td>SharePoint site designation</td><td class="pending">Which site/library should campaign assets go to?</td></tr>
+</table>
+
+<hr>
+
+<h3>Beta Launch Target: Monday May 5</h3>
+
+<p>With the database now live, we're on track. The remaining items (Graph API permissions, OAuth, shared mailbox, DNS) are nice-to-haves for beta &mdash; the core pipeline works without them.</p>
+
+<p>Thanks again for the quick turnaround on the database.</p>
+
+<p class="sig">
+Steven Junop<br>
+Digital Marketing Manager — OneForma / Centific
+</p>
+
+</body>
+</html>
