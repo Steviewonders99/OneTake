@@ -1,7 +1,7 @@
-"""Image generation via OpenRouter.
+"""Image generation — OpenAI direct (primary) or OpenRouter (fallback).
 
-Supports Seedream 4.5, GPT Image 2, and other OpenRouter image models.
-Uses the /api/v1/chat/completions endpoint.
+Uses OpenAI Images API when OPENAI_API_KEY is set ($0.006/image at low quality).
+Falls back to OpenRouter chat/completions if no OpenAI key.
 Provider is selected via IMAGE_MODEL env var.
 Quality (low/medium/high) controlled via IMAGE_QUALITY env var.
 """
@@ -12,7 +12,7 @@ import logging
 import os
 
 import httpx
-from config import IMAGE_MODEL, IMAGE_QUALITY, OPENROUTER_API_KEY
+from config import IMAGE_MODEL, IMAGE_QUALITY, OPENAI_API_KEY, OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -60,20 +60,15 @@ async def generate_image(
         "cartoon, anime, illustration, 3d render, painting, watermark, "
         "text overlay, blurry, distorted hands, extra fingers, "
         "corporate stock photo, stiff pose, oversaturated, "
-        # Face defect anchors — prevent scars/cuts/blemishes on actors
         "scars, cuts, wounds, bruises, scratches on face, scabs, acne, "
         "blemishes, skin defects, forehead marks, forehead cuts, forehead scars, "
         "cheek scars, skin lesions, stitches, bandages, band-aid on face, "
-        # Cleanliness anchors — prevent dirty/disheveled actors
         "unwashed, disheveled, stained clothes, dirty clothes, greasy hair, "
         "dirty fingernails, grime on skin, sweat stains, "
-        # Dignity anchors — prevent stereotypical poverty imagery
         "dirty room, messy room, cracked walls, peeling paint, trash, debris, "
         "slum, poverty, rundown, dilapidated, broken furniture, "
         "dusty surfaces, grime, stained surfaces, scuff marks, drip stains, "
-        # Prevent nonsensical luxury
         "swimming pool, mansion, luxury car, yacht, penthouse, "
-        # Prevent AI screen artifacts
         "hex code on screen, debug text, placeholder text, gibberish text on device, "
         "fake money, fake currency, fake UI, fake app screenshot"
     )
@@ -85,19 +80,93 @@ async def generate_image(
         f"Avoid: {neg}"
     )
 
-    quality_label = IMAGE_QUALITY if ("gpt" in IMAGE_MODEL or "openai" in IMAGE_MODEL) else "default"
+    # ── Try OpenAI direct first (37x cheaper than OpenRouter) ──
+    if OPENAI_API_KEY:
+        try:
+            return await _generate_via_openai(full_prompt, width, height)
+        except Exception as e:
+            logger.warning("OpenAI image gen failed, falling back to OpenRouter: %s", str(e)[:200])
+
+    # ── Fallback: OpenRouter ──
+    if OPENROUTER_API_KEY:
+        return await _generate_via_openrouter(full_prompt, width, height)
+
+    raise ValueError("No image generation API key configured (OPENAI_API_KEY or OPENROUTER_API_KEY)")
+
+
+async def _generate_via_openai(prompt: str, width: int, height: int) -> bytes:
+    """Generate image via OpenAI Images API directly."""
+    # Map dimensions to OpenAI supported sizes
+    size = _openai_size(width, height)
+
     logger.info(
-        "Generating image via %s (%dx%d, quality=%s, prompt=%d chars)...",
-        IMAGE_MODEL, width, height, quality_label, len(full_prompt),
+        "Generating image via OpenAI direct (%s, quality=%s, prompt=%d chars)...",
+        size, IMAGE_QUALITY, len(prompt),
     )
 
-    # Seedream on OpenRouter uses chat/completions, NOT images/generations
-    # Response has message.images[] with base64 or URL entries
-    # Timeout needs to be long — image gen can take 30-180+ seconds
+    async with httpx.AsyncClient(timeout=httpx.Timeout(
+        connect=30.0, read=120.0, write=30.0, pool=30.0
+    )) as client:
+        resp = await client.post(
+            "https://api.openai.com/v1/images/generations",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": IMAGE_MODEL,
+                "prompt": prompt,
+                "n": 1,
+                "size": size,
+                "quality": IMAGE_QUALITY,
+                "output_format": "png",
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        images = data.get("data", [])
+        if not images:
+            raise ValueError("No images returned from OpenAI API")
+
+        img = images[0]
+
+        # OpenAI returns b64_json or url
+        if img.get("b64_json"):
+            img_bytes = base64.b64decode(img["b64_json"])
+            logger.info("OpenAI image decoded: %d bytes", len(img_bytes))
+            return img_bytes
+
+        if img.get("url"):
+            img_resp = await client.get(img["url"])
+            img_resp.raise_for_status()
+            logger.info("OpenAI image downloaded: %d bytes", len(img_resp.content))
+            return img_resp.content
+
+        raise ValueError(f"Unexpected OpenAI response format: {list(img.keys())}")
+
+
+def _openai_size(width: int, height: int) -> str:
+    """Map arbitrary dimensions to nearest OpenAI supported size."""
+    ratio = width / height
+    if ratio > 1.3:
+        return "1536x1024"  # landscape
+    elif ratio < 0.7:
+        return "1024x1536"  # portrait
+    else:
+        return "1024x1024"  # square
+
+
+async def _generate_via_openrouter(prompt: str, width: int, height: int) -> bytes:
+    """Generate image via OpenRouter (fallback)."""
+    logger.info(
+        "Generating image via OpenRouter (%dx%d, prompt=%d chars)...",
+        width, height, len(prompt),
+    )
+
     async with httpx.AsyncClient(timeout=httpx.Timeout(
         connect=30.0, read=300.0, write=30.0, pool=30.0
     )) as client:
-        # Retry up to 2 times on timeout
         resp = None
         for attempt in range(2):
             try:
@@ -110,7 +179,7 @@ async def generate_image(
                     json={
                         "model": IMAGE_MODEL,
                         "messages": [
-                            {"role": "user", "content": full_prompt},
+                            {"role": "user", "content": prompt},
                         ],
                         **({"quality": IMAGE_QUALITY} if "gpt" in IMAGE_MODEL or "openai" in IMAGE_MODEL else {}),
                     },
@@ -119,7 +188,7 @@ async def generate_image(
                 break
             except httpx.ReadTimeout:
                 if attempt == 0:
-                    logger.warning("Seedream read timeout — retrying...")
+                    logger.warning("OpenRouter read timeout — retrying...")
                     continue
                 raise
         data = resp.json()
@@ -128,71 +197,46 @@ async def generate_image(
         images = msg.get("images", [])
 
         if not images:
-            # Some models return image in content as base64 data URI
             content = msg.get("content", "")
             if content and "base64" in str(content):
-                logger.info("Image found in content field")
-                # Extract base64 from data URI if present
                 if "data:image" in content:
                     b64_part = content.split(",", 1)[-1] if "," in content else content
                     return base64.b64decode(b64_part)
-
-            raise ValueError(
-                f"No images in response. Keys: {list(msg.keys())}. "
-                f"Content type: {type(content).__name__}"
-            )
+            raise ValueError(f"No images in OpenRouter response. Keys: {list(msg.keys())}")
 
         img = images[0]
 
-        # Handle dict formats
         if isinstance(img, dict):
-            # OpenAI vision format: {"type": "image_url", "image_url": {"url": "data:..."}}
             if img.get("type") == "image_url" and "image_url" in img:
                 image_url_data = img["image_url"]
-                if isinstance(image_url_data, dict):
-                    url = image_url_data.get("url", "")
-                else:
-                    url = str(image_url_data)
-
+                url = image_url_data.get("url", "") if isinstance(image_url_data, dict) else str(image_url_data)
                 if url.startswith("data:image"):
-                    # Base64 data URI — extract the base64 part
-                    b64_part = url.split(",", 1)[-1] if "," in url else url
-                    img_bytes = base64.b64decode(b64_part)
-                    logger.info("Image decoded from data URI: %d bytes", len(img_bytes))
-                    return img_bytes
+                    return base64.b64decode(url.split(",", 1)[-1])
                 elif url.startswith("http"):
                     img_resp = await client.get(url)
                     img_resp.raise_for_status()
-                    logger.info("Image downloaded from URL: %d bytes", len(img_resp.content))
                     return img_resp.content
-
-            # Direct URL format: {"url": "https://..."}
             if img.get("url"):
                 url = img["url"]
                 if url.startswith("data:image"):
-                    b64_part = url.split(",", 1)[-1]
-                    return base64.b64decode(b64_part)
+                    return base64.b64decode(url.split(",", 1)[-1])
                 img_resp = await client.get(url)
                 img_resp.raise_for_status()
                 return img_resp.content
-
-            # Direct base64 format: {"b64_json": "..."}
             if img.get("b64_json"):
                 return base64.b64decode(img["b64_json"])
 
-        # Handle raw base64 string
         if isinstance(img, str):
             if img.startswith("http"):
                 img_resp = await client.get(img)
                 img_resp.raise_for_status()
                 return img_resp.content
             elif img.startswith("data:image"):
-                b64_part = img.split(",", 1)[-1]
-                return base64.b64decode(b64_part)
+                return base64.b64decode(img.split(",", 1)[-1])
             else:
                 return base64.b64decode(img)
 
-        raise ValueError(f"Unexpected image format: {type(img)}, keys: {list(img.keys()) if isinstance(img, dict) else 'N/A'}")
+        raise ValueError(f"Unexpected image format: {type(img)}")
 
 
 async def edit_image(

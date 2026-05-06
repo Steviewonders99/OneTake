@@ -50,10 +50,11 @@ NVIDIA_NIM_CREATIVE_MODEL = os.environ.get("NVIDIA_NIM_CREATIVE_MODEL", "google/
 NVIDIA_NIM_DESIGN_MODEL = os.environ.get("NVIDIA_NIM_DESIGN_MODEL", "z-ai/glm5")
 
 # ---------------------------------------------------------------------------
-# OpenRouter (Seedream 4.5 image gen + fallback LLM)
+# Image Generation — OpenAI direct (primary) or OpenRouter (fallback)
 # ---------------------------------------------------------------------------
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "openai/gpt-5.4-image-2")
+IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-1")
 IMAGE_QUALITY = os.environ.get("IMAGE_QUALITY", "low")  # low, medium, high
 IMAGE_CONCURRENCY = int(os.environ.get("IMAGE_CONCURRENCY", "15"))
 
@@ -96,6 +97,7 @@ COMPOSE_CONCURRENCY = int(os.environ.get("COMPOSE_CONCURRENCY", "15"))  # Paid O
 # ---------------------------------------------------------------------------
 # Stage 4 Graphic Design Agent
 # ---------------------------------------------------------------------------
+# Supported: "design_agent", "reference_layout_agent", or legacy compose_v3 fallback.
 STAGE4_ENGINE = os.environ.get("STAGE4_ENGINE", "design_agent")
 CREATIVE_DIRECTOR_MODEL = os.environ.get("CREATIVE_DIRECTOR_MODEL", "qwen/qwen3.5-397b-a17b")
 CREATIVE_DIRECTOR_FALLBACK = os.environ.get("CREATIVE_DIRECTOR_FALLBACK", "google/gemma-3-27b-it")
@@ -117,4 +119,3 @@ ELEVENLABS_DEFAULT_VOICE = os.environ.get("ELEVENLABS_DEFAULT_VOICE", "21m00Tcm4
 # Gemma 4 VQA (Creative evaluation)
 NVIDIA_NIM_VQA_KEY = os.environ.get("NVIDIA_NIM_VQA_KEY", os.environ.get("NVIDIA_NIM_API_KEY", ""))
 NVIDIA_NIM_VQA_MODEL = os.environ.get("NVIDIA_NIM_VQA_MODEL", "google/gemma-4-31b-it")
-
