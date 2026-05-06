@@ -222,7 +222,7 @@ export default function DesignerDashboard() {
               fontFamily: FONT.sans,
             }}
           >
-            Nova
+            OneTake
           </span>
           <span
             style={{

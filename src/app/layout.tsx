@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nova — OneForma Creative Intelligence",
+  title: "OneTake — OneForma Creative Intelligence",
   description: "AI-powered recruitment marketing platform by OneForma / Centific",
 };
 
@@ -18,13 +18,13 @@ export default function RootLayout({
       localization={{
         signIn: {
           start: {
-            title: "Welcome to Nova",
+            title: "Welcome to OneTake",
             subtitle: "OneForma Creative Intelligence Platform",
           },
         },
         signUp: {
           start: {
-            title: "Join Nova",
+            title: "Join OneTake",
             subtitle: "OneForma Creative Intelligence Platform",
           },
         },

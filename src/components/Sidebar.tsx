@@ -148,7 +148,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     // Restore collapsed state from localStorage
-    const saved = localStorage.getItem("nova-sidebar-collapsed");
+    const saved = localStorage.getItem("onetake-sidebar-collapsed");
     if (saved === "true") setCollapsed(true);
 
     fetch("/api/auth/me")
@@ -162,7 +162,7 @@ export default function Sidebar() {
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
-    localStorage.setItem("nova-sidebar-collapsed", String(next));
+    localStorage.setItem("onetake-sidebar-collapsed", String(next));
   };
 
   const navSections = role ? (ROLE_NAV[role] ?? DEFAULT_NAV) : DEFAULT_NAV;
@@ -209,7 +209,7 @@ export default function Sidebar() {
                   onClick={() => setMobileOpen(false)}
                 >
                   <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
-                    Nova
+                    OneTake
                   </span>
                   <span className="block text-[10px] font-medium text-[var(--muted-foreground)] mt-0.5">
                     OneForma Creative Intelligence
@@ -234,7 +234,7 @@ export default function Sidebar() {
                 aria-label="Expand sidebar"
               >
                 <span className="text-[16px] font-bold text-[var(--foreground)]">
-                  N
+                  OT
                 </span>
               </button>
             )}

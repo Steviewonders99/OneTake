@@ -499,7 +499,7 @@ export default function DesignerGallery({
           color: theme.textDim,
         }}
       >
-        Nova Creative Platform · Powered by OneForma
+        OneTake · Powered by OneForma
       </div>
 
       {/* Lightbox */}
