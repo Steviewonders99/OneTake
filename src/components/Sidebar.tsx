@@ -205,17 +205,20 @@ export default function Sidebar() {
               <>
                 <Link
                   href="/"
-                  className="cursor-pointer flex-1"
+                  className="cursor-pointer flex-1 flex items-center gap-2.5"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
-                    OneTake
-                  </span>
-                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)] mt-0.5">
-                    OneForma Creative Intelligence
-                  </span>
+                  <img src="/oneforma-logo.png" alt="OneTake" className="w-7 h-7 object-contain" />
+                  <div>
+                    <span className="text-[15px] font-bold tracking-tight text-[var(--foreground)]">
+                      OneTake
+                    </span>
+                    <span className="block text-[10px] font-medium text-[var(--muted-foreground)] mt-0.5">
+                      OneForma Creative Intelligence
+                    </span>
+                  </div>
                 </Link>
-                {/* Collapse — hidden N that appears on hover */}
+                {/* Collapse toggle */}
                 <button
                   onClick={toggleCollapsed}
                   className="hidden lg:flex w-7 h-7 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] cursor-pointer transition-all opacity-0 group-hover/sidebar:opacity-100"
@@ -226,16 +229,14 @@ export default function Sidebar() {
                 </button>
               </>
             ) : (
-              /* Collapsed: N is the expand button */
+              /* Collapsed: logo icon is the expand button */
               <button
                 onClick={toggleCollapsed}
                 className="cursor-pointer mx-auto w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--muted)] transition-colors"
                 title="Expand sidebar"
                 aria-label="Expand sidebar"
               >
-                <span className="text-[16px] font-bold text-[var(--foreground)]">
-                  OT
-                </span>
+                <img src="/oneforma-logo.png" alt="OneTake" className="w-6 h-6 object-contain" />
               </button>
             )}
 
