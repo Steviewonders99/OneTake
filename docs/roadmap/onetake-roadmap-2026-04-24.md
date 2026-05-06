@@ -284,7 +284,8 @@ Recruiter selects asset → picks what to change → types new value → submits
 
 | Item | Owner | Status | Impact | Priority |
 |---|---|---|---|---|
-| DNS: `onetake.oneforma.com` + `go.oneforma.com` → Vercel | IT (Cloudflare) | **Requested May 5** — 3 records (2 CNAME + 1 TXT) | Unified frontend + branded tracked links | P1 |
+| DNS: `onetake.oneforma.com` → Vercel | IT (Cloudflare) | **LIVE May 6** — locked in Cloudflare | Unified frontend domain | DONE |
+| DNS: `pro.oneforma.com` → Vercel | IT (Cloudflare) | **Requested May 6** — switched from `go` (was in use) | Branded tracked links (`pro.oneforma.com/r/xxxxx`) | P1 |
 | Azure Function `onetake-fn-west01` | IT | **Requested May 5** — name submitted | Serverless compute for scheduled tasks | P1 |
 | Entra ID custom app (no user assignment) | IT | **Requested May 5** | Azure AD integration for function auth | P1 |
 | Azure PG admin password — set strong password | Steven | **URGENT** — currently weak test value | Security: Container App secret must be updated | P0 |
