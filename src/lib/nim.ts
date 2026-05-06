@@ -1,14 +1,14 @@
 /**
  * NVIDIA NIM client for server-side LLM calls.
  *
- * Uses the free NIM API with Gemma 4 31B for extraction tasks.
- * Falls back to Kimi K2.5 on NIM if Gemma fails.
+ * Uses Kimi K2.5 as primary (fastest for structured extraction).
+ * Falls back to Gemma 4 31B on NIM if Kimi fails.
  * Falls back to OpenRouter Kimi K2.5 as last resort.
  */
 
 const NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const NIM_MODEL_PRIMARY = "google/gemma-4-31b-it";
-const NIM_MODEL_FALLBACK = "moonshotai/kimi-k2.5";
+const NIM_MODEL_PRIMARY = "moonshotai/kimi-k2.5";
+const NIM_MODEL_FALLBACK = "google/gemma-4-31b-it";
 
 export async function callNIM(
   systemPrompt: string,
@@ -17,21 +17,21 @@ export async function callNIM(
   const nimKey = process.env.NVIDIA_NIM_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-  // Try NIM Gemma 4 first
+  // Try NIM Kimi K2.5 first (fastest for extraction)
   if (nimKey) {
     try {
       const result = await nimCall(nimKey, NIM_MODEL_PRIMARY, systemPrompt, userPrompt);
       if (result) return result;
     } catch (err) {
-      console.warn("[NIM] Gemma 4 failed, trying Kimi K2.5 fallback:", (err as Error).message?.slice(0, 100));
+      console.warn("[NIM] Kimi K2.5 failed, trying Gemma 4 fallback:", (err as Error).message?.slice(0, 100));
     }
 
-    // Fallback: NIM Kimi K2.5
+    // Fallback: NIM Gemma 4 31B
     try {
       const result = await nimCall(nimKey, NIM_MODEL_FALLBACK, systemPrompt, userPrompt);
       if (result) return result;
     } catch (err) {
-      console.warn("[NIM] Kimi K2.5 fallback failed:", (err as Error).message?.slice(0, 100));
+      console.warn("[NIM] Gemma 4 fallback failed:", (err as Error).message?.slice(0, 100));
     }
   }
 
@@ -52,7 +52,7 @@ export async function callNIM(
         ],
         temperature: 0.3,
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -86,9 +86,9 @@ async function nimCall(
         { role: "user", content: userPrompt },
       ],
       temperature: 0.3,
-      max_tokens: 8192,
+      max_tokens: 2048,
     }),
-    signal: AbortSignal.timeout(90_000),
+    signal: AbortSignal.timeout(30_000),
   });
 
   if (!response.ok) {

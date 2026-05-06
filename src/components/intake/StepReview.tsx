@@ -179,7 +179,6 @@ export default function StepReview({
         maxWidth: 1600,
         width: "100%",
         margin: "0 auto",
-        padding: "48px 48px",
       }}
     >
       {/* Page header */}

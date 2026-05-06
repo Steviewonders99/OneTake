@@ -201,15 +201,7 @@ export default function StepStart({ onExtracted, onSkip, onExtractingChange, onR
   }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        padding: "40px",
-      }}
-    >
+    <div style={{ maxWidth: 1600, width: "100%", margin: "0 auto" }}>
       {/* Step card */}
       <div
         style={{
@@ -217,7 +209,6 @@ export default function StepStart({ onExtracted, onSkip, onExtractingChange, onR
           borderRadius: 16,
           border: `1px solid ${border}`,
           width: "100%",
-          maxWidth: 1600,
           overflow: "hidden",
         }}
       >

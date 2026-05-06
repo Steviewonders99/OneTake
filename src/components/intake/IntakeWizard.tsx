@@ -177,7 +177,7 @@ export default function IntakeWizard() {
       </div>
 
       {/* Step content */}
-      <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 40 }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "48px 48px" }}>
         {currentStep === 0 && <StepStart onExtracted={handleExtracted} onSkip={handleSkip} onExtractingChange={setIsExtracting} onRegisterExtract={(fn) => { extractTriggerRef.current = fn; }} />}
         {currentStep === 1 && (
           <StepTaskMode

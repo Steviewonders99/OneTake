@@ -231,7 +231,7 @@ export default function StepDetails({ formData, onChange, confidenceFlags, local
   const targetLanguages = (formData.target_languages as string[] | undefined) ?? [];
 
   return (
-    <div style={{ maxWidth: 1600, margin: "0 auto", padding: "48px" }}>
+    <div style={{ maxWidth: 1600, width: "100%", margin: "0 auto" }}>
       {/* Header */}
       <div style={{ marginBottom: 36 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1A1A1A", margin: 0 }}>Project Details</h2>

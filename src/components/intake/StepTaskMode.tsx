@@ -39,7 +39,7 @@ export default function StepTaskMode({
   onWorkModeChange,
 }: StepTaskModeProps) {
   return (
-    <div style={{ maxWidth: 1600, margin: "0 auto", padding: "48px" }}>
+    <div style={{ maxWidth: 1600, width: "100%", margin: "0 auto" }}>
       {/* Step card */}
       <div
         style={{
