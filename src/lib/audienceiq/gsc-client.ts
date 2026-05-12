@@ -1,10 +1,11 @@
 /**
- * GSC Client — fetches search query data.
+ * GSC Client — reads search query/page data from gsc_daily_cache.
  *
- * GSC data comes via the seo-ai MCP server or direct API.
- * This module provides query functions for search performance data.
- * Currently returns data from a local cache pattern.
+ * GSC data is written to gsc_daily_cache by the Python worker's GSC sync job.
+ * This module provides query functions over that cache for the frontend.
  */
+
+import { getDb } from '@/lib/db';
 
 export interface GscQueryRow {
   query: string;
@@ -23,22 +24,59 @@ export interface GscPageRow {
 }
 
 /**
- * Fetch top search queries. In Phase 3, this uses cached data
- * or calls the SEO MCP on-demand.
+ * Fetch top search queries over the last 28 days from gsc_daily_cache.
  */
 export async function getTopQueries(limit: number = 20): Promise<GscQueryRow[]> {
-  // GSC data will be populated via the seo-ai MCP server
-  // For now, return empty array — the widget shows "No GSC data yet"
-  // Once GSC MCP is wired, this will call:
-  // mcp__seo-ai__get_keyword_metrics or similar
-  return [];
+  const sql = getDb();
+  const rows = await sql`
+    SELECT
+      query,
+      SUM(clicks)::int       AS clicks,
+      SUM(impressions)::int  AS impressions,
+      AVG(ctr)::float        AS ctr,
+      AVG(position)::float   AS position
+    FROM gsc_daily_cache
+    WHERE date >= CURRENT_DATE - INTERVAL '28 days'
+    GROUP BY query
+    ORDER BY clicks DESC
+    LIMIT ${limit}
+  `;
+  return rows as GscQueryRow[];
 }
 
+/**
+ * Fetch top pages over the last 28 days from gsc_daily_cache.
+ */
 export async function getTopPages(limit: number = 20): Promise<GscPageRow[]> {
-  return [];
+  const sql = getDb();
+  const rows = await sql`
+    SELECT
+      page,
+      SUM(clicks)::int       AS clicks,
+      SUM(impressions)::int  AS impressions,
+      AVG(ctr)::float        AS ctr,
+      AVG(position)::float   AS position
+    FROM gsc_daily_cache
+    WHERE date >= CURRENT_DATE - INTERVAL '28 days'
+    GROUP BY page
+    ORDER BY clicks DESC
+    LIMIT ${limit}
+  `;
+  return rows as GscPageRow[];
 }
 
+/**
+ * Returns true — actual connection validity is managed at the worker level.
+ */
 export function isGscConnected(): boolean {
-  // Will be true once GSC MCP is configured with property access
-  return false;
+  return true;
+}
+
+/**
+ * Returns true if there is any data in gsc_daily_cache.
+ */
+export async function hasGscData(): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`SELECT COUNT(*)::int AS cnt FROM gsc_daily_cache`;
+  return (rows[0]?.cnt ?? 0) > 0;
 }
