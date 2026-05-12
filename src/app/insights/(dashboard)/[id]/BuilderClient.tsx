@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/components/insights/DashboardContext';
+import { DashboardFilterProvider } from '@/components/insights/DashboardFilterContext';
 import { DashboardToolbar } from '@/components/insights/DashboardToolbar';
 import { WidgetPalette } from '@/components/insights/WidgetPalette';
 import { DashboardGrid } from '@/components/insights/DashboardGrid';
@@ -54,7 +55,9 @@ export function BuilderClient({
       initialDescription={initialDescription}
       initialLayoutData={initialLayoutData}
     >
-      <BuilderInner dashboardId={dashboardId} canEdit={canEdit} />
+      <DashboardFilterProvider>
+        <BuilderInner dashboardId={dashboardId} canEdit={canEdit} />
+      </DashboardFilterProvider>
     </DashboardProvider>
   );
 }
