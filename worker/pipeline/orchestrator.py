@@ -57,6 +57,21 @@ async def run_pipeline(job: dict) -> None:
     stage_target = job.get("stage_target")
     feedback = job.get("feedback")
 
+    # ── Organic Metrics Sync: standalone job, not a pipeline ──
+    if job_type == "organic_sync":
+        from pipeline.stage_organic_sync import run_organic_sync
+        context: dict = {"request_id": request_id}
+        # Extract days from feedback_data if provided
+        feedback_data = job.get("feedback_data", {})
+        if isinstance(feedback_data, str):
+            import json as _json
+            feedback_data = _json.loads(feedback_data)
+        if isinstance(feedback_data, dict):
+            context["days"] = feedback_data.get("days", 7)
+        result = await run_organic_sync(context)
+        logger.info("Organic sync job complete: %s", result)
+        return
+
     # ── Country Job Creator: create per-country jobs on the SAME request ──
     # If country_quotas exist, create one compute_job per country.
     # Each country job runs the full pipeline independently.
