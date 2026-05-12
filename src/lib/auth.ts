@@ -1,5 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { getUserRole } from '@/lib/db/user-roles';
+import { getUserRole, isAllowedDomain } from '@/lib/db/user-roles';
 import type { UserRole } from '@/lib/types';
 
 export async function requireAuth(): Promise<{ userId: string }> {
@@ -21,6 +21,11 @@ export async function requireRole(
     email = user?.emailAddresses?.[0]?.emailAddress;
   } catch {
     // currentUser may fail in some contexts — proceed without email
+  }
+
+  // Domain restriction: reject users from non-allowed email domains
+  if (email && !isAllowedDomain(email)) {
+    throw new Error('Forbidden');
   }
 
   const userRole = await getUserRole(userId, email);

@@ -1,5 +1,12 @@
 import { getDb } from '../db';
 
+const ALLOWED_EMAIL_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS || 'centific.com,oneforma.com').split(',');
+
+export function isAllowedDomain(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return ALLOWED_EMAIL_DOMAINS.includes(domain);
+}
+
 export interface UserRoleRecord {
   id: string;
   clerk_id: string;
@@ -38,8 +45,8 @@ export async function getUserRole(clerkId: string, email?: string): Promise<User
     }
   }
 
-  // Auto-provision: new users get 'recruiter' role by default
-  if (email) {
+  // Auto-provision: new users get 'recruiter' role — only for allowed domains
+  if (email && isAllowedDomain(email)) {
     const newRows = await sql`
       INSERT INTO user_roles (clerk_id, email, role)
       VALUES (${clerkId}, ${email}, 'recruiter')

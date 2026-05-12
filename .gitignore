@@ -44,6 +44,7 @@ next-env.d.ts
 .superpowers/
 .keys.json
 worker/.keys.json
+ACR.json
 
 # Superpowers worktrees and brainstorm sessions
 .worktrees/

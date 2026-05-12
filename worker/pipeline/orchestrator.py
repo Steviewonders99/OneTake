@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 async def _run_stage4_routed(context: dict) -> dict:
-    """Route Stage 4 to design_agent or legacy compose_v3 based on config."""
+    """Route Stage 4 to the configured composition engine."""
     if STAGE4_ENGINE == "design_agent":
         from pipeline.stage4_design_agent import run_stage4 as run_stage4_new
         return await run_stage4_new(context)
+    elif STAGE4_ENGINE == "reference_layout_agent":
+        from pipeline.stage4_reference_layout import run_stage4 as run_stage4_reference
+        return await run_stage4_reference(context)
     else:
         from pipeline.stage4_compose_v3 import run_stage4 as run_stage4_legacy
         return await run_stage4_legacy(context)

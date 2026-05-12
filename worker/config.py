@@ -119,3 +119,23 @@ ELEVENLABS_DEFAULT_VOICE = os.environ.get("ELEVENLABS_DEFAULT_VOICE", "21m00Tcm4
 # Gemma 4 VQA (Creative evaluation)
 NVIDIA_NIM_VQA_KEY = os.environ.get("NVIDIA_NIM_VQA_KEY", os.environ.get("NVIDIA_NIM_API_KEY", ""))
 NVIDIA_NIM_VQA_MODEL = os.environ.get("NVIDIA_NIM_VQA_MODEL", "google/gemma-4-31b-it")
+
+# ---------------------------------------------------------------------------
+# Organic Social Metrics Sync
+# ---------------------------------------------------------------------------
+META_PAGE_ACCESS_TOKEN = os.environ.get("META_PAGE_ACCESS_TOKEN", "")
+META_PAGE_ID = os.environ.get("META_PAGE_ID", "")
+META_IG_BUSINESS_ID = os.environ.get("META_IG_BUSINESS_ID", "")
+
+LINKEDIN_ORG_ACCESS_TOKEN = os.environ.get("LINKEDIN_ORG_ACCESS_TOKEN", "")
+LINKEDIN_ORG_ID = os.environ.get("LINKEDIN_ORG_ID", "")
+
+REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
+REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+REDDIT_USERNAME = os.environ.get("REDDIT_USERNAME", "")
+REDDIT_PASSWORD = os.environ.get("REDDIT_PASSWORD", "")
+
+GSC_SERVICE_ACCOUNT_JSON = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
+GSC_PROPERTY_URL = os.environ.get("GSC_PROPERTY_URL", "")
+
+ORGANIC_SYNC_DAYS = int(os.environ.get("ORGANIC_SYNC_DAYS", "7"))

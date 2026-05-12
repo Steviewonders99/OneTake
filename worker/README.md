@@ -114,6 +114,20 @@ Neon Postgres (compute_jobs table)
 - 7-dimension creative evaluation (threshold 0.70, max 3 retries)
 - Uploads final creatives to Vercel Blob
 
+### Stage 4: Reference Layout Agent
+- Optional engine: `STAGE4_ENGINE=reference_layout_agent`
+- Uses a typed layer manifest instead of model-written HTML/CSS
+- Preserves premium reference structure: exact frame, text, overlays, texture, logo, and z-order
+- Swaps only the base photo layer from Stage 2 actor images
+- Renders editable HTML + PNG via Playwright
+
+Local visual smoke test:
+
+```bash
+cd worker
+python3 sandbox_reference_layout.py --image /path/to/base-image.png
+```
+
 ## Models
 
 | Model | Purpose | Size |
