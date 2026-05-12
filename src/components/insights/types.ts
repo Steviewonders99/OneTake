@@ -39,6 +39,17 @@ export type WidgetType =
   | 'hie-scrollmap'
   | 'hie-form-friction'
   | 'platform-audiences'
+  // Organic Social
+  | 'organic-kpi'
+  | 'organic-platform-compare'
+  | 'organic-attribution'
+  | 'organic-account-growth'
+  | 'organic-top-posts'
+  | 'gsc-performance'
+  // Paid (drill-down parity)
+  | 'paid-kpi'
+  | 'paid-platform-compare'
+  | 'paid-campaign-detail'
   // Utility
   | 'text-note';
 
@@ -48,6 +59,8 @@ export type WidgetCategory =
   | 'utm'
   | 'operations'
   | 'audienceiq'
+  | 'organic'
+  | 'paid'
   | 'utility';
 
 export interface WidgetInstance {

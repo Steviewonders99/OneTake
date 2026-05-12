@@ -9,6 +9,7 @@ import {
   Globe, AlertTriangle, ListChecks, StickyNote, GitCompare, Trophy,
   Palette, TrendingUp, Grid3x3, Link2, Funnel, Award, TrendingDown,
   Crosshair, Target, Radar, HeartPulse, Search, Megaphone,
+  Share2, Rss, ArrowUpRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { WidgetType, WidgetCategory } from './types';
@@ -29,6 +30,8 @@ export const WIDGET_CATEGORIES: { id: WidgetCategory; label: string }[] = [
   { id: 'assets', label: 'Assets & Creative' },
   { id: 'operations', label: 'Operations' },
   { id: 'audienceiq', label: 'AudienceIQ' },
+  { id: 'organic', label: 'Organic Social' },
+  { id: 'paid', label: 'Paid Media' },
   { id: 'utility', label: 'Utility' },
 ];
 
@@ -208,6 +211,62 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     category: 'audienceiq', label: 'Platform Audiences', icon: Megaphone,
     description: 'Multi-platform ad audience overview — Google, Meta, LinkedIn, TikTok',
     defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
+  },
+  // ── Organic Social ────────────────────────────────────────
+  'organic-kpi': {
+    component: lazy(() => import('./widgets/OrganicKpiWidget')),
+    category: 'organic', label: 'Organic KPIs', icon: Rss,
+    description: 'Impressions, reach, engagement, follower delta across all social platforms',
+    defaultSize: { w: 12, h: 2 }, minSize: { w: 6, h: 2 },
+  },
+  'organic-platform-compare': {
+    component: lazy(() => import('./widgets/OrganicPlatformCompareWidget')),
+    category: 'organic', label: 'Platform Comparison', icon: BarChart3,
+    description: 'Engagement by platform over time — Facebook, Instagram, LinkedIn, Reddit',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'organic-attribution': {
+    component: lazy(() => import('./widgets/OrganicAttributionWidget')),
+    category: 'organic', label: 'Pipeline vs Manual', icon: GitCompare,
+    description: 'Compare AI-generated vs manually posted content performance',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'organic-account-growth': {
+    component: lazy(() => import('./widgets/OrganicAccountGrowthWidget')),
+    category: 'organic', label: 'Account Growth', icon: ArrowUpRight,
+    description: 'Follower count trends per platform over time',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'organic-top-posts': {
+    component: lazy(() => import('./widgets/OrganicTopPostsWidget')),
+    category: 'organic', label: 'Top Posts', icon: Share2,
+    description: 'Ranked list of posts by engagement with pipeline/manual attribution',
+    defaultSize: { w: 12, h: 5 }, minSize: { w: 6, h: 3 },
+  },
+  'gsc-performance': {
+    component: lazy(() => import('./widgets/GscPerformanceWidget')),
+    category: 'organic', label: 'GSC Performance', icon: Search,
+    description: 'Google Search Console queries, pages, and ranking trends',
+    defaultSize: { w: 6, h: 5 }, minSize: { w: 4, h: 3 },
+  },
+  // ── Paid Media ────────────────────────────────────────────
+  'paid-kpi': {
+    component: lazy(() => import('./widgets/PaidKpiWidget')),
+    category: 'paid', label: 'Paid KPIs', icon: Megaphone,
+    description: 'Spend, impressions, clicks, conversions, CPA, CTR across all paid platforms',
+    defaultSize: { w: 12, h: 2 }, minSize: { w: 6, h: 2 },
+  },
+  'paid-platform-compare': {
+    component: lazy(() => import('./widgets/PaidPlatformCompareWidget')),
+    category: 'paid', label: 'Paid Platform Comparison', icon: BarChart3,
+    description: 'Spend by platform over time — Meta, Reddit, LinkedIn, Google, TikTok',
+    defaultSize: { w: 6, h: 4 }, minSize: { w: 4, h: 3 },
+  },
+  'paid-campaign-detail': {
+    component: lazy(() => import('./widgets/PaidCampaignDetailWidget')),
+    category: 'paid', label: 'Campaign Detail', icon: ListChecks,
+    description: 'Campaign-level spend, impressions, clicks, conversions, CPA breakdown',
+    defaultSize: { w: 12, h: 5 }, minSize: { w: 6, h: 3 },
   },
   'text-note': {
     component: lazy(() => import('./widgets/TextNoteWidget')),
