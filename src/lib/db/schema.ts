@@ -1,5 +1,6 @@
 import { getDb } from '@/lib/db';
 import { seedDefaultTemplate } from '@/lib/db/dashboards';
+import { seedPrebuiltDashboards } from '@/lib/db/seed-dashboards';
 
 /**
  * Creates all database tables with proper constraints, foreign keys, and indexes.
@@ -1359,4 +1360,7 @@ export async function createTables(): Promise<void> {
 
   // Seed default Insights dashboard template
   await seedDefaultTemplate();
+
+  // Seed 4 pre-built story dashboards
+  await seedPrebuiltDashboards();
 }
