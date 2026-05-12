@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Eye, Users, TrendingUp, MousePointerClick } from 'lucide-react';
+import { useDashboardFilter } from '../DashboardFilterContext';
 
-interface OrganicOverview {
+interface PlatformStats {
   impressions: number;
   reach: number;
   engagement: number;
@@ -12,8 +13,21 @@ interface OrganicOverview {
   engagement_rate: number;
 }
 
+interface OrganicOverview extends PlatformStats {
+  per_platform?: Record<string, PlatformStats>;
+}
+
+const PLATFORM_LABEL: Record<string, string> = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+  reddit: 'Reddit',
+};
+
 export default function OrganicKpiWidget({ config }: { config: Record<string, unknown> }) {
   const [data, setData] = useState<OrganicOverview | null>(null);
+  const { filters } = useDashboardFilter();
+  const activePlatform = filters.platform;
 
   useEffect(() => {
     const days = (config.days as number) || 30;
@@ -25,35 +39,49 @@ export default function OrganicKpiWidget({ config }: { config: Record<string, un
 
   if (!data) return <div className="h-full skeleton rounded-lg" />;
 
+  const stats: PlatformStats =
+    activePlatform && data.per_platform?.[activePlatform]
+      ? data.per_platform[activePlatform]
+      : data;
+
+  const subtitleLabel = activePlatform
+    ? (PLATFORM_LABEL[activePlatform] ?? activePlatform.charAt(0).toUpperCase() + activePlatform.slice(1))
+    : 'All Platforms';
+
   const cards = [
-    { label: 'Impressions', value: data.impressions.toLocaleString(), Icon: Eye },
-    { label: 'Reach', value: data.reach.toLocaleString(), Icon: Users },
-    { label: 'Engagement', value: data.engagement.toLocaleString(), Icon: TrendingUp },
-    { label: 'Clicks', value: data.clicks.toLocaleString(), Icon: MousePointerClick },
+    { label: 'Impressions', value: stats.impressions.toLocaleString(), Icon: Eye },
+    { label: 'Reach', value: stats.reach.toLocaleString(), Icon: Users },
+    { label: 'Engagement', value: stats.engagement.toLocaleString(), Icon: TrendingUp },
+    { label: 'Clicks', value: stats.clicks.toLocaleString(), Icon: MousePointerClick },
     {
       label: 'Followers +/-',
-      value: (data.followers_delta >= 0 ? '+' : '') + data.followers_delta.toLocaleString(),
+      value: (stats.followers_delta >= 0 ? '+' : '') + stats.followers_delta.toLocaleString(),
       Icon: Users,
     },
     {
       label: 'Eng Rate',
-      value: `${data.engagement_rate.toFixed(2)}%`,
+      value: `${stats.engagement_rate.toFixed(2)}%`,
       Icon: TrendingUp,
     },
   ];
 
   return (
-    <div className="h-full grid grid-cols-3 gap-2 content-start">
-      {cards.map(({ label, value, Icon }) => (
-        <div
-          key={label}
-          className="px-3 py-3 rounded-lg bg-[var(--muted)] cursor-pointer flex flex-col items-center gap-1 hover:bg-[#ebebeb] transition-colors"
-        >
-          <Icon className="w-4 h-4 text-[var(--muted-foreground)]" />
-          <div className="text-sm font-bold text-[var(--foreground)] leading-none">{value}</div>
-          <div className="text-[10px] text-[var(--muted-foreground)] text-center">{label}</div>
-        </div>
-      ))}
+    <div className="h-full flex flex-col gap-2">
+      <div className="text-[9px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider text-center">
+        {subtitleLabel}
+      </div>
+      <div className="flex-1 grid grid-cols-3 gap-2 content-start">
+        {cards.map(({ label, value, Icon }) => (
+          <div
+            key={label}
+            className="px-3 py-3 rounded-lg bg-[var(--muted)] cursor-pointer flex flex-col items-center gap-1 hover:bg-[#ebebeb] transition-colors"
+          >
+            <Icon className="w-4 h-4 text-[var(--muted-foreground)]" />
+            <div className="text-sm font-bold text-[var(--foreground)] leading-none">{value}</div>
+            <div className="text-[10px] text-[var(--muted-foreground)] text-center">{label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
