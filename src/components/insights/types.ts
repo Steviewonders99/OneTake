@@ -46,6 +46,8 @@ export type WidgetType =
   | 'organic-account-growth'
   | 'organic-top-posts'
   | 'gsc-performance'
+  // Campaign Funnel
+  | 'campaign-funnel'
   // Paid (drill-down parity)
   | 'paid-kpi'
   | 'paid-platform-compare'

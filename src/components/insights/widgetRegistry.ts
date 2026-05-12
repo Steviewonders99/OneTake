@@ -213,6 +213,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
   },
   // ── Organic Social ────────────────────────────────────────
+  'campaign-funnel': {
+    component: lazy(() => import('./widgets/CampaignFunnelWidget')),
+    category: 'paid', label: 'Campaign Funnel', icon: Funnel,
+    description: 'Full funnel: ad spend → sessions → sign-ups → completions. Cross-channel, per campaign.',
+    defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
+  },
   'organic-kpi': {
     component: lazy(() => import('./widgets/OrganicKpiWidget')),
     category: 'organic', label: 'Organic KPIs', icon: Rss,
