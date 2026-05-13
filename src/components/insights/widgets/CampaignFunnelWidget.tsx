@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { CHART_COLORS, formatCurrency, formatCompact } from '../chartTheme';
+import { CHART_COLORS, formatCurrency, formatCompact, formatPct } from '../chartTheme';
 
 interface FunnelStage {
   stage: string;
@@ -15,8 +15,12 @@ interface Channel {
   source: string;
   medium: string;
   sessions: number;
+  applies: number;
   signups: number;
   completions: number;
+  cvr_click_to_signup: number;
+  cvr_click_to_purchase: number;
+  cvr_signup_to_purchase: number;
 }
 
 interface SpendPlatform {
@@ -34,11 +38,17 @@ interface FunnelData {
   spend: { total: number; impressions: number; clicks: number; by_platform: SpendPlatform[] };
   kpis: {
     total_spend: number;
+    total_sessions: number;
+    applies: number;
     signups: number;
     completions: number;
     cpa_signup: number;
     cpa_completion: number;
-    conversion_rate: number;
+    cvr_click_to_signup: number;
+    cvr_click_to_purchase: number;
+    cvr_session_to_signup: number;
+    cvr_session_to_purchase: number;
+    cvr_signup_to_purchase: number;
   };
   available_campaigns: { campaign: string; total: number }[];
 }
@@ -74,20 +84,15 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
   const maxCount = Math.max(...data.funnel.map(f => f.count), 1);
   const kpis = data.kpis;
 
-  // Funnel bar fill: single muted color, progressively darker as funnel narrows
   const funnelLength = data.funnel.length || 1;
   function funnelFill(i: number): string {
-    // From lightest (#e5e5e5) at top to darkest (#525252) at bottom
     const t = i / Math.max(funnelLength - 1, 1);
-    // Interpolate between #e5e5e5 (229,229,229) and #525252 (82,82,82)
-    const r = Math.round(229 - t * (229 - 82));
-    const g = Math.round(229 - t * (229 - 82));
-    const b = Math.round(229 - t * (229 - 82));
-    return `rgb(${r},${g},${b})`;
+    const v = Math.round(229 - t * (229 - 82));
+    return `rgb(${v},${v},${v})`;
   }
 
   return (
-    <div className="h-full flex flex-col gap-3 overflow-hidden">
+    <div className="h-full flex flex-col gap-4 overflow-hidden">
       {/* Campaign Selector */}
       <div className="flex items-center gap-2 shrink-0">
         <div className="relative">
@@ -113,7 +118,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
                   className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors flex justify-between"
                 >
                   <span className="truncate">{c.campaign}</span>
-                  <span className="text-[#a3a3a3] ml-2">{c.total.toLocaleString()}</span>
+                  <span className="text-[#a3a3a3] ml-2 tabular-nums">{c.total.toLocaleString()}</span>
                 </button>
               ))}
             </div>
@@ -121,24 +126,41 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
         </div>
       </div>
 
-      {/* KPI Row — tiny label + big value, no icons */}
-      <div className="grid grid-cols-4 gap-3 shrink-0">
+      {/* KPI Row — top line: spend + volume */}
+      <div className="grid grid-cols-6 gap-4 shrink-0">
         {[
           { label: 'Ad Spend', value: formatCurrency(kpis.total_spend) },
+          { label: 'Sessions', value: formatCompact(kpis.total_sessions) },
           { label: 'Sign-ups', value: formatCompact(kpis.signups) },
           { label: 'Completions', value: formatCompact(kpis.completions) },
           { label: 'CPA Sign-up', value: kpis.cpa_signup > 0 ? formatCurrency(kpis.cpa_signup, 2) : '—' },
+          { label: 'CPA Completion', value: kpis.cpa_completion > 0 ? formatCurrency(kpis.cpa_completion, 2) : '—' },
         ].map(c => (
-          <div key={c.label} className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">{c.label}</span>
-            <span className="text-xl font-semibold text-[#1a1a1a] tracking-tight leading-none">{c.value}</span>
+          <div key={c.label}>
+            <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] mb-1">{c.label}</div>
+            <div className="text-lg font-semibold text-[#1a1a1a] tracking-tight leading-none tabular-nums">{c.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* CVR Row — the killer metrics, highlighted */}
+      <div className="grid grid-cols-3 gap-4 shrink-0 py-3 border-y border-[#f0f0f0]">
+        {[
+          { label: 'CVR Click → Sign-up', value: kpis.cvr_click_to_signup, color: kpis.cvr_click_to_signup > 10 ? '#22c55e' : kpis.cvr_click_to_signup > 5 ? '#1a1a1a' : '#a3a3a3' },
+          { label: 'CVR Click → Purchase', value: kpis.cvr_click_to_purchase, color: kpis.cvr_click_to_purchase > 20 ? '#22c55e' : kpis.cvr_click_to_purchase > 5 ? '#1a1a1a' : '#a3a3a3' },
+          { label: 'CVR Sign-up → Purchase', value: kpis.cvr_signup_to_purchase, color: kpis.cvr_signup_to_purchase > 50 ? '#22c55e' : kpis.cvr_signup_to_purchase > 20 ? '#1a1a1a' : '#a3a3a3' },
+        ].map(c => (
+          <div key={c.label}>
+            <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] mb-1">{c.label}</div>
+            <div className="text-2xl font-semibold tracking-tight leading-none tabular-nums" style={{ color: c.color }}>
+              {formatPct(c.value)}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Funnel + breakdown — scrollable */}
       <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-        {/* Conversion Funnel */}
         <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em]">
           Conversion Funnel
         </p>
@@ -156,19 +178,16 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
               <div className="flex-1 relative h-5">
                 <div
                   className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500 ease-out"
-                  style={{
-                    width: `${widthPct}%`,
-                    backgroundColor: funnelFill(i),
-                  }}
+                  style={{ width: `${widthPct}%`, backgroundColor: funnelFill(i) }}
                 />
                 <div className="absolute inset-y-0 left-2 flex items-center">
-                  <span className="text-[10px] font-semibold text-[#525252]">
+                  <span className="text-[10px] font-semibold text-[#525252] tabular-nums">
                     {stage.count.toLocaleString()}
                   </span>
                 </div>
               </div>
               {dropoff !== null && (
-                <div className="w-10 text-right text-[9px] text-[#ef4444] shrink-0">
+                <div className="w-10 text-right text-[9px] text-[#ef4444] shrink-0 tabular-nums">
                   -{dropoff}%
                 </div>
               )}
@@ -176,15 +195,24 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
           );
         })}
 
-        {/* Channel Breakdown */}
+        {/* Channel Breakdown — now with CVR per channel */}
         {data.channels.length > 0 && (
           <>
             <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] pt-3">
               By Channel
             </p>
-            <div className="space-y-0.5">
+            {/* Column headers */}
+            <div className="flex items-center gap-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pb-0.5 border-b border-[#f5f5f5]">
+              <div className="w-1.5 shrink-0" />
+              <div className="flex-1">Source</div>
+              <div className="w-14 text-right">Sessions</div>
+              <div className="w-14 text-right">Sign-ups</div>
+              <div className="w-14 text-right">Done</div>
+              <div className="w-12 text-right">CVR</div>
+            </div>
+            <div className="space-y-0">
               {data.channels.map(ch => (
-                <div key={`${ch.source}-${ch.medium}`} className="flex items-center gap-2 text-[10px] py-1">
+                <div key={`${ch.source}-${ch.medium}`} className="flex items-center gap-2 text-[10px] py-1.5 border-b border-[#fafafa]">
                   <div
                     className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ backgroundColor: SOURCE_COLOR[ch.source] || '#d4d4d4' }}
@@ -192,14 +220,20 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
                   <div className="flex-1 truncate text-[#525252]">
                     {ch.source} / {ch.medium}
                   </div>
-                  <div className="text-[#a3a3a3] whitespace-nowrap">
-                    {formatCompact(ch.sessions)} sess
+                  <div className="w-14 text-right text-[#a3a3a3] tabular-nums">
+                    {formatCompact(ch.sessions)}
                   </div>
-                  <div className="text-[#1a1a1a] font-semibold whitespace-nowrap">
-                    {formatCompact(ch.signups)} sign-ups
+                  <div className="w-14 text-right text-[#1a1a1a] font-medium tabular-nums">
+                    {formatCompact(ch.signups)}
                   </div>
-                  <div className="text-[#22c55e] font-semibold whitespace-nowrap">
-                    {formatCompact(ch.completions)} done
+                  <div className="w-14 text-right font-medium tabular-nums" style={{ color: ch.completions > 0 ? '#22c55e' : '#a3a3a3' }}>
+                    {formatCompact(ch.completions)}
+                  </div>
+                  <div
+                    className="w-12 text-right font-semibold tabular-nums"
+                    style={{ color: ch.cvr_click_to_purchase > 20 ? '#22c55e' : ch.cvr_click_to_purchase > 5 ? '#1a1a1a' : '#a3a3a3' }}
+                  >
+                    {ch.cvr_click_to_purchase > 0 ? formatPct(ch.cvr_click_to_purchase) : '—'}
                   </div>
                 </div>
               ))}
@@ -213,13 +247,13 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
             <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] pt-3">
               Ad Spend by Platform
             </p>
-            <div className="space-y-0.5">
+            <div className="space-y-0">
               {data.spend.by_platform.map((sp, i) => (
                 <div key={i} className="flex items-center gap-2 text-[10px] py-1">
-                  <div className="w-14 shrink-0 text-[#a3a3a3]">{sp.platform.replace('_ads', '')}</div>
+                  <div className="w-12 shrink-0 text-[#a3a3a3]">{sp.platform.replace('_ads', '')}</div>
                   <div className="flex-1 truncate text-[#525252]">{sp.campaign_name}</div>
-                  <div className="font-semibold text-[#1a1a1a]">{formatCurrency(sp.spend)}</div>
-                  <div className="text-[#a3a3a3]">{formatCompact(sp.impressions)} impr</div>
+                  <div className="font-semibold text-[#1a1a1a] tabular-nums">{formatCurrency(sp.spend)}</div>
+                  <div className="text-[#a3a3a3] tabular-nums">{formatCompact(sp.impressions)} impr</div>
                 </div>
               ))}
             </div>

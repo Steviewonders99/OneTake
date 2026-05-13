@@ -79,12 +79,13 @@ export async function GET(req: NextRequest) {
       conversions: funnelMap.get(e)!.conversions,
     }));
 
-  // 2. Channel breakdown (same campaign, split by source/medium)
+  // 2. Channel breakdown (same campaign, split by source/medium) — with CVR at every stage
   const channelRows = campaignFilter
     ? await sql`
         SELECT source, medium,
                SUM(event_count)::int as total_events,
                SUM(CASE WHEN event_name = 'session_start' THEN event_count ELSE 0 END)::int as sessions,
+               SUM(CASE WHEN event_name = 'apply_click' THEN event_count ELSE 0 END)::int as applies,
                SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
                SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
         FROM ga4_funnel_events
@@ -98,6 +99,7 @@ export async function GET(req: NextRequest) {
         SELECT source, medium,
                SUM(event_count)::int as total_events,
                SUM(CASE WHEN event_name = 'session_start' THEN event_count ELSE 0 END)::int as sessions,
+               SUM(CASE WHEN event_name = 'apply_click' THEN event_count ELSE 0 END)::int as applies,
                SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
                SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
         FROM ga4_funnel_events
@@ -107,6 +109,14 @@ export async function GET(req: NextRequest) {
         ORDER BY sessions DESC
         LIMIT 10
       `;
+
+  // Compute CVR per channel
+  const channelsWithCvr = channelRows.map((ch: any) => ({
+    ...ch,
+    cvr_click_to_signup: ch.sessions > 0 ? (ch.signups / ch.sessions * 100) : 0,
+    cvr_click_to_purchase: ch.sessions > 0 ? (ch.completions / ch.sessions * 100) : 0,
+    cvr_signup_to_purchase: ch.signups > 0 ? (ch.completions / ch.signups * 100) : 0,
+  }));
 
   // 3. Ad spend for this campaign (from paid cache tables)
   const spendRows = campaignFilter
@@ -154,19 +164,30 @@ export async function GET(req: NextRequest) {
     LIMIT 30
   `;
 
+  // Aggregate CVR metrics
+  const totalSessions = funnel.find(f => f.stage === 'session_start')?.count || 0;
+  const applies = funnel.find(f => f.stage === 'apply_click')?.count || 0;
+
   return NextResponse.json({
     campaign: campaignFilter || 'All Campaigns',
     days,
     funnel,
-    channels: channelRows,
+    channels: channelsWithCvr,
     spend: { total: totalSpend, impressions: totalImpressions, clicks: totalClicks, by_platform: spendRows },
     kpis: {
       total_spend: totalSpend,
+      total_sessions: totalSessions,
+      applies,
       signups,
       completions,
       cpa_signup: signups > 0 ? totalSpend / signups : 0,
       cpa_completion: completions > 0 ? totalSpend / completions : 0,
-      conversion_rate: totalClicks > 0 ? (signups / totalClicks * 100) : 0,
+      // CVR at every stage
+      cvr_click_to_signup: totalClicks > 0 ? (signups / totalClicks * 100) : 0,
+      cvr_click_to_purchase: totalClicks > 0 ? (completions / totalClicks * 100) : 0,
+      cvr_session_to_signup: totalSessions > 0 ? (signups / totalSessions * 100) : 0,
+      cvr_session_to_purchase: totalSessions > 0 ? (completions / totalSessions * 100) : 0,
+      cvr_signup_to_purchase: signups > 0 ? (completions / signups * 100) : 0,
     },
     available_campaigns: campaigns,
   });
