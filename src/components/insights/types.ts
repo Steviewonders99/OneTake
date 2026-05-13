@@ -46,6 +46,8 @@ export type WidgetType =
   | 'organic-account-growth'
   | 'organic-top-posts'
   | 'gsc-performance'
+  // Creative Gallery (ad images + Meta performance)
+  | 'creative-gallery'
   // Campaign Funnel
   | 'campaign-funnel'
   // Paid (drill-down parity)

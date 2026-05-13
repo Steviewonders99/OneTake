@@ -212,6 +212,13 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     description: 'Multi-platform ad audience overview — Google, Meta, LinkedIn, TikTok',
     defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
   },
+  // ── Creative Gallery ──────────────────────────────────────
+  'creative-gallery': {
+    component: lazy(() => import('./widgets/CreativeGalleryWidget')),
+    category: 'paid', label: 'Creative Gallery', icon: Image,
+    description: "Ad creative images with performance metrics — see what's actually working",
+    defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
+  },
   // ── Organic Social ────────────────────────────────────────
   'campaign-funnel': {
     component: lazy(() => import('./widgets/CampaignFunnelWidget')),
