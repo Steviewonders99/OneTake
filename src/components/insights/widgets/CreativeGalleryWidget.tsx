@@ -24,6 +24,10 @@ interface Creative {
   ctr: number;
   cpc: number;
   cpa: number;
+  funnel_sessions: number;
+  funnel_signups: number;
+  funnel_completions: number;
+  funnel_cvr: number;
 }
 
 interface GalleryData {
@@ -87,7 +91,7 @@ function CreativeCard({ c }: { c: Creative }) {
           </p>
         </div>
 
-        {/* Metrics row */}
+        {/* Ad metrics row */}
         <div className="grid grid-cols-5 gap-1 pt-1 border-t border-[#f5f5f5]">
           <MetricCell label="Impr" value={formatCompact(c.impressions)} />
           <MetricCell label="Clicks" value={formatCompact(c.clicks)} />
@@ -102,6 +106,16 @@ function CreativeCard({ c }: { c: Creative }) {
             value={c.cpa > 0 ? formatCurrency(c.cpa, 2) : '—'}
           />
         </div>
+
+        {/* Funnel metrics row — full funnel quality */}
+        {(c.funnel_sessions > 0 || c.funnel_signups > 0) && (
+          <div className="grid grid-cols-4 gap-1 pt-1 border-t border-[#f5f5f5]">
+            <MetricCell label="Sessions" value={formatCompact(c.funnel_sessions)} />
+            <MetricCell label="Sign-ups" value={formatCompact(c.funnel_signups)} highlight={c.funnel_signups > 0 ? '#3b82f6' : undefined} />
+            <MetricCell label="Complete" value={formatCompact(c.funnel_completions)} highlight={c.funnel_completions > 0 ? '#22c55e' : undefined} />
+            <MetricCell label="CVR" value={c.funnel_cvr > 0 ? formatPct(c.funnel_cvr) : '—'} highlight={c.funnel_cvr > 20 ? '#22c55e' : c.funnel_cvr > 5 ? '#1a1a1a' : undefined} />
+          </div>
+        )}
       </div>
     </div>
   );

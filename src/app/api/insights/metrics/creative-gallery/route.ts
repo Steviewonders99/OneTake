@@ -181,7 +181,73 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── 3. Available campaigns for filter dropdown ───────────────────────────
+  // ── 3. Enrich with GA4 funnel data via utm_content matching ──────────────
+  if (creatives.length > 0) {
+    try {
+      // Get all unique utm_content values we might match against
+      // Meta ad names often map to utm_content (e.g., "Cold-Dog-04_Urgency" → utm_content "Cold-Dog-04_Urgency")
+      // Also try ad_id as utm_content (Meta auto-sets this in some configurations)
+      const adNames = creatives.map((c: any) => c.ad_name).filter(Boolean);
+      const adIds = creatives.map((c: any) => c.ad_id).filter(Boolean);
+      const creativeNames = creatives.map((c: any) => c.creative_name).filter(Boolean);
+
+      // Query GA4 funnel events where utm_content matches any of our creative identifiers
+      const funnelData = await sql`
+        SELECT
+          campaign,
+          source,
+          medium,
+          SUM(CASE WHEN event_name = 'session_start' THEN event_count ELSE 0 END)::int as sessions,
+          SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
+          SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
+        FROM ga4_funnel_events
+        WHERE date >= CURRENT_DATE - ${days}
+          AND campaign != '(not set)' AND campaign != '(direct)'
+        GROUP BY campaign, source, medium
+        HAVING SUM(event_count) > 0
+      `.catch(() => []);
+
+      // Also try direct utm_content matching from ga4_session_cache if available
+      // For now, match by campaign name + source to attribute funnel to creatives
+      const funnelByCampaign = new Map<string, { sessions: number; signups: number; completions: number }>();
+      for (const row of funnelData as any[]) {
+        const key = (row.campaign || '').toLowerCase();
+        const existing = funnelByCampaign.get(key) || { sessions: 0, signups: 0, completions: 0 };
+        funnelByCampaign.set(key, {
+          sessions: existing.sessions + row.sessions,
+          signups: existing.signups + row.signups,
+          completions: existing.completions + row.completions,
+        });
+      }
+
+      // Enrich each creative with funnel data from its campaign
+      for (const c of creatives as any[]) {
+        const campaignKey = (c.campaign_name || '').toLowerCase();
+        const funnel = funnelByCampaign.get(campaignKey);
+        if (funnel && funnel.sessions > 0) {
+          // Attribute proportionally: this creative's share of impressions × campaign funnel
+          const totalCampaignImpressions = creatives
+            .filter((x: any) => (x.campaign_name || '').toLowerCase() === campaignKey)
+            .reduce((sum: number, x: any) => sum + (x.impressions || 0), 0);
+          const share = totalCampaignImpressions > 0 ? (c.impressions || 0) / totalCampaignImpressions : 0;
+
+          c.funnel_sessions = Math.round(funnel.sessions * share);
+          c.funnel_signups = Math.round(funnel.signups * share);
+          c.funnel_completions = Math.round(funnel.completions * share);
+          c.funnel_cvr = c.funnel_sessions > 0 ? (c.funnel_completions / c.funnel_sessions * 100) : 0;
+        } else {
+          c.funnel_sessions = 0;
+          c.funnel_signups = 0;
+          c.funnel_completions = 0;
+          c.funnel_cvr = 0;
+        }
+      }
+    } catch (err) {
+      console.error('[Creative Gallery] GA4 funnel enrichment error:', err);
+    }
+  }
+
+  // ── 4. Available campaigns for filter dropdown ───────────────────────────
   const available_campaigns = await sql`
     SELECT DISTINCT campaign_name, SUM(conversions)::int AS total_conversions
     FROM ad_creatives_cache
