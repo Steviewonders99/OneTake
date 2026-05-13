@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { X } from 'lucide-react';
 import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
+import { FilterChip } from '../FilterChip';
 
 interface PlatformRow {
   date: string;
@@ -50,13 +50,7 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
   return (
     <div className="h-full flex flex-col gap-3">
       {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
-        <button
-          onClick={() => clearFilter('platform')}
-          className="self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors"
-        >
-          {PLATFORM_LABEL[activePlatformFilter]}
-          <X className="w-2.5 h-2.5 text-[#a3a3a3]" />
-        </button>
+        <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('platform')} />
       )}
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">

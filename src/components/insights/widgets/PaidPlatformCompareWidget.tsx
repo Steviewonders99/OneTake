@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { X } from 'lucide-react';
 import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE, formatCurrency } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
+import { FilterChip } from '../FilterChip';
 
 interface PaidPlatformRow {
   date: string;
@@ -74,16 +74,7 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
           Spend by Platform
         </p>
         {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb]">
-            {PLATFORM_LABEL[activePlatformFilter]}
-            <button
-              onClick={() => clearFilter('platform')}
-              className="flex items-center cursor-pointer"
-              aria-label="Clear platform filter"
-            >
-              <X className="w-3 h-3 text-[#a3a3a3]" />
-            </button>
-          </span>
+          <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('platform')} />
         )}
       </div>
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
 import { useDashboardFilter } from '../DashboardFilterContext';
 import { CHART_COLORS } from '../chartTheme';
+import { FilterChip } from '../FilterChip';
 
 interface PostRow {
   id: string;
@@ -55,16 +55,7 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
       {isFilteredByContext && platformLabel && (
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-[#a3a3a3]">Showing:</span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb]">
-            {platformLabel}
-            <button
-              onClick={() => clearFilter('platform')}
-              className="flex items-center cursor-pointer"
-              aria-label="Clear platform filter"
-            >
-              <X className="w-3 h-3 text-[#a3a3a3]" />
-            </button>
-          </span>
+          <FilterChip label={PLATFORM_LABEL[filters.platform!] || filters.platform!} onClear={() => clearFilter('platform')} />
         </div>
       )}
 
