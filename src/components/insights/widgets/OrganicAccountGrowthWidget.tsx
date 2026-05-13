@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Legend,
+  LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, LINE_STYLE } from '../chartTheme';
 
 interface GrowthRow {
   date: string;
@@ -34,11 +34,11 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
       .catch(() => {});
   }, [config.days]);
 
-  if (!data) return <div className="h-full skeleton rounded-lg" />;
+  if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
   if (data.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-[var(--muted-foreground)] text-xs">
+      <div className="h-full flex items-center justify-center text-[#a3a3a3] text-xs">
         No follower data yet
       </div>
     );
@@ -50,9 +50,27 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
 
   return (
     <div className="h-full flex flex-col gap-2">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-        Follower Growth
+      {/* Header + custom dot legend */}
+      <div className="flex items-center justify-between shrink-0">
+        <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em]">
+          Follower Growth
+        </p>
+        <div className="flex items-center gap-3">
+          {activePlatforms.map(p => (
+            <div key={p} className="flex items-center gap-1">
+              <span
+                className="inline-block w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: PLATFORM_COLOR[p] }}
+              />
+              <span className="text-[10px] text-[#525252]">
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Chart */}
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
@@ -60,7 +78,6 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
             <XAxis dataKey="date" {...AXIS_STYLE} tick={{ fontSize: 9 }} />
             <YAxis {...AXIS_STYLE} />
             <Tooltip {...TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ fontSize: 10 }} />
             {activePlatforms.map(p => (
               <Line
                 key={p}
@@ -68,8 +85,7 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
                 dataKey={p}
                 name={p.charAt(0).toUpperCase() + p.slice(1)}
                 stroke={PLATFORM_COLOR[p]}
-                strokeWidth={2}
-                dot={false}
+                {...LINE_STYLE}
               />
             ))}
           </LineChart>

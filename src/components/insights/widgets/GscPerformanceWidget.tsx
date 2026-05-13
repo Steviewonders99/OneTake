@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { Unplug } from 'lucide-react';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, LINE_STYLE } from '../chartTheme';
 
 interface QueryRow {
   query: string;
@@ -36,14 +35,13 @@ export default function GscPerformanceWidget({ config }: { config: Record<string
       .catch(() => {});
   }, [config.days]);
 
-  if (!data) return <div className="h-full skeleton rounded-lg" />;
+  if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
   if (!data.connected) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-2 text-center p-4">
-        <Unplug className="w-8 h-8 text-[var(--muted-foreground)]" />
-        <p className="text-xs font-semibold text-[var(--foreground)]">GSC Not Connected</p>
-        <p className="text-[10px] text-[var(--muted-foreground)]">
+      <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center p-4">
+        <p className="text-[11px] font-semibold text-[#1a1a1a]">GSC Not Connected</p>
+        <p className="text-[10px] text-[#a3a3a3]">
           Configure Google Search Console and trigger a sync to enable
         </p>
       </div>
@@ -54,10 +52,10 @@ export default function GscPerformanceWidget({ config }: { config: Record<string
     <div className="h-full flex flex-col gap-3">
       {/* Click trend mini chart */}
       {data.click_trend.length > 0 && (
-        <div className="h-24">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">
+        <div className="h-24 shrink-0">
+          <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] mb-1">
             Click Trend
-          </div>
+          </p>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.click_trend}>
               <CartesianGrid {...GRID_STYLE} />
@@ -68,8 +66,7 @@ export default function GscPerformanceWidget({ config }: { config: Record<string
                 type="monotone"
                 dataKey="clicks"
                 stroke={CHART_COLORS.blue}
-                strokeWidth={2}
-                dot={false}
+                {...LINE_STYLE}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -78,20 +75,26 @@ export default function GscPerformanceWidget({ config }: { config: Record<string
 
       {/* Top queries */}
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">
+        <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] mb-1.5">
           Top Queries
-        </div>
-        {data.top_queries.map((q, i) => (
-          <div key={i} className="flex items-center gap-2 py-1 border-b border-[var(--border)] last:border-0">
-            <span className="flex-1 text-[11px] text-[var(--foreground)] truncate">{q.query}</span>
-            <span className="text-[10px] text-[var(--muted-foreground)] shrink-0">
-              {q.clicks.toLocaleString()} clicks
-            </span>
-            <span className="text-[10px] text-[var(--muted-foreground)] shrink-0 w-10 text-right">
-              #{q.position.toFixed(1)}
-            </span>
+        </p>
+        {data.top_queries.length === 0 ? (
+          <div className="flex items-center justify-center h-16 text-[#a3a3a3] text-xs">
+            No query data yet
           </div>
-        ))}
+        ) : (
+          data.top_queries.map((q, i) => (
+            <div key={i} className="flex items-center gap-2 py-1.5 border-b border-[#f5f5f5] last:border-0">
+              <span className="flex-1 text-[11px] text-[#1a1a1a] truncate">{q.query}</span>
+              <span className="text-[10px] font-semibold text-[#1a1a1a] shrink-0 tabular-nums">
+                {q.clicks.toLocaleString()}
+              </span>
+              <span className="text-[10px] text-[#a3a3a3] shrink-0 w-10 text-right tabular-nums">
+                #{q.position.toFixed(1)}
+              </span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
