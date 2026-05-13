@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, BarChart3 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { DashboardCard } from '@/components/insights/DashboardCard';
+import { AiComposerHero } from '@/components/insights/AiComposerHero';
 import { toast } from 'sonner';
 import type { Dashboard } from '@/components/insights/types';
 import type { UserRole } from '@/lib/types';
@@ -43,40 +44,30 @@ export function InsightsDashboardList({ dashboards: initial, role }: { dashboard
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">Insights</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Build custom analytics dashboards for your recruitment pipeline</p>
-        </div>
-        {isAdmin && (
-          <button onClick={handleCreate} className="btn-primary cursor-pointer">
-            <Plus className="w-4 h-4" /> New Dashboard
-          </button>
-        )}
-      </div>
-
-      {dashboards.length === 0 ? (
-        <div className="card p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[var(--muted)] flex items-center justify-center mx-auto mb-4">
-            <BarChart3 className="w-7 h-7 text-[var(--muted-foreground)]" />
+      <AiComposerHero />
+      <div className="px-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em]">
+            Your Dashboards
           </div>
-          <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">No dashboards yet</h3>
-          <p className="text-xs text-[var(--muted-foreground)] mb-4">
-            {isAdmin ? 'Create your first custom dashboard to track pipeline metrics' : 'No dashboards have been shared with you yet'}
-          </p>
           {isAdmin && (
-            <button onClick={handleCreate} className="btn-primary cursor-pointer">
-              <Plus className="w-4 h-4" /> Create Dashboard
+            <button onClick={handleCreate} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors">
+              <Plus className="w-3.5 h-3.5" /> New Dashboard
             </button>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dashboards.map(d => (
-            <DashboardCard key={d.id} dashboard={d} onDuplicate={handleDuplicate} onDelete={handleDelete} />
-          ))}
-        </div>
-      )}
+        {dashboards.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-sm text-[#a3a3a3]">No dashboards yet — try asking a question above</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dashboards.map(d => (
+              <DashboardCard key={d.id} dashboard={d} onDuplicate={handleDuplicate} onDelete={handleDelete} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
