@@ -634,12 +634,13 @@ describe('AI Compose — JSON parsing and widget validation', () => {
       },
     };
 
-    const hasMd = Array.isArray(llmResponse.gridLayouts.md);
-    const hasSm = Array.isArray((llmResponse.gridLayouts as any).sm);
+    const layouts = llmResponse.gridLayouts as Record<string, any>;
+    const hasMd = Array.isArray(layouts.md);
+    const hasSm = Array.isArray(layouts.sm);
 
     // Route would generate these
-    const md = !hasMd ? generateMdLayout(llmResponse.gridLayouts.lg) : llmResponse.gridLayouts.md;
-    const sm = !hasSm ? generateSmLayout(llmResponse.gridLayouts.lg) : (llmResponse.gridLayouts as any).sm;
+    const md = !hasMd ? generateMdLayout(llmResponse.gridLayouts.lg) : layouts.md;
+    const sm = !hasSm ? generateSmLayout(llmResponse.gridLayouts.lg) : layouts.sm;
 
     expect(Array.isArray(md)).toBe(true);
     expect(Array.isArray(sm)).toBe(true);
