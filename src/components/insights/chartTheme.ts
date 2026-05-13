@@ -110,3 +110,8 @@ export function formatDelta(n: number): { text: string; color: string } {
   if (n < 0) return { text: n.toLocaleString(), color: CHART_COLORS.red };
   return { text: '0', color: '#a3a3a3' };
 }
+
+export const ANIMATION_CONFIG = {
+  bar: { isAnimationActive: true, animationDuration: 600, animationEasing: 'ease-out' as const },
+  line: { isAnimationActive: true, animationDuration: 800, animationEasing: 'ease-out' as const },
+};

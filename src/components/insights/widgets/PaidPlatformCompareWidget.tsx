@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE, formatCurrency } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE, formatCurrency, ANIMATION_CONFIG } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
 import { FilterChip } from '../FilterChip';
 
@@ -100,6 +100,7 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
                 style={{ cursor: 'pointer', transition: 'opacity 300ms ease-in-out' }}
                 opacity={!activePlatformFilter || activePlatformFilter === p ? 1 : 0.15}
                 {...BAR_STYLE}
+                {...ANIMATION_CONFIG.bar}
               />
             ))}
           </BarChart>

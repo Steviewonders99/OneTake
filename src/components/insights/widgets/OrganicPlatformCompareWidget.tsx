@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE, ANIMATION_CONFIG } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
 import { FilterChip } from '../FilterChip';
 
@@ -67,6 +67,7 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
                 stackId="a"
                 fill={PLATFORM_COLOR[p]}
                 {...BAR_STYLE}
+                {...ANIMATION_CONFIG.bar}
                 onClick={() => setFilter('platform', p)}
                 style={{ cursor: 'pointer', transition: 'opacity 300ms ease-in-out' }}
                 opacity={!activePlatformFilter || activePlatformFilter === p ? 0.85 : 0.15}

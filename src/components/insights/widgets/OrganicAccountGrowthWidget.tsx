@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, LINE_STYLE } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, LINE_STYLE, ANIMATION_CONFIG } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
 
 interface GrowthRow {
@@ -92,6 +92,7 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
                 name={PLATFORM_LABEL[p] ?? p}
                 stroke={PLATFORM_COLOR[p]}
                 {...LINE_STYLE}
+                {...ANIMATION_CONFIG.line}
               />
             ))}
           </LineChart>
