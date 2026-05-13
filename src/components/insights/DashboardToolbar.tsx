@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Undo2, Redo2, Eye, Pencil, Share2, Copy, Trash2, Check, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Undo2, Redo2, Eye, Pencil, Share2, Copy, Trash2, Check, Loader2, AlertCircle, ArrowLeft, Download } from 'lucide-react';
 import { useDashboard } from './DashboardContext';
 import { useDashboardFilter } from './DashboardFilterContext';
 import { ShareModal } from './ShareModal';
@@ -60,6 +60,13 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
           ) : (
             <button onClick={() => { setEditTitle(state.title); setIsEditing(true); }} className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--ring)] truncate max-w-md block cursor-pointer">{state.title}</button>
           )}
+          {state.description && (
+            <div className="text-[10px] text-[#a3a3a3] truncate max-w-md">{state.description}</div>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-[#a3a3a3]">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+          <span>Live</span>
         </div>
         {state.saveStatus === 'error' ? (
           <button onClick={() => forceSave()} className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-500 cursor-pointer">{saveIcon.error}<span>Save failed — retry</span></button>
@@ -90,6 +97,7 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
         </button>
         <div className="flex items-center gap-1 border-l border-[var(--border)] pl-3">
           <button onClick={() => setShowShareModal(true)} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer" title="Share"><Share2 className="w-4 h-4" /></button>
+          <button onClick={() => window.print()} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer" title="Export PDF"><Download className="w-4 h-4" /></button>
           <button onClick={handleDuplicate} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer" title="Duplicate"><Copy className="w-4 h-4" /></button>
           <button onClick={handleDelete} className="p-1.5 rounded-lg hover:bg-red-50 text-[var(--muted-foreground)] hover:text-red-600 transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
