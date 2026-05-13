@@ -181,69 +181,134 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── 3. Enrich with GA4 funnel data via utm_content matching ──────────────
+  // ── 3. Enrich with REAL per-creative GA4 funnel via utm_content ──────────
+  // The sGTM identity stack persists utm_content as first-touch attribution.
+  // GA4 sessionManualAdContent dimension = utm_content = ad name / creative ID.
+  // We query GA4 Analytics Data API directly for per-creative funnel events.
   if (creatives.length > 0) {
     try {
-      // Get all unique utm_content values we might match against
-      // Meta ad names often map to utm_content (e.g., "Cold-Dog-04_Urgency" → utm_content "Cold-Dog-04_Urgency")
-      // Also try ad_id as utm_content (Meta auto-sets this in some configurations)
-      const adNames = creatives.map((c: any) => c.ad_name).filter(Boolean);
-      const adIds = creatives.map((c: any) => c.ad_id).filter(Boolean);
-      const creativeNames = creatives.map((c: any) => c.creative_name).filter(Boolean);
+      const adcPath = process.env.HOME + '/.config/gcloud/application_default_credentials.json';
+      let ga4Token: string | null = null;
 
-      // Query GA4 funnel events where utm_content matches any of our creative identifiers
-      const funnelData = await sql`
-        SELECT
-          campaign,
-          source,
-          medium,
-          SUM(CASE WHEN event_name = 'session_start' THEN event_count ELSE 0 END)::int as sessions,
-          SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
-          SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
-        FROM ga4_funnel_events
-        WHERE date >= CURRENT_DATE - ${days}
-          AND campaign != '(not set)' AND campaign != '(direct)'
-        GROUP BY campaign, source, medium
-        HAVING SUM(event_count) > 0
-      `.catch(() => []);
+      // Try to get Google credentials for GA4 API
+      try {
+        const fs = await import('fs');
+        if (fs.existsSync(adcPath)) {
+          const adc = JSON.parse(fs.readFileSync(adcPath, 'utf-8'));
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              grant_type: 'refresh_token',
+              client_id: adc.client_id,
+              client_secret: adc.client_secret,
+              refresh_token: adc.refresh_token,
+            }),
+          });
+          if (tokenRes.ok) {
+            const tokenData = await tokenRes.json();
+            ga4Token = tokenData.access_token;
+          }
+        }
+      } catch { /* GA4 auth not available — skip enrichment */ }
 
-      // Also try direct utm_content matching from ga4_session_cache if available
-      // For now, match by campaign name + source to attribute funnel to creatives
-      const funnelByCampaign = new Map<string, { sessions: number; signups: number; completions: number }>();
-      for (const row of funnelData as any[]) {
-        const key = (row.campaign || '').toLowerCase();
-        const existing = funnelByCampaign.get(key) || { sessions: 0, signups: 0, completions: 0 };
-        funnelByCampaign.set(key, {
-          sessions: existing.sessions + row.sessions,
-          signups: existing.signups + row.signups,
-          completions: existing.completions + row.completions,
-        });
-      }
+      if (ga4Token) {
+        const propertyId = process.env.GA4_PROPERTY_ID || '330157295';
+        const since = new Date();
+        since.setDate(since.getDate() - days);
+        const sinceStr = since.toISOString().split('T')[0];
+        const untilStr = new Date().toISOString().split('T')[0];
 
-      // Enrich each creative with funnel data from its campaign
-      for (const c of creatives as any[]) {
-        const campaignKey = (c.campaign_name || '').toLowerCase();
-        const funnel = funnelByCampaign.get(campaignKey);
-        if (funnel && funnel.sessions > 0) {
-          // Attribute proportionally: this creative's share of impressions × campaign funnel
-          const totalCampaignImpressions = creatives
-            .filter((x: any) => (x.campaign_name || '').toLowerCase() === campaignKey)
-            .reduce((sum: number, x: any) => sum + (x.impressions || 0), 0);
-          const share = totalCampaignImpressions > 0 ? (c.impressions || 0) / totalCampaignImpressions : 0;
+        // Collect all utm_content values to query (ad names serve as utm_content)
+        const utmContentValues = creatives
+          .map((c: any) => c.ad_name as string)
+          .filter((n: string) => n && n.length > 2);
 
-          c.funnel_sessions = Math.round(funnel.sessions * share);
-          c.funnel_signups = Math.round(funnel.signups * share);
-          c.funnel_completions = Math.round(funnel.completions * share);
-          c.funnel_cvr = c.funnel_sessions > 0 ? (c.funnel_completions / c.funnel_sessions * 100) : 0;
-        } else {
+        if (utmContentValues.length > 0) {
+          // Query GA4 for funnel events grouped by utm_content
+          const ga4Body = JSON.stringify({
+            dateRanges: [{ startDate: sinceStr, endDate: untilStr }],
+            dimensions: [
+              { name: 'sessionManualAdContent' },
+              { name: 'eventName' },
+            ],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: {
+              andGroup: {
+                expressions: [
+                  { filter: { fieldName: 'sessionManualAdContent', inListFilter: { values: utmContentValues } } },
+                  { filter: { fieldName: 'eventName', inListFilter: { values: ['session_start', 'sign_up', 'purchase', 'apply_click', 'generate_lead', 'begin_checkout'] } } },
+                ],
+              },
+            },
+            limit: 5000,
+          });
+
+          const ga4Res = await fetch(
+            `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+            {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${ga4Token}`, 'Content-Type': 'application/json' },
+              body: ga4Body,
+              signal: AbortSignal.timeout(15_000),
+            },
+          );
+
+          if (ga4Res.ok) {
+            const ga4Data = await ga4Res.json();
+
+            // Build per-creative funnel map
+            const funnelMap = new Map<string, { sessions: number; signups: number; completions: number; applies: number }>();
+            for (const row of ga4Data.rows || []) {
+              const utmContent = row.dimensionValues?.[0]?.value || '';
+              const eventName = row.dimensionValues?.[1]?.value || '';
+              const count = parseInt(row.metricValues?.[0]?.value || '0');
+
+              const existing = funnelMap.get(utmContent) || { sessions: 0, signups: 0, completions: 0, applies: 0 };
+              if (eventName === 'session_start') existing.sessions += count;
+              else if (eventName === 'sign_up') existing.signups += count;
+              else if (eventName === 'purchase') existing.completions += count;
+              else if (eventName === 'apply_click') existing.applies += count;
+              funnelMap.set(utmContent, existing);
+            }
+
+            // Enrich each creative with REAL funnel data
+            for (const c of creatives as any[]) {
+              const funnel = funnelMap.get(c.ad_name as string);
+              if (funnel) {
+                c.funnel_sessions = funnel.sessions;
+                c.funnel_signups = funnel.signups;
+                c.funnel_completions = funnel.completions;
+                c.funnel_cvr = funnel.sessions > 0 ? (funnel.completions / funnel.sessions * 100) : 0;
+                c.attribution = 'first-touch';
+              } else {
+                c.funnel_sessions = 0;
+                c.funnel_signups = 0;
+                c.funnel_completions = 0;
+                c.funnel_cvr = 0;
+                c.attribution = 'none';
+              }
+            }
+          }
+        }
+      } else {
+        // No GA4 token — set defaults
+        for (const c of creatives as any[]) {
           c.funnel_sessions = 0;
           c.funnel_signups = 0;
           c.funnel_completions = 0;
           c.funnel_cvr = 0;
+          c.attribution = 'unavailable';
         }
       }
     } catch (err) {
       console.error('[Creative Gallery] GA4 funnel enrichment error:', err);
+      for (const c of creatives as any[]) {
+        c.funnel_sessions = c.funnel_sessions ?? 0;
+        c.funnel_signups = c.funnel_signups ?? 0;
+        c.funnel_completions = c.funnel_completions ?? 0;
+        c.funnel_cvr = c.funnel_cvr ?? 0;
+      }
     }
   }
 
