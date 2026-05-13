@@ -2,18 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Legend,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
 import { X } from 'lucide-react';
-import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE } from '../chartTheme';
+import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, BAR_STYLE } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
 
 interface PlatformRow {
   date: string;
-  facebook_engagement?: number;
-  instagram_engagement?: number;
-  linkedin_engagement?: number;
-  reddit_engagement?: number;
+  [key: string]: string | number | undefined;
 }
 
 const PLATFORM_COLOR: Record<string, string> = {
@@ -24,10 +21,7 @@ const PLATFORM_COLOR: Record<string, string> = {
 };
 
 const PLATFORM_LABEL: Record<string, string> = {
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  linkedin: 'LinkedIn',
-  reddit: 'Reddit',
+  facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', reddit: 'Reddit',
 };
 
 const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'reddit'];
@@ -40,76 +34,73 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
   useEffect(() => {
     const days = (config.days as number) || 30;
     fetch(`/api/insights/metrics/organic-by-platform?days=${days}`)
-      .then(r => r.json())
-      .then(setData)
-      .catch(() => {});
+      .then(r => r.json()).then(setData).catch(() => {});
   }, [config.days]);
 
-  function handleBarClick(platform: string) {
-    setFilter('platform', platform);
-  }
-
-  if (!data) return <div className="h-full skeleton rounded-lg" />;
+  if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
   if (data.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-[var(--muted-foreground)] text-xs">
-        No organic data yet
-      </div>
-    );
+    return <div className="h-full flex items-center justify-center text-[#a3a3a3] text-xs">No organic data yet</div>;
   }
 
   const activePlatforms = PLATFORMS.filter(p =>
-    data.some(row => (row as unknown as Record<string, unknown>)[`${p}_engagement`] != null)
+    data.some(row => row[`${p}_engagement`] != null)
   );
 
   return (
-    <div className="h-full flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-          Engagement by Platform
-        </div>
-        {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, rgb(6,147,227), rgb(155,81,224))' }}
-          >
-            {PLATFORM_LABEL[activePlatformFilter]}
-            <button
-              onClick={() => clearFilter('platform')}
-              className="flex items-center cursor-pointer"
-              aria-label="Clear platform filter"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </span>
-        )}
-      </div>
+    <div className="h-full flex flex-col gap-3">
+      {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
+        <button
+          onClick={() => clearFilter('platform')}
+          className="self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors"
+        >
+          {PLATFORM_LABEL[activePlatformFilter]}
+          <X className="w-2.5 h-2.5 text-[#a3a3a3]" />
+        </button>
+      )}
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <BarChart data={data} barCategoryGap="20%">
             <CartesianGrid {...GRID_STYLE} />
-            <XAxis dataKey="date" {...AXIS_STYLE} tick={{ fontSize: 9 }} />
-            <YAxis {...AXIS_STYLE} />
+            <XAxis dataKey="date" {...AXIS_STYLE} />
+            <YAxis {...AXIS_STYLE} width={35} />
             <Tooltip {...TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ fontSize: 10 }} />
             {activePlatforms.map(p => (
               <Bar
                 key={p}
                 dataKey={`${p}_engagement`}
-                name={p.charAt(0).toUpperCase() + p.slice(1)}
+                name={PLATFORM_LABEL[p]}
                 stackId="a"
                 fill={PLATFORM_COLOR[p]}
-                onClick={() => handleBarClick(p)}
-                style={{
-                  cursor: 'pointer',
-                  transition: 'opacity 300ms ease-in-out',
-                }}
-                opacity={!activePlatformFilter || activePlatformFilter === p ? 1 : 0.2}
+                {...BAR_STYLE}
+                onClick={() => setFilter('platform', p)}
+                style={{ cursor: 'pointer', transition: 'opacity 300ms ease-in-out' }}
+                opacity={!activePlatformFilter || activePlatformFilter === p ? 0.85 : 0.15}
               />
             ))}
           </BarChart>
         </ResponsiveContainer>
+      </div>
+      {/* Minimal legend */}
+      <div className="flex items-center gap-4 justify-center">
+        {activePlatforms.map(p => (
+          <button
+            key={p}
+            onClick={() => setFilter('platform', p)}
+            className="flex items-center gap-1.5 cursor-pointer group"
+          >
+            <div
+              className="w-2 h-2 rounded-full transition-opacity"
+              style={{
+                backgroundColor: PLATFORM_COLOR[p],
+                opacity: !activePlatformFilter || activePlatformFilter === p ? 1 : 0.3,
+              }}
+            />
+            <span className="text-[10px] text-[#a3a3a3] group-hover:text-[#525252] transition-colors">
+              {PLATFORM_LABEL[p]}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
