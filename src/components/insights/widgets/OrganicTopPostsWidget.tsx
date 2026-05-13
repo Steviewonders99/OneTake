@@ -77,7 +77,7 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
           {data.map(post => (
             <div
               key={post.id}
-              className="flex items-start gap-2 px-2 py-1.5 rounded cursor-pointer"
+              className="flex items-start gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-[#fafafa] transition-colors"
             >
               {/* Platform dot */}
               <span

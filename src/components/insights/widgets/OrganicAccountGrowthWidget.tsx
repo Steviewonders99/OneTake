@@ -21,6 +21,10 @@ const PLATFORM_COLOR: Record<string, string> = {
   reddit: CHART_COLORS.orange,
 };
 
+const PLATFORM_LABEL: Record<string, string> = {
+  facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', reddit: 'Reddit',
+};
+
 const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'reddit'];
 
 export default function OrganicAccountGrowthWidget({ config }: { config: Record<string, unknown> }) {
@@ -63,7 +67,7 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
                 style={{ backgroundColor: PLATFORM_COLOR[p] }}
               />
               <span className="text-[10px] text-[#525252]">
-                {p.charAt(0).toUpperCase() + p.slice(1)}
+                {PLATFORM_LABEL[p] ?? p}
               </span>
             </div>
           ))}
@@ -83,7 +87,7 @@ export default function OrganicAccountGrowthWidget({ config }: { config: Record<
                 key={p}
                 type="monotone"
                 dataKey={p}
-                name={p.charAt(0).toUpperCase() + p.slice(1)}
+                name={PLATFORM_LABEL[p] ?? p}
                 stroke={PLATFORM_COLOR[p]}
                 {...LINE_STYLE}
               />

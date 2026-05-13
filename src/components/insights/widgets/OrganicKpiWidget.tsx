@@ -63,7 +63,7 @@ export default function OrganicKpiWidget({ config }: { config: Record<string, un
               {kpi.label}
             </div>
             <div
-              className="text-xl font-semibold tracking-tight leading-none"
+              className="text-xl font-semibold tracking-tight leading-none tabular-nums"
               style={{ color: kpi.color || '#1a1a1a' }}
             >
               {kpi.value}

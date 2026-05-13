@@ -87,32 +87,10 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
         )}
       </div>
 
-      {/* Custom dot legend */}
-      <div className="flex items-center gap-3 shrink-0 flex-wrap">
-        {activePlatforms.map(p => (
-          <button
-            key={p}
-            onClick={() => handleBarClick(p)}
-            className="flex items-center gap-1 cursor-pointer"
-          >
-            <span
-              className="inline-block w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: PLATFORM_COLOR[p] }}
-            />
-            <span
-              className="text-[10px]"
-              style={{ color: !activePlatformFilter || activePlatformFilter === p ? '#525252' : '#d4d4d4' }}
-            >
-              {PLATFORM_LABEL[p]}
-            </span>
-          </button>
-        ))}
-      </div>
-
       {/* Chart */}
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barCategoryGap="30%">
+          <BarChart data={data} barCategoryGap="20%">
             <CartesianGrid {...GRID_STYLE} />
             <XAxis dataKey="date" {...AXIS_STYLE} tick={{ fontSize: 9 }} />
             <YAxis {...AXIS_STYLE} tickFormatter={(v: number) => formatCurrency(v)} />
@@ -135,6 +113,28 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
             ))}
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Custom dot legend */}
+      <div className="flex items-center gap-3 shrink-0 flex-wrap">
+        {activePlatforms.map(p => (
+          <button
+            key={p}
+            onClick={() => handleBarClick(p)}
+            className="flex items-center gap-1 cursor-pointer"
+          >
+            <span
+              className="inline-block w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: PLATFORM_COLOR[p] }}
+            />
+            <span
+              className="text-[10px]"
+              style={{ color: !activePlatformFilter || activePlatformFilter === p ? '#525252' : '#d4d4d4' }}
+            >
+              {PLATFORM_LABEL[p]}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );

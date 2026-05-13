@@ -62,7 +62,7 @@ export default function PaidKpiWidget({ config }: { config: Record<string, unkno
             <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] mb-1">
               {kpi.label}
             </div>
-            <div className="text-xl font-semibold text-[#1a1a1a] tracking-tight leading-none">
+            <div className="text-xl font-semibold text-[#1a1a1a] tracking-tight leading-none tabular-nums">
               {kpi.value}
             </div>
           </div>

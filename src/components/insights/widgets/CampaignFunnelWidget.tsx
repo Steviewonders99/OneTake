@@ -85,10 +85,8 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
   const kpis = data.kpis;
 
   const funnelLength = data.funnel.length || 1;
-  function funnelFill(i: number): string {
-    const t = i / Math.max(funnelLength - 1, 1);
-    const v = Math.round(229 - t * (229 - 82));
-    return `rgb(${v},${v},${v})`;
+  function funnelOpacity(i: number): number {
+    return 1 - (i / funnelLength) * 0.7;
   }
 
   return (
@@ -178,7 +176,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
               <div className="flex-1 relative h-5">
                 <div
                   className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500 ease-out"
-                  style={{ width: `${widthPct}%`, backgroundColor: funnelFill(i) }}
+                  style={{ width: `${widthPct}%`, backgroundColor: CHART_COLORS.charcoal, opacity: funnelOpacity(i) }}
                 />
                 <div className="absolute inset-y-0 left-2 flex items-center">
                   <span className="text-[10px] font-semibold text-[#525252] tabular-nums">
