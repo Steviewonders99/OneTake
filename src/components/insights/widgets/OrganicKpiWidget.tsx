@@ -31,7 +31,7 @@ export default function OrganicKpiWidget({ config }: { config: Record<string, un
   const [data, setData] = useState<OrganicOverview | null>(null);
   const [trends, setTrends] = useState<OrganicTrends | null>(null);
   const { filters } = useDashboardFilter();
-  const activePlatform = filters.platform;
+  const activePlatform = filters.organicPlatform;
 
   useEffect(() => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);

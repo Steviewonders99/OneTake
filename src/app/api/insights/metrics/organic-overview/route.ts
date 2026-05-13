@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db';
 export async function GET(req: NextRequest) {
   await requireAuth();
   const sql = getDb();
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '30');
+  const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '30') || 30);
 
   const since = `CURRENT_DATE - INTERVAL '${days} days'`;
 

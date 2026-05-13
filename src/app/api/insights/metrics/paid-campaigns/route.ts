@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const sql = getDb();
 
   const rawPlatform = req.nextUrl.searchParams.get('platform') || 'meta_ads';
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '30');
+  const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '30') || 30);
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50'), 200);
 
   // Validate platform against allowlist

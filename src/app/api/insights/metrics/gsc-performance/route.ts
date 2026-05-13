@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db';
 export async function GET(req: NextRequest) {
   await requireAuth();
   const sql = getDb();
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '28');
+  const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '28') || 28);
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50'), 200);
 
   // Check if we have any GSC data at all

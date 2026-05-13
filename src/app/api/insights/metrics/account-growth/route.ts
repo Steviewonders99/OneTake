@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db';
 export async function GET(req: NextRequest) {
   await requireAuth();
   const sql = getDb();
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '90');
+  const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '90') || 90);
   const platform = req.nextUrl.searchParams.get('platform') || null;
 
   const snapshots = await sql`

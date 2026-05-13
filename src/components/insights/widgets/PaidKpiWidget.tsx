@@ -31,7 +31,7 @@ export default function PaidKpiWidget({ config }: { config: Record<string, unkno
   const [data, setData] = useState<PaidOverview | null>(null);
   const [trends, setTrends] = useState<PaidTrends | null>(null);
   const { filters } = useDashboardFilter();
-  const activePlatform = filters.platform;
+  const activePlatform = filters.paidPlatform;
 
   useEffect(() => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);

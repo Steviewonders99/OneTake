@@ -17,7 +17,7 @@ import { getDb } from '@/lib/db';
 export async function GET(req: NextRequest) {
   await requireAuth();
   const sql = getDb();
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '90');
+  const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '90') || 90);
   const campaignFilter = req.nextUrl.searchParams.get('campaign') || '';
 
   // Funnel stages in order
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         SELECT event_name, SUM(event_count)::int as count, SUM(conversions)::int as conversions
         FROM ga4_funnel_events
         WHERE date >= CURRENT_DATE - ${days}
-          AND LOWER(campaign) LIKE ${'%' + campaignFilter.toLowerCase() + '%'}
+          AND LOWER(campaign) = ${campaignFilter.toLowerCase()}
           AND event_name = ANY(${FUNNEL_ORDER})
         GROUP BY event_name
       `
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
                SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
         FROM ga4_funnel_events
         WHERE date >= CURRENT_DATE - ${days}
-          AND LOWER(campaign) LIKE ${'%' + campaignFilter.toLowerCase() + '%'}
+          AND LOWER(campaign) = ${campaignFilter.toLowerCase()}
         GROUP BY source, medium
         ORDER BY sessions DESC
         LIMIT 10
@@ -125,14 +125,14 @@ export async function GET(req: NextRequest) {
                SUM(impressions)::int as impressions, SUM(clicks)::int as clicks, SUM(spend)::float as spend
         FROM meta_ads_cache
         WHERE date >= CURRENT_DATE - ${days}
-          AND LOWER(campaign_name) LIKE ${'%' + campaignFilter.toLowerCase() + '%'}
+          AND LOWER(campaign_name) = ${campaignFilter.toLowerCase()}
         GROUP BY campaign_name
         UNION ALL
         SELECT 'reddit_ads', campaign_name,
                SUM(impressions)::int, SUM(clicks)::int, SUM(spend)::float
         FROM reddit_ads_cache
         WHERE date >= CURRENT_DATE - ${days}
-          AND LOWER(campaign_name) LIKE ${'%' + campaignFilter.toLowerCase() + '%'}
+          AND LOWER(campaign_name) = ${campaignFilter.toLowerCase()}
         GROUP BY campaign_name
       `
     : await sql`

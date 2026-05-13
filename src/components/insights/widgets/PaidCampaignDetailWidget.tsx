@@ -27,7 +27,7 @@ export default function PaidCampaignDetailWidget({ config }: { config: Record<st
   const [data, setData] = useState<CampaignRow[] | null>(null);
   const { filters, clearFilter } = useDashboardFilter();
 
-  const effectivePlatform = filters.platform || (config.platform as string) || 'meta_ads';
+  const effectivePlatform = filters.paidPlatform || (config.platform as string) || 'meta_ads';
 
   useEffect(() => {
     setData(null);
@@ -41,7 +41,7 @@ export default function PaidCampaignDetailWidget({ config }: { config: Record<st
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
   const platformLabel = PLATFORM_LABEL[effectivePlatform] ?? effectivePlatform;
-  const isFilteredByContext = !!filters.platform;
+  const isFilteredByContext = !!filters.paidPlatform;
 
   return (
     <div className="h-full flex flex-col gap-1.5">
@@ -49,7 +49,7 @@ export default function PaidCampaignDetailWidget({ config }: { config: Record<st
       {isFilteredByContext && (
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-[#a3a3a3]">Showing:</span>
-          <FilterChip label={PLATFORM_LABEL[effectivePlatform] || effectivePlatform} onClear={() => clearFilter('platform')} />
+          <FilterChip label={PLATFORM_LABEL[effectivePlatform] || effectivePlatform} onClear={() => clearFilter('paidPlatform')} />
         </div>
       )}
 

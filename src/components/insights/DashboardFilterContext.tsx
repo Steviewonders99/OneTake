@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 interface DashboardFilters {
-  platform?: string;
+  organicPlatform?: string;
+  paidPlatform?: string;
   dateRange?: string;  // stored as string like "7", "14", "30", "90"
 }
 

@@ -29,7 +29,7 @@ const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'reddit'];
 export default function OrganicPlatformCompareWidget({ config }: { config: Record<string, unknown> }) {
   const [data, setData] = useState<PlatformRow[] | null>(null);
   const { filters, setFilter, clearFilter } = useDashboardFilter();
-  const activePlatformFilter = filters.platform;
+  const activePlatformFilter = filters.organicPlatform;
 
   useEffect(() => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
@@ -50,7 +50,7 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
   return (
     <div className="h-full flex flex-col gap-3">
       {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
-        <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('platform')} />
+        <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('organicPlatform')} />
       )}
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
@@ -68,7 +68,7 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
                 fill={PLATFORM_COLOR[p]}
                 {...BAR_STYLE}
                 {...ANIMATION_CONFIG.bar}
-                onClick={() => setFilter('platform', p)}
+                onClick={() => setFilter('organicPlatform', p)}
                 style={{ cursor: 'pointer', transition: 'opacity 300ms ease-in-out' }}
                 opacity={!activePlatformFilter || activePlatformFilter === p ? 0.85 : 0.15}
               />
@@ -81,7 +81,7 @@ export default function OrganicPlatformCompareWidget({ config }: { config: Recor
         {activePlatforms.map(p => (
           <button
             key={p}
-            onClick={() => setFilter('platform', p)}
+            onClick={() => setFilter('organicPlatform', p)}
             className="flex items-center gap-1.5 cursor-pointer group"
           >
             <div

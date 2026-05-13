@@ -32,7 +32,7 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
   const [data, setData] = useState<PostRow[] | null>(null);
   const { filters, clearFilter } = useDashboardFilter();
 
-  const effectivePlatform = filters.platform || (config.platform as string) || '';
+  const effectivePlatform = filters.organicPlatform || (config.platform as string) || '';
 
   useEffect(() => {
     setData(null);
@@ -40,14 +40,14 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
     const url = `/api/insights/metrics/organic-posts?days=${days}&sort=engagement&limit=20${effectivePlatform ? `&platform=${effectivePlatform}` : ''}`;
     fetch(url)
       .then(r => r.json())
-      .then(setData)
+      .then(d => setData(d.posts || []))
       .catch(() => setData([]));
   }, [config.days, filters.dateRange, effectivePlatform]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
   const platformLabel = effectivePlatform ? (PLATFORM_LABEL[effectivePlatform] ?? effectivePlatform) : null;
-  const isFilteredByContext = !!filters.platform;
+  const isFilteredByContext = !!filters.organicPlatform;
 
   return (
     <div className="h-full flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
       {isFilteredByContext && platformLabel && (
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-[#a3a3a3]">Showing:</span>
-          <FilterChip label={PLATFORM_LABEL[filters.platform!] || filters.platform!} onClear={() => clearFilter('platform')} />
+          <FilterChip label={PLATFORM_LABEL[filters.organicPlatform!] || filters.organicPlatform!} onClear={() => clearFilter('organicPlatform')} />
         </div>
       )}
 

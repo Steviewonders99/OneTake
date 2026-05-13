@@ -19,7 +19,12 @@ Respond with ONLY JSON:
 
 export async function POST(request: NextRequest) {
   await requireAuth();
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ insights: {} });
+  }
   const widgetData = body.widgets as Record<string, { type: string; title: string; summary: string }>;
 
   if (!widgetData || Object.keys(widgetData).length === 0) {

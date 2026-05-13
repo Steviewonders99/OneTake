@@ -38,7 +38,7 @@ const PLATFORM_LABEL: Record<string, string> = {
 export default function PaidPlatformCompareWidget({ config }: { config: Record<string, unknown> }) {
   const [data, setData] = useState<PaidPlatformRow[] | null>(null);
   const { filters, setFilter, clearFilter } = useDashboardFilter();
-  const activePlatformFilter = filters.platform;
+  const activePlatformFilter = filters.paidPlatform;
 
   useEffect(() => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
@@ -49,7 +49,7 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
   }, [config.days, filters.dateRange]);
 
   function handleBarClick(platform: string) {
-    setFilter('platform', platform);
+    setFilter('paidPlatform', platform);
   }
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
@@ -74,7 +74,7 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
           Spend by Platform
         </p>
         {activePlatformFilter && PLATFORM_LABEL[activePlatformFilter] && (
-          <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('platform')} />
+          <FilterChip label={PLATFORM_LABEL[activePlatformFilter] || activePlatformFilter} onClear={() => clearFilter('paidPlatform')} />
         )}
       </div>
 
