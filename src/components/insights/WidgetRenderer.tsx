@@ -3,6 +3,7 @@
 import { Suspense, Component, type ReactNode } from 'react';
 import { GripVertical, Settings2, X } from 'lucide-react';
 import { WIDGET_REGISTRY } from './widgetRegistry';
+import { AiInsightLine } from './AiInsightLine';
 import type { WidgetInstance } from './types';
 
 class WidgetErrorBoundary extends Component<{ children: ReactNode; widgetType: string }, { hasError: boolean }> {
@@ -37,9 +38,10 @@ interface WidgetRendererProps {
   isSelected?: boolean;
   onSelect?: (widgetId: string | null) => void;
   onRemove?: (widgetId: string) => void;
+  insight?: { text: string; type: 'info' | 'positive' | 'warning' | 'alert' };
 }
 
-export function WidgetRenderer({ widget, isEditMode = false, isSelected = false, onSelect, onRemove }: WidgetRendererProps) {
+export function WidgetRenderer({ widget, isEditMode = false, isSelected = false, onSelect, onRemove, insight }: WidgetRendererProps) {
   const entry = WIDGET_REGISTRY[widget.type];
   if (!entry) {
     return <div className="flex items-center justify-center h-full text-[#a3a3a3] text-xs">Unknown: {widget.type}</div>;
@@ -86,6 +88,7 @@ export function WidgetRenderer({ widget, isEditMode = false, isSelected = false,
             <WidgetComponent config={widget.config} />
           </Suspense>
         </WidgetErrorBoundary>
+        {insight && <AiInsightLine text={insight.text} type={insight.type} />}
       </div>
     </div>
   );
