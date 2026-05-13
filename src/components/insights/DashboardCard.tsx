@@ -20,6 +20,15 @@ export function DashboardCard({ dashboard, onDuplicate, onDelete }: DashboardCar
           {dashboard.is_shared && <span className="badge badge-sent"><Share2 className="w-3 h-3" /> Shared</span>}
         </div>
         <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1 truncate">{dashboard.title}</h3>
+        {dashboard.description?.toLowerCase().includes('ai') ? (
+          <span className="inline-flex text-[9px] font-medium px-2 py-0.5 rounded bg-[#f0f9ff] text-[#3b82f6] mt-1">
+            AI Generated
+          </span>
+        ) : dashboard.created_by === 'system' ? (
+          <span className="inline-flex text-[9px] font-medium px-2 py-0.5 rounded bg-[#f5f5f5] text-[#a3a3a3] mt-1">
+            Pre-built
+          </span>
+        ) : null}
         {dashboard.description && <p className="text-xs text-[var(--muted-foreground)] mb-3 line-clamp-2">{dashboard.description}</p>}
         <div className="flex items-center gap-3 text-[10px] text-[var(--muted-foreground)]">
           <span>{widgetCount} widget{widgetCount !== 1 ? 's' : ''}</span>
