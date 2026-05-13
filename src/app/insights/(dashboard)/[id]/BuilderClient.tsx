@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/components/insights/DashboardContext';
-import { DashboardFilterProvider } from '@/components/insights/DashboardFilterContext';
+import { DashboardFilterProvider, useDashboardFilter } from '@/components/insights/DashboardFilterContext';
 import { DashboardToolbar } from '@/components/insights/DashboardToolbar';
 import { WidgetPalette } from '@/components/insights/WidgetPalette';
 import { DashboardGrid } from '@/components/insights/DashboardGrid';
@@ -11,6 +11,7 @@ import type { DashboardLayoutData } from '@/components/insights/types';
 
 function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: boolean }) {
   const { state, toggleEditMode } = useDashboard();
+  const { clearAll, isFiltered } = useDashboardFilter();
 
   // If recruiter (canEdit=false), force view mode
   useEffect(() => {
@@ -18,6 +19,17 @@ function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: 
       toggleEditMode();
     }
   }, [canEdit, state.isEditMode, toggleEditMode]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && isFiltered) {
+        e.preventDefault();
+        clearAll();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [clearAll, isFiltered]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] -mx-6 -mt-6">
