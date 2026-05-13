@@ -4,12 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Undo2, Redo2, Eye, Pencil, Share2, Copy, Trash2, Check, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useDashboard } from './DashboardContext';
+import { useDashboardFilter } from './DashboardFilterContext';
 import { ShareModal } from './ShareModal';
 import { toast } from 'sonner';
 
 export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
   const router = useRouter();
   const { state, canUndo, canRedo, undo, redo, setTitle, toggleEditMode, forceSave } = useDashboard();
+  const { filters, setFilter } = useDashboardFilter();
+  const activeDateRange = filters.dateRange ? parseInt(filters.dateRange) : 30;
+  const DATE_OPTIONS = [7, 14, 30, 90];
   const [showShareModal, setShowShareModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(state.title);
@@ -62,6 +66,21 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
         ) : (
           <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">{saveIcon[state.saveStatus]}<span>{saveText[state.saveStatus]}</span></div>
         )}
+        <div className="flex items-center gap-0.5 border-l border-[var(--border)] pl-3">
+          {DATE_OPTIONS.map(d => (
+            <button
+              key={d}
+              onClick={() => setFilter('dateRange', String(d))}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors cursor-pointer ${
+                activeDateRange === d
+                  ? 'bg-[#1a1a1a] text-white'
+                  : 'text-[#a3a3a3] hover:text-[#525252] hover:bg-[#f5f5f5]'
+              }`}
+            >
+              {d}d
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-0.5 border-l border-[var(--border)] pl-3">
           <button onClick={undo} disabled={!canUndo} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Undo (Cmd+Z)"><Undo2 className="w-4 h-4" /></button>
           <button onClick={redo} disabled={!canRedo} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Redo"><Redo2 className="w-4 h-4" /></button>

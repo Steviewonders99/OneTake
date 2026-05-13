@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
 } from 'recharts';
 import { CHART_COLORS, AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE, LINE_STYLE } from '../chartTheme';
+import { useDashboardFilter } from '../DashboardFilterContext';
 
 interface QueryRow {
   query: string;
@@ -26,14 +27,15 @@ interface GscData {
 
 export default function GscPerformanceWidget({ config }: { config: Record<string, unknown> }) {
   const [data, setData] = useState<GscData | null>(null);
+  const { filters } = useDashboardFilter();
 
   useEffect(() => {
-    const days = (config.days as number) || 30;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
     fetch(`/api/insights/metrics/gsc-performance?days=${days}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {});
-  }, [config.days]);
+  }, [config.days, filters.dateRange]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 

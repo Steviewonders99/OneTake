@@ -41,12 +41,12 @@ export default function PaidPlatformCompareWidget({ config }: { config: Record<s
   const activePlatformFilter = filters.platform;
 
   useEffect(() => {
-    const days = (config.days as number) || 30;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
     fetch(`/api/insights/metrics/paid-by-platform?days=${days}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {});
-  }, [config.days]);
+  }, [config.days, filters.dateRange]);
 
   function handleBarClick(platform: string) {
     setFilter('platform', platform);

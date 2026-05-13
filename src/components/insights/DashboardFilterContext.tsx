@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 
 interface DashboardFilters {
   platform?: string;
+  dateRange?: string;  // stored as string like "7", "14", "30", "90"
 }
 
 interface DashboardFilterContextValue {

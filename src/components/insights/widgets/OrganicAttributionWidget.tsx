@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatPct, formatCompact } from '../chartTheme';
+import { useDashboardFilter } from '../DashboardFilterContext';
 
 interface AttributionSource {
   avg_engagement_rate: number;
@@ -38,14 +39,15 @@ function StatBlock({
 
 export default function OrganicAttributionWidget({ config }: { config: Record<string, unknown> }) {
   const [data, setData] = useState<OrganicAttribution | null>(null);
+  const { filters } = useDashboardFilter();
 
   useEffect(() => {
-    const days = (config.days as number) || 30;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
     fetch(`/api/insights/metrics/organic-attribution?days=${days}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {});
-  }, [config.days]);
+  }, [config.days, filters.dateRange]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 

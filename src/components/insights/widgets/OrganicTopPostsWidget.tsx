@@ -36,13 +36,13 @@ export default function OrganicTopPostsWidget({ config }: { config: Record<strin
 
   useEffect(() => {
     setData(null);
-    const days = (config.days as number) || 30;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
     const url = `/api/insights/metrics/organic-posts?days=${days}&sort=engagement&limit=20${effectivePlatform ? `&platform=${effectivePlatform}` : ''}`;
     fetch(url)
       .then(r => r.json())
       .then(setData)
       .catch(() => setData([]));
-  }, [config.days, effectivePlatform]);
+  }, [config.days, filters.dateRange, effectivePlatform]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 

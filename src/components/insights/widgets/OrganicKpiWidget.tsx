@@ -27,10 +27,10 @@ export default function OrganicKpiWidget({ config }: { config: Record<string, un
   const activePlatform = filters.platform;
 
   useEffect(() => {
-    const days = (config.days as number) || 30;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
     fetch(`/api/insights/metrics/organic-overview?days=${days}`)
       .then(r => r.json()).then(setData).catch(() => {});
-  }, [config.days]);
+  }, [config.days, filters.dateRange]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 

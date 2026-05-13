@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CHART_COLORS, formatCurrency, formatCompact, formatPct } from '../chartTheme';
+import { useDashboardFilter } from '../DashboardFilterContext';
 
 interface FunnelStage {
   stage: string;
@@ -67,15 +68,16 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
   const [data, setData] = useState<FunnelData | null>(null);
   const [campaign, setCampaign] = useState<string>((config.campaign as string) || '');
   const [showDropdown, setShowDropdown] = useState(false);
+  const { filters } = useDashboardFilter();
 
   const fetchData = useCallback((c: string) => {
-    const days = (config.days as number) || 90;
+    const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 90);
     const qp = c ? `&campaign=${encodeURIComponent(c)}` : '';
     fetch(`/api/insights/metrics/campaign-funnel?days=${days}${qp}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {});
-  }, [config.days]);
+  }, [config.days, filters.dateRange]);
 
   useEffect(() => { fetchData(campaign); }, [campaign, fetchData]);
 
