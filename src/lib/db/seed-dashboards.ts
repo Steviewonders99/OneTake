@@ -174,6 +174,33 @@ const dashboards: DashboardSeed[] = [
       ]),
     },
   },
+
+  // -------------------------------------------------------------------------
+  // 5. Creative Intelligence
+  // -------------------------------------------------------------------------
+  {
+    title: 'Creative Intelligence',
+    description:
+      'Which creatives drive results? Ad images with full funnel metrics per channel. Filter by campaign to compare creative performance across Meta, Reddit, and TikTok.',
+    layoutData: {
+      widgets: [
+        w('ci-paid-kpi',      'paid-kpi',              'Campaign KPIs',             { days: 30 }),
+        w('ci-funnel',        'campaign-funnel',       'Full Funnel',               { days: 90 }),
+        w('ci-gallery-all',   'creative-gallery',      'Top Creatives — All',       { days: 30 }),
+        w('ci-compare',       'paid-platform-compare', 'Spend by Channel',          { days: 30 }),
+        w('ci-attribution',   'organic-attribution',   'Pipeline vs Manual',        { days: 30 }),
+        w('ci-campaigns',     'paid-campaign-detail',  'Campaign Breakdown',        { days: 30 }),
+      ],
+      gridLayouts: responsiveLayouts([
+        g('ci-paid-kpi',      0, 0,  12, 2),
+        g('ci-funnel',        0, 2,  12, 8),
+        g('ci-gallery-all',   0, 10, 12, 8),
+        g('ci-compare',       0, 18,  6, 4),
+        g('ci-attribution',   6, 18,  6, 4),
+        g('ci-campaigns',     0, 22, 12, 5),
+      ]),
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -185,8 +212,7 @@ export async function seedPrebuiltDashboards(): Promise<void> {
 
   for (const dash of dashboards) {
     const existing = await sql`
-      SELECT id FROM dashboards
-      WHERE created_by = 'system' AND title = ${dash.title}
+      SELECT id FROM dashboards WHERE created_by = 'system' AND title = ${dash.title}
     `;
     if (existing.length > 0) continue;
 
@@ -195,9 +221,9 @@ export async function seedPrebuiltDashboards(): Promise<void> {
       VALUES (
         ${dash.title},
         ${dash.description},
-        ${JSON.stringify(dash.layoutData)},
-        'system',
-        FALSE
+        ${JSON.stringify(dash.layoutData)}::jsonb,
+        ${'system'},
+        ${false}
       )
     `;
   }
