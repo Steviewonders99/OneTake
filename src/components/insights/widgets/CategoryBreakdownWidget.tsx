@@ -40,12 +40,15 @@ export default function CategoryBreakdownWidget({ config }: { config: Record<str
     return <div className="h-full flex items-center justify-center text-[#a3a3a3] text-xs">No category data yet</div>;
   }
 
+  // Filter out categories with zero spend AND zero sessions (noise)
+  const meaningful = data.filter(cat => cat.spend > 0 || cat.sessions > 0 || cat.completions > 0);
+
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden">
       {/* Category cards */}
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {data.map(cat => (
-          <div key={cat.category} className="border border-[#f0f0f0] rounded-xl p-4 hover:border-[#e0e0e0] transition-colors">
+      <div className="flex-1 overflow-y-auto space-y-3">
+        {meaningful.map(cat => (
+          <div key={cat.category} className="rounded-xl p-4 transition-colors" style={{ backgroundColor: cat.color + '08', borderLeft: `3px solid ${cat.color}` }}>
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />

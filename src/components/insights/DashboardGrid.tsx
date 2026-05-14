@@ -37,7 +37,7 @@ export function DashboardGrid() {
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-auto p-5 bg-[#fafafa]">
+    <div ref={containerRef} className="flex-1 overflow-auto p-5 bg-[#f7f7f8]">
       {mounted && (
         <ResponsiveGridLayout
           className="layout"

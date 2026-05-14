@@ -160,35 +160,42 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
       </div>
 
       {/* Funnel + breakdown — scrollable */}
-      <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-        <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em]">
+      <div className="flex-1 overflow-y-auto space-y-0.5 min-h-0">
+        <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] mb-1">
           Conversion Funnel
         </p>
         {data.funnel.map((stage, i) => {
-          const widthPct = Math.max(8, (stage.count / maxCount) * 100);
+          // Use log scale to prevent huge bars from dominating
+          const logMax = Math.log10(maxCount + 1);
+          const logVal = Math.log10(stage.count + 1);
+          const widthPct = Math.max(6, (logVal / logMax) * 100);
           const dropoff = i > 0 && data.funnel[i - 1].count > 0
-            ? ((1 - stage.count / data.funnel[i - 1].count) * 100).toFixed(0)
+            ? Math.round((1 - stage.count / data.funnel[i - 1].count) * 100)
             : null;
+
+          // Color gradient: blue at top → teal in middle → green at bottom (conversion)
+          const t = i / Math.max(data.funnel.length - 1, 1);
+          const barColor = t < 0.4 ? '#3b82f6' : t < 0.7 ? '#14b8a6' : '#22c55e';
 
           return (
             <div key={stage.stage} className="flex items-center gap-2">
               <div className="w-24 text-right text-[10px] text-[#a3a3a3] shrink-0 truncate" title={stage.label}>
                 {stage.label}
               </div>
-              <div className="flex-1 relative h-5">
+              <div className="flex-1 relative h-6">
                 <div
-                  className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500 ease-out"
-                  style={{ width: `${widthPct}%`, backgroundColor: CHART_COLORS.charcoal, opacity: funnelOpacity(i) }}
+                  className="absolute inset-y-0.5 left-0 rounded transition-all duration-500 ease-out"
+                  style={{ width: `${widthPct}%`, backgroundColor: barColor, opacity: 0.15 + (0.7 * (1 - t)) }}
                 />
                 <div className="absolute inset-y-0 left-2 flex items-center">
-                  <span className="text-[10px] font-semibold text-[#525252] tabular-nums">
+                  <span className="text-[10px] font-semibold text-[#1a1a1a] tabular-nums">
                     {stage.count.toLocaleString()}
                   </span>
                 </div>
               </div>
-              {dropoff !== null && (
-                <div className="w-10 text-right text-[9px] text-[#ef4444] shrink-0 tabular-nums">
-                  -{dropoff}%
+              {dropoff !== null && dropoff > 0 && (
+                <div className="w-10 text-right text-[9px] text-[#a3a3a3] shrink-0 tabular-nums">
+                  {dropoff}%
                 </div>
               )}
             </div>
