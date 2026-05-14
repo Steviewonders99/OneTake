@@ -53,8 +53,8 @@ export function WidgetRenderer({ widget, isEditMode = false, isSelected = false,
     <div
       className={`group h-full flex flex-col overflow-hidden transition-all duration-200 ${
         isSelected
-          ? 'rounded-xl ring-1 ring-[#3b82f6]/30 bg-white'
-          : 'rounded-xl bg-white border border-[#f0f0f0] hover:border-[#e0e0e0]'
+          ? 'rounded-xl ring-1 ring-[#3b82f6]/30 bg-[#fafafa]'
+          : 'rounded-xl bg-[#fafafa] border border-[#ebebeb] hover:border-[#ddd]'
       }`}
     >
       {/* Header — minimal, no background color. Title + controls only. */}
