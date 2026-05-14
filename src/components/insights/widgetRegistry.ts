@@ -219,6 +219,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     description: "Ad creative images with performance metrics — see what's actually working",
     defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
   },
+  'category-breakdown': {
+    component: lazy(() => import('./widgets/CategoryBreakdownWidget')),
+    category: 'paid', label: 'Project Categories', icon: BarChart3,
+    description: 'Performance by project type: Data Collection, Language, Evaluation, Onsite',
+    defaultSize: { w: 12, h: 6 }, minSize: { w: 6, h: 4 },
+  },
   // ── Organic Social ────────────────────────────────────────
   'campaign-funnel': {
     component: lazy(() => import('./widgets/CampaignFunnelWidget')),
