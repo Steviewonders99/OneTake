@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, Clock, CheckCircle, Send, MousePointerClick } from 'lucide-react';
+import { formatCompact } from './chartTheme';
 
 export function KpiStrip() {
   const [pipeline, setPipeline] = useState<{ total: number; by_status: { status: string; count: number }[] } | null>(null);
@@ -12,28 +12,27 @@ export function KpiStrip() {
     fetch('/api/insights/metrics/clicks').then(r => r.json()).then(setClicks).catch(() => {});
   }, []);
 
-  if (!pipeline) return <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}</div>;
+  if (!pipeline) return (
+    <div className="flex gap-6 px-6 py-4 border-b border-[#f0f0f0] bg-white">
+      {Array.from({ length: 5 }).map((_, i) => <div key={i} className="animate-pulse h-12 w-24 rounded bg-[#f5f5f5]" />)}
+    </div>
+  );
 
   const byStatus = Object.fromEntries(pipeline.by_status.map(s => [s.status, s.count]));
   const cards = [
-    { label: 'Campaigns', value: pipeline.total, icon: TrendingUp, color: 'text-[var(--ring)]' },
-    { label: 'Generating', value: byStatus['generating'] ?? 0, icon: Clock, color: 'text-blue-600' },
-    { label: 'Approved', value: byStatus['approved'] ?? 0, icon: CheckCircle, color: 'text-green-600' },
-    { label: 'Sent', value: byStatus['sent'] ?? 0, icon: Send, color: 'text-cyan-600' },
-    { label: 'Total Clicks', value: clicks?.summary?.total_clicks ?? 0, icon: MousePointerClick, color: 'text-purple-600' },
+    { label: 'Campaigns', value: pipeline.total },
+    { label: 'Generating', value: byStatus['generating'] ?? 0 },
+    { label: 'Approved', value: byStatus['approved'] ?? 0 },
+    { label: 'Sent', value: byStatus['sent'] ?? 0 },
+    { label: 'Total Clicks', value: clicks?.summary?.total_clicks ?? 0 },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div className="flex items-center gap-8 px-6 py-4 border-b border-[#f0f0f0] bg-white">
       {cards.map(c => (
-        <div key={c.label} className="card p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[var(--muted)] flex items-center justify-center shrink-0">
-            <c.icon className={`w-4 h-4 ${c.color}`} />
-          </div>
-          <div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{c.label}</div>
-            <div className="text-xl font-bold text-[var(--foreground)]">{c.value}</div>
-          </div>
+        <div key={c.label}>
+          <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">{c.label}</div>
+          <div className="text-xl font-semibold text-[#1a1a1a] tracking-tight tabular-nums">{formatCompact(c.value)}</div>
         </div>
       ))}
     </div>

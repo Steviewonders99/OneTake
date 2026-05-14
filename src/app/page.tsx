@@ -59,8 +59,8 @@ export default function Dashboard() {
       .then((data) => { if (data?.role) setRole(data.role as UserRole); })
       .catch(() => {});
 
-    // Auto-collapse sidebar on dashboard for more content space
-    localStorage.setItem("nova-sidebar-collapsed", "true");
+    // Keep sidebar expanded
+    localStorage.removeItem("onetake-sidebar-collapsed");
   }, []);
 
   useEffect(() => {
@@ -109,29 +109,31 @@ export default function Dashboard() {
   if (role === "admin") {
     return (
       <AppShell>
-        <KpiStrip />
-        <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
-          {/* Left: campaign list */}
-          <div className="w-full lg:w-[380px] flex-shrink-0 lg:h-full h-auto max-h-[50vh] lg:max-h-none overflow-y-auto border-b lg:border-b-0 border-[var(--border)]">
-            <CampaignList
-              requests={requests}
-              loading={loading}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-            />
-          </div>
-          {/* Right: preview panel */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white min-h-0">
-            {selectedId ? (
-              <CampaignPreviewPanel
-                requestId={selectedId}
-                canEdit={role === 'admin'}
+        <div className="flex flex-col h-full">
+          <KpiStrip />
+          <div className="flex flex-1 min-h-0">
+            {/* Left: campaign list */}
+            <div className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-[#f0f0f0] bg-white">
+              <CampaignList
+                requests={requests}
+                loading={loading}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
               />
-            ) : (
-              <div className="flex items-center justify-center h-full text-[#737373] text-sm">
-                Select a campaign to preview
-              </div>
-            )}
+            </div>
+            {/* Right: preview panel */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#fafafa]">
+              {selectedId ? (
+                <CampaignPreviewPanel
+                  requestId={selectedId}
+                  canEdit={role === 'admin'}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-[#a3a3a3] text-sm">
+                  Select a campaign to preview
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </AppShell>
