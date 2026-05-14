@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   // 1. Completions by source (first-touch attribution)
   const sourceFilter = campaign
-    ? sql`AND LOWER(campaign) = ${campaign.toLowerCase()}`
+    ? sql`AND LOWER(campaign) LIKE ${campaign.toLowerCase() + '%'}`
     : sql`AND campaign NOT IN ('(direct)','(organic)','(referral)','(not set)','')`;
 
   const sourceRows = await sql`

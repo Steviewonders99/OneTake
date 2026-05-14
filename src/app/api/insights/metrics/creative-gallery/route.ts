@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     creatives = await sql`
       SELECT *
       FROM ad_creatives_cache
-      WHERE LOWER(campaign_name) = ${campaign.toLowerCase()}
+      WHERE LOWER(campaign_name) LIKE ${campaign.toLowerCase() + '%'}
       ORDER BY
         CASE WHEN ${sortCol} = 'ctr' THEN ctr
              WHEN ${sortCol} = 'clicks' THEN clicks
