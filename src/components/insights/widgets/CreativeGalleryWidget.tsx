@@ -47,7 +47,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 function ImagePlaceholder() {
   return (
-    <div className="w-full aspect-video bg-[#f5f5f5] rounded-lg flex items-center justify-center">
+    <div className="w-full aspect-square bg-[#f5f5f5] flex items-center justify-center">
       <div className="w-8 h-8 rounded bg-[#e5e5e5]" />
     </div>
   );
@@ -59,8 +59,8 @@ function CreativeCard({ c }: { c: Creative }) {
 
   return (
     <div className="border border-[#f0f0f0] rounded-xl overflow-hidden bg-white transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] group">
-      {/* Image */}
-      <div className="w-full overflow-hidden bg-[#f5f5f5]">
+      {/* Image — 1:1 square, object-cover to fill without distortion */}
+      <div className="w-full aspect-square overflow-hidden bg-[#f5f5f5] rounded-t-xl">
         {imgSrc && !imgError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -68,8 +68,7 @@ function CreativeCard({ c }: { c: Creative }) {
             alt={c.ad_name || c.creative_name || 'Ad creative'}
             loading="lazy"
             onError={() => setImgError(true)}
-            className="w-full object-cover rounded-t-xl"
-            style={{ aspectRatio: 'auto', maxHeight: 220 }}
+            className="w-full h-full object-cover"
           />
         ) : (
           <ImagePlaceholder />
