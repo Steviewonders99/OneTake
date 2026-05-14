@@ -231,7 +231,26 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     description: 'Form completions by traffic source + city with W1 vs W2 and CPA trends',
     defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
   },
-  // ── Organic Social ────────────────────────────────────────
+  // ── Funnel (split widgets) ────────────────────────────────────
+  'funnel-visualization': {
+    component: lazy(() => import('./widgets/FunnelVisualizationWidget')),
+    category: 'paid', label: 'Visual Funnel', icon: Funnel,
+    description: 'Tapered funnel: sessions → sign-ups → completions with drop-off rates and CVR summary.',
+    defaultSize: { w: 6, h: 8 }, minSize: { w: 4, h: 5 },
+  },
+  'channel-attribution': {
+    component: lazy(() => import('./widgets/ChannelAttributionWidget')),
+    category: 'paid', label: 'Channel Attribution', icon: BarChart3,
+    description: 'Sessions, sign-ups, completions and CVR broken down by traffic source and medium.',
+    defaultSize: { w: 6, h: 6 }, minSize: { w: 4, h: 4 },
+  },
+  'top-campaign-spend': {
+    component: lazy(() => import('./widgets/TopCampaignSpendWidget')),
+    category: 'paid', label: 'Top Campaigns', icon: ListChecks,
+    description: 'Top 10 campaigns ranked by ad spend with impressions and clicks. Sortable.',
+    defaultSize: { w: 6, h: 6 }, minSize: { w: 4, h: 4 },
+  },
+  // ── Campaign Funnel (legacy — keep for existing dashboards) ───
   'campaign-funnel': {
     component: lazy(() => import('./widgets/CampaignFunnelWidget')),
     category: 'paid', label: 'Campaign Funnel', icon: Funnel,

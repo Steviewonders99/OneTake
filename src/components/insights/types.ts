@@ -50,7 +50,11 @@ export type WidgetType =
   | 'creative-gallery'
   | 'category-breakdown'
   | 'recruitment-attribution'
-  // Campaign Funnel
+  // Campaign Funnel (split)
+  | 'funnel-visualization'
+  | 'channel-attribution'
+  | 'top-campaign-spend'
+  // Campaign Funnel (legacy — keep for existing dashboards)
   | 'campaign-funnel'
   // Paid (drill-down parity)
   | 'paid-kpi'
