@@ -259,7 +259,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
   // ── Campaign Funnel (legacy — keep for existing dashboards) ───
   'campaign-funnel': {
     component: lazy(() => import('./widgets/CampaignFunnelWidget')),
-    category: 'paid', label: 'Campaign Funnel', icon: Funnel,
+    category: 'paid', label: 'Project Funnel', icon: Funnel,
     description: 'Full funnel: ad spend → sessions → sign-ups → completions. Cross-channel, per campaign.',
     defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
   },

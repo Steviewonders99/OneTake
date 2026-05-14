@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
   const applies = funnel.find(f => f.stage === 'apply_click')?.count || 0;
 
   return NextResponse.json({
-    campaign: campaignFilter || 'All Campaigns',
+    campaign: campaignFilter || 'All Projects',
     days,
     funnel,
     channels: channelsWithCvr,

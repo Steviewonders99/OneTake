@@ -106,7 +106,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
               onClick={() => setShowDropdown(!showDropdown)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors"
             >
-              <span className="truncate max-w-[160px]">{data.campaign || 'All Campaigns'}</span>
+              <span className="truncate max-w-[160px]">{data.campaign || 'All Projects'}</span>
               <ChevronDown className="w-3 h-3 text-[#a3a3a3] shrink-0" />
             </button>
             {showDropdown && (
@@ -115,7 +115,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
                   onClick={() => { setCampaign(''); setShowDropdown(false); }}
                   className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors"
                 >
-                  All Campaigns
+                  All Projects
                 </button>
                 {data.available_campaigns.map(c => (
                   <button

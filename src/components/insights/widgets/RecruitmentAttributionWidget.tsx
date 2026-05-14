@@ -71,7 +71,7 @@ export default function RecruitmentAttributionWidget({ config }: { config: Recor
             {showDropdown && (
               <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50 max-h-48 overflow-y-auto min-w-[180px]">
                 <button onClick={() => { setCampaign(''); setShowDropdown(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer">All Campaigns</button>
+                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer">All Projects</button>
                 {data.available_campaigns.map(c => (
                   <button key={c.campaign} onClick={() => { setCampaign(c.campaign); setShowDropdown(false); }}
                     className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer flex justify-between">

@@ -192,7 +192,7 @@ const dashboards: DashboardSeed[] = [
       'Which creatives drive results? Ad images with full funnel metrics per channel. Filter by campaign to compare creative performance across Meta, Reddit, and TikTok.',
     layoutData: {
       widgets: [
-        w('ci-paid-kpi',      'paid-kpi',              'Campaign KPIs',             { days: 30 }),
+        w('ci-paid-kpi',      'paid-kpi',              'Project KPIs',             { days: 30 }),
         w('ci-funnel-viz',    'funnel-visualization',  'Conversion Funnel',         { days: 90 }),
         w('ci-channels',      'channel-attribution',   'Channel Attribution',       { days: 90 }),
         w('ci-top-spend',     'top-campaign-spend',    'Top Campaigns by Spend',    { days: 90 }),
