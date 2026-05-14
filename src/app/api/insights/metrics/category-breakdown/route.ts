@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const paidRows = await sql`
     SELECT campaign_name, SUM(impressions)::int as impressions, SUM(clicks)::int as clicks,
            SUM(spend)::float as spend, SUM(conversions)::int as conversions
-    FROM meta_ads_cache WHERE date >= CURRENT_DATE - ${days}
+    FROM meta_ads_cache WHERE date >= CURRENT_DATE - make_interval(days => ${days})
     GROUP BY campaign_name
   `;
 
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
            SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
            SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
     FROM ga4_funnel_events
-    WHERE date >= CURRENT_DATE - ${days}
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       AND campaign NOT IN ('(direct)', '(organic)', '(referral)', '(not set)')
     GROUP BY campaign
   `;

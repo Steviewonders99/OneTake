@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         post_url,
         caption
       FROM meta_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE post_date >= CURRENT_DATE - make_interval(days => ${days})
         AND (${platform}::text IS NULL OR platform = ${platform})
 
       UNION ALL
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         post_url,
         caption
       FROM linkedin_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE post_date >= CURRENT_DATE - make_interval(days => ${days})
         AND (${platform}::text IS NULL OR ${platform} = 'linkedin')
 
       UNION ALL
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
         post_url,
         title                                         AS caption
       FROM reddit_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE post_date >= CURRENT_DATE - make_interval(days => ${days})
         AND (${platform}::text IS NULL OR ${platform} = 'reddit')
     ) p
     LEFT JOIN organic_post_assets a ON a.post_id = p.post_id AND a.platform = p.platform

@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions,
       SUM(CASE WHEN event_name = 'apply_click' THEN event_count ELSE 0 END)::int as applies
     FROM ga4_funnel_events
-    WHERE date >= CURRENT_DATE - ${days} ${sourceFilter}
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days}) ${sourceFilter}
     GROUP BY source, medium
     ORDER BY completions DESC
   `;
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
       SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
     FROM ga4_funnel_events
-    WHERE date >= CURRENT_DATE - ${days} ${sourceFilter}
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days}) ${sourceFilter}
     GROUP BY country
     ORDER BY completions DESC
     LIMIT 15
@@ -50,12 +50,12 @@ export async function GET(req: NextRequest) {
     sql`SELECT source, medium,
       SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
       FROM ga4_funnel_events
-      WHERE date >= CURRENT_DATE - ${days} AND date < CURRENT_DATE - ${half} ${sourceFilter}
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days}) AND date < CURRENT_DATE - make_interval(days => ${half}) ${sourceFilter}
       GROUP BY source, medium`,
     sql`SELECT source, medium,
       SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
       FROM ga4_funnel_events
-      WHERE date >= CURRENT_DATE - ${half} ${sourceFilter}
+      WHERE date >= CURRENT_DATE - make_interval(days => ${half}) ${sourceFilter}
       GROUP BY source, medium`,
   ]);
 
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
   const spendRows = await sql`
     SELECT SUM(spend)::float as total_spend, SUM(conversions)::int as total_conversions
     FROM meta_ads_cache
-    WHERE date >= CURRENT_DATE - ${days}
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
     ${campaign ? sql`AND LOWER(campaign_name) LIKE ${'%' + campaign.toLowerCase() + '%'}` : sql``}
   `;
   const spend = (spendRows[0] as any)?.total_spend || 0;
@@ -94,10 +94,10 @@ export async function GET(req: NextRequest) {
   // W1 vs W2 spend
   const [w1Spend, w2Spend] = await Promise.all([
     sql`SELECT SUM(spend)::float as spend, SUM(conversions)::int as conv FROM meta_ads_cache
-        WHERE date >= CURRENT_DATE - ${days} AND date < CURRENT_DATE - ${half}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days}) AND date < CURRENT_DATE - make_interval(days => ${half})
         ${campaign ? sql`AND LOWER(campaign_name) LIKE ${'%' + campaign.toLowerCase() + '%'}` : sql``}`,
     sql`SELECT SUM(spend)::float as spend, SUM(conversions)::int as conv FROM meta_ads_cache
-        WHERE date >= CURRENT_DATE - ${half}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${half})
         ${campaign ? sql`AND LOWER(campaign_name) LIKE ${'%' + campaign.toLowerCase() + '%'}` : sql``}`,
   ]);
 
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
     SELECT DISTINCT campaign, SUM(event_count)::int as total
     FROM ga4_funnel_events
     WHERE campaign NOT IN ('(direct)','(organic)','(referral)','(not set)','')
-      AND date >= CURRENT_DATE - ${days}
+      AND date >= CURRENT_DATE - make_interval(days => ${days})
     GROUP BY campaign ORDER BY total DESC LIMIT 20
   `;
 

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       COALESCE(SUM(conversions), 0)          AS conversions,
       COALESCE(SUM(revenue), 0)              AS revenue
     FROM normalized_daily_metrics
-    WHERE date >= CURRENT_DATE - ${days}::int
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
     GROUP BY date, platform, channel
     ORDER BY date ASC, platform ASC, channel ASC
   `;

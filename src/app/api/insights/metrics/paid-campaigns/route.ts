@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         MIN(date)                              AS first_date,
         MAX(date)                              AS last_date
       FROM meta_ads_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY campaign_id, campaign_name
       ORDER BY spend DESC
       LIMIT ${limit}
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         MIN(date)                              AS first_date,
         MAX(date)                              AS last_date
       FROM reddit_ads_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY campaign_id, campaign_name
       ORDER BY spend DESC
       LIMIT ${limit}
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
         MIN(date)                              AS first_date,
         MAX(date)                              AS last_date
       FROM linkedin_ads_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY campaign_id, campaign_name
       ORDER BY spend DESC
       LIMIT ${limit}
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
         MIN(date)                              AS first_date,
         MAX(date)                              AS last_date
       FROM google_ads_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY campaign_id, campaign_name
       ORDER BY spend DESC
       LIMIT ${limit}

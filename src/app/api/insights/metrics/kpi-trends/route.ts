@@ -11,26 +11,26 @@ export async function GET(req: NextRequest) {
   const [paidDaily, organicDaily, paidCurr, paidPrev, orgCurr, orgPrev] = await Promise.all([
     sql`SELECT date::text, COALESCE(SUM(spend),0)::float as spend, COALESCE(SUM(impressions),0)::int as impressions,
         COALESCE(SUM(clicks),0)::int as clicks, COALESCE(SUM(conversions),0)::int as conversions
-        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - ${days}::int GROUP BY date ORDER BY date`,
+        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - make_interval(days => ${days}) GROUP BY date ORDER BY date`,
     sql`SELECT date::text, COALESCE(SUM(impressions),0)::int as impressions, COALESCE(SUM(reach),0)::int as reach,
         COALESCE(SUM(engagement),0)::int as engagement, COALESCE(SUM(clicks),0)::int as clicks
-        FROM meta_organic_cache WHERE date >= CURRENT_DATE - ${days}::int GROUP BY date ORDER BY date`,
+        FROM meta_organic_cache WHERE date >= CURRENT_DATE - make_interval(days => ${days}) GROUP BY date ORDER BY date`,
     // Current half
     sql`SELECT COALESCE(SUM(spend),0)::float as spend, COALESCE(SUM(impressions),0)::int as impressions,
         COALESCE(SUM(clicks),0)::int as clicks, COALESCE(SUM(conversions),0)::int as conversions
-        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - ${half}::int`,
+        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - make_interval(days => ${half})`,
     // Previous half
     sql`SELECT COALESCE(SUM(spend),0)::float as spend, COALESCE(SUM(impressions),0)::int as impressions,
         COALESCE(SUM(clicks),0)::int as clicks, COALESCE(SUM(conversions),0)::int as conversions
-        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - ${days}::int AND date < CURRENT_DATE - ${half}::int`,
+        FROM normalized_daily_metrics WHERE date >= CURRENT_DATE - make_interval(days => ${days}) AND date < CURRENT_DATE - make_interval(days => ${half})`,
     // Organic current half
     sql`SELECT COALESCE(SUM(impressions),0)::int as impressions, COALESCE(SUM(reach),0)::int as reach,
         COALESCE(SUM(engagement),0)::int as engagement, COALESCE(SUM(clicks),0)::int as clicks
-        FROM meta_organic_cache WHERE date >= CURRENT_DATE - ${half}::int`,
+        FROM meta_organic_cache WHERE date >= CURRENT_DATE - make_interval(days => ${half})`,
     // Organic previous half
     sql`SELECT COALESCE(SUM(impressions),0)::int as impressions, COALESCE(SUM(reach),0)::int as reach,
         COALESCE(SUM(engagement),0)::int as engagement, COALESCE(SUM(clicks),0)::int as clicks
-        FROM meta_organic_cache WHERE date >= CURRENT_DATE - ${days}::int AND date < CURRENT_DATE - ${half}::int`,
+        FROM meta_organic_cache WHERE date >= CURRENT_DATE - make_interval(days => ${days}) AND date < CURRENT_DATE - make_interval(days => ${half})`,
   ]);
 
   const pct = (c: number, p: number) => p > 0 ? Math.round((c - p) / p * 1000) / 10 : 0;

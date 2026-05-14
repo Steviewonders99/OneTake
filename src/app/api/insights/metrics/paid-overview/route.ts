@@ -10,50 +10,39 @@ export async function GET(req: NextRequest) {
   const rows = await sql`
     SELECT
       platform,
-      COALESCE(SUM(spend), 0)                     AS total_spend,
-      COALESCE(SUM(impressions), 0)::bigint        AS total_impressions,
-      COALESCE(SUM(clicks), 0)::bigint             AS total_clicks,
-      COALESCE(SUM(conversions), 0)                AS total_conversions,
-      CASE WHEN SUM(conversions) > 0
-           THEN SUM(spend) / SUM(conversions)
-           ELSE NULL END                           AS avg_cpa,
-      CASE WHEN SUM(impressions) > 0
-           THEN SUM(clicks)::float / SUM(impressions)
-           ELSE NULL END                           AS avg_ctr,
-      CASE WHEN SUM(spend) > 0
-           THEN SUM(revenue) / SUM(spend)
-           ELSE NULL END                           AS roas
+      COALESCE(SUM(spend), 0) AS total_spend,
+      COALESCE(SUM(impressions), 0)::int AS total_impressions,
+      COALESCE(SUM(clicks), 0)::int AS total_clicks,
+      COALESCE(SUM(conversions), 0)::int AS total_conversions
     FROM normalized_daily_metrics
-    WHERE date >= CURRENT_DATE - ${days}::int
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
     GROUP BY platform
     ORDER BY total_spend DESC
   `;
 
-  const total_spend = rows.reduce((s, r) => s + Number(r.total_spend ?? 0), 0);
-  const total_impressions = rows.reduce((s, r) => s + Number(r.total_impressions ?? 0), 0);
-  const total_clicks = rows.reduce((s, r) => s + Number(r.total_clicks ?? 0), 0);
-  const total_conversions = rows.reduce((s, r) => s + Number(r.total_conversions ?? 0), 0);
+  const total_spend = rows.reduce((s: number, r: any) => s + Number(r.total_spend ?? 0), 0);
+  const total_impressions = rows.reduce((s: number, r: any) => s + Number(r.total_impressions ?? 0), 0);
+  const total_clicks = rows.reduce((s: number, r: any) => s + Number(r.total_clicks ?? 0), 0);
+  const total_conversions = rows.reduce((s: number, r: any) => s + Number(r.total_conversions ?? 0), 0);
 
-  const avg_cpa = total_conversions > 0 ? total_spend / total_conversions : null;
-  const avg_ctr = total_impressions > 0 ? total_clicks / total_impressions : null;
-
-  const total_revenue = rows.reduce((s, r) => {
-    // Re-derive revenue from roas * spend per platform
-    const spend = Number(r.total_spend ?? 0);
-    const roas = r.roas != null ? Number(r.roas) : null;
-    return s + (roas != null ? spend * roas : 0);
-  }, 0);
-  const roas = total_spend > 0 ? total_revenue / total_spend : null;
+  const per_platform: Record<string, any> = {};
+  for (const row of rows as any[]) {
+    per_platform[row.platform] = {
+      spend: Number(row.total_spend), impressions: Number(row.total_impressions),
+      clicks: Number(row.total_clicks), conversions: Number(row.total_conversions),
+      cpa: Number(row.total_conversions) > 0 ? Number(row.total_spend) / Number(row.total_conversions) : 0,
+    };
+  }
 
   return NextResponse.json({
-    days,
-    total_spend,
-    total_impressions,
-    total_clicks,
-    total_conversions,
-    avg_cpa,
-    avg_ctr,
-    roas,
-    platforms: rows,
+    total_spend, total_impressions, total_clicks, total_conversions,
+    avg_cpa: total_conversions > 0 ? total_spend / total_conversions : 0,
+    avg_ctr: total_impressions > 0 ? total_clicks / total_impressions : 0,
+    roas: 0,
+    per_platform,
+    // Aliases for widget compatibility
+    spend: total_spend, impressions: total_impressions, clicks: total_clicks,
+    conversions: total_conversions, cpa: total_conversions > 0 ? total_spend / total_conversions : 0,
+    ctr: total_impressions > 0 ? (total_clicks / total_impressions * 100) : 0,
   });
 }

@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     ? await sql`
         SELECT event_name, SUM(event_count)::int as count, SUM(conversions)::int as conversions
         FROM ga4_funnel_events
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND LOWER(campaign) = ${campaignFilter.toLowerCase()}
           AND event_name = ANY(${FUNNEL_ORDER})
         GROUP BY event_name
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
     : await sql`
         SELECT event_name, SUM(event_count)::int as count, SUM(conversions)::int as conversions
         FROM ga4_funnel_events
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND campaign NOT IN ('(direct)', '(organic)', '(referral)', '(not set)')
           AND event_name = ANY(${FUNNEL_ORDER})
         GROUP BY event_name
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
                SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
                SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
         FROM ga4_funnel_events
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND LOWER(campaign) = ${campaignFilter.toLowerCase()}
         GROUP BY source, medium
         ORDER BY sessions DESC
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
                SUM(CASE WHEN event_name = 'sign_up' THEN event_count ELSE 0 END)::int as signups,
                SUM(CASE WHEN event_name = 'purchase' THEN event_count ELSE 0 END)::int as completions
         FROM ga4_funnel_events
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND campaign NOT IN ('(direct)', '(organic)', '(referral)', '(not set)')
         GROUP BY source, medium
         ORDER BY sessions DESC
@@ -124,26 +124,26 @@ export async function GET(req: NextRequest) {
         SELECT 'meta_ads' as platform, campaign_name,
                SUM(impressions)::int as impressions, SUM(clicks)::int as clicks, SUM(spend)::float as spend
         FROM meta_ads_cache
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND LOWER(campaign_name) = ${campaignFilter.toLowerCase()}
         GROUP BY campaign_name
         UNION ALL
         SELECT 'reddit_ads', campaign_name,
                SUM(impressions)::int, SUM(clicks)::int, SUM(spend)::float
         FROM reddit_ads_cache
-        WHERE date >= CURRENT_DATE - ${days}
+        WHERE date >= CURRENT_DATE - make_interval(days => ${days})
           AND LOWER(campaign_name) = ${campaignFilter.toLowerCase()}
         GROUP BY campaign_name
       `
     : await sql`
         SELECT 'meta_ads' as platform, campaign_name,
                SUM(impressions)::int as impressions, SUM(clicks)::int as clicks, SUM(spend)::float as spend
-        FROM meta_ads_cache WHERE date >= CURRENT_DATE - ${days}
+        FROM meta_ads_cache WHERE date >= CURRENT_DATE - make_interval(days => ${days})
         GROUP BY campaign_name
         UNION ALL
         SELECT 'reddit_ads', campaign_name,
                SUM(impressions)::int, SUM(clicks)::int, SUM(spend)::float
-        FROM reddit_ads_cache WHERE date >= CURRENT_DATE - ${days}
+        FROM reddit_ads_cache WHERE date >= CURRENT_DATE - make_interval(days => ${days})
         GROUP BY campaign_name
       `;
 
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
   const campaigns = await sql`
     SELECT DISTINCT campaign, SUM(event_count)::int as total
     FROM ga4_funnel_events
-    WHERE date >= CURRENT_DATE - ${days}
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       AND campaign NOT IN ('(direct)', '(organic)', '(referral)', '(not set)', '')
     GROUP BY campaign
     ORDER BY total DESC

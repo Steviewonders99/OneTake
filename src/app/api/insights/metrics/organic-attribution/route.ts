@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         COALESCE(reach, 0)::bigint        AS reach,
         COALESCE(engagement, 0)::bigint   AS engagement
       FROM meta_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
 
       UNION ALL
 
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         COALESCE(unique_impressions, 0)::bigint AS reach,
         COALESCE(engagement, 0)::bigint         AS engagement
       FROM linkedin_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
 
       UNION ALL
 
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         0::bigint                                                      AS reach,
         (COALESCE(upvotes, 0) + COALESCE(comments, 0))::bigint        AS engagement
       FROM reddit_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
     ) p
     LEFT JOIN organic_post_assets a ON a.post_id = p.post_id AND a.platform = p.platform
     GROUP BY source

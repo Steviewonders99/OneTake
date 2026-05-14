@@ -7,112 +7,60 @@ export async function GET(req: NextRequest) {
   const sql = getDb();
   const days = Math.max(1, parseInt(req.nextUrl.searchParams.get('days') || '30') || 30);
 
-  const since = `CURRENT_DATE - INTERVAL '${days} days'`;
-
-  const [metaRows, linkedinRows, redditRows, snapshotRows] = await Promise.all([
+  const [metaRows, snapshotRows] = await Promise.all([
     sql`
-      SELECT
-        platform,
-        COALESCE(SUM(impressions), 0)::bigint AS impressions,
-        COALESCE(SUM(reach), 0)::bigint AS reach,
-        COALESCE(SUM(engagement), 0)::bigint AS engagement,
-        COALESCE(SUM(clicks), 0)::bigint AS clicks,
-        COUNT(*)::int AS post_count
+      SELECT platform,
+        COALESCE(SUM(impressions),0)::int as impressions,
+        COALESCE(SUM(reach),0)::int as reach,
+        COALESCE(SUM(engagement),0)::int as engagement,
+        COALESCE(SUM(clicks),0)::int as clicks,
+        COUNT(DISTINCT post_id)::int as post_count,
+        AVG(engagement_rate) as avg_eng_rate
       FROM meta_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY platform
     `,
     sql`
-      SELECT
-        'linkedin' AS platform,
-        COALESCE(SUM(impressions), 0)::bigint AS impressions,
-        COALESCE(SUM(unique_impressions), 0)::bigint AS reach,
-        COALESCE(SUM(engagement), 0)::bigint AS engagement,
-        COALESCE(SUM(clicks), 0)::bigint AS clicks,
-        COUNT(*)::int AS post_count
-      FROM linkedin_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
-    `,
-    sql`
-      SELECT
-        'reddit' AS platform,
-        COALESCE(SUM(impressions), 0)::bigint AS impressions,
-        0::bigint AS reach,
-        COALESCE(SUM(upvotes) + SUM(comments), 0)::bigint AS engagement,
-        COALESCE(SUM(clicks), 0)::bigint AS clicks,
-        COUNT(*)::int AS post_count
-      FROM reddit_organic_cache
-      WHERE post_date >= CURRENT_DATE - ${days}::int
-    `,
-    sql`
-      SELECT
-        platform,
-        MAX(follower_count) - MIN(follower_count) AS follower_delta
+      SELECT platform, COALESCE(SUM(follower_delta),0)::int as follower_delta
       FROM social_account_snapshots
-      WHERE snapshot_date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY platform
     `,
   ]);
 
-  // Merge all platform rows
-  const platformMap: Record<string, {
-    platform: string;
-    impressions: number;
-    reach: number;
-    engagement: number;
-    clicks: number;
-    post_count: number;
-    follower_delta: number;
-  }> = {};
+  const per_platform: Record<string, any> = {};
+  let total_impressions = 0, total_reach = 0, total_engagement = 0, total_clicks = 0, total_posts = 0, total_follower_delta = 0;
 
-  for (const row of [...metaRows, ...linkedinRows, ...redditRows]) {
-    const p = row.platform as string;
-    if (!platformMap[p]) {
-      platformMap[p] = {
-        platform: p,
-        impressions: 0,
-        reach: 0,
-        engagement: 0,
-        clicks: 0,
-        post_count: 0,
-        follower_delta: 0,
-      };
-    }
-    platformMap[p].impressions += Number(row.impressions ?? 0);
-    platformMap[p].reach += Number(row.reach ?? 0);
-    platformMap[p].engagement += Number(row.engagement ?? 0);
-    platformMap[p].clicks += Number(row.clicks ?? 0);
-    platformMap[p].post_count += Number(row.post_count ?? 0);
+  for (const row of metaRows as any[]) {
+    const p = row.platform;
+    per_platform[p] = {
+      impressions: Number(row.impressions), reach: Number(row.reach),
+      engagement: Number(row.engagement), clicks: Number(row.clicks),
+      post_count: Number(row.post_count), follower_delta: 0,
+    };
+    total_impressions += Number(row.impressions);
+    total_reach += Number(row.reach);
+    total_engagement += Number(row.engagement);
+    total_clicks += Number(row.clicks);
+    total_posts += Number(row.post_count);
   }
 
-  for (const row of snapshotRows) {
-    const p = row.platform as string;
-    if (platformMap[p]) {
-      platformMap[p].follower_delta = Number(row.follower_delta ?? 0);
+  for (const snap of snapshotRows as any[]) {
+    if (per_platform[snap.platform]) {
+      per_platform[snap.platform].follower_delta = Number(snap.follower_delta);
     }
+    total_follower_delta += Number(snap.follower_delta);
   }
-
-  const platforms = Object.values(platformMap);
-
-  const total_impressions = platforms.reduce((s, r) => s + r.impressions, 0);
-  const total_reach = platforms.reduce((s, r) => s + r.reach, 0);
-  const total_engagement = platforms.reduce((s, r) => s + r.engagement, 0);
-  const total_clicks = platforms.reduce((s, r) => s + r.clicks, 0);
-  const follower_delta = platforms.reduce((s, r) => s + r.follower_delta, 0);
-  const post_count = platforms.reduce((s, r) => s + r.post_count, 0);
-  const avg_engagement_rate = total_impressions > 0
-    ? total_engagement / total_impressions
-    : 0;
 
   return NextResponse.json({
-    days,
-    total_impressions,
-    total_reach,
-    total_engagement,
-    total_clicks,
-    follower_delta,
-    post_count,
-    avg_engagement_rate,
-    platforms,
+    impressions: total_impressions,
+    reach: total_reach,
+    engagement: total_engagement,
+    clicks: total_clicks,
+    post_count: total_posts,
+    followers_delta: total_follower_delta,
+    engagement_rate: total_reach > 0 ? (total_engagement / total_reach * 100) : 0,
+    avg_engagement_rate: total_reach > 0 ? (total_engagement / total_reach * 100) : 0,
+    per_platform,
   });
 }

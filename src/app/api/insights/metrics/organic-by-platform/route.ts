@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       COALESCE(SUM(post_count), 0)::int AS post_count
     FROM channel_performance_unified
     WHERE metric_type = 'organic'
-      AND date >= CURRENT_DATE - ${days}::int
+      AND date >= CURRENT_DATE - make_interval(days => ${days})
     GROUP BY date, platform, metric_type
     ORDER BY date ASC, platform ASC
   `;

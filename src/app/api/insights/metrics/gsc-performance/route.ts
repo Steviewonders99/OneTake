@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   // Check if we have any GSC data at all
   const [countRows] = await sql`
     SELECT COUNT(*)::int AS total FROM gsc_daily_cache
-    WHERE date >= CURRENT_DATE - ${days}::int
+    WHERE date >= CURRENT_DATE - make_interval(days => ${days})
   `;
 
   const hasData = (countRows?.total ?? 0) > 0;
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         AVG(position)           AS avg_position,
         AVG(ctr)                AS avg_ctr
       FROM gsc_daily_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY query
       ORDER BY clicks DESC
       LIMIT ${limit}
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         AVG(position)           AS avg_position,
         AVG(ctr)                AS avg_ctr
       FROM gsc_daily_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY page
       ORDER BY clicks DESC
       LIMIT ${limit}
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
         AVG(position)           AS avg_position,
         AVG(ctr)                AS avg_ctr
       FROM gsc_daily_cache
-      WHERE date >= CURRENT_DATE - ${days}::int
+      WHERE date >= CURRENT_DATE - make_interval(days => ${days})
       GROUP BY date
       ORDER BY date ASC
     `,

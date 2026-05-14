@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       snapshot_date,
       metadata
     FROM social_account_snapshots
-    WHERE snapshot_date >= CURRENT_DATE - ${days}::int
+    WHERE snapshot_date >= CURRENT_DATE - make_interval(days => ${days})
       AND (${platform}::text IS NULL OR platform = ${platform})
     ORDER BY platform ASC, snapshot_date ASC
   `;
