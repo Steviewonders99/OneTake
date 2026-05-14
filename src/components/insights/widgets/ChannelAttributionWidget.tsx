@@ -37,6 +37,31 @@ const SOURCE_COLOR: Record<string, string> = {
   organic: CHART_COLORS.charcoal,
 };
 
+function shortenSource(source: string): string {
+  const map: Record<string, string> = {
+    'paid_media': 'Paid Media',
+    'facebook': 'Facebook',
+    'brevo': 'Brevo',
+    'google': 'Google',
+    'Handshake': 'Handshake',
+    'youtube.com': 'YouTube',
+    'l.facebook.com': 'FB Referral',
+    'linkedin': 'LinkedIn',
+    'LinkedIn': 'LinkedIn',
+    'tiktok': 'TikTok',
+    '(direct)': 'Direct',
+    'ig': 'Instagram',
+    'Indeed': 'Indeed',
+    'reddit': 'Reddit',
+  };
+  for (const [k, v] of Object.entries(map)) {
+    if (source.toLowerCase() === k.toLowerCase()) return v;
+    if (source.toLowerCase().includes(k.toLowerCase())) return v;
+  }
+  // Truncate anything over 12 chars
+  return source.length > 12 ? source.slice(0, 11) + '…' : source;
+}
+
 function sourceColor(source: string): string {
   const key = source.toLowerCase();
   for (const [k, v] of Object.entries(SOURCE_COLOR)) {
@@ -139,11 +164,11 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
                         style={{ backgroundColor: sourceColor(ch.source) }}
                       />
                     </td>
-                    <td className="py-2 pr-2">
-                      <div className="text-[11px] text-[#1a1a1a] font-medium truncate max-w-[120px]">
-                        {ch.source}
+                    <td className="py-2 pr-2 max-w-[100px]">
+                      <div className="text-[11px] text-[#1a1a1a] font-medium truncate">
+                        {shortenSource(ch.source)}
                       </div>
-                      <div className="text-[9px] text-[#a3a3a3]">{ch.medium}</div>
+                      <div className="text-[9px] text-[#a3a3a3] truncate">{ch.medium}</div>
                     </td>
                     <td className="py-2 pr-1 text-right text-[11px] text-[#a3a3a3] tabular-nums">
                       {formatCompact(ch.sessions)}
