@@ -92,8 +92,8 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
           <button onClick={undo} disabled={!canUndo} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Undo (Cmd+Z)"><Undo2 className="w-4 h-4" /></button>
           <button onClick={redo} disabled={!canRedo} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Redo"><Redo2 className="w-4 h-4" /></button>
         </div>
-        <button onClick={toggleEditMode} className="btn-secondary !text-xs !py-1.5 !px-3 cursor-pointer">
-          {state.isEditMode ? <><Eye className="w-3.5 h-3.5" /> Preview</> : <><Pencil className="w-3.5 h-3.5" /> Edit</>}
+        <button onClick={toggleEditMode} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium cursor-pointer transition-colors ${state.isEditMode ? 'bg-[#1a1a1a] text-white' : 'text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb]'}`}>
+          {state.isEditMode ? <><Eye className="w-3 h-3" /> Preview</> : <><Pencil className="w-3 h-3" /> Edit</>}
         </button>
         <div className="flex items-center gap-1 border-l border-[var(--border)] pl-3">
           <button onClick={() => setShowShareModal(true)} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer" title="Share"><Share2 className="w-4 h-4" /></button>
