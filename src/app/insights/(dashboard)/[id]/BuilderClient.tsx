@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/components/insights/DashboardContext';
 import { DashboardFilterProvider, useDashboardFilter } from '@/components/insights/DashboardFilterContext';
 import { DashboardToolbar } from '@/components/insights/DashboardToolbar';
+import { DashboardNav } from '@/components/insights/DashboardNav';
 import { WidgetPalette } from '@/components/insights/WidgetPalette';
 import { DashboardGrid } from '@/components/insights/DashboardGrid';
 import { WidgetConfigPanel } from '@/components/insights/WidgetConfigPanel';
@@ -28,6 +29,7 @@ function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: 
   return (
     <div className="flex flex-col h-full">
       <DashboardToolbar dashboardId={dashboardId} />
+      <DashboardNav currentId={dashboardId} />
       <div className="flex flex-1 min-h-0">
         {state.isEditMode && canEdit && <WidgetPalette />}
         <div className="flex-1 overflow-hidden flex">

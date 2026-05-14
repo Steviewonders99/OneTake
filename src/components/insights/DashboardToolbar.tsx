@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Undo2, Redo2, Eye, Pencil, Share2, Copy, Trash2, Check, Loader2, AlertCircle, ArrowLeft, Download } from 'lucide-react';
 import { useDashboard } from './DashboardContext';
 import { useDashboardFilter } from './DashboardFilterContext';
+import { getDashboardMeta } from './dashboard-meta';
 import { ShareModal } from './ShareModal';
 import { toast } from 'sonner';
 
@@ -42,6 +43,9 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
     } catch { toast.error('Failed to delete'); }
   };
 
+  const meta = getDashboardMeta(state.title);
+  const MetaIcon = meta?.icon;
+
   const saveIcon = {
     saved: <Check className="w-3.5 h-3.5 text-green-600" />,
     saving: <Loader2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] animate-spin" />,
@@ -54,6 +58,11 @@ export function DashboardToolbar({ dashboardId }: { dashboardId: string }) {
     <>
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border)] bg-white">
         <button onClick={() => router.push('/insights')} className="p-1.5 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer" title="Back"><ArrowLeft className="w-4 h-4" /></button>
+        {MetaIcon && meta && (
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: meta.accentBg }}>
+            <MetaIcon className="w-3.5 h-3.5" style={{ color: meta.accent }} />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           {isEditing ? (
             <input autoFocus value={editTitle} onChange={(e) => setEditTitle(e.target.value)} onBlur={handleTitleSubmit} onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()} className="bg-transparent text-sm font-semibold text-[var(--foreground)] outline-none border-b-2 border-[var(--ring)] pb-0.5 w-full max-w-md" />
