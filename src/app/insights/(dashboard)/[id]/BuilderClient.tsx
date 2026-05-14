@@ -32,11 +32,11 @@ function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: 
   }, [clearAll, isFiltered]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] -mx-6 -mt-6">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       <DashboardToolbar dashboardId={dashboardId} />
       <div className="flex flex-1 overflow-hidden">
         {state.isEditMode && canEdit && <WidgetPalette />}
-        <div className="flex-1 bg-[var(--muted)] overflow-hidden flex">
+        <div className="flex-1 bg-[#fafafa] overflow-hidden flex">
           <DashboardGrid />
         </div>
         {state.isEditMode && canEdit && state.selectedWidgetId && <WidgetConfigPanel />}
