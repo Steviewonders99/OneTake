@@ -124,7 +124,31 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
 
   if (!data) return <div className="h-full animate-pulse rounded-xl bg-[#f5f5f5]" />;
 
-  const channels = (data.channels || []).slice(0, 10);
+  // Aggregate by normalized source name to dedup (e.g. "facebook" + "ig" + numeric IDs → single "Meta" rows)
+  const rawChannels = data.channels || [];
+  const aggMap = new Map<string, Channel & { _key: string }>();
+  for (const ch of rawChannels) {
+    const norm = normalizeSource(ch.source);
+    const existing = aggMap.get(norm);
+    if (existing) {
+      existing.sessions += ch.sessions;
+      existing.signups += ch.signups;
+      existing.completions += ch.completions;
+      existing.applies += ch.applies;
+    } else {
+      aggMap.set(norm, { ...ch, _key: norm });
+    }
+  }
+  // Recompute CVR after aggregation
+  const channels = Array.from(aggMap.values())
+    .map(ch => ({
+      ...ch,
+      cvr_click_to_signup: ch.sessions > 0 ? (ch.signups / ch.sessions * 100) : 0,
+      cvr_click_to_purchase: ch.sessions > 0 ? (ch.completions / ch.sessions * 100) : 0,
+      cvr_signup_to_purchase: ch.signups > 0 ? (ch.completions / ch.signups * 100) : 0,
+    }))
+    .sort((a, b) => b.sessions - a.sessions)
+    .slice(0, 10);
   const totalSignups = channels.reduce((s, ch) => s + (ch.signups || 0), 0);
 
   return (
