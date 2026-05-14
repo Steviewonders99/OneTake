@@ -13,30 +13,24 @@ function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: 
   const { state, toggleEditMode } = useDashboard();
   const { clearAll, isFiltered } = useDashboardFilter();
 
-  // If recruiter (canEdit=false), force view mode
   useEffect(() => {
-    if (!canEdit && state.isEditMode) {
-      toggleEditMode();
-    }
+    if (!canEdit && state.isEditMode) toggleEditMode();
   }, [canEdit, state.isEditMode, toggleEditMode]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && isFiltered) {
-        e.preventDefault();
-        clearAll();
-      }
+      if (e.key === 'Escape' && isFiltered) { e.preventDefault(); clearAll(); }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [clearAll, isFiltered]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-full">
       <DashboardToolbar dashboardId={dashboardId} />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {state.isEditMode && canEdit && <WidgetPalette />}
-        <div className="flex-1 bg-[#fafafa] overflow-hidden flex">
+        <div className="flex-1 overflow-hidden flex">
           <DashboardGrid />
         </div>
         {state.isEditMode && canEdit && state.selectedWidgetId && <WidgetConfigPanel />}
@@ -53,20 +47,9 @@ interface BuilderClientProps {
   canEdit: boolean;
 }
 
-export function BuilderClient({
-  dashboardId,
-  initialTitle,
-  initialDescription,
-  initialLayoutData,
-  canEdit,
-}: BuilderClientProps) {
+export function BuilderClient({ dashboardId, initialTitle, initialDescription, initialLayoutData, canEdit }: BuilderClientProps) {
   return (
-    <DashboardProvider
-      dashboardId={dashboardId}
-      initialTitle={initialTitle}
-      initialDescription={initialDescription}
-      initialLayoutData={initialLayoutData}
-    >
+    <DashboardProvider dashboardId={dashboardId} initialTitle={initialTitle} initialDescription={initialDescription} initialLayoutData={initialLayoutData}>
       <DashboardFilterProvider>
         <BuilderInner dashboardId={dashboardId} canEdit={canEdit} />
       </DashboardFilterProvider>
