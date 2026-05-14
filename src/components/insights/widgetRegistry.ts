@@ -225,6 +225,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     description: 'Performance by project type: Data Collection, Language, Evaluation, Onsite',
     defaultSize: { w: 12, h: 6 }, minSize: { w: 6, h: 4 },
   },
+  'recruitment-attribution': {
+    component: lazy(() => import('./widgets/RecruitmentAttributionWidget')),
+    category: 'paid', label: 'Recruitment Attribution', icon: Funnel,
+    description: 'Form completions by traffic source + city with W1 vs W2 and CPA trends',
+    defaultSize: { w: 12, h: 8 }, minSize: { w: 6, h: 5 },
+  },
   // ── Organic Social ────────────────────────────────────────
   'campaign-funnel': {
     component: lazy(() => import('./widgets/CampaignFunnelWidget')),

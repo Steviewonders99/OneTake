@@ -49,6 +49,7 @@ export type WidgetType =
   // Creative Gallery + Category
   | 'creative-gallery'
   | 'category-breakdown'
+  | 'recruitment-attribution'
   // Campaign Funnel
   | 'campaign-funnel'
   // Paid (drill-down parity)

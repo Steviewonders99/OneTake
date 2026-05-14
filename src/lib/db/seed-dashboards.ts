@@ -203,6 +203,30 @@ const dashboards: DashboardSeed[] = [
       ]),
     },
   },
+  // -------------------------------------------------------------------------
+  // 6. Recruitment ROI
+  // -------------------------------------------------------------------------
+  {
+    title: 'Recruitment ROI',
+    description:
+      'Prove marketing dollars drive results. Completions by source, CPA trending down, volume trending up. Filter by campaign.',
+    layoutData: {
+      widgets: [
+        w('roi-paid-kpi',       'paid-kpi',                  'Paid KPIs',               { days: 30 }),
+        w('roi-categories',     'category-breakdown',        'By Project Type',         { days: 30 }),
+        w('roi-attribution',    'recruitment-attribution',   'Source Attribution',       { days: 30 }),
+        w('roi-funnel',         'campaign-funnel',           'Full Funnel',             { days: 90 }),
+        w('roi-gallery',        'creative-gallery',          'Top Creatives',           { days: 30 }),
+      ],
+      gridLayouts: responsiveLayouts([
+        g('roi-paid-kpi',       0, 0,  12, 2),
+        g('roi-categories',     0, 2,  12, 6),
+        g('roi-attribution',    0, 8,  12, 8),
+        g('roi-funnel',         0, 16, 12, 8),
+        g('roi-gallery',        0, 24, 12, 8),
+      ]),
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
