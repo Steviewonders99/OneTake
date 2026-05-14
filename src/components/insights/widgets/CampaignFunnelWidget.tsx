@@ -248,22 +248,34 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
           </>
         )}
 
-        {/* Spend by Platform */}
+        {/* Spend by Platform — top 8 only */}
         {data.spend.by_platform.length > 0 && (
           <>
-            <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] pt-3">
-              Ad Spend by Platform
+            <p className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.08em] pt-4 mb-1">
+              Top Campaigns by Spend
             </p>
+            <div className="flex items-center gap-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pb-1 border-b border-[#f0f0f0]">
+              <div className="w-8 shrink-0">Src</div>
+              <div className="flex-1">Campaign</div>
+              <div className="w-16 text-right">Spend</div>
+              <div className="w-16 text-right">Impr</div>
+            </div>
             <div className="space-y-0">
-              {data.spend.by_platform.map((sp, i) => (
-                <div key={i} className="flex items-center gap-2 text-[10px] py-1">
-                  <div className="w-12 shrink-0 text-[#a3a3a3]">{sp.platform.replace('_ads', '')}</div>
-                  <div className="flex-1 truncate text-[#525252]">{sp.campaign_name}</div>
-                  <div className="font-semibold text-[#1a1a1a] tabular-nums">{formatCurrency(sp.spend)}</div>
-                  <div className="text-[#a3a3a3] tabular-nums">{formatCompact(sp.impressions)} impr</div>
+              {data.spend.by_platform
+                .sort((a: SpendPlatform, b: SpendPlatform) => b.spend - a.spend)
+                .slice(0, 8)
+                .map((sp, i) => (
+                <div key={i} className="flex items-center gap-2 text-[10px] py-1.5 border-b border-[#fafafa]">
+                  <div className="w-8 shrink-0 text-[9px] text-[#a3a3a3]">{sp.platform.replace('_ads', '').slice(0, 5)}</div>
+                  <div className="flex-1 truncate text-[#525252] max-w-[200px]">{sp.campaign_name || '—'}</div>
+                  <div className="w-16 text-right font-semibold text-[#1a1a1a] tabular-nums">{formatCurrency(sp.spend)}</div>
+                  <div className="w-16 text-right text-[#a3a3a3] tabular-nums">{formatCompact(sp.impressions)}</div>
                 </div>
               ))}
             </div>
+            {data.spend.by_platform.length > 8 && (
+              <div className="text-[9px] text-[#a3a3a3] pt-1">+{data.spend.by_platform.length - 8} more campaigns</div>
+            )}
           </>
         )}
       </div>
