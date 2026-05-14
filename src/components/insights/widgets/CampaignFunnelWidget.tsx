@@ -132,7 +132,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
         {[
           { label: 'Ad Spend', value: formatCurrency(kpis.total_spend) },
           { label: 'Sessions', value: formatCompact(kpis.total_sessions) },
-          { label: 'Sign-ups', value: formatCompact(kpis.signups) },
+          { label: 'Project Signups', value: formatCompact(kpis.signups) },
           { label: 'Completions', value: formatCompact(kpis.completions) },
           { label: 'CPA Sign-up', value: kpis.cpa_signup > 0 ? formatCurrency(kpis.cpa_signup, 2) : '—' },
           { label: 'CPA Completion', value: kpis.cpa_completion > 0 ? formatCurrency(kpis.cpa_completion, 2) : '—' },

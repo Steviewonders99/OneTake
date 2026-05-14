@@ -35,19 +35,8 @@ export async function GET(req: NextRequest) {
     'purchase',
   ];
 
-  const STAGE_LABELS: Record<string, string> = {
-    'AdToHomepageView': 'Ad → Homepage',
-    'session_start': 'Sessions',
-    'Job Card List': 'Browsed Jobs',
-    'Job Details Page': 'Viewed Job',
-    'apply_click': 'Applied',
-    'UserEnterLoginPage': 'Login Page',
-    'Onboarding': 'Onboarding',
-    'sign_up': 'Signed Up',
-    'generate_lead': 'Lead Generated',
-    'begin_checkout': 'Started Task',
-    'purchase': 'Completed Task',
-  };
+  // Import from shared terminology
+  const { FUNNEL_STAGE_LABELS: STAGE_LABELS } = await import('@/lib/terminology');
 
   // 1. Funnel stages (aggregated across all channels for this campaign)
   const funnelRows = campaignFilter
