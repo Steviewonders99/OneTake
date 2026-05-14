@@ -38,27 +38,59 @@ const SOURCE_COLOR: Record<string, string> = {
 };
 
 function shortenSource(source: string): string {
-  const map: Record<string, string> = {
+  const s = source.toLowerCase().trim();
+
+  // Exact matches first
+  const exact: Record<string, string> = {
     'paid_media': 'Paid Media',
-    'facebook': 'Facebook',
-    'brevo': 'Brevo',
+    'facebook': 'Facebook Paid',
+    'l.facebook.com': 'FB Organic',
+    'lm.facebook.com': 'FB Organic',
+    'm.facebook.com': 'FB Organic',
+    'fb': 'Facebook Paid',
+    'brevo': 'Brevo Email',
     'google': 'Google',
-    'Handshake': 'Handshake',
+    'bing': 'Bing',
+    'handshake': 'Handshake',
     'youtube.com': 'YouTube',
-    'l.facebook.com': 'FB Referral',
     'linkedin': 'LinkedIn',
-    'LinkedIn': 'LinkedIn',
     'tiktok': 'TikTok',
     '(direct)': 'Direct',
-    'ig': 'Instagram',
-    'Indeed': 'Indeed',
+    'direct': 'Direct',
+    '(not set)': 'Unknown',
+    'ig': 'Instagram Paid',
+    'indeed': 'Indeed',
     'reddit': 'Reddit',
+    'craigslist': 'Craigslist',
+    'twitter': 'Twitter/X',
+    'x.com': 'Twitter/X',
+    'glassdoor': 'Glassdoor',
+    'meta': 'Meta Paid',
   };
-  for (const [k, v] of Object.entries(map)) {
-    if (source.toLowerCase() === k.toLowerCase()) return v;
-    if (source.toLowerCase().includes(k.toLowerCase())) return v;
+
+  if (exact[s]) return exact[s];
+
+  // Partial matches
+  if (s.includes('facebook')) return 'FB Organic';
+  if (s.includes('instagram')) return 'Instagram';
+  if (s.includes('linkedin')) return 'LinkedIn';
+  if (s.includes('tiktok')) return 'TikTok';
+  if (s.includes('reddit')) return 'Reddit';
+  if (s.includes('youtube')) return 'YouTube';
+  if (s.includes('brevo')) return 'Brevo Email';
+  if (s.includes('indeed')) return 'Indeed';
+  if (s.includes('handshake')) return 'Handshake';
+
+  // Numeric IDs (campaign IDs, ad IDs) → "Meta Ad"
+  if (/^\d{5,}$/.test(s)) return 'Meta Ad';
+
+  // URLs → extract domain
+  if (s.includes('.com') || s.includes('.org') || s.includes('.net')) {
+    const domain = s.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].split('.')[0];
+    return domain.charAt(0).toUpperCase() + domain.slice(1);
   }
-  // Truncate anything over 12 chars
+
+  // Anything over 12 chars → truncate
   return source.length > 12 ? source.slice(0, 11) + '…' : source;
 }
 
