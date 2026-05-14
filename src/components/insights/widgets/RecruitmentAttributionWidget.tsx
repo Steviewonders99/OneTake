@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { formatCompact, formatCurrency, formatPct } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
+import { normalizeSource, getSourceColor } from '@/lib/source-normalization';
 
 interface SourceRow {
   source: string; medium: string; sessions: number; signups: number; completions: number;
@@ -141,7 +142,7 @@ export default function RecruitmentAttributionWidget({ config }: { config: Recor
                 <div className="w-3 shrink-0">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLOR[r.type] || '#d4d4d4' }} />
                 </div>
-                <div className="flex-1 text-[#525252] truncate">{r.source} / {r.medium}</div>
+                <div className="flex-1 text-[#525252] truncate">{normalizeSource(r.source)} / {r.medium}</div>
                 <div className="w-10 text-right text-[9px] text-[#a3a3a3]">{r.type}</div>
                 <div className="w-12 text-right text-[#a3a3a3] tabular-nums">{r.w1_completions}</div>
                 <div className="w-12 text-right text-[#1a1a1a] font-medium tabular-nums">{r.w2_completions}</div>

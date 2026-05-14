@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { formatCompact, formatPct, CHART_COLORS } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
+import { normalizeSource, getSourceColor } from '@/lib/source-normalization';
 
 interface Channel {
   source: string;
@@ -193,12 +194,12 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
                     <td className="py-2 pr-1">
                       <div
                         className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: sourceColor(ch.source) }}
+                        style={{ backgroundColor: getSourceColor(normalizeSource(ch.source)) }}
                       />
                     </td>
                     <td className="py-2 pr-2 max-w-[100px]">
                       <div className="text-[11px] text-[#1a1a1a] font-medium truncate">
-                        {shortenSource(ch.source)}
+                        {normalizeSource(ch.source)}
                       </div>
                       <div className="text-[9px] text-[#a3a3a3] truncate">{ch.medium}</div>
                     </td>

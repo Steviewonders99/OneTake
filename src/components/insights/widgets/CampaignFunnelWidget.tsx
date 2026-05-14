@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CHART_COLORS, formatCurrency, formatCompact, formatPct } from '../chartTheme';
 import { useDashboardFilter } from '../DashboardFilterContext';
+import { normalizeSource, getSourceColor } from '@/lib/source-normalization';
 
 interface FunnelStage {
   stage: string;
@@ -222,10 +223,10 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
                 <div key={`${ch.source}-${ch.medium}`} className="flex items-center gap-2 text-[10px] py-1.5 border-b border-[#fafafa]">
                   <div
                     className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ backgroundColor: SOURCE_COLOR[ch.source] || '#d4d4d4' }}
+                    style={{ backgroundColor: getSourceColor(normalizeSource(ch.source)) }}
                   />
                   <div className="flex-1 truncate text-[#525252]">
-                    {ch.source} / {ch.medium}
+                    {normalizeSource(ch.source)} / {ch.medium}
                   </div>
                   <div className="w-14 text-right text-[#a3a3a3] tabular-nums">
                     {formatCompact(ch.sessions)}
