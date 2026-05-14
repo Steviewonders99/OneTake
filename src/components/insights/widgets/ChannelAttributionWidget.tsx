@@ -123,6 +123,7 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
   if (!data) return <div className="h-full animate-pulse rounded-xl bg-[#f5f5f5]" />;
 
   const channels = (data.channels || []).slice(0, 10);
+  const totalSignups = channels.reduce((s, ch) => s + (ch.signups || 0), 0);
 
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden">
@@ -178,6 +179,7 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
                 <th className="text-left pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">Source</th>
                 <th className="text-right pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pr-1">Sessions</th>
                 <th className="text-right pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pr-1">Sign-ups</th>
+                <th className="text-right pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pr-1">% Share</th>
                 <th className="text-right pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em] pr-1">Done</th>
                 <th className="text-right pb-2 text-[8px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">CVR</th>
               </tr>
@@ -208,6 +210,9 @@ export default function ChannelAttributionWidget({ config }: { config: Record<st
                     </td>
                     <td className="py-2 pr-1 text-right text-[11px] text-[#1a1a1a] font-medium tabular-nums">
                       {formatCompact(ch.signups)}
+                    </td>
+                    <td className="py-2 pr-1 text-right text-[10px] text-[#a3a3a3] tabular-nums">
+                      {totalSignups > 0 && ch.signups > 0 ? formatPct(ch.signups / totalSignups * 100) : '—'}
                     </td>
                     <td className="py-2 pr-1 text-right text-[11px] font-medium tabular-nums"
                       style={{ color: ch.completions > 0 ? CHART_COLORS.green : '#a3a3a3' }}
