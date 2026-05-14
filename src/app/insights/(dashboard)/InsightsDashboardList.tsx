@@ -43,7 +43,7 @@ export function InsightsDashboardList({ dashboards: initial, role }: { dashboard
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-12">
       <AiComposerHero />
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
