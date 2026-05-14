@@ -71,6 +71,8 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
   const [showDropdown, setShowDropdown] = useState(false);
   const { filters } = useDashboardFilter();
 
+  const effectiveCampaign = filters.campaign || campaign;
+
   const fetchData = useCallback((c: string) => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 90);
     const qp = c ? `&campaign=${encodeURIComponent(c)}` : '';
@@ -80,7 +82,7 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
       .catch(() => {});
   }, [config.days, filters.dateRange]);
 
-  useEffect(() => { fetchData(campaign); }, [campaign, fetchData]);
+  useEffect(() => { fetchData(effectiveCampaign); }, [effectiveCampaign, fetchData]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
@@ -96,35 +98,39 @@ export default function CampaignFunnelWidget({ config }: { config: Record<string
     <div className="h-full flex flex-col gap-4 overflow-hidden">
       {/* Campaign Selector */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="relative">
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors"
-          >
-            <span className="truncate max-w-[160px]">{data.campaign || 'All Campaigns'}</span>
-            <ChevronDown className="w-3 h-3 text-[#a3a3a3] shrink-0" />
-          </button>
-          {showDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50 max-h-48 overflow-y-auto min-w-[200px]">
-              <button
-                onClick={() => { setCampaign(''); setShowDropdown(false); }}
-                className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors"
-              >
-                All Campaigns
-              </button>
-              {data.available_campaigns.map(c => (
+        {filters.campaign ? (
+          <div className="text-[10px] text-[#3b82f6] font-medium">Filtered: {filters.campaign}</div>
+        ) : (
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors"
+            >
+              <span className="truncate max-w-[160px]">{data.campaign || 'All Campaigns'}</span>
+              <ChevronDown className="w-3 h-3 text-[#a3a3a3] shrink-0" />
+            </button>
+            {showDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50 max-h-48 overflow-y-auto min-w-[200px]">
                 <button
-                  key={c.campaign}
-                  onClick={() => { setCampaign(c.campaign); setShowDropdown(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors flex justify-between"
+                  onClick={() => { setCampaign(''); setShowDropdown(false); }}
+                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors"
                 >
-                  <span className="truncate">{c.campaign}</span>
-                  <span className="text-[#a3a3a3] ml-2 tabular-nums">{c.total.toLocaleString()}</span>
+                  All Campaigns
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
+                {data.available_campaigns.map(c => (
+                  <button
+                    key={c.campaign}
+                    onClick={() => { setCampaign(c.campaign); setShowDropdown(false); }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer transition-colors flex justify-between"
+                  >
+                    <span className="truncate">{c.campaign}</span>
+                    <span className="text-[#a3a3a3] ml-2 tabular-nums">{c.total.toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI Row — top line: spend + volume */}

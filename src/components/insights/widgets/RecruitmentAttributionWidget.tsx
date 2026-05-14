@@ -40,13 +40,15 @@ export default function RecruitmentAttributionWidget({ config }: { config: Recor
   const { filters } = useDashboardFilter();
   const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 30);
 
+  const effectiveCampaign = filters.campaign || campaign;
+
   const fetchData = useCallback((c: string) => {
     const qp = c ? `&campaign=${encodeURIComponent(c)}` : '';
     fetch(`/api/insights/metrics/recruitment-attribution?days=${days}${qp}`)
       .then(r => r.json()).then(setData).catch(() => {});
   }, [days]);
 
-  useEffect(() => { fetchData(campaign); }, [campaign, fetchData]);
+  useEffect(() => { fetchData(effectiveCampaign); }, [effectiveCampaign, fetchData]);
 
   if (!data) return <div className="h-full animate-pulse rounded bg-[#f5f5f5]" />;
 
@@ -57,26 +59,30 @@ export default function RecruitmentAttributionWidget({ config }: { config: Recor
     <div className="h-full flex flex-col gap-4 overflow-hidden">
       {/* Campaign selector + view toggle */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="relative">
-          <button onClick={() => setShowDropdown(!showDropdown)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors">
-            <span className="truncate max-w-[140px]">{data.campaign}</span>
-            <ChevronDown className="w-3 h-3 text-[#a3a3a3] shrink-0" />
-          </button>
-          {showDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50 max-h-48 overflow-y-auto min-w-[180px]">
-              <button onClick={() => { setCampaign(''); setShowDropdown(false); }}
-                className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer">All Campaigns</button>
-              {data.available_campaigns.map(c => (
-                <button key={c.campaign} onClick={() => { setCampaign(c.campaign); setShowDropdown(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer flex justify-between">
-                  <span className="truncate">{c.campaign}</span>
-                  <span className="text-[#a3a3a3] ml-2 tabular-nums">{c.total.toLocaleString()}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {filters.campaign ? (
+          <div className="text-[10px] text-[#3b82f6] font-medium">Filtered: {filters.campaign}</div>
+        ) : (
+          <div className="relative">
+            <button onClick={() => setShowDropdown(!showDropdown)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-[#525252] bg-[#f5f5f5] hover:bg-[#ebebeb] cursor-pointer transition-colors">
+              <span className="truncate max-w-[140px]">{data.campaign}</span>
+              <ChevronDown className="w-3 h-3 text-[#a3a3a3] shrink-0" />
+            </button>
+            {showDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50 max-h-48 overflow-y-auto min-w-[180px]">
+                <button onClick={() => { setCampaign(''); setShowDropdown(false); }}
+                  className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer">All Campaigns</button>
+                {data.available_campaigns.map(c => (
+                  <button key={c.campaign} onClick={() => { setCampaign(c.campaign); setShowDropdown(false); }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] text-[#525252] hover:bg-[#f5f5f5] cursor-pointer flex justify-between">
+                    <span className="truncate">{c.campaign}</span>
+                    <span className="text-[#a3a3a3] ml-2 tabular-nums">{c.total.toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex gap-0.5 ml-auto">
           {(['sources', 'cities'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}

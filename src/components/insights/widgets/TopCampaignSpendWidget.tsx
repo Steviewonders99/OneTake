@@ -61,11 +61,12 @@ export default function TopCampaignSpendWidget({ config }: { config: Record<stri
 
   const fetchData = useCallback(() => {
     const days = filters.dateRange ? parseInt(filters.dateRange) : ((config.days as number) || 90);
-    fetch(`/api/insights/metrics/campaign-funnel?days=${days}`)
+    const qp = filters.campaign ? `&campaign=${encodeURIComponent(filters.campaign)}` : '';
+    fetch(`/api/insights/metrics/campaign-funnel?days=${days}${qp}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {});
-  }, [config.days, filters.dateRange]);
+  }, [config.days, filters.dateRange, filters.campaign]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -101,8 +102,13 @@ export default function TopCampaignSpendWidget({ config }: { config: Record<stri
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between shrink-0">
-        <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">
-          Top {rows.length} by spend
+        <div className="flex items-center gap-2">
+          <div className="text-[9px] font-medium text-[#a3a3a3] uppercase tracking-[0.06em]">
+            Top {rows.length} by spend
+          </div>
+          {filters.campaign && (
+            <div className="text-[10px] text-[#3b82f6] font-medium">Filtered: {filters.campaign}</div>
+          )}
         </div>
         {totalSpend > 0 && (
           <div className="text-[10px] font-semibold text-[#1a1a1a] tabular-nums">
