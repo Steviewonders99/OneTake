@@ -5,7 +5,8 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 interface DashboardFilters {
   organicPlatform?: string;
   paidPlatform?: string;
-  dateRange?: string;  // stored as string like "7", "14", "30", "90"
+  dateRange?: string;
+  campaign?: string;  // master campaign filter — all widgets respect this
 }
 
 interface DashboardFilterContextValue {

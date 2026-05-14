@@ -213,6 +213,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetRegistryEntry> = {
     defaultSize: { w: 12, h: 4 }, minSize: { w: 6, h: 3 },
   },
   // ── Creative Gallery ──────────────────────────────────────
+  'master-filter': {
+    component: lazy(() => import('./widgets/MasterFilterWidget')),
+    category: 'utility', label: 'Campaign Filter', icon: Target,
+    description: 'Master campaign selector — all widgets on the dashboard respond to this filter',
+    defaultSize: { w: 3, h: 6 }, minSize: { w: 2, h: 4 },
+  },
   'creative-gallery': {
     component: lazy(() => import('./widgets/CreativeGalleryWidget')),
     category: 'paid', label: 'Creative Gallery', icon: Image,

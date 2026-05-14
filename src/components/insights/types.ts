@@ -46,6 +46,8 @@ export type WidgetType =
   | 'organic-account-growth'
   | 'organic-top-posts'
   | 'gsc-performance'
+  // Master Filter
+  | 'master-filter'
   // Creative Gallery + Category
   | 'creative-gallery'
   | 'category-breakdown'
