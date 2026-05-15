@@ -27,15 +27,14 @@ POST_INSIGHT_METRICS = [
     "post_clicks",
 ]
 
-# IG media insight metrics
+# IG media insight metrics (v21.0+ — 'impressions' and 'engagement' deprecated for newer posts)
 IG_MEDIA_METRICS = [
-    "impressions",
     "reach",
-    "engagement",
     "likes",
     "comments",
     "shares",
     "saved",
+    "total_interactions",
 ]
 
 
@@ -113,6 +112,7 @@ def _parse_insights(raw: dict) -> dict:
         "impressions": "impressions",
         "reach": "reach",
         "engagement": "engagement",
+        "total_interactions": "engagement",
         "likes": "likes",
         "comments": "comments",
         "shares": "shares",
@@ -163,8 +163,8 @@ class MetaOrganicClient:
     ) -> None:
         self.db = db
         self.page_id: str = page_id or os.environ.get("META_PAGE_ID", "")
-        self.token: str = token or os.environ.get("META_PAGE_TOKEN", "")
-        self.ig_id: str = ig_id or os.environ.get("META_IG_ID", "")
+        self.token: str = token or os.environ.get("META_PAGE_ACCESS_TOKEN", os.environ.get("META_PAGE_TOKEN", ""))
+        self.ig_id: str = ig_id or os.environ.get("META_IG_BUSINESS_ID", os.environ.get("META_IG_ID", ""))
 
     # ------------------------------------------------------------------
     # Public API
