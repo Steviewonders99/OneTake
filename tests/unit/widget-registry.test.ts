@@ -6,8 +6,8 @@ describe('Widget Registry', () => {
   const registryEntries = Object.entries(WIDGET_REGISTRY);
   const categoryIds = WIDGET_CATEGORIES.map(c => c.id);
 
-  it('has exactly 30 widget entries', () => {
-    expect(registryEntries.length).toBe(30);
+  it('has exactly 47 widget entries', () => {
+    expect(registryEntries.length).toBe(47);
   });
 
   it('every entry has a valid category from WIDGET_CATEGORIES', () => {

@@ -7,6 +7,7 @@ vi.mock('@/lib/platforms/google-ads', () => ({ getNormalizedGoogleAds: vi.fn(asy
 vi.mock('@/lib/platforms/meta-ads', () => ({ getNormalizedMetaAds: vi.fn(async () => null) }));
 vi.mock('@/lib/platforms/linkedin-ads', () => ({ getNormalizedLinkedInAds: vi.fn(async () => null) }));
 vi.mock('@/lib/platforms/tiktok-ads', () => ({ getNormalizedTikTokAds: vi.fn(async () => null) }));
+vi.mock('@/lib/platforms/reddit-ads', () => ({ getNormalizedRedditAds: vi.fn(async () => null) }));
 
 import { getMergedPaidAudience } from '@/lib/platforms/normalizer';
 import { getNormalizedGoogleAds } from '@/lib/platforms/google-ads';
