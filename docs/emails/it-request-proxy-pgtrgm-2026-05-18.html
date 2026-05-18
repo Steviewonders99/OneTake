@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT Request — Container App Ingress + pg_trgm Extension</title>
+<style>
+  body { margin: 0; padding: 32px; font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f5f5f5; line-height: 1.6; }
+  .email { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0348B2, #7C3AED); padding: 28px 32px; color: white; }
+  .header h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .header .sub { font-size: 12px; opacity: 0.8; }
+  .body { padding: 28px 32px; }
+  h2 { font-size: 16px; font-weight: 700; color: #0348B2; margin: 24px 0 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; }
+  h2:first-child { margin-top: 0; }
+  p { margin: 8px 0; font-size: 14px; }
+  .priority { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; color: white; margin-right: 6px; }
+  .p0 { background: #DC2626; }
+  .p1 { background: #F59E0B; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #f8f8f8; border: 1px solid #e5e5e5; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #737373; }
+  td { padding: 8px 12px; border: 1px solid #e5e5e5; vertical-align: top; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: 'Cascadia Code', 'Fira Code', monospace; line-height: 1.5; margin: 12px 0; }
+  pre .comment { color: #6c7086; }
+  .callout { background: #EFF6FF; border-left: 4px solid #2563EB; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; }
+  .callout.warn { background: #FFFBEB; border-left-color: #F59E0B; }
+  .footer { padding: 20px 32px; background: #f8f8f8; border-top: 1px solid #f0f0f0; font-size: 12px; color: #737373; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { font-size: 14px; margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="email">
+
+<div class="header">
+  <h1>IT Request — OneTake Platform (2 Items)</h1>
+  <div class="sub">From: Steven Junop · Digital Marketing · May 18, 2026 · Priority: P0 + P1</div>
+</div>
+
+<div class="body">
+
+<p>Hi Pengfei,</p>
+
+<p>Thank you again for the incredible Azure infrastructure work — the Container App and PG server have been running flawlessly since Day 24. I have two requests for the OneTake platform, both related to the analytics dashboard we're presenting to L1 leadership on <strong>Thursday May 22</strong>.</p>
+
+<h2>Request 1: Enable Container App Ingress (Port 8080)</h2>
+<span class="priority p0">P0 — Blocks Thursday demo</span>
+
+<p><strong>What:</strong> Enable external HTTP ingress on the <code>onetake-py-worker</code> Container App, port 8080.</p>
+
+<p><strong>Why:</strong> We've built a lightweight JSON API proxy (<code>db_proxy.py</code>) that runs inside the Container App alongside the existing worker. Our Next.js frontend is deployed on Vercel, which has dynamic IPs that can't be whitelisted on the Azure PG firewall. The proxy solves this — it sits inside the Container App (same network as PG), accepts HTTPS requests from Vercel, queries PG, and returns JSON. Bearer token authentication is enforced on every request.</p>
+
+<p><strong>Architecture:</strong></p>
+<pre>
+<span class="comment"># Current (broken)</span>
+Vercel (dynamic IPs) ──✗──→ Azure PG (IP whitelist blocks)
+
+<span class="comment"># With proxy (fixed)</span>
+Vercel ──HTTPS──→ Container App :8080 ──direct──→ Azure PG
+                  (db_proxy.py)         (same network, no IP issue)
+                  Bearer token auth
+</pre>
+
+<p><strong>What I need:</strong></p>
+
+<table>
+  <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+  <tr>
+    <td>Container App</td>
+    <td><code>onetake-py-worker</code></td>
+    <td>Existing app in <code>onetake-rg</code></td>
+  </tr>
+  <tr>
+    <td>Ingress</td>
+    <td>Enabled, External</td>
+    <td>Must be reachable from public internet (Vercel)</td>
+  </tr>
+  <tr>
+    <td>Target port</td>
+    <td><code>8080</code></td>
+    <td>The proxy listens on 8080</td>
+  </tr>
+  <tr>
+    <td>Transport</td>
+    <td>HTTP (TLS terminated by Container Apps)</td>
+    <td>Container Apps provides the SSL certificate automatically</td>
+  </tr>
+</table>
+
+<p><strong>CLI equivalent (if you prefer):</strong></p>
+<pre>
+az containerapp ingress enable \
+  --name onetake-py-worker \
+  --resource-group onetake-rg \
+  --target-port 8080 \
+  --type external \
+  --transport http
+</pre>
+
+<div class="callout">
+  <strong>Security note:</strong> The proxy enforces Bearer token authentication on every request via the <code>PROXY_SECRET</code> environment variable. No unauthenticated access is possible. The token is shared only between Vercel (as an env var) and the Container App.
+</div>
+
+<p><strong>After ingress is enabled</strong>, I'll need the Container App's FQDN (e.g., <code>onetake-py-worker.&lt;env&gt;.&lt;region&gt;.azurecontainerapps.io</code>) to configure Vercel.</p>
+
+<h2>Request 2: Allowlist pg_trgm Extension on Azure PG</h2>
+<span class="priority p1">P1 — Blocks Azure PG migration</span>
+
+<p><strong>What:</strong> Add <code>pg_trgm</code> to the allowed extensions list on <code>onetake-pg-west01</code>.</p>
+
+<p><strong>Why:</strong> We built a Project Registry system that uses fuzzy text matching to automatically link WordPress job posts to their advertising campaigns, email sequences, recruiter links, and organic social posts. The <code>pg_trgm</code> extension enables this fuzzy matching — it's a built-in PostgreSQL extension (not third-party) that ships with every PG installation.</p>
+
+<p><strong>What it does:</strong> Trigram-based text similarity. For example, it can match "hummus" to "humus" or "fur_frame_dogs" to "fur-frame" with a confidence score. This powers the auto-linking that saves hours of manual campaign-to-project mapping.</p>
+
+<p><strong>What I need:</strong></p>
+
+<table>
+  <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+  <tr>
+    <td>Server</td>
+    <td><code>onetake-pg-west01</code></td>
+    <td>Azure Database for PostgreSQL Flexible Server</td>
+  </tr>
+  <tr>
+    <td>Parameter</td>
+    <td><code>azure.extensions</code></td>
+    <td>Server parameter (Networking → Server parameters)</td>
+  </tr>
+  <tr>
+    <td>Value to add</td>
+    <td><code>pg_trgm</code></td>
+    <td>Append to existing value (comma-separated if others exist)</td>
+  </tr>
+</table>
+
+<p><strong>Via Azure Portal:</strong></p>
+<ul>
+  <li>Navigate to <code>onetake-pg-west01</code> → Server parameters</li>
+  <li>Search for <code>azure.extensions</code></li>
+  <li>Add <code>PG_TRGM</code> to the allowed list (check the checkbox)</li>
+  <li>Save</li>
+</ul>
+
+<p><strong>CLI equivalent:</strong></p>
+<pre>
+az postgres flexible-server parameter set \
+  --resource-group onetake-rg \
+  --server-name onetake-pg-west01 \
+  --name azure.extensions \
+  --value pg_trgm
+</pre>
+
+<div class="callout">
+  <strong>No restart required.</strong> Allowlisting an extension just enables <code>CREATE EXTENSION</code> — it doesn't install anything or require a server restart. I'll run <code>CREATE EXTENSION IF NOT EXISTS pg_trgm</code> after it's allowlisted.
+</div>
+
+<h2>Timeline</h2>
+
+<table>
+  <tr><th>Item</th><th>Priority</th><th>Needed by</th><th>Why</th></tr>
+  <tr>
+    <td>Container App ingress (port 8080)</td>
+    <td><span class="priority p0">P0</span></td>
+    <td><strong>Wed May 21</strong> (day before demo)</td>
+    <td>Blocks the Project Command Center dashboard for Thursday L1 presentation</td>
+  </tr>
+  <tr>
+    <td>pg_trgm allowlisting</td>
+    <td><span class="priority p1">P1</span></td>
+    <td>End of week</td>
+    <td>Blocks full migration from Neon → Azure PG. Currently using Neon as interim.</td>
+  </tr>
+</table>
+
+<h2>Environment Variables Needed on Container App</h2>
+
+<p>After ingress is enabled, I'll also need these env vars added to the Container App (or I can add them via the portal if I have access):</p>
+
+<table>
+  <tr><th>Variable</th><th>Type</th><th>Value</th></tr>
+  <tr>
+    <td><code>PROXY_SECRET</code></td>
+    <td>Secret</td>
+    <td>I'll generate and share securely</td>
+  </tr>
+  <tr>
+    <td><code>PROXY_PORT</code></td>
+    <td>Plain</td>
+    <td><code>8080</code></td>
+  </tr>
+</table>
+
+<p>Happy to jump on a quick call if any of this needs clarification. Thank you for the continued fast turnaround — the Azure infrastructure has been rock-solid.</p>
+
+<p style="margin-top: 20px;">Best,<br><strong>Steven Junop</strong><br>Digital Marketing Manager<br>OneForma / Centific</p>
+
+</div>
+
+<div class="footer">
+  OneTake Platform · Day 43 · 900+ commits · 53 projects in registry · L1 demo Thursday May 22
+</div>
+
+</div>
+</body>
+</html>
