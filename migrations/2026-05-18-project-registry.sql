@@ -243,10 +243,10 @@ BEGIN
       ELSE NULL
     END,
     CASE
-      WHEN ucr.utm_source_pattern IS NOT NULL AND ucr.utm_medium_pattern IS NOT NULL THEN 1.0
-      WHEN ucr.utm_source_pattern IS NOT NULL THEN 0.8
-      WHEN ucr.utm_medium_pattern IS NOT NULL THEN 0.7
-      ELSE 0.5
+      WHEN ucr.utm_source_pattern IS NOT NULL AND ucr.utm_medium_pattern IS NOT NULL THEN 1.0::FLOAT
+      WHEN ucr.utm_source_pattern IS NOT NULL THEN 0.8::FLOAT
+      WHEN ucr.utm_medium_pattern IS NOT NULL THEN 0.7::FLOAT
+      ELSE 0.5::FLOAT
     END
   FROM utm_channel_rules ucr
   JOIN channel_definitions cd ON cd.id = ucr.channel_id
@@ -334,7 +334,8 @@ SELECT
   (SELECT cd.display_name
    FROM channel_definitions cd
    JOIN utm_channel_rules ucr ON ucr.channel_id = cd.id
-   WHERE u.raw_source ~* coalesce(ucr.utm_source_pattern, '.*')
+   WHERE ucr.utm_source_pattern IS NOT NULL
+     AND u.raw_source ~* ucr.utm_source_pattern
    ORDER BY ucr.priority DESC LIMIT 1
   ) AS suggested_channel
 FROM unclassified_utm_log u
