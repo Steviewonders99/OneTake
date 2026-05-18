@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { listChannelLinks, createChannelLink, confirmChannelLink, dismissChannelLink } from '@/lib/db/channels';
+import { isProxyEnabled, proxyGetChannels } from '@/lib/db-proxy';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await requireAuth();
   const { id } = await params;
+
+  if (isProxyEnabled()) {
+    const channels = await proxyGetChannels(id);
+    return NextResponse.json(channels);
+  }
+
   const links = await listChannelLinks(id);
   return NextResponse.json(links);
 }

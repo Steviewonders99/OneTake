@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { isProxyEnabled, proxyGetFunnel } from '@/lib/db-proxy';
 import type { ProjectFunnelRow, ProjectWeeklySummary } from '@/lib/types/projects';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await requireAuth();
   const { id } = await params;
   const view = req.nextUrl.searchParams.get('view') ?? 'weekly';
+
+  // Use proxy when available (Azure PG via Container App)
+  if (isProxyEnabled()) {
+    const data = await proxyGetFunnel(id, view);
+    return NextResponse.json(data);
+  }
+
   const sql = getDb();
 
   if (view === 'daily') {

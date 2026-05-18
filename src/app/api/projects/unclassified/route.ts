@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { listUnclassified, resolveUnclassified, listChannelDefinitions, createChannelDefinition, createUtmRule } from '@/lib/db/channels';
+import { isProxyEnabled, proxyGetUnclassified } from '@/lib/db-proxy';
 
 export async function GET() {
   await requireAuth();
+
+  if (isProxyEnabled()) {
+    const data = await proxyGetUnclassified();
+    return NextResponse.json(data);
+  }
+
   const items = await listUnclassified();
   const channels = await listChannelDefinitions();
   return NextResponse.json({ items, channels });
