@@ -29,6 +29,7 @@ import sys
 from typing import Any
 
 import uuid as _uuid
+from decimal import Decimal
 
 import asyncpg
 from aiohttp import web
@@ -65,6 +66,8 @@ def row_to_dict(row: asyncpg.Record) -> dict[str, Any]:
     for k, v in d.items():
         if isinstance(v, _uuid.UUID):
             d[k] = str(v)
+        elif isinstance(v, Decimal):
+            d[k] = float(v)
         elif hasattr(v, "isoformat"):
             d[k] = v.isoformat()
         elif isinstance(v, list):
