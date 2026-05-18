@@ -28,6 +28,8 @@ import os
 import sys
 from typing import Any
 
+import uuid as _uuid
+
 import asyncpg
 from aiohttp import web
 
@@ -61,7 +63,9 @@ async def auth_middleware(request: web.Request, handler):
 def row_to_dict(row: asyncpg.Record) -> dict[str, Any]:
     d = dict(row)
     for k, v in d.items():
-        if hasattr(v, "isoformat"):
+        if isinstance(v, _uuid.UUID):
+            d[k] = str(v)
+        elif hasattr(v, "isoformat"):
             d[k] = v.isoformat()
         elif isinstance(v, list):
             d[k] = [str(i) for i in v]
