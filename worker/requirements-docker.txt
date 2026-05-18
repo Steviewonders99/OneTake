@@ -21,3 +21,4 @@ qrcode[pil]==8.0
 #
 # In Docker, the worker uses cloud AI providers (OpenRouter, NVIDIA NIM)
 # for all inference. Install full requirements.txt for local Mac development.
+aiohttp>=3.9.0

@@ -27,3 +27,4 @@ torch>=2.1.0
 
 # FFmpeg is required at system level for audio/video muxing
 # Install via: brew install ffmpeg (macOS) or apt install ffmpeg (Linux)
+aiohttp>=3.9.0
