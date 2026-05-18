@@ -1358,6 +1358,105 @@ export async function createTables(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_share_links_token ON campaign_share_links(token)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_roas_config_request ON roas_config(request_id, country)`;
 
+  // ═══ Project Registry ═══
+
+  await sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS projects (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      codename        TEXT NOT NULL UNIQUE,
+      display_name    TEXT NOT NULL,
+      wp_job_id       INT,
+      wp_slug         TEXT,
+      wp_published_at TIMESTAMPTZ,
+      intake_id       UUID REFERENCES intake_requests(id) ON DELETE SET NULL,
+      status          TEXT NOT NULL DEFAULT 'active'
+                      CHECK (status IN ('active','paused','completed','archived')),
+      countries       TEXT[],
+      created_at      TIMESTAMPTZ DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS project_aliases (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      project_id  UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      alias       TEXT NOT NULL UNIQUE,
+      source      TEXT NOT NULL DEFAULT 'manual'
+                  CHECK (source IN ('manual','fuzzy_match','utm_scan','wp_scan')),
+      confidence  FLOAT DEFAULT 1.0,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_project_aliases_trgm ON project_aliases USING gin (alias gin_trgm_ops)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS channel_definitions (
+      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      slug          TEXT NOT NULL UNIQUE,
+      display_name  TEXT NOT NULL,
+      category      TEXT NOT NULL CHECK (category IN (
+        'paid_social','paid_search','organic_social','organic_search',
+        'email','job_board','physical','recruiter','influencer','referral','direct','other'
+      )),
+      icon          TEXT,
+      is_paid       BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at    TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS utm_channel_rules (
+      id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      channel_id            UUID NOT NULL REFERENCES channel_definitions(id) ON DELETE CASCADE,
+      utm_source_pattern    TEXT,
+      utm_medium_pattern    TEXT,
+      utm_campaign_pattern  TEXT,
+      priority              INT NOT NULL DEFAULT 0,
+      extract_label_regex   TEXT,
+      notes                 TEXT,
+      created_at            TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS project_channel_links (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      channel_id      UUID NOT NULL REFERENCES channel_definitions(id),
+      external_id     TEXT NOT NULL,
+      external_name   TEXT,
+      extracted_label TEXT,
+      match_method    TEXT NOT NULL DEFAULT 'manual'
+                      CHECK (match_method IN ('manual','fuzzy','exact','regex')),
+      confidence      FLOAT DEFAULT 1.0,
+      confirmed_at    TIMESTAMPTZ,
+      created_at      TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(channel_id, external_id)
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS unclassified_utm_log (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      project_id      UUID REFERENCES projects(id) ON DELETE SET NULL,
+      raw_source      TEXT,
+      raw_medium      TEXT,
+      raw_campaign    TEXT,
+      normalized_name TEXT NOT NULL,
+      hit_count       INT NOT NULL DEFAULT 1,
+      first_seen_at   DATE NOT NULL,
+      last_seen_at    DATE NOT NULL,
+      resolved        BOOLEAN NOT NULL DEFAULT FALSE,
+      resolved_to     UUID REFERENCES channel_definitions(id),
+      resolved_at     TIMESTAMPTZ,
+      UNIQUE(raw_source, raw_medium, raw_campaign)
+    )
+  `;
+
   // Seed default Insights dashboard template
   await seedDefaultTemplate();
 
