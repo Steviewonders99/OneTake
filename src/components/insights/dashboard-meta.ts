@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp,
+  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp, Target,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -16,6 +16,13 @@ export interface DashboardMeta {
  * Keyed by dashboard title — must match seed-dashboards.ts titles exactly.
  */
 export const DASHBOARD_META: Record<string, DashboardMeta> = {
+  'Project Command Center': {
+    icon: Target,
+    accent: '#7C3AED',
+    accentBg: '#F5F3FF',
+    tagline: 'Full portfolio — paid, organic, email, physical, recruiter. All channels, one view.',
+    order: 0,
+  },
   'Executive Overview': {
     icon: LayoutDashboard,
     accent: '#3b82f6',
