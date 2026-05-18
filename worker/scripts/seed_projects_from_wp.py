@@ -18,6 +18,7 @@ import logging
 import os
 import re
 import sys
+from datetime import datetime, timezone
 
 import asyncpg
 import httpx
@@ -90,7 +91,13 @@ async def seed_to_db(jobs: list[dict]) -> int:
             title = job.get("title", {}).get("rendered", "Untitled")
             slug = job.get("slug", "")
             wp_id = job.get("id")
-            published = job.get("date_gmt", "")
+            raw_date = job.get("date_gmt", "")
+            published = None
+            if raw_date:
+                try:
+                    published = datetime.fromisoformat(raw_date).replace(tzinfo=timezone.utc)
+                except ValueError:
+                    pass
             codename = extract_codename(title, slug)
 
             # Extract countries from ACF fields if present
@@ -110,7 +117,7 @@ async def seed_to_db(jobs: list[dict]) -> int:
                     title,
                     wp_id,
                     slug,
-                    published if published else None,
+                    published,
                     countries if countries else [],
                 )
                 logger.info(
