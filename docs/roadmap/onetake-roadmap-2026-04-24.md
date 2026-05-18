@@ -1,6 +1,6 @@
-# OneTake Platform Roadmap — Updated May 6, 2026
+# OneTake Platform Roadmap — Updated May 18, 2026
 
-> Day 31 of deployment. 850+ commits. ~108K LOC. **Domains live. Normalization layer shipped. Demo Friday May 9.**
+> Day 43 of deployment. 900+ commits. ~112K LOC. **Project Registry shipped. Unified funnel live on Neon. Insights redesign in progress.**
 
 ---
 
@@ -8,7 +8,7 @@
 
 OneTake is a fully autonomous recruitment marketing platform that takes a job description and produces localized creative packages across 16+ countries in under 2 hours. This roadmap tracks the **6-week rollout** from Day 1 (April 6) through the Friday demo (May 9, Day 34).
 
-**Day 31 status:** `onetake.oneforma.com` DNS **LIVE** (CNAME locked in Cloudflare). `apply.oneforma.com` CNAME live, TXT verification pending IT. Data normalization layer shipped — Meta Ads, Reddit Ads, Brevo sync clients + orchestrator route + `normalizeToDaily()` pipeline ready for real credentials. Extraction speed 3x faster (Kimi K2.5 primary, 30s timeout). Intake wizard sizing standardized + OnForma-branded loader with fun facts + progress timeline. **Friday demo (May 9) is the target — everything this week serves that.**
+**Day 43 status:** Project Registry shipped — canonical `projects` table with fuzzy alias matching (pg_trgm), dynamic channel registry (20 channels, 16 UTM rules), unified `project_daily_funnel` view across paid/organic/email/physical/recruiter/job-board channels, `project_weekly_summary` materialized view for WoW narrative dashboards. 10 projects seeded, 31 aliases, 12 channel links, 4 unclassified UTMs surfaced with real normalized names. Deployed on Neon; Azure PG pending `pg_trgm` allowlisting from IT. 505 tests passing. Insights redesign brainstorm complete — next: narrative dashboard frontend.
 
 ---
 
@@ -144,6 +144,55 @@ Four-ring audience drift detection: "What is the gap between who we target, who 
 - **Azure Function named** — `onetake-fn-west01` submitted to IT
 - **Entra ID application** — Custom app, no user assignment required
 - **DNS request finalized** — 3 Cloudflare records for Vercel subdomains
+
+### Day 43 Ships (May 18): Project Registry + Insights Redesign Foundation ★★
+
+**Project Registry — canonical project identity (7 commits):**
+- **`projects` table** — UUID PK, codename UNIQUE, WP job link, intake_request link, status, countries. Every WP job post = one project row.
+- **`project_aliases` table** — fuzzy matching via pg_trgm GIN index. Handles messy codename variants (hummus→humus, kilo-nyc→kilo, furframe→fur-frame). Auto-created from WP slugs.
+- **`channel_definitions` table** — 20 seeded channels across 12 categories (paid_social, paid_search, organic_social, organic_search, email, job_board, physical, recruiter, influencer, referral, direct, other). Add new channels as data rows, no migration needed.
+- **`utm_channel_rules` table** — 16 regex rules mapping raw UTM patterns to channels. Priority-based resolution with label extraction (e.g. `recruiter_jane_smith` → channel=recruiter, label=jane_smith).
+- **`project_channel_links` table** — connects projects to data sources (campaign IDs, post IDs, UTM patterns, URL patterns). Manual + fuzzy + exact + regex match methods with confidence scores and confirmation workflow.
+- **`unclassified_utm_log` table** — surfaces unknown UTM combos with `normalize_utm_display()` function (never shows "unknown" — always real cleaned names like "Jobberman Premium / Job Board"). Assign-or-create workflow in dashboard.
+
+**SQL functions & views:**
+- `normalize_utm_display()` — IMMUTABLE, turns `recruiter_jane_smith` → "Recruiter Jane Smith"
+- `resolve_utm_channel()` — matches UTMs against rules by priority, extracts labels, computes confidence
+- `seed_project_from_wp()` — upsert project + auto-create aliases from codename + WP slug
+- `link_intake_to_projects()` — bulk-link existing intake_requests to projects via campaign_slug
+- `project_daily_funnel` VIEW — UNION ALL of paid (via intake_id + via channel_links), organic meta, organic linkedin, email brevo, organic search GSC
+- `project_weekly_summary` MATERIALIZED VIEW — weekly aggregates with paid/organic/email breakdowns, conversion_rate, blended_cpa, active_channels
+- `unclassified_channels_pending` VIEW — dashboard query surface with suggestions
+
+**Data access layer (TypeScript):**
+- `src/lib/types/projects.ts` — 11 interfaces (Project, ProjectAlias, ChannelDefinition, UTM types, funnel types)
+- `src/lib/db/projects.ts` — CRUD, aliases, fuzzy search, WP seeding, intake linking
+- `src/lib/db/channels.ts` — channel definitions, UTM rules, channel links, UTM resolution, unclassified management
+
+**API routes (7 endpoints):**
+- `GET/POST /api/projects` — list (with ?search= fuzzy), create
+- `GET/PATCH/DELETE /api/projects/[id]` — single project CRUD
+- `GET/POST /api/projects/[id]/aliases` — alias management
+- `GET/POST/PATCH /api/projects/[id]/channels` — channel link management (create, confirm, dismiss)
+- `GET /api/projects/[id]/funnel` — unified funnel data (?view=daily or weekly with WoW deltas)
+- `GET/PATCH /api/projects/unclassified` — unclassified UTM inbox (resolve or create-and-resolve)
+- `POST /api/projects/seed` — trigger retroactive discovery pipeline (admin only)
+
+**Python seeder:**
+- `worker/scripts/seed_projects_from_wp.py` — asyncpg + httpx, pulls all WP `job` posts, extracts codenames, calls `seed_project_from_wp()`
+
+**Tests:**
+- 22 new unit tests (projects + channels), all passing
+- Fixed 2 pre-existing test failures (normalizer missing reddit-ads mock, widget registry stale count 30→47)
+- **505/505 tests passing**
+
+**Sample data seeded on Neon:**
+- 10 projects (centaurus, humus, kilo, lumina, mosaic, moonbrush, fur-frame, jellyfish, andromeda, fred)
+- 31 aliases including messy variants
+- 12 channel links across meta_paid, reddit_paid, flyer, influencer, indeed, linkedin_jobs, google_paid, organic_search, brevo_email, recruiter
+- 4 unclassified UTMs (jobberman_premium, whatsapp_broadcast, telegram_group, unknown_partner_xyz)
+
+**Blocker:** Azure PG needs `pg_trgm` allowlisted by IT (`azure.extensions = 'pg_trgm'`). Neon deployment complete.
 
 ### Infrastructure & Security
 - 17-commit security hardening (auth bypass, IDOR, XSS, secrets, CSP)
@@ -539,13 +588,51 @@ Day 36+ (Post-demo)
   ├── AudienceIQ Phase 5 (ad platform APIs)
   ├── Organic content extension
   └── VYRA convergence decision
+
+Day 43 (May 18) — PROJECT REGISTRY + INSIGHTS FOUNDATION ★★★
+  ├── PROJECT REGISTRY (7 commits)
+  │   ├── projects table — canonical identity, WP job link, codename UNIQUE
+  │   ├── project_aliases — pg_trgm fuzzy matching (hummus→humus, furframe→fur-frame)
+  │   ├── channel_definitions — 20 channels across 12 categories (no-migration dynamic)
+  │   ├── utm_channel_rules — 16 regex rules, priority-based, label extraction
+  │   ├── project_channel_links — manual/fuzzy/exact/regex linking with confidence + confirmation
+  │   ├── unclassified_utm_log — real normalized names, assign-or-create workflow
+  │   └── 5 SQL functions + 3 views (daily funnel, weekly summary, unclassified pending)
+  │
+  ├── DATA ACCESS + API (15 new files)
+  │   ├── src/lib/types/projects.ts — 11 interfaces
+  │   ├── src/lib/db/projects.ts — CRUD, aliases, fuzzy search, WP seeding
+  │   ├── src/lib/db/channels.ts — channel defs, UTM rules, links, unclassified
+  │   ├── 7 API routes: projects CRUD, aliases, channels, funnel, unclassified, seed
+  │   └── worker/scripts/seed_projects_from_wp.py — asyncpg WP job seeder
+  │
+  ├── TESTING
+  │   ├── 22 new unit tests (projects + channels)
+  │   ├── Fixed normalizer.test.ts (missing reddit-ads mock)
+  │   ├── Fixed widget-registry.test.ts (stale count 30→47)
+  │   └── 505/505 tests passing
+  │
+  ├── NEON DEPLOYMENT — LIVE
+  │   ├── All tables, functions, views deployed
+  │   ├── 10 projects seeded, 31 aliases, 12 channel links, 4 unclassified UTMs
+  │   └── Fuzzy search verified (hummus→humus ✓, furframe→fur-frame ✓)
+  │
+  └── AZURE PG — BLOCKED on pg_trgm allowlisting (IT ticket needed)
+
+Day 44+ (May 19+) — INSIGHTS NARRATIVE DASHBOARD
+  ├── Narrative dashboard frontend (plain-English style SVP loved)
+  ├── Per-project funnel page with WoW deltas + recommendations
+  ├── Unclassified UTM inbox UI (assign / create channel)
+  ├── Channel link review UI (confirm / dismiss fuzzy matches)
+  ├── Prod DB integration (myoneforma.com → close the apply→hire funnel)
+  └── Azure PG deployment (after IT allowlists pg_trgm)
 ```
 
 ---
 
 ## Success Metrics
 
-| Metric | Before OneTake | With OneTake | Day 24 Status |
+| Metric | Before OneTake | With OneTake | Latest Status |
 |---|---|---|---|
 | Time: JD → creative package | 3-5 days | 30 minutes | Achieved |
 | Creatives per campaign | 2-4 | 15-30+ per country | Achieved |
@@ -556,20 +643,23 @@ Day 36+ (Post-demo)
 | Audience intelligence | None | Four-ring drift detection | Shipped |
 | Platform interest coverage | 0 platforms | 6 platforms | Live |
 | Image generation cost | N/A | $0.04 (Seedream) → $0.225 (GPT Image 2 OpenRouter) → $0.006 (OpenAI direct, planned) | $0.225/image |
-| Test coverage | 0 | 832 total (413 TypeScript + 419 Python) | CI green, 5 gates |
+| Test coverage | 0 | 505 tests passing | **505/505 Day 43** |
 | Infrastructure | Local laptop | Enterprise Azure (ACR + Container Apps + PG 17.9 + SSL) | **Worker LIVE** — polling Azure PG |
 | CI/CD | Manual deploy | GitHub Actions → ACR auto-push on merge | Live |
 | Auth | None | Clerk + Microsoft OAuth + domain restriction | Ready (configure in dashboard) |
 | Graph API | None | 6 permissions admin-consented | Live |
-| Azure DB | None | PG 17.9, 31 tables, 76 indexes | **Full admin — self-service migrations** |
+| Azure DB | None | PG 17.9, 37+ tables, 80+ indexes | **Full admin — self-service migrations** |
 | Pipeline modes | 1 (all-or-nothing) | 2 (organic default → paid upgrade) | **Shipped Day 30** |
 | Organic deliverables | 0 | 6 types (WP post, portal copy, flyer, flyer copy, social caption, social graphic) | **Shipped Day 30** |
 | Asset editing | Manual re-run | Inline batch edit + rollback (4 action types) | **Shipped Day 30** |
-| Ad platform sync | 0 platforms | 3 ready (Meta, Reddit, Brevo) + 2 Wave 2 (Google, TikTok) | **Shipped Day 31** — awaiting credentials |
+| Ad platform sync | 0 platforms | 3 ready (Meta, Reddit, Brevo) + 2 Wave 2 (Google, TikTok) | **Shipped Day 31** |
 | Extraction speed | ~90s (Gemma 4 31B) | ~10s (Kimi K2.5) | **3x faster Day 31** |
-| Custom domains | nova-intake.vercel.app | onetake.oneforma.com + apply.oneforma.com | **onetake LIVE, pro pending TXT** |
-| Commits | 0 | 850+ | Day 31 |
-| LOC | 0 | ~108,000 | Day 31 |
+| Custom domains | nova-intake.vercel.app | onetake.oneforma.com + apply.oneforma.com | **onetake LIVE** |
+| Project identity | None (fragmented across platforms) | Canonical registry with fuzzy matching across all channels | **Shipped Day 43** — 10 projects, 20 channels, 16 UTM rules |
+| Channel attribution | Manual spreadsheets | Dynamic UTM rules + auto-classification + unclassified inbox | **Shipped Day 43** — 12 categories, real normalized names |
+| Cross-channel funnel | Impossible | Unified per-project funnel (paid + organic + email + physical + recruiter + job boards) | **Shipped Day 43** — daily + weekly materialized views |
+| Commits | 0 | 900+ | Day 43 |
+| LOC | 0 | ~112,000 | Day 43 |
 
 ---
 
