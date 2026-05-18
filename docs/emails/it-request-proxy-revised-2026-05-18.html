@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RE: Internal: Nova Codebase – Engineering Review & OneForma Alignment</title>
+<style>
+  body { margin: 0; padding: 32px; font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f5f5f5; line-height: 1.7; }
+  .email { max-width: 740px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0348B2, #7C3AED); padding: 24px 32px; color: white; }
+  .header h1 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+  .header .sub { font-size: 11px; opacity: 0.8; }
+  .body { padding: 28px 32px; }
+  h2 { font-size: 15px; font-weight: 700; color: #0348B2; margin: 28px 0 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; }
+  h2:first-of-type { margin-top: 0; }
+  p { margin: 8px 0; font-size: 14px; }
+  .highlight { background: #EFF6FF; border-left: 4px solid #2563EB; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13px; line-height: 1.6; }
+  .highlight.security { background: #F0FDF4; border-left-color: #16A34A; }
+  .highlight.warn { background: #FFFBEB; border-left-color: #F59E0B; }
+  .priority { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 12px; color: white; margin-right: 4px; vertical-align: middle; }
+  .p0 { background: #DC2626; }
+  .p1 { background: #F59E0B; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #f8f8f8; border: 1px solid #e5e5e5; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #737373; }
+  td { padding: 8px 12px; border: 1px solid #e5e5e5; vertical-align: top; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: 'Cascadia Code', 'Fira Code', monospace; line-height: 1.5; margin: 12px 0; }
+  pre .c { color: #6c7086; }
+  pre .g { color: #a6e3a1; }
+  pre .r { color: #f38ba8; }
+  pre .b { color: #89b4fa; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { font-size: 14px; margin: 4px 0; }
+  .footer { padding: 20px 32px; background: #f8f8f8; border-top: 1px solid #f0f0f0; font-size: 12px; color: #737373; }
+  strong.name { color: #0348B2; }
+</style>
+</head>
+<body>
+<div class="email">
+
+<div class="header">
+  <h1>RE: Internal: Nova Codebase – Engineering Review & OneForma Alignment</h1>
+  <div class="sub">Steven Junop → Michael, Pengfei, Narayan, Jenn, Wentao · May 18, 2026</div>
+</div>
+
+<div class="body">
+
+<p>Hi Michael, Narayan, Pengfei,</p>
+
+<p>Thank you for looping in Infosec — completely understand the need for proper process. After reviewing Michael's feedback (no public DB access, private network only), I've <strong>redesigned the approach to eliminate any public database exposure entirely</strong>. Here's the updated proposal:</p>
+
+<h2>The Problem (Recap)</h2>
+
+<p>OneTake's Next.js frontend runs on Vercel. Vercel uses dynamic IPs that can't be whitelisted. This means the frontend cannot query Azure PG or the OneForma prod DB directly. We need a secure path for dashboard data without exposing any database to the public internet.</p>
+
+<h2>Proposed Solution: Internal API Proxy (Zero Public DB Exposure)</h2>
+
+<p>Instead of opening database access from the outside, we've built a <strong>lightweight API proxy that runs inside the existing Azure Container App</strong> (<code>onetake-py-worker</code>). The proxy sits on the internal Azure network, queries the databases locally, and returns JSON results over HTTPS with Bearer token authentication.</p>
+
+<div class="highlight security">
+  <strong>🔒 Key security point:</strong> No database is exposed to the public internet. The only public-facing component is an HTTPS API endpoint on the Container App, protected by Bearer token auth. All database traffic stays internal to the Azure network.
+</div>
+
+<pre>
+<span class="c">── Current (broken) ──────────────────────────────────</span>
+Vercel <span class="r">──✗──→</span> Azure PG       <span class="c">(IP whitelist blocks)</span>
+Vercel <span class="r">──✗──→</span> Prod DB        <span class="c">(private network, no public access)</span>
+
+<span class="c">── Proposed (secure) ─────────────────────────────────</span>
+                    ┌─────────────────────────────────┐
+                    │  Azure Container App             │
+                    │  <span class="g">db_proxy.py</span> (port 8080)         │
+                    │  <span class="b">Bearer token auth on every req</span>  │
+                    │                                  │
+Vercel <span class="g">──HTTPS──→</span>  │  <span class="g">──→</span> Azure PG    <span class="c">(internal)</span>     │
+                    │  <span class="g">──→</span> Prod DB     <span class="c">(private VNet)</span>  │
+                    │                                  │
+                    └─────────────────────────────────┘
+                    <span class="c">Only the proxy has a public endpoint.</span>
+                    <span class="c">Databases remain fully private.</span>
+</pre>
+
+<h2>Security Controls</h2>
+
+<table>
+  <tr><th>Layer</th><th>Control</th><th>Detail</th></tr>
+  <tr>
+    <td>Authentication</td>
+    <td>Bearer token on every request</td>
+    <td>256-bit secret shared only between Vercel (env var) and Container App (env var). Rejected with 401 if missing/invalid.</td>
+  </tr>
+  <tr>
+    <td>Transport</td>
+    <td>HTTPS only</td>
+    <td>Container Apps provides TLS termination automatically. No plaintext traffic.</td>
+  </tr>
+  <tr>
+    <td>Database access</td>
+    <td>No public exposure</td>
+    <td>Both Azure PG and prod DB remain on private networks. Only the proxy process (inside the Container App) connects to them.</td>
+  </tr>
+  <tr>
+    <td>Read-only scope</td>
+    <td>Proxy returns JSON, not raw SQL</td>
+    <td>The proxy exposes specific endpoints (list projects, get funnel data, get channel links). No arbitrary query execution. No write operations except a materialized view refresh.</td>
+  </tr>
+  <tr>
+    <td>Prod DB access</td>
+    <td>Read-only connection string</td>
+    <td>We'd use the <code>.reader</code> endpoint (<code>oneformapostgresprod.reader.postgres.database.azure.com</code>) — inherently read-only.</td>
+  </tr>
+  <tr>
+    <td>Network</td>
+    <td>Internal only</td>
+    <td>DB connections stay within Azure VNet / private network. No database port is exposed externally.</td>
+  </tr>
+</table>
+
+<h2>What We Need From IT / Infosec</h2>
+
+<table>
+  <tr><th>#</th><th>Request</th><th>Priority</th><th>Owner</th><th>Detail</th></tr>
+  <tr>
+    <td>1</td>
+    <td>Enable Container App ingress (port 8080)</td>
+    <td><span class="priority p0">P0</span></td>
+    <td><strong class="name">Pengfei</strong></td>
+    <td>
+      Enable external HTTP ingress on <code>onetake-py-worker</code>, target port 8080.
+      This exposes only the proxy API, not any database.
+      <br><br>
+      CLI: <code>az containerapp ingress enable --name onetake-py-worker --resource-group onetake-rg --target-port 8080 --type external --transport http</code>
+    </td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Allowlist <code>pg_trgm</code> extension</td>
+    <td><span class="priority p1">P1</span></td>
+    <td><strong class="name">Pengfei</strong></td>
+    <td>
+      Add <code>pg_trgm</code> to allowed extensions on <code>onetake-pg-west01</code>. This is a built-in PostgreSQL extension (ships with every PG installation) for fuzzy text matching. No server restart needed.
+      <br><br>
+      Portal: Server parameters → <code>azure.extensions</code> → check PG_TRGM → Save
+    </td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Prod DB network path from Container App</td>
+    <td><span class="priority p1">P1</span></td>
+    <td><strong class="name">Narayan / Pengfei</strong></td>
+    <td>
+      Confirm whether the <code>onetake-py-worker</code> Container App can reach <code>oneformapostgresprod.reader.postgres.database.azure.com</code> via the private network. Options:
+      <ul>
+        <li><strong>If same VNet or peered VNets:</strong> Already reachable — just need a read-only credential</li>
+        <li><strong>If separate networks:</strong> VNet peering or Private Endpoint needed between the Container App environment and the prod DB VNet</li>
+      </ul>
+      We only need <strong>read-only</strong> access via the <code>.reader</code> endpoint.
+    </td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Infosec review / approval</td>
+    <td><span class="priority p1">P1</span></td>
+    <td><strong class="name">Narayan</strong></td>
+    <td>
+      If this architecture requires a formal security review, happy to fill out whatever forms are needed.
+      The core claim: <strong>no database is exposed publicly. The proxy is the only public surface, protected by HTTPS + Bearer token + read-only scope.</strong>
+    </td>
+  </tr>
+</table>
+
+<h2>Timeline</h2>
+
+<div class="highlight warn">
+  <strong>Thursday May 22 — L1 leadership demo.</strong> The Project Command Center dashboard (53 projects, all-channel funnel, AI recommendations) is built and ready. Item #1 (Container App ingress) is the only blocker for a live demo. Items #2-4 are needed for full production but can follow.
+</div>
+
+<table>
+  <tr><th>Item</th><th>Needed by</th><th>Impact if delayed</th></tr>
+  <tr>
+    <td>#1 Container App ingress</td>
+    <td><strong>Wed May 21</strong></td>
+    <td>Dashboard shows real data from Azure PG in Thursday demo</td>
+  </tr>
+  <tr>
+    <td>#2 pg_trgm</td>
+    <td>End of week</td>
+    <td>Fuzzy project matching works on Azure (currently Neon interim)</td>
+  </tr>
+  <tr>
+    <td>#3 Prod DB network path</td>
+    <td>Next week</td>
+    <td>Closed-loop attribution: marketing spend → hire. Full funnel.</td>
+  </tr>
+  <tr>
+    <td>#4 Infosec approval</td>
+    <td>As needed</td>
+    <td>Formal sign-off on the proxy architecture</td>
+  </tr>
+</table>
+
+<h2>What This Enables</h2>
+
+<p>Once all 4 items are in place, the OneTake Command Center dashboard shows:</p>
+<ul>
+  <li><strong>All 53 active job projects</strong> auto-detected from WordPress</li>
+  <li><strong>Full-funnel per project:</strong> impressions → clicks → applications → completions → hires</li>
+  <li><strong>Every channel unified:</strong> paid ads (Meta, Reddit, Google), organic (LinkedIn, Indeed, Glassdoor), email (Brevo), physical (flyers, QR), recruiter direct links</li>
+  <li><strong>AI-generated recommendations:</strong> INCREASE / HOLD / FIX / BOOST per project</li>
+  <li><strong>Zero public database exposure</strong></li>
+</ul>
+
+<p>Happy to jump on a call with Narayan to walk through the security architecture. The proxy code is ready to deploy — we just need the network path.</p>
+
+<p style="margin-top: 24px;">Best,<br><strong>Steven Junop</strong><br>Marketing Manager | OneForma Group<br>9544106098</p>
+
+</div>
+
+<div class="footer">
+  OneTake Platform · Day 43 · 900+ commits · 53 projects · L1 demo Thursday May 22
+</div>
+
+</div>
+</body>
+</html>
