@@ -143,7 +143,61 @@ export async function GET(request: NextRequest) {
     log.push({ step: 'channel_link', result: `error: ${(err as Error).message?.slice(0, 200)}`, ms: Date.now() - t3 });
   }
 
-  // ── Step 5: Refresh materialized view ─────────────────────────
+  // ── Step 5: Sync locale links from WP ACF fields ──────────────
+  const t4a = Date.now();
+  try {
+    const jobs = await fetchWpJobs();
+    let newLinks = 0;
+    let updatedLinks = 0;
+
+    for (const job of jobs) {
+      const wpId = job.id;
+      const projectRows = await sql`SELECT id FROM projects WHERE wp_job_id = ${wpId}`;
+      if (projectRows.length === 0) continue;
+      const projectId = projectRows[0].id;
+
+      const applyLinks = job.acf?.apply_job ?? [];
+      for (const link of applyLinks) {
+        const language = (link as any).language?.trim();
+        const applyUrl = (link as any).apply_url?.trim();
+        if (!language || !applyUrl) continue;
+
+        // Extract requestId from URL
+        let requestId: string | null = null;
+        try {
+          const url = new URL(applyUrl);
+          requestId = url.searchParams.get('requestId');
+          if (!requestId) {
+            const crowdMatch = applyUrl.match(/\/crowd\/jobs\/(\d+)/);
+            if (crowdMatch) requestId = `crowd_${crowdMatch[1]}`;
+            const legacyMatch = url.searchParams.get('job_id');
+            if (legacyMatch) requestId = `legacy_${legacyMatch}`;
+          }
+        } catch {}
+
+        const result = await sql`
+          INSERT INTO project_locale_links (project_id, language, apply_url, platform_request_id)
+          VALUES (${projectId}, ${language}, ${applyUrl}, ${requestId})
+          ON CONFLICT (project_id, language) DO UPDATE SET
+            apply_url = EXCLUDED.apply_url,
+            platform_request_id = COALESCE(EXCLUDED.platform_request_id, project_locale_links.platform_request_id),
+            last_seen_at = NOW(), is_active = TRUE, removed_at = NULL
+          RETURNING (xmax = 0) AS is_new
+        `;
+        if (result[0]?.is_new) newLinks++;
+        else updatedLinks++;
+      }
+    }
+    log.push({
+      step: 'locale_links',
+      result: `${newLinks} new, ${updatedLinks} updated`,
+      ms: Date.now() - t4a,
+    });
+  } catch (err) {
+    log.push({ step: 'locale_links', result: `error: ${(err as Error).message?.slice(0, 200)}`, ms: Date.now() - t4a });
+  }
+
+  // ── Step 6: Refresh materialized view ─────────────────────────
   const t4 = Date.now();
   try {
     await sql`REFRESH MATERIALIZED VIEW project_weekly_summary`;

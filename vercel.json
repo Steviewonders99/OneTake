@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/sync-projects",
       "schedule": "30 */6 * * *"
+    },
+    {
+      "path": "/api/cron/sync-ga4-funnel",
+      "schedule": "45 */6 * * *"
     }
   ]
 }
