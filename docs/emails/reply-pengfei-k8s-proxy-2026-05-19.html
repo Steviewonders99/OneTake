@@ -117,6 +117,28 @@ Vercel → <span style="color:#89b4fa;">OneForma API Gateway</span> → <span st
 
 <p>The full codebase is in the repo above — review at your own pace. It's intentionally minimal — 230 lines, 2 dependencies, the less surface area the less to audit.</p>
 
+<h2>CI/CD — Container Registry Question</h2>
+
+<p>Our current GitHub Actions CI pushes the worker Docker image to <code>novacert.azurecr.io</code> (Pactera subscription). With the move to the OneForma K8s cluster, I have a couple of questions:</p>
+
+<table>
+  <tr><th>Question</th><th>Context</th></tr>
+  <tr>
+    <td>Does the OneForma K8s cluster use its own ACR?</td>
+    <td>I need the registry URL (e.g. <code>oneformaacr.azurecr.io</code>) and push credentials to update our CI pipeline. The change is 3 lines in our GitHub Actions workflow.</td>
+  </tr>
+  <tr>
+    <td>Can the K8s cluster pull from <code>novacert.azurecr.io</code>?</td>
+    <td>If cross-subscription pull is possible, we can keep the current pipeline unchanged during transition.</td>
+  </tr>
+  <tr>
+    <td>Image pull auth — secrets or workload identity?</td>
+    <td>Need to know how the K8s pods authenticate to the registry so I configure the deployment spec correctly.</td>
+  </tr>
+</table>
+
+<p>Happy to push to both registries during the transition period so nothing breaks for the existing Container App while we migrate to K8s.</p>
+
 <h2>Timeline / Thursday Demo</h2>
 
 <p>I understand the K8s deployment may take a few days to configure properly. For the <strong>L1 leadership demo on Thursday May 22</strong>, I can run the proxy locally from my machine (my IP is already whitelisted on the OneTake PG firewall) as a temporary measure. This doesn't require any infrastructure changes — it's just a local development setup.</p>
