@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import type { Dashboard } from '@/components/insights/types';
 import type { UserRole } from '@/lib/types';
 
-export function InsightsDashboardList({ dashboards: initial, role }: { dashboards: Dashboard[]; role: UserRole }) {
+export function InsightsDashboardList({ dashboards: initial, role, hideHeader }: { dashboards: Dashboard[]; role: UserRole; hideHeader?: boolean }) {
   const router = useRouter();
   const [dashboards, setDashboards] = useState(initial);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -77,12 +77,14 @@ export function InsightsDashboardList({ dashboards: initial, role }: { dashboard
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-2xl font-semibold text-[#1a1a1a] tracking-tight">Analytics</h1>
-        <p className="text-sm text-[#a3a3a3] mt-1">Real-time marketing intelligence across all channels</p>
-      </div>
+    <div className={hideHeader ? '' : 'max-w-7xl mx-auto px-6 py-8'}>
+      {/* Header — hidden when parent provides it */}
+      {!hideHeader && (
+        <div className="mb-10">
+          <h1 className="text-2xl font-semibold text-[#1a1a1a] tracking-tight">Analytics</h1>
+          <p className="text-sm text-[#a3a3a3] mt-1">Real-time marketing intelligence across all channels</p>
+        </div>
+      )}
 
       {/* Featured Pre-built Dashboards */}
       {prebuilt.length > 0 && (
