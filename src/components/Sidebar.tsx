@@ -16,6 +16,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   BarChart3,
+  Target,
+  Zap,
+  Radio,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
@@ -39,6 +42,9 @@ const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
       title: "Analytics",
       links: [
         { href: "/insights", label: "Insights", Icon: BarChart3 },
+        { href: "/insights/command-center", label: "Command Center", Icon: Target },
+        { href: "/insights/deep-dive", label: "Deep Dive", Icon: Zap },
+        { href: "/insights/channel-intel", label: "Channel Intel", Icon: Radio },
       ],
     },
     {
@@ -64,6 +70,9 @@ const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
       title: "Analytics",
       links: [
         { href: "/insights", label: "Insights", Icon: BarChart3 },
+        { href: "/insights/command-center", label: "Command Center", Icon: Target },
+        { href: "/insights/deep-dive", label: "Deep Dive", Icon: Zap },
+        { href: "/insights/channel-intel", label: "Channel Intel", Icon: Radio },
       ],
     },
   ],
