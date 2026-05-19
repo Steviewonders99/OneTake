@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp, Target, Zap,
+  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp, Target, Zap, Radio,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -29,6 +29,13 @@ export const DASHBOARD_META: Record<string, DashboardMeta> = {
     accentBg: '#FDF2F8',
     tagline: '9-stage funnel from ad click to active worker. Per-project, per-source, per-locale.',
     order: 0.5,
+  },
+  'Channel Intelligence': {
+    icon: Radio,
+    accent: '#2563EB',
+    accentBg: '#EFF6FF',
+    tagline: 'Start from the channel. GSC keywords, post audit, creative gallery, recruiter UTM tracking.',
+    order: 0.7,
   },
   'Executive Overview': {
     icon: LayoutDashboard,
