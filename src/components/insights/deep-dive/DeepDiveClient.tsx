@@ -70,7 +70,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     { label: 'Certification', value: funnelData.totals.certification ?? 0, color: '#DB2777' },
     { label: 'Browsing Jobs', value: funnelData.totals.browsing_jobs ?? 0, color: '#6366F1' },
     { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2' },
-  ].filter(s => s.value > 0 || s.always) : [];
+  ].filter(s => s.value > 0 || s.label === 'WP Entry') : [];
 
   // Sources from funnel data
   const sources = (funnelData?.by_source ?? []).map((s: any) => ({
