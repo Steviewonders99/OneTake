@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp, Target,
+  LayoutDashboard, Users, Megaphone, GitBranch, Palette, TrendingUp, Target, Zap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -22,6 +22,13 @@ export const DASHBOARD_META: Record<string, DashboardMeta> = {
     accentBg: '#F5F3FF',
     tagline: 'Full portfolio — paid, organic, email, physical, recruiter. All channels, one view.',
     order: 0,
+  },
+  'Project Deep Dive': {
+    icon: Zap,
+    accent: '#DB2777',
+    accentBg: '#FDF2F8',
+    tagline: '9-stage funnel from ad click to active worker. Per-project, per-source, per-locale.',
+    order: 0.5,
   },
   'Executive Overview': {
     icon: LayoutDashboard,
