@@ -202,7 +202,7 @@ async def get_ga4_funnel(request: web.Request):
     """GA4 acquisition funnel: WP entry → profile → NDA per project."""
     pid = request.match_info["id"]
     rows = await query(
-        "SELECT campaign_name, source, medium, wp_entry, signup, mfa_setup, "
+        "SELECT campaign_name, source, medium, wp_entry, apply_click, signup, mfa_setup, "
         "profile_created, nda_signed, certification, browsing_jobs, doing_tasks "
         "FROM ga4_project_funnel WHERE project_id = $1::UUID ORDER BY nda_signed DESC",
         pid,
@@ -216,6 +216,7 @@ async def get_ga4_funnel(request: web.Request):
         "by_source": rows,
         "totals": {
             "wp_entry": tw,
+            "apply_click": total("apply_click"),
             "signup": total("signup"),
             "mfa_setup": total("mfa_setup"),
             "profile_created": total("profile_created"),
@@ -225,11 +226,12 @@ async def get_ga4_funnel(request: web.Request):
             "doing_tasks": total("doing_tasks"),
         },
         "rates": {
+            "wp_to_apply": round(total("apply_click") / tw * 100, 1) if tw > 0 else 0,
             "wp_to_signup": round(total("signup") / tw * 100, 1) if tw > 0 else 0,
-            "wp_to_profile": round(total("profile_created") / tw * 100, 1) if tw > 0 else 0,
             "wp_to_nda": round(total("nda_signed") / tw * 100, 1) if tw > 0 else 0,
             "wp_to_tasks": round(total("doing_tasks") / tw * 100, 1) if tw > 0 else 0,
             "nda_to_tasks": round(total("doing_tasks") / total("nda_signed") * 100, 1) if total("nda_signed") > 0 else 0,
+            "apply_to_nda": round(total("nda_signed") / total("apply_click") * 100, 1) if total("apply_click") > 0 else 0,
         },
     })
 

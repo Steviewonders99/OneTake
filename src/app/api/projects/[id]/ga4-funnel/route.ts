@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const sql = getDb();
   const rows = await sql`
-    SELECT campaign_name, source, medium, wp_entry, signup, mfa_setup,
+    SELECT campaign_name, source, medium, wp_entry, apply_click, signup, mfa_setup,
            profile_created, nda_signed, certification, browsing_jobs, doing_tasks
     FROM ga4_project_funnel WHERE project_id = ${id} ORDER BY nda_signed DESC
   `;
@@ -31,7 +31,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json({
     by_source: rows,
     totals: {
-      wp_entry: tw, signup: total('signup'), mfa_setup: total('mfa_setup'),
+      wp_entry: tw, apply_click: total('apply_click'), signup: total('signup'),
+      mfa_setup: total('mfa_setup'),
       profile_created: total('profile_created'), nda_signed: total('nda_signed'),
       certification: total('certification'), browsing_jobs: total('browsing_jobs'),
       doing_tasks: total('doing_tasks'),

@@ -51,13 +51,14 @@ export function DeepDiveClient({ initialProjects }: Props) {
   // Build funnel stages from GA4 data
   const funnelStages = funnelData?.totals ? [
     { label: 'WP Entry', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
-    { label: 'Signup', value: funnelData.totals.signup ?? 0, color: '#2563EB' },
+    { label: 'Apply Click', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
+    { label: 'Signup', value: funnelData.totals.signup ?? 0, color: '#4F46E5' },
     { label: 'MFA Setup', value: funnelData.totals.mfa_setup ?? 0, color: '#7C3AED' },
     { label: 'Profile Created', value: funnelData.totals.profile_created ?? 0, color: '#9333EA' },
     { label: 'NDA Signed', value: funnelData.totals.nda_signed ?? 0, color: '#A855F7' },
     { label: 'Certification', value: funnelData.totals.certification ?? 0, color: '#DB2777' },
     { label: 'Browsing Jobs', value: funnelData.totals.browsing_jobs ?? 0, color: '#6366F1' },
-    { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#2563EB' },
+    { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2' },
   ].filter(s => s.value > 0 || s.label === 'WP Entry') : [];
 
   // Paid metrics from weekly data
