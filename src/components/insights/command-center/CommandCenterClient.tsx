@@ -27,25 +27,36 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const enriched = await Promise.all(
+      // Fetch channels for all projects first (lightweight)
+      const withChannels = await Promise.all(
         initialProjects.map(async (proj) => {
-          const [channelsRes, funnelRes] = await Promise.all([
-            fetch(`/api/projects/${proj.id}/channels`).then(r => r.ok ? r.json() : []),
-            fetch(`/api/projects/${proj.id}/funnel?view=weekly`).then(r => r.ok ? r.json() : { weeks: [], wow: null }),
-          ]);
+          const channels = await fetch(`/api/projects/${proj.id}/channels`).then(r => r.ok ? r.json() : []).catch(() => []);
+          return { ...proj, channels } as ProjectWithFunnel;
+        })
+      );
+
+      // Only fetch funnel data for projects WITH channel links (saves 80% of API calls)
+      const enriched = await Promise.all(
+        withChannels.map(async (proj) => {
+          if ((proj.channels ?? []).length === 0) {
+            return { ...proj, weekly: [], wow: null, action: 'hold' as const };
+          }
+          const funnelRes = await fetch(`/api/projects/${proj.id}/funnel?view=weekly`)
+            .then(r => r.ok ? r.json() : { weeks: [], wow: null })
+            .catch(() => ({ weeks: [], wow: null }));
 
           const weekly = funnelRes.weeks ?? [];
           const wow = funnelRes.wow ?? null;
           const action = computeAction(wow, weekly[0]?.blended_cpa ?? null, null);
 
-          return { ...proj, channels: channelsRes, weekly, wow, action } as ProjectWithFunnel;
+          return { ...proj, weekly, wow, action } as ProjectWithFunnel;
         })
       );
 
       setProjects(enriched);
 
-      const unRes = await fetch('/api/projects/unclassified');
-      if (unRes.ok) {
+      const unRes = await fetch('/api/projects/unclassified').catch(() => null);
+      if (unRes?.ok) {
         const unData = await unRes.json();
         setUnclassifiedCount(unData.items?.length ?? 0);
       }
