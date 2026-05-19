@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RE: Internal: Nova Codebase – Engineering Review & OneForma Alignment</title>
+<style>
+  body { margin: 0; padding: 32px; font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f5f5f5; line-height: 1.7; }
+  .email { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0348B2, #7C3AED); padding: 24px 32px; color: white; }
+  .header h1 { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+  .header .sub { font-size: 11px; opacity: 0.8; }
+  .body { padding: 28px 32px; font-size: 14px; }
+  p { margin: 8px 0; }
+  h2 { font-size: 15px; font-weight: 700; color: #0348B2; margin: 24px 0 8px; }
+  .highlight { background: #EFF6FF; border-left: 4px solid #2563EB; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13px; line-height: 1.6; }
+  .highlight.green { background: #F0FDF4; border-left-color: #16A34A; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #f8f8f8; border: 1px solid #e5e5e5; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #737373; }
+  td { padding: 8px 12px; border: 1px solid #e5e5e5; vertical-align: top; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', monospace; font-size: 12px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: 'Cascadia Code', monospace; line-height: 1.5; margin: 12px 0; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .footer { padding: 16px 32px; background: #f8f8f8; border-top: 1px solid #f0f0f0; font-size: 12px; color: #737373; }
+</style>
+</head>
+<body>
+<div class="email">
+
+<div class="header">
+  <h1>RE: Internal: Nova Codebase – Engineering Review & OneForma Alignment</h1>
+  <div class="sub">Steven Junop → Pengfei, Narayan, Nemanja, Michael, Jenn, Wentao · May 19, 2026</div>
+</div>
+
+<div class="body">
+
+<p>Hi Pengfei, Narayan, Nemanja,</p>
+
+<p>Thank you both for the fast and clear responses — this is exactly the direction we need.</p>
+
+<div class="highlight green">
+  <strong>Summary of what I'm hearing:</strong> Infosec is OK with the restricted-access proxy model. Pengfei recommends deploying the proxy into the OneForma K8s cluster (not the Container App) with access through OneForma's API Gateway. OneTake's own PG + Blob need security approval. A call with Nemanja for pentest/analysis is the next step.
+</div>
+
+<h2>Pengfei's Architecture — Fully Aligned</h2>
+
+<p>Your recommendation to deploy into the <strong>OneForma K8s cluster + API Gateway</strong> is a better architecture than what I proposed. I fully support this. Here's how the proxy maps to your model:</p>
+
+<pre>
+<span style="color:#6c7086;">── Current (Container App under Pactera sub) ──</span>
+Vercel → Container App → OneTake PG (public-facing)
+
+<span style="color:#a6e3a1;">── Pengfei's recommendation (K8s under OneForma sub) ──</span>
+Vercel → <span style="color:#89b4fa;">OneForma API Gateway</span> → <span style="color:#a6e3a1;">K8s Pod (db_proxy.py)</span> → OneTake PG (private)
+                                        ↓
+                              <span style="color:#f9e2af;">(future) OneForma Prod DB (read-only)</span>
+</pre>
+
+<p><strong>What I've already built:</strong></p>
+<ul>
+  <li><code>db_proxy.py</code> — lightweight Python service (aiohttp, ~230 lines). Exposes 8 JSON endpoints for dashboard data. Bearer token auth on every request. Read-only — no write operations except a materialized view refresh.</li>
+  <li>It's stateless, containerizable, and has zero dependencies beyond <code>asyncpg</code> and <code>aiohttp</code>. Runs anywhere — Container App, K8s pod, Azure Function, or bare VM.</li>
+</ul>
+
+<p><strong>What I need from the team to make this work:</strong></p>
+
+<table>
+  <tr><th>#</th><th>Item</th><th>Owner</th><th>Detail</th></tr>
+  <tr>
+    <td>1</td>
+    <td>K8s deployment spec + namespace</td>
+    <td>Pengfei</td>
+    <td>I'll provide the Docker image + env vars. Need: namespace, service account, ingress/gateway route. The proxy listens on port 8080.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>API Gateway route</td>
+    <td>Pengfei</td>
+    <td>External HTTPS endpoint that routes to the K8s proxy pod. Vercel will call this URL. Bearer token auth is enforced by the proxy itself (not the gateway).</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Network path: K8s pod → OneTake PG</td>
+    <td>Pengfei</td>
+    <td>The proxy needs to reach <code>onetake-pg-west01.postgres.database.azure.com:5432</code> from the K8s cluster. If this is cross-subscription, may need VNet peering or a private endpoint.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Security review + pentest</td>
+    <td>Nemanja</td>
+    <td>Happy to give you full access to the proxy code, API spec, and test environment. The proxy is open-source in our repo.</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>pg_trgm extension allowlisting</td>
+    <td>Pengfei</td>
+    <td>Still need <code>pg_trgm</code> on <code>onetake-pg-west01</code> for fuzzy text matching. Built-in PG extension, no restart needed.</td>
+  </tr>
+</table>
+
+<h2>For Nemanja — Proxy Security Overview</h2>
+
+<p>Quick summary for your pentest scoping:</p>
+
+<table>
+  <tr><th>Surface</th><th>Detail</th></tr>
+  <tr><td>Exposed endpoints</td><td>8 GET/POST routes returning JSON. No user input in SQL — all queries use parameterized statements.</td></tr>
+  <tr><td>Auth</td><td>Bearer token (256-bit secret) required on every request except <code>/health</code>. 401 if missing/invalid.</td></tr>
+  <tr><td>Database access</td><td>Read-only connection to OneTake PG via connection pool (asyncpg, max 5 connections). No DDL, no arbitrary SQL.</td></tr>
+  <tr><td>Data returned</td><td>Project names, campaign metrics (spend/clicks/conversions), channel mappings. No PII, no credentials, no contributor personal data.</td></tr>
+  <tr><td>Dependencies</td><td>Python 3.12, aiohttp 3.9, asyncpg 0.31. No other packages.</td></tr>
+  <tr><td>Code location</td><td><code>worker/db_proxy.py</code> in the OneTake repo — I can share this directly or give you repo access.</td></tr>
+</table>
+
+<p>Happy to walk through the code on a call. It's intentionally minimal — the less surface area, the less to audit.</p>
+
+<h2>Timeline / Thursday Demo</h2>
+
+<p>I understand the K8s deployment may take a few days to configure properly. For the <strong>L1 leadership demo on Thursday May 22</strong>, I can run the proxy locally from my machine (my IP is already whitelisted on the OneTake PG firewall) as a temporary measure. This doesn't require any infrastructure changes — it's just a local development setup.</p>
+
+<p>The production K8s deployment can follow after Nemanja's review is complete.</p>
+
+<h2>Proposed Next Steps</h2>
+
+<ol>
+  <li><strong>Schedule a call</strong> — Pengfei, Nemanja, and me. 30 minutes. I'll walk through the proxy code + architecture. Any time this week works for me.</li>
+  <li><strong>I push the Docker image</strong> — to whatever registry the K8s cluster pulls from (ACR, or OneForma's registry).</li>
+  <li><strong>Pengfei deploys to K8s</strong> — with the gateway route.</li>
+  <li><strong>Nemanja pentests</strong> — against the deployed endpoint.</li>
+  <li><strong>pg_trgm</strong> — can be done independently, whenever convenient.</li>
+</ol>
+
+<p>Let me know what time works for the call. Thank you both for moving this forward so quickly.</p>
+
+<p style="margin-top: 24px;">Best,<br><strong>Steven Junop</strong><br>Marketing Manager | OneForma Group<br>9544106098</p>
+
+</div>
+
+<div class="footer">
+  OneTake Platform · db_proxy.py · 8 endpoints · Bearer auth · Read-only · 230 lines
+</div>
+
+</div>
+</body>
+</html>
