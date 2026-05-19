@@ -6,7 +6,7 @@ import { suggestChannelLinks } from '@/lib/db/channels';
 /**
  * Cron endpoint — syncs project registry from WordPress + auto-links channels.
  *
- * Called by Vercel Cron every 6 hours (after sync-metrics).
+ * Called by Vercel Cron every 3 hours (after sync-metrics).
  * Full pipeline:
  *   1. Pull new job posts from WP REST API → seed into projects table
  *   2. Link intake_requests to projects via campaign_slug

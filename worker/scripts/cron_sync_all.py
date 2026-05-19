@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.12
 """Master cron orchestrator — runs all project sync tasks in sequence.
 
-Designed to run inside the Azure Container App on a 6-hour schedule.
+Designed to run inside the Azure Container App on a 3-hour schedule.
 Direct PG access — no proxy needed.
 
 Sequence:
@@ -16,7 +16,7 @@ Usage:
   python3.12 worker/scripts/cron_sync_all.py
 
   # Run from container (crontab or process manager)
-  0 */6 * * * cd /app && python3.12 worker/scripts/cron_sync_all.py >> /var/log/sync.log 2>&1
+  0 */3 * * * cd /app && python3.12 worker/scripts/cron_sync_all.py >> /var/log/sync.log 2>&1
 
 Env vars: DATABASE_URL, WP_BASE_URL, WP_USERNAME, WP_APP_PASSWORD
 """
