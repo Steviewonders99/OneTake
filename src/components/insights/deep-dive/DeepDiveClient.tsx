@@ -9,6 +9,7 @@ import { FunnelWaterfall } from './FunnelWaterfall';
 import { SourceBreakdown } from './SourceBreakdown';
 import { PaidMetrics } from './PaidMetrics';
 import { LocaleTable } from './LocaleTable';
+import { CountrySelector } from './CountrySelector';
 
 interface Props {
   initialProjects: Project[];
@@ -17,6 +18,7 @@ interface Props {
 export function DeepDiveClient({ initialProjects }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(initialProjects[0]?.id ?? null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
+  const [selectedLocale, setSelectedLocale] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [funnelData, setFunnelData] = useState<any>(null);
   const [weeklyData, setWeeklyData] = useState<any>(null);
@@ -48,18 +50,39 @@ export function DeepDiveClient({ initialProjects }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Build funnel stages from GA4 data
-  const funnelStages = funnelData?.totals ? [
-    { label: 'WP Entry', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
-    { label: 'Apply Click', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
-    { label: 'Signup', value: funnelData.totals.signup ?? 0, color: '#4F46E5' },
-    { label: 'MFA Setup', value: funnelData.totals.mfa_setup ?? 0, color: '#7C3AED' },
-    { label: 'Profile Created', value: funnelData.totals.profile_created ?? 0, color: '#9333EA' },
-    { label: 'NDA Signed', value: funnelData.totals.nda_signed ?? 0, color: '#A855F7' },
-    { label: 'Certification', value: funnelData.totals.certification ?? 0, color: '#DB2777' },
-    { label: 'Browsing Jobs', value: funnelData.totals.browsing_jobs ?? 0, color: '#6366F1' },
-    { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2' },
-  ].filter(s => s.value > 0 || s.label === 'WP Entry') : [];
+  // Detect funnel path type from data
+  const hasPaidSpend = (weeklyData?.current?.total_spend ?? 0) > 0;
+  const hasSignup = (funnelData?.totals?.signup ?? 0) > 0;
+  const hasNda = (funnelData?.totals?.nda_signed ?? 0) > 0;
+  const hasSurvey = locales.some((l: any) => l.apply_url?.includes('aidaform'));
+
+  const pathType: 'paid' | 'organic' | 'aidaform' | 'unknown' =
+    hasPaidSpend ? 'paid' :
+    hasSurvey ? 'aidaform' :
+    hasSignup || hasNda ? 'organic' :
+    'unknown';
+
+  const pathLabel = {
+    paid: 'Paid Campaign Funnel',
+    organic: 'Organic Acquisition Funnel',
+    aidaform: 'Data Collection Funnel (AidaForm)',
+    unknown: 'Acquisition Funnel',
+  }[pathType];
+
+  // Build funnel stages adaptively — only show stages with data
+  const allStages = funnelData?.totals ? [
+    { label: 'WP Entry', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2', always: true },
+    { label: 'Apply Click', value: funnelData.totals.apply_click ?? 0, color: '#2563EB', always: false },
+    { label: 'Signup', value: funnelData.totals.signup ?? 0, color: '#4F46E5', always: false },
+    { label: 'MFA Setup', value: funnelData.totals.mfa_setup ?? 0, color: '#7C3AED', always: false },
+    { label: 'Profile Created', value: funnelData.totals.profile_created ?? 0, color: '#9333EA', always: false },
+    { label: 'NDA Signed', value: funnelData.totals.nda_signed ?? 0, color: '#A855F7', always: false },
+    { label: 'Certification', value: funnelData.totals.certification ?? 0, color: '#DB2777', always: false },
+    { label: 'Browsing Jobs', value: funnelData.totals.browsing_jobs ?? 0, color: '#6366F1', always: false },
+    { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2', always: false },
+  ] : [];
+
+  const funnelStages = allStages.filter(s => s.value > 0 || s.always);
 
   // Paid metrics from weekly data
   const currentWeek = weeklyData?.current;
@@ -127,14 +150,26 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       </div>
 
-      {/* Hero metrics strip */}
+      {/* Hero metrics strip — adapts to path type */}
       {funnelData?.totals && (
         <div className="grid grid-cols-4 gap-3 mb-5">
           {[
             { label: 'WP Entries', value: funnelData.totals.wp_entry?.toLocaleString() ?? '0' },
-            { label: 'NDA Signed', value: funnelData.totals.nda_signed?.toLocaleString() ?? '0', color: BRAND.blue },
-            { label: 'Active Workers', value: funnelData.totals.doing_tasks?.toLocaleString() ?? '0', color: BRAND.purple },
-            { label: 'Entry → Worker Rate', value: funnelData.rates?.wp_to_tasks ? `${funnelData.rates.wp_to_tasks}%` : '—', color: BRAND.pink },
+            { label: 'Apply Clicks', value: funnelData.totals.apply_click?.toLocaleString() ?? '0', color: BRAND.blue },
+            {
+              label: hasPaidSpend ? 'NDA Signed' : 'Signups',
+              value: hasPaidSpend
+                ? (funnelData.totals.nda_signed?.toLocaleString() ?? '0')
+                : (funnelData.totals.signup?.toLocaleString() ?? '0'),
+              color: BRAND.purple,
+            },
+            {
+              label: hasPaidSpend ? 'Cost / Worker' : 'Active Workers',
+              value: hasPaidSpend && activeWorkers > 0
+                ? `€${(spend / activeWorkers).toFixed(2)}`
+                : (funnelData.totals.doing_tasks?.toLocaleString() ?? '0'),
+              color: BRAND.pink,
+            },
           ].map(m => (
             <div key={m.label} className="bg-white rounded-xl px-4 py-3.5 border border-black/[0.08]"
                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -145,19 +180,47 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       )}
 
+      {/* Country Selector */}
+      <CountrySelector
+        locales={locales}
+        selectedLocale={selectedLocale}
+        onSelect={setSelectedLocale}
+      />
+
+      {/* Funnel Path Type Badge */}
+      {funnelStages.length > 0 && (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md"
+                style={{
+                  background: pathType === 'paid' ? '#EFF6FF' : pathType === 'organic' ? '#F5F3FF' : '#FDF2F8',
+                  color: pathType === 'paid' ? '#1E40AF' : pathType === 'organic' ? '#6D28D9' : '#BE185D',
+                }}>
+            {pathLabel}
+          </span>
+          {selectedLocale && (
+            <span className="text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md"
+                  style={{ background: '#F0FDF4', color: '#166534' }}>
+              Filtered: {selectedLocale}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Funnel Waterfall */}
       {funnelStages.length > 0 && <FunnelWaterfall stages={funnelStages} />}
 
-      {/* Source Breakdown + Paid Metrics side by side */}
-      <div className="grid grid-cols-2 gap-4 mb-5">
+      {/* Source Breakdown + Paid Metrics (or just Source if organic) */}
+      <div className={`grid ${hasPaidSpend ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-5`}>
         <SourceBreakdown sources={sources} />
-        <PaidMetrics
-          spend={spend}
-          impressions={impressions}
-          clicks={clicks}
-          ndaSigned={ndaSigned}
-          activeWorkers={activeWorkers}
-        />
+        {hasPaidSpend && (
+          <PaidMetrics
+            spend={spend}
+            impressions={impressions}
+            clicks={clicks}
+            ndaSigned={ndaSigned}
+            activeWorkers={activeWorkers}
+          />
+        )}
       </div>
 
       {/* Locale Table */}
