@@ -223,6 +223,21 @@ async def get_unclassified(request: web.Request):
     return web.json_response({"items": items, "channels": channels})
 
 
+async def normalize_pages(request: web.Request):
+    """Normalize page paths to human-readable display names."""
+    body = await request.json()
+    paths = body.get("paths", [])
+    if not paths:
+        return web.json_response({})
+
+    results = {}
+    for path in paths[:200]:  # max 200 at a time
+        rows = await query("SELECT normalize_page_path($1) AS name", path)
+        results[path] = rows[0]["name"] if rows else path
+
+    return web.json_response(results)
+
+
 async def trigger_sync(request: web.Request):
     """Trigger project sync — links intakes, discovers aliases, links channels."""
     results = []
@@ -327,6 +342,7 @@ def create_app() -> web.Application:
     app.router.add_get("/projects/{id}/ga4-funnel", get_ga4_funnel)
     app.router.add_get("/projects/{id}/locales", get_locales)
     app.router.add_get("/projects/{id}/channels", get_channels)
+    app.router.add_post("/pages/normalize", normalize_pages)
     app.router.add_post("/projects/sync", trigger_sync)
     app.router.add_post("/refresh", refresh_view)
 
