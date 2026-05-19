@@ -356,7 +356,7 @@ Expected output includes lines showing each statement succeeded. The new `tracke
 Run:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon(process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT column_name FROM information_schema.columns WHERE table_name='tracked_links' ORDER BY ordinal_position\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon(process.env.DATABASE_URL || '$DATABASE_URL'); return sql\`SELECT column_name FROM information_schema.columns WHERE table_name='tracked_links' ORDER BY ordinal_position\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: list of all 14 columns from the CREATE TABLE above, in order.
@@ -364,7 +364,7 @@ Expected: list of all 14 columns from the CREATE TABLE above, in order.
 - [ ] **Step 5: Backfill campaign_slug for existing approved campaigns**
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`UPDATE intake_requests SET campaign_slug = lower(regexp_replace(title, '[^a-zA-Z0-9]+', '-', 'g')) WHERE campaign_slug IS NULL RETURNING id, title, campaign_slug\`.then(r => { console.log(\`Backfilled \${r.length} rows\`); console.log(r.slice(0,3)); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`UPDATE intake_requests SET campaign_slug = lower(regexp_replace(title, '[^a-zA-Z0-9]+', '-', 'g')) WHERE campaign_slug IS NULL RETURNING id, title, campaign_slug\`.then(r => { console.log(\`Backfilled \${r.length} rows\`); console.log(r.slice(0,3)); process.exit(0); }); });"
 ```
 
 This is a one-shot backfill — the postgres regex is a rough approximation of the TypeScript slugify (no accent stripping, no length cap), which is fine because admins can refine per campaign via the inline editor later.
@@ -522,7 +522,7 @@ Start dev server: `npm run dev`
 In another terminal, POST a test intake (use your existing dev account's clerk session — easiest path: go to http://localhost:3000/intake/new, fill the form with title "Test Campaign Slug 🔥", submit). Then check the DB:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT id, title, campaign_slug FROM intake_requests ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT id, title, campaign_slug FROM intake_requests ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: most recent row has `campaign_slug: 'test-campaign-slug'`.
@@ -800,7 +800,7 @@ Expected: 0 errors. (Note: the GET handler is in the next task — the route fil
 With `npm run dev` running, grab an existing approved campaign ID. To find one quickly:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT id, title, campaign_slug, status FROM intake_requests WHERE status IN ('approved','sent') ORDER BY created_at DESC LIMIT 3\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT id, title, campaign_slug, status FROM intake_requests WHERE status IN ('approved','sent') ORDER BY created_at DESC LIMIT 3\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Copy one of the returned `id` values. Ensure it has at least one landing page URL set (use the Landing Pages card in admin mode to add one like `https://oneforma.com/apply/test` if needed).
@@ -1069,7 +1069,7 @@ With dev server running, grab the slug from the link you minted in Task 7 (query
 Open `http://localhost:3000/r/<SLUG>` in a new tab. Expected: browser 301-redirects to the destination URL. Then query the DB again:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT slug, click_count, last_clicked_at FROM tracked_links ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT slug, click_count, last_clicked_at FROM tracked_links ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: `click_count = 1`, `last_clicked_at` is now populated.
@@ -2274,7 +2274,7 @@ Open an approved campaign as a recruiter. Expected:
 Mint a real tracked link via the builder. Copy it. Open it in a new tab — verify it 301s to the destination with all UTM params appended. Check the DB:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT slug, utm_source, utm_term, utm_content, click_count FROM tracked_links ORDER BY created_at DESC LIMIT 3\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT slug, utm_source, utm_term, utm_content, click_count FROM tracked_links ORDER BY created_at DESC LIMIT 3\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: newest row has `click_count >= 1`.

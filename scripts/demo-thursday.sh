@@ -44,9 +44,24 @@ echo ""
 
 # ── Config ────────────────────────────────────────────────────
 PROXY_PORT=8080
-PROXY_SECRET="demo-thursday-2026"
-AZURE_DB="postgresql://sqladm:fTpQ6iZAE7clL9pEU0gvFAnRtZow8bGn@onetake-pg-west01.postgres.database.azure.com:5432/onetake_db?sslmode=require"
+PROXY_SECRET="${DB_PROXY_SECRET:-}"
 PYTHON="/opt/homebrew/bin/python3.12"
+
+# Load DB URL from worker/.env (never hardcode credentials)
+AZURE_DB="${AZURE_DATABASE_URL:-}"
+if [ -z "$AZURE_DB" ] && [ -f worker/.env ]; then
+  AZURE_DB=$(grep "^AZURE_DATABASE_URL=" worker/.env | cut -d'=' -f2-)
+fi
+if [ -z "$AZURE_DB" ]; then
+  echo "❌ AZURE_DATABASE_URL not set. Export it or check worker/.env"
+  exit 1
+fi
+
+# Load proxy secret from env or generate one
+if [ -z "$PROXY_SECRET" ]; then
+  PROXY_SECRET=$($PYTHON -c "import secrets; print(secrets.token_urlsafe(32))")
+  echo -e "${DIM}  Generated proxy secret (set DB_PROXY_SECRET env var to persist)${NC}"
+fi
 
 # ── Preflight ─────────────────────────────────────────────────
 echo -e "${DIM}Checking prerequisites...${NC}"

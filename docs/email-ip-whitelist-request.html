@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>IP Whitelisting Requests — Last Blockers for OneTake Launch</title>
+</head>
+<body style="font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; max-width: 680px; margin: 0; padding: 0;">
+
+<p>Hi Michael, Pengfei,</p>
+
+<p>OneTake is fully built and deployed &mdash; the pipeline, dashboards, analytics, and worker are all running. We're down to two infrastructure blockers that are preventing full launch. Both are network access requests:</p>
+
+<p><strong>1. Vercel &rarr; OneTake Azure DB (<code>onetake-pg-west01.postgres.database.azure.com</code>)</strong></p>
+
+<p>Our Next.js frontend is hosted on Vercel and needs to query the OneTake Azure PostgreSQL database directly for dashboards, campaign data, and analytics. Vercel uses dynamic egress IPs that rotate per request, so whitelisting individual IPs isn't practical.</p>
+
+<p>The simplest fix: on the <code>onetake-pg-west01</code> Flexible Server firewall, please enable <strong>&ldquo;Allow public access from any Azure service within Azure.&rdquo;</strong> Vercel routes through Azure infrastructure, so this covers our traffic. We still have credential-based auth (username/password + SSL required) as a second security layer, so the blast radius is minimal.</p>
+
+<p><strong>2. Our Access &rarr; OneForma Production DB (<code>oneformapostgresprod.reader.postgres.database.azure.com</code>)</strong></p>
+
+<p>We need <strong>read-only</strong> access to the OneForma production Postgres database to build closed-loop attribution &mdash; connecting marketing campaigns to actual contributor signups, task completions, and conversion rates. This is what turns our dashboards from &ldquo;how many clicks&rdquo; into &ldquo;how many qualified contributors actually completed tasks.&rdquo;</p>
+
+<p>The server currently uses Azure Private DNS and isn't reachable from the public internet. Two options:</p>
+
+<ul>
+<li><strong>(A)</strong> Add a firewall rule for my IP (<code>73.1.31.109</code>) + enable &ldquo;Allow public access from any Azure service within Azure&rdquo; (so the OneTake app can query it too)</li>
+<li><strong>(B)</strong> Confirm whether the Centific VPN provides access &mdash; I can use my company laptop for initial exploration, but the production app still needs a network path for live dashboards</li>
+</ul>
+
+<p><strong>Why this is urgent:</strong> These are two of the last remaining blockers before OneTake is fully operational. Everything else &mdash; the 6-stage creative pipeline, 5 analytics dashboards, 40+ widgets, organic social sync, full tracking infrastructure &mdash; is built and deployed. Once these connections are open, we can launch the Milky Way pilot with full end-to-end measurement (marketing spend &rarr; contributor signup &rarr; task completion &rarr; ROAS).</p>
+
+<p>Happy to jump on a call if it's easier to coordinate. Thanks for the help getting us across the finish line.</p>
+
+<p>Best,<br>Steven</p>
+
+</body>
+</html>

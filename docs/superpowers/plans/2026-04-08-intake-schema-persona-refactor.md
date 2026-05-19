@@ -125,7 +125,7 @@ Expected output: counter showing all statements executed, final line `All tables
 
 ```bash
 cd /Users/stevenjunop/centric-intake/.worktrees/intake-persona-refactor
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return Promise.all([sql\`SELECT column_name FROM information_schema.columns WHERE table_name='intake_requests' AND column_name IN ('qualifications_required','qualifications_preferred','location_scope','language_requirements','engagement_model','technical_requirements','context_notes') ORDER BY column_name\`, sql\`SELECT column_name FROM information_schema.columns WHERE table_name='creative_briefs' AND column_name IN ('pillar_primary','pillar_secondary','derived_requirements') ORDER BY column_name\`]).then(([a,b]) => { console.log('intake_requests new cols:', a.length); console.log(a); console.log('creative_briefs new cols:', b.length); console.log(b); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return Promise.all([sql\`SELECT column_name FROM information_schema.columns WHERE table_name='intake_requests' AND column_name IN ('qualifications_required','qualifications_preferred','location_scope','language_requirements','engagement_model','technical_requirements','context_notes') ORDER BY column_name\`, sql\`SELECT column_name FROM information_schema.columns WHERE table_name='creative_briefs' AND column_name IN ('pillar_primary','pillar_secondary','derived_requirements') ORDER BY column_name\`]).then(([a,b]) => { console.log('intake_requests new cols:', a.length); console.log(a); console.log('creative_briefs new cols:', b.length); console.log(b); process.exit(0); }); });"
 ```
 
 Expected: `intake_requests new cols: 7`, `creative_briefs new cols: 3`, plus the full column lists.
@@ -133,7 +133,7 @@ Expected: `intake_requests new cols: 7`, `creative_briefs new cols: 3`, plus the
 - [ ] **Step 5: Verify CHECK constraint catches bad pillar values**
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`INSERT INTO creative_briefs (request_id, brief_data, pillar_primary) VALUES (gen_random_uuid(), '{}', 'sharp') RETURNING id\`.then(r => { console.log('BAD: insert succeeded', r); process.exit(1); }).catch(e => { console.log('GOOD: insert rejected as expected:', e.message.slice(0,200)); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`INSERT INTO creative_briefs (request_id, brief_data, pillar_primary) VALUES (gen_random_uuid(), '{}', 'sharp') RETURNING id\`.then(r => { console.log('BAD: insert succeeded', r); process.exit(1); }).catch(e => { console.log('GOOD: insert rejected as expected:', e.message.slice(0,200)); process.exit(0); }); });"
 ```
 
 Expected: `GOOD: insert rejected as expected: ...violates check constraint "creative_briefs_pillar_primary_check"...`
@@ -892,7 +892,7 @@ sleep 5
 # Fill in all 4 required Job Requirements fields + paste an RFP
 # Submit
 # Verify via psql:
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT id, title, qualifications_required, location_scope, language_requirements, engagement_model FROM intake_requests ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT id, title, qualifications_required, location_scope, language_requirements, engagement_model FROM intake_requests ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: the most recent intake_requests row has the 4 required Job Requirements fields populated.
@@ -3017,7 +3017,7 @@ python3 main.py &
 Check via psql:
 
 ```bash
-node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('postgresql://neondb_owner:npg_wnpLYmD5EHa6@ep-lucky-rice-a8nk2ai4-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'); return sql\`SELECT id, pillar_primary, pillar_secondary, (derived_requirements->'persona_constraints'->>'excluded_archetypes') as excluded FROM creative_briefs WHERE request_id = (SELECT id FROM intake_requests WHERE title ILIKE '%cutis%' LIMIT 1) ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
+node -e "import('@neondatabase/serverless').then(({ neon }) => { const sql = neon('$DATABASE_URL'); return sql\`SELECT id, pillar_primary, pillar_secondary, (derived_requirements->'persona_constraints'->>'excluded_archetypes') as excluded FROM creative_briefs WHERE request_id = (SELECT id FROM intake_requests WHERE title ILIKE '%cutis%' LIMIT 1) ORDER BY created_at DESC LIMIT 1\`.then(r => { console.log(r); process.exit(0); }); });"
 ```
 
 Expected: `pillar_primary = 'shape'`, excluded_archetypes is a JSON array with disambiguated phrases.
