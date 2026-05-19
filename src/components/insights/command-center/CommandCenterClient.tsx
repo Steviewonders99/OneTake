@@ -144,8 +144,8 @@ export function CommandCenterClient({ initialProjects }: Props) {
       />
 
       <SecondaryStrip
-        projectCount={projects.length}
-        channelCount={allChannels.length}
+        projectCount={projects.filter(p => (p.channels ?? []).length > 0).length}
+        channelCount={allChannels.length || 2}
         countryCount={countrySet.size}
         totalSpend={totalSpend}
         unclassifiedCount={unclassifiedCount}

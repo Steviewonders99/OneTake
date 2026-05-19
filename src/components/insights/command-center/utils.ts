@@ -44,13 +44,13 @@ export function generateNarrative(projects: ProjectWithFunnel[], totalSpend: num
     const conv = best.weekly?.[0]?.total_conversions ?? 0;
     const wow = best.wow?.conversions;
     const wowText = wow && wow > 0 ? `, ${Math.round(wow)}% WoW improvement` : '';
-    text += `${cap(best.codename)} leads the portfolio${cpa ? ` — ${formatEur(cpa)} CPA with ${conv} applications${wowText}` : ''}. `;
+    text += `${projectName(best)} leads the portfolio${cpa ? ` — ${formatEur(cpa)} CPA with ${conv} applications${wowText}` : ''}. `;
   }
 
   if (worst) {
     const cpa = worst.weekly?.[0]?.blended_cpa;
     const wow = worst.wow?.conversions;
-    text += `${cap(worst.codename)} ${wow && wow < 0 ? `declined ${Math.abs(Math.round(wow))}%` : 'needs attention'}${cpa ? ` at ${formatEur(cpa)} CPA` : ''}. `;
+    text += `${projectName(worst)} ${wow && wow < 0 ? `declined ${Math.abs(Math.round(wow))}%` : 'needs attention'}${cpa ? ` at ${formatEur(cpa)} CPA` : ''}. `;
   }
 
   if (organicShare > 50) {
@@ -60,4 +60,10 @@ export function generateNarrative(projects: ProjectWithFunnel[], totalSpend: num
   return text;
 }
 
-function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
+function projectName(p: { codename: string; display_name?: string }): string {
+  if (p.display_name) {
+    const name = p.display_name.split('—')[0]?.trim();
+    if (name && name.length > 0) return name;
+  }
+  return p.codename.charAt(0).toUpperCase() + p.codename.slice(1).replace(/[-_]/g, ' ');
+}

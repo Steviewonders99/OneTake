@@ -14,11 +14,23 @@ interface NarrativePanelProps {
 export function NarrativePanel({ projects, totalSpend, totalConversions, organicShare }: NarrativePanelProps) {
   const narrative = generateNarrative(projects, totalSpend, totalConversions, organicShare);
 
+  const getName = (p: ProjectWithFunnel) => {
+    if (p.display_name) {
+      const name = p.display_name.split('—')[0]?.trim();
+      if (name && name.length > 0) return name;
+    }
+    return p.codename;
+  };
+
+  // Only show projects that have channel links (not the 38 organic ones with no data)
+  const tracked = projects.filter(p => (p.channels ?? []).length > 0);
+  const untracked = projects.filter(p => (p.channels ?? []).length === 0);
+
   const grouped: Record<string, string[]> = {
-    increase: projects.filter(p => p.action === 'increase').map(p => p.codename),
-    hold: projects.filter(p => p.action === 'hold').map(p => p.codename),
-    fix: projects.filter(p => p.action === 'fix').map(p => p.codename),
-    boost: projects.filter(p => p.action === 'boost').map(p => p.codename),
+    increase: tracked.filter(p => p.action === 'increase').map(getName),
+    hold: tracked.filter(p => p.action === 'hold').map(getName),
+    fix: tracked.filter(p => p.action === 'fix').map(getName),
+    boost: tracked.filter(p => p.action === 'boost').map(getName),
   };
 
   return (
@@ -38,7 +50,7 @@ export function NarrativePanel({ projects, totalSpend, totalConversions, organic
             <div key={action} className="flex items-center gap-1.5 text-xs">
               <span className="inline-block text-[9px] font-extrabold px-2 py-[2px] rounded-[10px] text-white uppercase"
                     style={{ background: style.bg }}>{style.label}</span>
-              <span style={{ color: BRAND.text2 }}>{names.map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(', ')}</span>
+              <span style={{ color: BRAND.text2 }}>{names.join(', ')}</span>
             </div>
           );
         })}

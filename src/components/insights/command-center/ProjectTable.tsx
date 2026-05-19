@@ -59,23 +59,30 @@ export function ProjectTable({ projects, selectedCountry, onProjectSelect }: Pro
               <tr key={proj.id}
                   className="border-b border-black/[0.03] cursor-pointer transition-colors hover:bg-[#FAFAFF]"
                   onClick={() => onProjectSelect(proj.id)}>
-                <td className="px-4 py-3.5">
-                  <div className="font-semibold text-[13px]" style={{ color: BRAND.text }}>{proj.codename}</div>
-                  <div className="text-[10px]" style={{ color: BRAND.text3 }}>
-                    {proj.display_name.split('—')[1]?.trim()} · {(proj.countries ?? []).join(', ')}
+                <td className="px-4 py-3.5 max-w-[280px]">
+                  <div className="font-semibold text-[13px]" style={{ color: BRAND.text }}>
+                    {proj.display_name.split('—')[0]?.trim() ?? proj.codename}
+                  </div>
+                  <div className="text-[10px] truncate" style={{ color: BRAND.text3 }}>
+                    {proj.display_name.split('—')[1]?.trim() ?? ''}
+                    {(proj.countries ?? []).length > 0 && ` · ${(proj.countries ?? []).length} locales`}
                   </div>
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex gap-1 flex-wrap">
-                    {(proj.channels ?? []).map(ch => {
-                      const slug = ch.channel_slug ?? '';
-                      const pillClass = PILL_CLASSES[slug] ?? 'bg-gray-100 text-gray-600';
+                    {Array.from(new Set((proj.channels ?? []).map(ch => ch.channel_slug))).filter(Boolean).map(slug => {
+                      const pillClass = PILL_CLASSES[slug!] ?? 'bg-gray-100 text-gray-600';
                       return (
-                        <span key={ch.id} className={`inline-block text-[8px] font-bold px-[7px] py-[2px] rounded-[10px] uppercase tracking-[0.04em] ${pillClass}`}>
-                          {CHANNEL_DISPLAY[slug] ?? slug}
+                        <span key={slug} className={`inline-block text-[8px] font-bold px-[7px] py-[2px] rounded-[10px] uppercase tracking-[0.04em] ${pillClass}`}>
+                          {CHANNEL_DISPLAY[slug!] ?? slug}
                         </span>
                       );
                     })}
+                    {(proj.channels ?? []).length === 0 && (
+                      <span className="inline-block text-[8px] font-medium px-[7px] py-[2px] rounded-[10px] bg-[#F3F4F6] text-[#6B7280] italic">
+                        organic
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-3.5 text-right text-[13px] font-semibold" style={{ color: spend > 0 ? BRAND.text : BRAND.text3 }}>
