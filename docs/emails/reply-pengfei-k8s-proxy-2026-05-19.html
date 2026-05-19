@@ -112,10 +112,10 @@ Vercel → <span style="color:#89b4fa;">OneForma API Gateway</span> → <span st
   <tr><td>Database access</td><td>Read-only connection to OneTake PG via connection pool (asyncpg, max 5 connections). No DDL, no arbitrary SQL.</td></tr>
   <tr><td>Data returned</td><td>Project names, campaign metrics (spend/clicks/conversions), channel mappings. No PII, no credentials, no contributor personal data.</td></tr>
   <tr><td>Dependencies</td><td>Python 3.12, aiohttp 3.9, asyncpg 0.31. No other packages.</td></tr>
-  <tr><td>Code location</td><td><code>worker/db_proxy.py</code> in the OneTake repo — I can share this directly or give you repo access.</td></tr>
+  <tr><td>Code location</td><td><strong><a href="https://github.com/Steviewonders99/onetake-db-proxy" style="color:#2563EB;">github.com/Steviewonders99/onetake-db-proxy</a></strong> — public repo, full source + Dockerfile + README</td></tr>
 </table>
 
-<p>Happy to walk through the code on a call. It's intentionally minimal — the less surface area, the less to audit.</p>
+<p>The full codebase is in the repo above — review at your own pace. It's intentionally minimal — 230 lines, 2 dependencies, the less surface area the less to audit.</p>
 
 <h2>Timeline / Thursday Demo</h2>
 
@@ -126,7 +126,8 @@ Vercel → <span style="color:#89b4fa;">OneForma API Gateway</span> → <span st
 <h2>Proposed Next Steps</h2>
 
 <ol>
-  <li><strong>Schedule a call</strong> — Pengfei, Nemanja, and me. 30 minutes. I'll walk through the proxy code + architecture. Any time this week works for me.</li>
+  <li><strong>Review the code</strong> — the full proxy is in a public repo for your review: <a href="https://github.com/Steviewonders99/onetake-db-proxy" style="color:#2563EB;font-weight:600;">github.com/Steviewonders99/onetake-db-proxy</a> — 4 files: <code>db_proxy.py</code> (230 lines), <code>Dockerfile</code>, <code>requirements.txt</code>, and a README with the full security overview + endpoint spec. Nemanja can review at his own pace.</li>
+  <li><strong>Schedule a call if needed</strong> — happy to do 30 minutes with Pengfei + Nemanja to discuss. But the repo has everything — a call may not be necessary.</li>
   <li><strong>I push the Docker image</strong> — to whatever registry the K8s cluster pulls from (ACR, or OneForma's registry).</li>
   <li><strong>Pengfei deploys to K8s</strong> — with the gateway route.</li>
   <li><strong>Nemanja pentests</strong> — against the deployed endpoint.</li>
