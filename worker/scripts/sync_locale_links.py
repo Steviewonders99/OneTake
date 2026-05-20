@@ -169,6 +169,24 @@ async def sync_locale_links(jobs: list[dict]) -> dict[str, int]:
                 )
                 stats["removed"] += 1
 
+        # Auto-detect funnel_type from apply URLs
+        # aidaform = external AidaForm, platform = my.oneforma.com signup/crowd
+        await conn.execute("""
+            UPDATE projects p SET funnel_type = 'aidaform'
+            WHERE p.id IN (
+                SELECT DISTINCT pll.project_id FROM project_locale_links pll
+                WHERE pll.is_active = TRUE AND pll.apply_url LIKE '%%aidaform%%'
+            ) AND (p.funnel_type IS NULL OR p.funnel_type != 'aidaform')
+        """)
+        await conn.execute("""
+            UPDATE projects SET funnel_type = 'platform'
+            WHERE (funnel_type IS NULL OR funnel_type = 'aidaform')
+            AND id NOT IN (
+                SELECT DISTINCT project_id FROM project_locale_links
+                WHERE is_active = TRUE AND apply_url LIKE '%%aidaform%%'
+            )
+        """)
+
     await pool.close()
     return stats
 
