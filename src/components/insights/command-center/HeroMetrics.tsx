@@ -15,7 +15,7 @@ interface HeroMetricsProps {
   organicShare: number;
   organicCount: number;
   totalCount: number;
-  organicShare30dAgo: number;
+  organicShare30dAgo?: number;
 }
 
 export function HeroMetrics(props: HeroMetricsProps) {
@@ -51,8 +51,12 @@ export function HeroMetrics(props: HeroMetricsProps) {
       gradient: BRAND.gradWarm,
       eyebrow: 'Non-Paid Acquisition Share',
       number: `${Math.round(props.organicShare)}%`,
-      delta: `${props.organicCount.toLocaleString()} of ${props.totalCount.toLocaleString()} at zero ad spend`,
-      benchmark: `vs ${Math.round(props.organicShare30dAgo)}% non-paid 30 days ago`,
+      delta: props.totalCount > 0
+        ? `${Math.round(props.organicShare)}% of traffic from non-paid channels`
+        : 'No channel data in range',
+      benchmark: props.organicCount > 0
+        ? `${props.organicCount.toLocaleString()} non-paid · ${(props.totalCount - props.organicCount).toLocaleString()} paid clicks`
+        : '',
     },
   ];
 

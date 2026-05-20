@@ -194,7 +194,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
         organicShare={organicShare}
         organicCount={rangeOrganicClicks}
         totalCount={organicTotal}
-        organicShare30dAgo={Math.max(organicShare - 5, 0)}
+        organicShare30dAgo={0}
       />
 
       <SecondaryStrip
