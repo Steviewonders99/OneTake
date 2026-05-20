@@ -23,15 +23,11 @@ interface Props {
 }
 
 export function DeepDiveClient({ initialProjects }: Props) {
-  // Default to Centaurus or first project with channel data (not alphabetical first)
-  const defaultProject = initialProjects.find(p => p.codename === 'centaurus')
-    ?? initialProjects.find(p => p.display_name?.toLowerCase().includes('centaurus'))
-    ?? initialProjects[0];
-  const [selectedId, setSelectedId] = useState<string | null>(defaultProject?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
   const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [selectedLocale, setSelectedLocale] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [funnelData, setFunnelData] = useState<any>(null);
   const [weeklyData, setWeeklyData] = useState<any>(null);
   const [channels, setChannels] = useState<any[]>([]);
@@ -149,12 +145,59 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const projectName = selected?.display_name?.split('—')[0]?.trim() ?? selected?.codename ?? 'Select a project';
   const projectDetail = selected?.display_name?.split('—')[1]?.trim() ?? '';
 
+  // Empty state — no project selected
+  if (!selectedId) {
+    return (
+      <div className="p-8 max-w-[1400px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-[24px] tracking-tight" style={{ color: BRAND.text }}>
+                <span className="font-extralight">Project</span>{' '}
+                <span className="font-extrabold">Deep Dive</span>
+              </h1>
+              <div className="text-[12px] mt-0.5" style={{ color: BRAND.text3 }}>
+                Select a project to view its acquisition funnel and performance data
+              </div>
+            </div>
+            <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
+          </div>
+          <div style={{ maxWidth: 400 }}>
+            <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center"
+               style={{ background: BRAND.bgRaised }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={BRAND.text3} strokeWidth="1.5">
+              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
+            </svg>
+          </div>
+          <div className="text-[16px] font-semibold mb-1" style={{ color: BRAND.text }}>
+            Choose a project to analyze
+          </div>
+          <div className="text-[13px] max-w-[360px]" style={{ color: BRAND.text3 }}>
+            Search above to select a project. You'll see its full acquisition funnel, source attribution, locale performance, and trends.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading && !funnelData) {
     return (
-      <div className="p-10" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+      <div className="p-8 max-w-[1400px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+        <div className="mb-6">
+          <div style={{ maxWidth: 400 }}>
+            <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+        </div>
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-64 bg-[#f0f0f0] rounded" />
-          <div className="h-[400px] bg-[#f0f0f0] rounded-2xl" />
+          <div className="grid grid-cols-4 gap-3">
+            {[1,2,3,4].map(i => <div key={i} className="h-28 bg-[#f0f0f0] rounded-2xl" />)}
+          </div>
+          <div className="h-[300px] bg-[#f0f0f0] rounded-2xl" />
         </div>
       </div>
     );
