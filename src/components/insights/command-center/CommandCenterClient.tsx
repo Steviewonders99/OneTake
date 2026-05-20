@@ -222,7 +222,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
   }
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+    <div className="p-8 max-w-[1600px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
       <CommandCenterHeader
         projects={projects}
         selectedProject={selectedProject}
