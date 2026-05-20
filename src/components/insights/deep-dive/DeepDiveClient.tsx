@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Project, ProjectWeeklySummary } from '@/lib/types/projects';
 import type { DateRange, DateRangeValue, ProjectWithFunnel } from '../command-center/types';
 import { BRAND } from '../command-center/types';
@@ -23,8 +24,9 @@ interface Props {
 }
 
 export function DeepDiveClient({ initialProjects }: Props) {
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(searchParams.get('project'));
   const [dateRange, setDateRange] = useState<DateRange>(30);
   const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [selectedLocale, setSelectedLocale] = useState<string | null>(null);

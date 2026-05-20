@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ProjectWithFunnel, DateRangeValue } from './types';
 import { BRAND, PILL_CLASSES, CHANNEL_DISPLAY } from './types';
 import { formatEur, formatDelta, ACTION_STYLES } from './utils';
@@ -57,6 +58,7 @@ interface ProjectTableProps {
 }
 
 export function ProjectTable({ projects, selectedCountry, onProjectSelect, dateRange }: ProjectTableProps) {
+  const router = useRouter();
   const [showAll, setShowAll] = useState(false);
 
   const filtered = selectedCountry
@@ -125,7 +127,7 @@ export function ProjectTable({ projects, selectedCountry, onProjectSelect, dateR
             return (
               <tr key={proj.id}
                   className="border-b border-black/[0.03] cursor-pointer transition-colors hover:bg-[#FAFAFF]"
-                  onClick={() => onProjectSelect(proj.id)}>
+                  onClick={() => router.push(`/insights/deep-dive?project=${proj.id}`)}>
                 <td className="px-4 py-3.5 max-w-[280px]">
                   <div className="font-semibold text-[13px]" style={{ color: BRAND.text }}>
                     {proj.display_name.split('—')[0]?.trim() ?? proj.codename}
