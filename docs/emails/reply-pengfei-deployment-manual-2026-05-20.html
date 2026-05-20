@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RE: Deployment Manual — OneTake DB Proxy</title>
+<style>
+  body { margin: 0; padding: 32px; font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f5f5f5; line-height: 1.7; }
+  .email { max-width: 740px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0348B2, #7C3AED); padding: 24px 32px; color: white; }
+  .header h1 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+  .header .sub { font-size: 11px; opacity: 0.8; }
+  .body { padding: 28px 32px; font-size: 14px; }
+  h2 { font-size: 15px; font-weight: 700; color: #0348B2; margin: 24px 0 8px; }
+  h2:first-of-type { margin-top: 0; }
+  p { margin: 8px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #f8f8f8; border: 1px solid #e5e5e5; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #737373; }
+  td { padding: 8px 12px; border: 1px solid #e5e5e5; vertical-align: top; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', monospace; font-size: 12px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: 'Cascadia Code', monospace; line-height: 1.6; margin: 12px 0; }
+  pre .c { color: #6c7086; }
+  pre .g { color: #a6e3a1; }
+  pre .b { color: #89b4fa; }
+  .callout { background: #EFF6FF; border-left: 4px solid #2563EB; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13px; line-height: 1.6; }
+  .callout.green { background: #F0FDF4; border-left-color: #16A34A; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .footer { padding: 16px 32px; background: #f8f8f8; border-top: 1px solid #f0f0f0; font-size: 12px; color: #737373; }
+</style>
+</head>
+<body>
+<div class="email">
+
+<div class="header">
+  <h1>Deployment Manual — OneTake DB Proxy</h1>
+  <div class="sub">Steven Junop → Pengfei Pan · May 20, 2026</div>
+</div>
+
+<div class="body">
+
+<p>Hi Pengfei,</p>
+
+<p>Great news — we can continue with <code>novacert.azurecr.io</code>. The image is ready. Here's everything you need to deploy and test.</p>
+
+<h2>1. Image Details</h2>
+
+<table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td>Registry</td><td><code>novacert.azurecr.io</code></td></tr>
+  <tr><td>Image</td><td><code>novacert.azurecr.io/onetake-worker:latest</code></td></tr>
+  <tr><td>Proxy entrypoint</td><td><code>python db_proxy.py</code></td></tr>
+  <tr><td>Proxy port</td><td><code>8080</code></td></tr>
+  <tr><td>Health check</td><td><code>GET /health</code> (no auth required)</td></tr>
+  <tr><td>Code repo</td><td><a href="https://github.com/Steviewonders99/onetake-db-proxy" style="color:#2563EB;">github.com/Steviewonders99/onetake-db-proxy</a></td></tr>
+</table>
+
+<h2>2. Environment Variables Required</h2>
+
+<table>
+  <tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td>Secret</td><td>PostgreSQL connection string for OneTake Azure PG<br><code>postgresql://sqladm:***@onetake-pg-west01.postgres.database.azure.com:5432/onetake_db?sslmode=require</code></td></tr>
+  <tr><td><code>PROXY_SECRET</code></td><td>Secret</td><td>Bearer token for API authentication (256-bit, I'll share securely)</td></tr>
+  <tr><td><code>PROXY_PORT</code></td><td>Plain</td><td><code>8080</code></td></tr>
+</table>
+
+<h2>3. Deployment Steps</h2>
+
+<pre>
+<span class="c"># Step 1: Pull the image (already in novacert.azurecr.io)</span>
+docker pull novacert.azurecr.io/onetake-worker:latest
+
+<span class="c"># Step 2: Run the proxy (standalone test)</span>
+docker run -d \
+  -p 8080:8080 \
+  -e DATABASE_URL="postgresql://sqladm:***@onetake-pg-west01..." \
+  -e PROXY_SECRET="<span class="b">secret-will-share-securely</span>" \
+  -e PROXY_PORT="8080" \
+  novacert.azurecr.io/onetake-worker:latest \
+  <span class="g">python db_proxy.py</span>
+
+<span class="c"># Step 3: Verify health</span>
+curl http://localhost:8080/health
+<span class="c"># Expected: {"ok": true, "db": true}</span>
+
+<span class="c"># Step 4: Test with auth</span>
+curl -H "Authorization: Bearer <span class="b">YOUR_SECRET</span>" \
+  http://localhost:8080/projects
+<span class="c"># Expected: JSON array of 48 projects</span>
+
+<span class="c"># Step 5: Test without auth (should be rejected)</span>
+curl http://localhost:8080/projects
+<span class="c"># Expected: {"error": "Unauthorized"} (401)</span>
+</pre>
+
+<h2>4. API Endpoints (for testing)</h2>
+
+<table>
+  <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/health</code></td><td>No</td><td>Health check + DB connectivity</td></tr>
+  <tr><td>GET</td><td><code>/projects</code></td><td>Yes</td><td>List all active projects (48)</td></tr>
+  <tr><td>GET</td><td><code>/projects/:id</code></td><td>Yes</td><td>Single project by UUID</td></tr>
+  <tr><td>GET</td><td><code>/projects/:id/funnel</code></td><td>Yes</td><td>Weekly funnel data + WoW deltas</td></tr>
+  <tr><td>GET</td><td><code>/projects/:id/ga4-funnel</code></td><td>Yes</td><td>9-stage GA4 acquisition funnel</td></tr>
+  <tr><td>GET</td><td><code>/projects/:id/channels</code></td><td>Yes</td><td>Channel links for a project</td></tr>
+  <tr><td>GET</td><td><code>/projects/:id/locales</code></td><td>Yes</td><td>Per-language apply URLs + requestIDs</td></tr>
+  <tr><td>GET</td><td><code>/projects/unclassified</code></td><td>Yes</td><td>Unclassified UTM sources</td></tr>
+  <tr><td>POST</td><td><code>/pages/normalize</code></td><td>Yes</td><td>Normalize page paths to display names</td></tr>
+  <tr><td>POST</td><td><code>/projects/sync</code></td><td>Yes</td><td>Trigger intake linking + view refresh</td></tr>
+  <tr><td>POST</td><td><code>/refresh</code></td><td>Yes</td><td>Refresh materialized view</td></tr>
+</table>
+
+<h2>5. Verification Checklist</h2>
+
+<div class="callout green">
+  <strong>After deploying, run these checks:</strong>
+  <ol style="margin: 8px 0; padding-left: 20px;">
+    <li><code>GET /health</code> → <code>{"ok": true, "db": true}</code></li>
+    <li><code>GET /projects</code> (with auth) → 48 projects returned</li>
+    <li><code>GET /projects</code> (no auth) → 401 Unauthorized</li>
+    <li><code>GET /projects/{any-uuid}/funnel?view=weekly</code> → weekly data</li>
+    <li>Response headers include: <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, <code>Server: onetake-proxy</code></li>
+    <li>Rate limiting: 120+ rapid requests → 429 response</li>
+  </ol>
+</div>
+
+<h2>6. Security Summary</h2>
+
+<table>
+  <tr><th>Control</th><th>Detail</th></tr>
+  <tr><td>Authentication</td><td>Bearer token (256-bit) on every request except /health</td></tr>
+  <tr><td>Token comparison</td><td>Constant-time (hmac.compare_digest) — timing-safe</td></tr>
+  <tr><td>Rate limiting</td><td>120 requests/minute per IP</td></tr>
+  <tr><td>Database access</td><td>Read-only (no DDL, no writes except materialized view refresh)</td></tr>
+  <tr><td>Error handling</td><td>Generic errors — never leaks internal details</td></tr>
+  <tr><td>Transport</td><td>HTTPS (TLS terminated by ingress/gateway)</td></tr>
+  <tr><td>Server header</td><td><code>onetake-proxy</code> (hides Python/aiohttp version)</td></tr>
+  <tr><td>Dependencies</td><td>Python 3.12 + aiohttp 3.9 + asyncpg 0.31 (3 packages total)</td></tr>
+</table>
+
+<h2>7. For K8s Deployment</h2>
+
+<p>If deploying to K8s instead of Container Apps:</p>
+
+<pre>
+<span class="c"># Deployment spec (minimal)</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onetake-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onetake-proxy
+  template:
+    metadata:
+      labels:
+        app: onetake-proxy
+    spec:
+      containers:
+      - name: proxy
+        image: novacert.azurecr.io/onetake-worker:latest
+        command: ["python", "db_proxy.py"]
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: onetake-secrets
+              key: database-url
+        - name: PROXY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: onetake-secrets
+              key: proxy-secret
+        - name: PROXY_PORT
+          value: "8080"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: onetake-proxy
+spec:
+  selector:
+    app: onetake-proxy
+  ports:
+  - port: 8080
+    targetPort: 8080
+</pre>
+
+<div class="callout">
+  <strong>Next steps:</strong>
+  <ol style="margin: 8px 0; padding-left: 20px;">
+    <li>You deploy using the steps above</li>
+    <li>Share the external endpoint URL with me (FQDN or gateway URL)</li>
+    <li>I'll update the Vercel <code>DB_PROXY_URL</code> to point to it</li>
+    <li>Nemanja can pentest the deployed endpoint</li>
+  </ol>
+</div>
+
+<p>I'll share the <code>PROXY_SECRET</code> value via Teams DM (not email). Let me know when you're ready to start the deployment test — happy to be on a call while you run through it.</p>
+
+<p style="margin-top: 20px;">Best,<br><strong>Steven Junop</strong><br>Marketing Manager | OneForma Group<br>9544106098</p>
+
+</div>
+
+<div class="footer">
+  OneTake DB Proxy · 11 endpoints · 3 dependencies · Ready to deploy
+</div>
+
+</div>
+</body>
+</html>
