@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 DIMENSIONS: dict[str, tuple[int, int]] = {
     "square": (1080, 1080),
+    "feed_portrait": (1080, 1350),
     "landscape": (1200, 628),
     "portrait": (1080, 1920),
     "linkedin": (1200, 627),
@@ -80,18 +81,11 @@ async def generate_image(
         f"Avoid: {neg}"
     )
 
-    # ── Try OpenAI direct first (37x cheaper than OpenRouter) ──
-    if OPENAI_API_KEY:
-        try:
-            return await _generate_via_openai(full_prompt, width, height)
-        except Exception as e:
-            logger.warning("OpenAI image gen failed, falling back to OpenRouter: %s", str(e)[:200])
-
-    # ── Fallback: OpenRouter ──
+    # ── OpenRouter primary (gpt-5.4-image-2 via OpenRouter) ──
     if OPENROUTER_API_KEY:
         return await _generate_via_openrouter(full_prompt, width, height)
 
-    raise ValueError("No image generation API key configured (OPENAI_API_KEY or OPENROUTER_API_KEY)")
+    raise ValueError("No image generation API key configured (OPENROUTER_API_KEY)")
 
 
 async def _generate_via_openai(prompt: str, width: int, height: int) -> bytes:
