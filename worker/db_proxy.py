@@ -302,18 +302,31 @@ async def get_ga4_funnel(request: web.Request):
             return sum(r.get(key, 0) or 0 for r in rows)
         tw = range_total("wp_entry")
         tn = range_total("nda_signed")
+        # Get apply_click + signup from all-time ga4_project_funnel (not in organic weekly)
+        alltime = await query(
+            "SELECT SUM(apply_click) as apply_click, SUM(signup) as signup "
+            "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+            "AND source = 'all_campaigns'",
+            pid,
+        )
+        at = alltime[0] if alltime else {}
+        ac = at.get("apply_click", 0) or 0
+        su = at.get("signup", 0) or 0
         return web.json_response({
             "by_source": rows,
             "utm_detail": utm_detail,
             "totals": {
-                "wp_entry": tw, "apply_click": range_total("apply_click"),
-                "signup": 0, "mfa_setup": 0, "profile_created": 0,
+                "wp_entry": tw, "apply_click": ac,
+                "signup": su, "mfa_setup": 0, "profile_created": 0,
                 "nda_signed": tn, "certification": 0, "browsing_jobs": 0, "doing_tasks": 0,
             },
             "rates": {
+                "wp_to_apply": round(ac / tw * 100, 1) if tw > 0 else 0,
                 "wp_to_nda": round(tn / tw * 100, 1) if tw > 0 else 0,
-                "wp_to_apply": 0, "wp_to_signup": 0, "wp_to_tasks": 0,
-                "nda_to_tasks": 0, "apply_to_nda": 0,
+                "wp_to_signup": round(su / tw * 100, 1) if tw > 0 else 0,
+                "wp_to_tasks": 0,
+                "nda_to_tasks": 0,
+                "apply_to_nda": round(tn / ac * 100, 1) if ac > 0 else 0,
             },
         })
 
