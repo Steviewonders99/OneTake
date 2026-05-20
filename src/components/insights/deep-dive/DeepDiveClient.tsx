@@ -23,11 +23,14 @@ interface Props {
 }
 
 export function DeepDiveClient({ initialProjects }: Props) {
+  const [mounted, setMounted] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
   const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [selectedLocale, setSelectedLocale] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
   const [funnelData, setFunnelData] = useState<any>(null);
   const [weeklyData, setWeeklyData] = useState<any>(null);
   const [channels, setChannels] = useState<any[]>([]);
@@ -145,27 +148,27 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const projectName = selected?.display_name?.split('—')[0]?.trim() ?? selected?.codename ?? 'Select a project';
   const projectDetail = selected?.display_name?.split('—')[1]?.trim() ?? '';
 
-  // Empty state — centered, inviting
-  if (!selectedId) {
+  // Empty state — centered, inviting (client-only to avoid hydration mismatch)
+  if (!selectedId && mounted) {
     return (
-      <div className="p-8 max-w-[1400px] mx-auto flex flex-col items-center justify-center min-h-[70vh]"
+      <div className="p-8 max-w-[1400px] mx-auto flex flex-col items-center justify-center" style={{ minHeight: '70vh' }}
            style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
-        <div className="text-center mb-8">
-          <h1 className="text-[32px] tracking-tight mb-2" style={{ color: BRAND.text }}>
+        <div className="text-center mb-10">
+          <h1 className="text-[48px] tracking-tight mb-3 leading-tight" style={{ color: BRAND.text }}>
             <span className="font-extralight">Project</span>{' '}
             <span className="font-extrabold">Deep Dive</span>
           </h1>
-          <div className="text-[14px]" style={{ color: BRAND.text3 }}>
+          <div className="text-[16px]" style={{ color: BRAND.text3 }}>
             Select a project to explore its full acquisition funnel
           </div>
         </div>
-        <div className="w-full max-w-[480px] mb-8">
+        <div className="w-full max-w-[520px] mb-10">
           <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-        <div className="flex gap-6 mb-6">
+        <div className="flex gap-8 mb-8">
           {['Funnel Analysis', 'Source Attribution', 'Locale Performance', 'Weekly Trends'].map(label => (
-            <div key={label} className="flex items-center gap-1.5 text-[11px]" style={{ color: BRAND.text3 }}>
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: BRAND.purple, opacity: 0.4 }} />
+            <div key={label} className="flex items-center gap-2 text-[12px] font-medium" style={{ color: BRAND.text3 }}>
+              <div className="w-2 h-2 rounded-full" style={{ background: BRAND.purple, opacity: 0.3 }} />
               {label}
             </div>
           ))}
