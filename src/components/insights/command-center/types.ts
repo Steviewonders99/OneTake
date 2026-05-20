@@ -72,4 +72,14 @@ export interface ChartWeek {
   [channelSlug: string]: number | string;
 }
 
+export type DateRangePreset = 7 | 14 | 30 | 90 | 'all';
+
+export interface DateRangeValue {
+  start: string;  // YYYY-MM-DD
+  end: string;    // YYYY-MM-DD
+  preset?: DateRangePreset;
+  compare?: { start: string; end: string } | null;
+}
+
+/** @deprecated Use DateRangeValue instead */
 export type DateRange = 7 | 14 | 30 | 90;

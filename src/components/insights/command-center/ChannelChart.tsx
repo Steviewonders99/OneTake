@@ -6,15 +6,16 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { CHANNEL_COLORS, CHANNEL_DISPLAY, TOP_CHANNELS, BRAND } from './types';
-import type { ChartWeek } from './types';
+import type { ChartWeek, DateRangeValue } from './types';
 import { AXIS_STYLE, GRID_STYLE, TOOLTIP_STYLE } from '@/components/insights/chartTheme';
 
 interface ChannelChartProps {
   data: ChartWeek[];
   allChannels: string[];
+  dateRange?: DateRangeValue;
 }
 
-export function ChannelChart({ data, allChannels }: ChannelChartProps) {
+export function ChannelChart({ data, allChannels, dateRange }: ChannelChartProps) {
   const [expanded, setExpanded] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -56,7 +57,14 @@ export function ChannelChart({ data, allChannels }: ChannelChartProps) {
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       <div className="flex justify-between items-center mb-5">
         <h3 className="text-sm font-bold" style={{ color: BRAND.text }}>
-          Applications by Channel — Last 8 Weeks
+          Applications by Channel — {dateRange?.preset
+            ? dateRange.preset === 'all' ? 'All Time' : `Last ${dateRange.preset} Days`
+            : `${data.length} Weeks`}
+          {dateRange?.compare && (
+            <span className="font-normal text-[11px] ml-2" style={{ color: BRAND.purple }}>
+              vs previous period
+            </span>
+          )}
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
           {(expanded ? [...TOP_CHANNELS, ...otherChannels] : [...TOP_CHANNELS]).map(ch => (

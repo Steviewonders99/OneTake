@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Project } from '@/lib/types/projects';
-import type { DateRange } from '../command-center/types';
+import type { DateRange, DateRangeValue } from '../command-center/types';
 import { BRAND } from '../command-center/types';
 import { ProjectSearch } from '../command-center/ProjectSearch';
+import { DateRangePicker, defaultDateRange } from '../DateRangePicker';
 import { ChannelSearch, getChannelInfo } from './ChannelSearch';
 import { ChannelHeroMetrics } from './ChannelHeroMetrics';
 import { GSCKeywordsPanel } from './GSCKeywordsPanel';
@@ -36,6 +37,7 @@ export function ChannelIntelClient({ initialProjects }: Props) {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
+  const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [loading, setLoading] = useState(false);
 
   // Data state — populated from API calls
@@ -203,14 +205,7 @@ export function ChannelIntelClient({ initialProjects }: Props) {
             {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <div className="flex gap-0.5 bg-[#F6F7FB] rounded-lg p-[3px]">
-          {([7, 30, 90] as DateRange[]).map(d => (
-            <button key={d} onClick={() => setDateRange(d)}
-                    className={`px-3.5 py-2 rounded-md text-[11px] font-semibold transition-all ${
-                      dateRange === d ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
-                    }`}>{d === 90 ? 'All' : `${d}d`}</button>
-          ))}
-        </div>
+        <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
       </div>
 
       {/* Hero Metrics */}

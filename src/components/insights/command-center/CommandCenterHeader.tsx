@@ -1,9 +1,10 @@
 'use client';
 
 import type { Project } from '@/lib/types/projects';
-import type { DateRange } from './types';
+import type { DateRange, DateRangeValue } from './types';
 import { BRAND } from './types';
 import { ProjectSearch } from './ProjectSearch';
+import { DateRangePicker } from '../DateRangePicker';
 
 interface HeaderProps {
   projects: Project[];
@@ -13,6 +14,8 @@ interface HeaderProps {
   onProjectChange: (id: string | null) => void;
   onCountryChange: (country: string | null) => void;
   onDateRangeChange: (range: DateRange) => void;
+  dateRangeV2?: DateRangeValue;
+  onDateRangeV2Change?: (value: DateRangeValue) => void;
 }
 
 // Extract real country names from locale strings like "English (Australia)" → "Australia"
@@ -79,15 +82,19 @@ export function CommandCenterHeader(props: HeaderProps) {
           </div>
         </div>
 
-        {/* Date pills — always visible top right */}
-        <div className="flex gap-0.5 bg-[#F6F7FB] rounded-lg p-[3px]">
-          {([7, 14, 30, 90] as DateRange[]).map(d => (
-            <button key={d} onClick={() => props.onDateRangeChange(d)}
-              className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                dateRange === d ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
-              }`}>{d}d</button>
-          ))}
-        </div>
+        {/* Date range picker */}
+        {props.dateRangeV2 && props.onDateRangeV2Change ? (
+          <DateRangePicker value={props.dateRangeV2} onChange={props.onDateRangeV2Change} />
+        ) : (
+          <div className="flex gap-0.5 bg-[#F6F7FB] rounded-lg p-[3px]">
+            {([7, 14, 30, 90] as DateRange[]).map(d => (
+              <button key={d} onClick={() => props.onDateRangeChange(d)}
+                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                  dateRange === d ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
+                }`}>{d}d</button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filter row */}

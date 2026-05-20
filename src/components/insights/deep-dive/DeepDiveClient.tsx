@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Project, ProjectWeeklySummary } from '@/lib/types/projects';
-import type { DateRange, ProjectWithFunnel } from '../command-center/types';
+import type { DateRange, DateRangeValue, ProjectWithFunnel } from '../command-center/types';
 import { BRAND } from '../command-center/types';
 import { formatEur } from '../command-center/utils';
 import { ProjectSearch } from '../command-center/ProjectSearch';
+import { DateRangePicker, defaultDateRange } from '../DateRangePicker';
 import { FunnelWaterfall } from './FunnelWaterfall';
 import { CountrySelector } from './CountrySelector';
 import { LocaleTable } from './LocaleTable';
@@ -28,6 +29,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     ?? initialProjects[0];
   const [selectedId, setSelectedId] = useState<string | null>(defaultProject?.id ?? null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
+  const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [selectedLocale, setSelectedLocale] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [funnelData, setFunnelData] = useState<any>(null);
@@ -145,14 +147,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
               {(selected?.countries ?? []).length} locales · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
             </div>
           </div>
-          <div className="flex gap-0.5 bg-[#F6F7FB] rounded-lg p-[3px]">
-            {([7, 14, 30, 90] as DateRange[]).map(d => (
-              <button key={d} onClick={() => setDateRange(d)}
-                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  dateRange === d ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
-                }`}>{d === 90 ? 'All' : `${d}d`}</button>
-            ))}
-          </div>
+          <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
         </div>
         <div className="flex gap-3 items-center">
           <div style={{ flex: 1, maxWidth: 320 }}>
