@@ -944,17 +944,31 @@ async def research_all_regions(
         logger.warning("No regions provided for cultural research.")
         return {}
 
-    all_research: dict[str, dict[str, Any]] = {}
+    import asyncio
 
-    for idx, region in enumerate(regions):
+    async def _research_one(idx: int, region: str) -> tuple[str, dict[str, Any]]:
         language = languages[idx % len(languages)] if languages else "English"
-        all_research[region] = await research_region(
+        result = await research_region(
             region=region,
             language=language,
             demographic=demographic,
             task_type=task_type,
             intake_row=intake_row,
         )
+        return region, result
+
+    results = await asyncio.gather(
+        *[_research_one(idx, region) for idx, region in enumerate(regions)],
+        return_exceptions=True,
+    )
+
+    all_research: dict[str, dict[str, Any]] = {}
+    for r in results:
+        if isinstance(r, Exception):
+            logger.error("Cultural research failed for a region: %s", r)
+        else:
+            region_name, data = r
+            all_research[region_name] = data
 
     return all_research
 
