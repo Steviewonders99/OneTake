@@ -8,6 +8,8 @@ import { formatEur } from '../command-center/utils';
 interface SourceRow {
   source: string;
   medium: string;
+  utm_content?: string | null;
+  utm_term?: string | null;
   wp_entry: number;
   apply_click: number;
   nda_signed: number;
@@ -119,7 +121,7 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
         <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: BRAND.bgRaised }}>
-              {['Channel', 'Entry', 'Apply', 'NDA', 'Workers', 'Entry→NDA', 'Cost', 'Cost / Worker'].map((h) => (
+              {['Channel', 'Detail', 'Entry', 'Apply', 'NDA', 'Workers', 'Entry→NDA', 'Cost', 'Cost / Worker'].map((h) => (
                 <th
                   key={h}
                   className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
@@ -168,6 +170,28 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                         </span>
                       </div>
                     </div>
+                  </td>
+
+                  {/* UTM Detail (content = job board name, term = recruiter ID) */}
+                  <td className="px-3 py-2.5">
+                    {(row.utm_content || row.utm_term) ? (
+                      <div className="flex flex-col gap-0.5">
+                        {row.utm_content && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#EDE9FE] inline-block w-fit"
+                                style={{ color: BRAND.purple }}>
+                            {row.utm_content}
+                          </span>
+                        )}
+                        {row.utm_term && (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#FEF3C7] inline-block w-fit"
+                                style={{ color: '#92400E' }}>
+                            {row.utm_term}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[10px]" style={{ color: BRAND.text3 }}>—</span>
+                    )}
                   </td>
 
                   {/* Entry */}
@@ -249,6 +273,7 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
               <td className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.06em]" style={{ color: BRAND.text2 }}>
                 All Channels
               </td>
+              <td className="px-3 py-2.5" />
               <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums" style={{ color: BRAND.text }}>
                 {totals.wp_entry.toLocaleString()}
               </td>

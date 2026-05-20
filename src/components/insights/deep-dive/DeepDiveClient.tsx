@@ -78,10 +78,12 @@ export function DeepDiveClient({ initialProjects }: Props) {
     { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2' },
   ].filter(s => s.value > 0 || s.label === 'WP Entry') : [];
 
-  // Sources from funnel data
+  // Sources from funnel data (includes UTM detail for flyers, job boards, recruiters)
   const sources = (funnelData?.by_source ?? []).map((s: any) => ({
     source: s.source ?? '(not set)',
     medium: s.medium ?? '(not set)',
+    utm_content: s.utm_content ?? null,
+    utm_term: s.utm_term ?? null,
     wp_entry: s.wp_entry ?? 0,
     apply_click: s.apply_click ?? 0,
     nda_signed: s.nda_signed ?? 0,

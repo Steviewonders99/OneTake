@@ -259,10 +259,28 @@ async def trigger_sync(request: web.Request):
 async def get_ga4_funnel(request: web.Request):
     """GA4 acquisition funnel: WP entry → profile → NDA per project."""
     pid = request.match_info["id"]
+    # Only use rows WITHOUT UTM detail for aggregates (UTM rows are sub-detail)
     rows = await query(
-        "SELECT campaign_name, source, medium, wp_entry, apply_click, signup, mfa_setup, "
-        "profile_created, nda_signed, certification, browsing_jobs, doing_tasks "
-        "FROM ga4_project_funnel WHERE project_id = $1::UUID ORDER BY nda_signed DESC",
+        "SELECT NULL as campaign_name, source, medium, "
+        "NULL as utm_campaign, NULL as utm_term, NULL as utm_content, "
+        "SUM(wp_entry) as wp_entry, SUM(apply_click) as apply_click, "
+        "SUM(signup) as signup, SUM(mfa_setup) as mfa_setup, "
+        "SUM(profile_created) as profile_created, SUM(nda_signed) as nda_signed, "
+        "SUM(certification) as certification, SUM(browsing_jobs) as browsing_jobs, "
+        "SUM(doing_tasks) as doing_tasks "
+        "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+        "AND utm_content IS NULL AND utm_term IS NULL AND utm_campaign IS NULL "
+        "GROUP BY source, medium ORDER BY SUM(wp_entry) DESC, SUM(nda_signed) DESC",
+        pid,
+    )
+    # Also fetch UTM detail rows (non-null utm_content or utm_term)
+    utm_detail = await query(
+        "SELECT source, medium, utm_content, utm_term, "
+        "SUM(wp_entry) as wp_entry, SUM(nda_signed) as nda_signed "
+        "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+        "AND (utm_content IS NOT NULL OR utm_term IS NOT NULL) "
+        "GROUP BY source, medium, utm_content, utm_term "
+        "ORDER BY SUM(nda_signed) DESC, SUM(wp_entry) DESC",
         pid,
     )
 
@@ -272,6 +290,7 @@ async def get_ga4_funnel(request: web.Request):
     tw = total("wp_entry")
     return web.json_response({
         "by_source": rows,
+        "utm_detail": utm_detail,
         "totals": {
             "wp_entry": tw,
             "apply_click": total("apply_click"),
