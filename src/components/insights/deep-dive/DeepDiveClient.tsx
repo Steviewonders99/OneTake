@@ -154,10 +154,10 @@ export function DeepDiveClient({ initialProjects }: Props) {
   // Empty state or not yet mounted
   if (!selectedId) {
     if (!mounted) {
-      return <div className="p-8 max-w-[1600px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif", minHeight: '70vh' }} />;
+      return <div className="p-8 w-full" style={{ fontFamily: "'Roboto', system-ui, sans-serif", minHeight: '70vh' }} />;
     }
     return (
-      <div className="p-8 max-w-[1600px] mx-auto flex flex-col items-center justify-center"
+      <div className="p-8 w-full flex flex-col items-center justify-center"
            style={{ fontFamily: "'Roboto', system-ui, sans-serif", minHeight: '70vh' }}>
         <div className="text-center mb-10">
           <h1 className="text-[48px] tracking-tight mb-3 leading-tight" style={{ color: BRAND.text }}>
@@ -188,7 +188,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
 
   if (loading && !funnelData) {
     return (
-      <div className="p-8 max-w-[1600px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+      <div className="p-8 w-full" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
         <div className="mb-6 flex justify-between items-center">
           <div style={{ maxWidth: 320 }}>
             <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
@@ -207,7 +207,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
   }
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+    <div className="p-8 w-full" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
       {/* Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
