@@ -38,33 +38,39 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const [channels, setChannels] = useState<any[]>([]);
   const [locales, setLocales] = useState<any[]>([]);
   const [countryPerf, setCountryPerf] = useState<any[]>([]);
+  const [fetchKey, setFetchKey] = useState(0);
 
   const selected = selectedId ? initialProjects.find(p => p.id === selectedId) : null;
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
     if (!selectedId) return;
+    let cancelled = false;
     setLoading(true);
-    try {
-      const [funnelRes, weeklyRes, channelsRes, localesRes, countryRes] = await Promise.all([
-        fetch(`/api/projects/${selectedId}/ga4-funnel?start=${dateRangeV2.start}&end=${dateRangeV2.end}`).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch(`/api/projects/${selectedId}/funnel?view=weekly`).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch(`/api/projects/${selectedId}/channels`).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`/api/projects/${selectedId}/locales`).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`/api/projects/${selectedId}/countries`).then(r => r.ok ? r.json() : []).catch(() => []),
-      ]);
+    const start = dateRangeV2.start;
+    const end = dateRangeV2.end;
+
+    Promise.all([
+      fetch(`/api/projects/${selectedId}/ga4-funnel?start=${start}&end=${end}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/projects/${selectedId}/funnel?view=weekly`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/projects/${selectedId}/channels`).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`/api/projects/${selectedId}/locales`).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`/api/projects/${selectedId}/countries`).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([funnelRes, weeklyRes, channelsRes, localesRes, countryRes]) => {
+      if (cancelled) return;
       setFunnelData(funnelRes);
       setWeeklyData(weeklyRes);
       setChannels(channelsRes);
       setLocales(localesRes);
       setCountryPerf(countryRes);
-    } catch (e) {
+    }).catch(e => {
       console.error('Failed to load deep dive data', e);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedId, dateRangeV2.start, dateRangeV2.end]);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
-  useEffect(() => { loadData(); }, [loadData]);
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, fetchKey]);
 
   // Weekly data filtered by selected date range
   const weeks = (weeklyData?.weeks ?? [])
@@ -182,7 +188,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
           ))}
         </div>
         <div className="mt-4">
-          <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} showCompare={false} />
+          <DateRangePicker value={dateRangeV2} onChange={(v: DateRangeValue) => { setDateRangeV2(v); setFetchKey(k => k + 1); }} showCompare={false} />
         </div>
       </div>
     );
@@ -195,7 +201,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
           <div style={{ maxWidth: 320 }}>
             <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
-          <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
+          <DateRangePicker value={dateRangeV2} onChange={(v: DateRangeValue) => { setDateRangeV2(v); setFetchKey(k => k + 1); }} />
         </div>
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-64 bg-[#f0f0f0] rounded" />
@@ -222,7 +228,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
               {isAidaForm ? 'AidaForm funnel' : 'Platform funnel'} · {(selected?.countries ?? []).length} countries · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
             </div>
           </div>
-          <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
+          <DateRangePicker value={dateRangeV2} onChange={(v: DateRangeValue) => { setDateRangeV2(v); setFetchKey(k => k + 1); }} />
         </div>
         <div className="flex gap-3 items-center">
           <div style={{ flex: 1, maxWidth: 320 }}>

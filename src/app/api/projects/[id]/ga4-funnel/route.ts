@@ -10,7 +10,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (isProxyEnabled()) {
     const PROXY_URL = process.env.DB_PROXY_URL!;
     const PROXY_SECRET = process.env.DB_PROXY_SECRET ?? '';
-    const res = await fetch(`${PROXY_URL}/projects/${id}/ga4-funnel`, {
+    const qs = _req.nextUrl.search;
+    const res = await fetch(`${PROXY_URL}/projects/${id}/ga4-funnel${qs}`, {
       headers: { Authorization: `Bearer ${PROXY_SECRET}` },
       cache: 'no-store',
     });
