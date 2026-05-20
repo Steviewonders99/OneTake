@@ -11,8 +11,6 @@ import logging
 from neon_client import get_actors, update_request_status
 from teams_notify import notify_generation_complete, notify_generation_failed
 
-from config import STAGE4_ENGINE
-
 from pipeline.stage1_intelligence import run_stage1
 from pipeline.stage2_images import run_stage2
 from pipeline.stage3_copy import run_stage3
@@ -24,16 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 async def _run_stage4_routed(context: dict) -> dict:
-    """Route Stage 4 to the configured composition engine."""
-    if STAGE4_ENGINE == "design_agent":
-        from pipeline.stage4_design_agent import run_stage4 as run_stage4_new
-        return await run_stage4_new(context)
-    elif STAGE4_ENGINE == "reference_layout_agent":
-        from pipeline.stage4_reference_layout import run_stage4 as run_stage4_reference
-        return await run_stage4_reference(context)
-    else:
-        from pipeline.stage4_compose_v3 import run_stage4 as run_stage4_legacy
-        return await run_stage4_legacy(context)
+    """Route Stage 4 to the material generator (Figma handoff workflow)."""
+    from pipeline.stage4_material_generator import run_stage4
+    return await run_stage4(context)
 
 
 async def _run_media_strategy(context: dict) -> dict:
