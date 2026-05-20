@@ -58,20 +58,22 @@ export function DeepDiveClient({ initialProjects }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [selectedId]);
+  }, [selectedId, dateRangeV2]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Weekly data for trends (must be before funnel/hero which reference it)
-  const weeks = (weeklyData?.weeks ?? []).map((w: any) => ({
-    week_start: w.week_start,
-    total_spend: w.total_spend ?? 0,
-    total_clicks: w.total_clicks ?? 0,
-    total_conversions: w.total_conversions ?? 0,
-    blended_cpa: w.blended_cpa,
-    paid_conversions: w.paid_conversions ?? 0,
-    organic_clicks: w.organic_clicks ?? 0,
-  }));
+  // Weekly data filtered by selected date range
+  const weeks = (weeklyData?.weeks ?? [])
+    .filter((w: any) => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end)
+    .map((w: any) => ({
+      week_start: w.week_start,
+      total_spend: w.total_spend ?? 0,
+      total_clicks: w.total_clicks ?? 0,
+      total_conversions: w.total_conversions ?? 0,
+      blended_cpa: w.blended_cpa,
+      paid_conversions: w.paid_conversions ?? 0,
+      organic_clicks: w.organic_clicks ?? 0,
+    }));
 
   // Detect funnel path type
   const totalWeeklySpend = weeks.reduce((s: number, w: any) => s + w.total_spend, 0);
@@ -247,7 +249,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
 
       {/* Section 7: AI Intelligence Brief */}
       <ProjectBrief
-        project={{ ...selected, channels, weekly: weeklyData?.weeks, wow: weeklyData?.wow } as ProjectWithFunnel}
+        project={{ ...selected, channels, weekly: weeks, wow: weeklyData?.wow } as ProjectWithFunnel}
         funnelTotals={funnelData?.totals ?? {}}
         funnelRates={funnelData?.rates ?? {}}
         sources={sources}
