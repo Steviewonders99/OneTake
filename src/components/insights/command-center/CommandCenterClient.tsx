@@ -24,6 +24,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [loading, setLoading] = useState(true);
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+  const [dailyRows, setDailyRows] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,18 @@ export function CommandCenterClient({ initialProjects }: Props) {
       }
 
       setProjects(enriched);
+
+      // Fetch daily data for all projects with channels (for 7d/14d daily chart)
+      const daily: any[] = [];
+      const projsWithChannels = enriched.filter(p => (p.channels ?? []).length > 0);
+      for (const proj of projsWithChannels) {
+        const res = await fetch(`/api/projects/${proj.id}/funnel?view=daily&start=${dateRangeV2.start}&end=${dateRangeV2.end}`)
+          .then(r => r.ok ? r.json() : []).catch(() => []);
+        for (const row of res) {
+          daily.push({ ...row, channels: proj.channels });
+        }
+      }
+      setDailyRows(daily);
 
       const unRes = await fetch('/api/projects/unclassified').catch(() => null);
       if (unRes?.ok) {
@@ -148,28 +161,34 @@ export function CommandCenterClient({ initialProjects }: Props) {
       } as ChartWeek));
     }
 
-    // For 7d/14d: expand weekly buckets into daily points
-    if (isShortRange) {
-      const days: ChartWeek[] = [];
-      const today = new Date();
-      const rangeStartDate = new Date(dateRangeV2.start + 'T00:00:00');
-
-      for (const [weekStart, channels] of sortedWeeks) {
-        const wsDate = new Date(weekStart + 'T00:00:00');
-        for (let d = 0; d < 7; d++) {
-          const dayDate = new Date(wsDate.getTime() + d * 86400000);
-          if (dayDate < rangeStartDate || dayDate > today) continue;
-          const isToday = dayDate.toDateString() === today.toDateString();
-          const label = isToday ? 'Today'
-            : dayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-          const dayRow: Record<string, number | string> = { week: label };
-          for (const [ch, val] of Object.entries(channels)) {
-            dayRow[ch] = Math.round((val as number) / 7);
+    // For 7d/14d: use real daily data from proxy
+    if (isShortRange && dailyRows.length > 0) {
+      const byDate: Record<string, Record<string, number>> = {};
+      for (const row of dailyRows) {
+        const dateKey = typeof row.date === 'string' ? row.date : String(row.date);
+        if (dateKey < dateRangeV2.start || dateKey > dateRangeV2.end) continue;
+        if (!byDate[dateKey]) byDate[dateKey] = {};
+        const conv = Math.round(row.conversions ?? 0);
+        const slugs = (row.channels ?? []).map((c: any) => c.channel_slug).filter(Boolean) as string[];
+        if (slugs.length === 0) {
+          byDate[dateKey]['organic'] = (byDate[dateKey]['organic'] ?? 0) + conv;
+        } else {
+          const perCh = Math.round(conv / slugs.length);
+          for (const slug of slugs) {
+            byDate[dateKey][slug] = (byDate[dateKey][slug] ?? 0) + perCh;
           }
-          days.push(dayRow as ChartWeek);
         }
       }
-      return days;
+      const today = new Date();
+      return Object.entries(byDate)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([dateStr, channels]) => {
+          const d = new Date(dateStr + 'T00:00:00');
+          const isToday = d.toDateString() === today.toDateString();
+          const label = isToday ? 'Today'
+            : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          return { week: label, ...channels } as ChartWeek;
+        });
     }
 
     // For 30d+: keep weekly buckets

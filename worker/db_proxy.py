@@ -156,13 +156,21 @@ async def get_funnel(request: web.Request):
     view = request.query.get("view", "weekly")
 
     if view == "daily":
-        start = request.query.get("start", "2026-01-01")
-        end = request.query.get("end", "2099-12-31")
-        rows = await query(
-            "SELECT * FROM project_daily_funnel WHERE project_id = $1::UUID "
-            "AND date >= $2::DATE AND date <= $3::DATE ORDER BY date DESC",
-            pid, start, end,
-        )
+        from datetime import date as _date
+        start = _date.fromisoformat(request.query.get("start", "2026-01-01"))
+        end = _date.fromisoformat(request.query.get("end", "2099-12-31"))
+        try:
+            rows = await query(
+                "SELECT codename, date::TEXT as date, platform, channel, metric_type, "
+                "COALESCE(impressions,0) as impressions, COALESCE(clicks,0) as clicks, "
+                "COALESCE(spend::FLOAT,0) as spend, COALESCE(conversions,0) as conversions "
+                "FROM project_daily_funnel WHERE project_id = $1::UUID "
+                "AND date >= $2 AND date <= $3 ORDER BY date",
+                pid, start, end,
+            )
+        except Exception as e:
+            logger.error("Daily funnel error: %s", e)
+            return web.json_response({"error": str(e)[:200]}, status=500)
         return web.json_response(rows)
 
     # Weekly with WoW
