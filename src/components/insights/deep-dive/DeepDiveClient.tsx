@@ -62,7 +62,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [selectedId, dateRangeV2]);
+  }, [selectedId, dateRangeV2.start, dateRangeV2.end]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
