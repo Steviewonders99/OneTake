@@ -148,11 +148,14 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const projectName = selected?.display_name?.split('—')[0]?.trim() ?? selected?.codename ?? 'Select a project';
   const projectDetail = selected?.display_name?.split('—')[1]?.trim() ?? '';
 
-  // Empty state — centered, inviting (client-only to avoid hydration mismatch)
-  if (!selectedId && mounted) {
+  // Empty state or not yet mounted
+  if (!selectedId) {
+    if (!mounted) {
+      return <div className="p-8 max-w-[1400px] mx-auto" style={{ fontFamily: "'Roboto', system-ui, sans-serif", minHeight: '70vh' }} />;
+    }
     return (
-      <div className="p-8 max-w-[1400px] mx-auto flex flex-col items-center justify-center" style={{ minHeight: '70vh' }}
-           style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
+      <div className="p-8 max-w-[1400px] mx-auto flex flex-col items-center justify-center"
+           style={{ fontFamily: "'Roboto', system-ui, sans-serif", minHeight: '70vh' }}>
         <div className="text-center mb-10">
           <h1 className="text-[48px] tracking-tight mb-3 leading-tight" style={{ color: BRAND.text }}>
             <span className="font-extralight">Project</span>{' '}
