@@ -297,7 +297,7 @@ def build_image_prompt(
     if emotion:
         pose_block += f"\nEXPRESSION & EMOTION: {emotion}"
 
-    prompt = f"""{prompt_seed}
+    prompt = f"""Ultra realistic documentary style. {prompt_seed}
 
 OUTFIT FOR THIS SHOT: {outfit}
 SIGNATURE ACCESSORY (MUST be visible): {accessory}

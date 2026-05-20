@@ -54,7 +54,7 @@ NVIDIA_NIM_DESIGN_MODEL = os.environ.get("NVIDIA_NIM_DESIGN_MODEL", "z-ai/glm5")
 # ---------------------------------------------------------------------------
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-2")
+IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "openai/gpt-5.4-image-2")
 IMAGE_QUALITY = os.environ.get("IMAGE_QUALITY", "low")  # low, medium, high
 IMAGE_CONCURRENCY = int(os.environ.get("IMAGE_CONCURRENCY", "15"))
 
