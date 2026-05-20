@@ -121,7 +121,7 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
         <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: BRAND.bgRaised }}>
-              {['Channel', 'Detail', 'Entry', 'Apply', 'NDA', 'Workers', 'Entry→NDA', 'Cost', 'Cost / Worker'].map((h) => (
+              {['Channel', 'Detail', 'Page Views', 'Apply Clicks', 'Applications', 'Entry→App', 'Cost', 'CPA'].map((h) => (
                 <th
                   key={h}
                   className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
@@ -204,17 +204,12 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                     {row.apply_click.toLocaleString()}
                   </td>
 
-                  {/* NDA */}
+                  {/* Applications */}
                   <td className="px-3 py-2.5 text-[12px] font-bold tabular-nums" style={{ color: BRAND.text }}>
                     {row.nda_signed.toLocaleString()}
                   </td>
 
-                  {/* Workers */}
-                  <td className="px-3 py-2.5 text-[12px] tabular-nums" style={{ color: BRAND.text }}>
-                    {row.doing_tasks.toLocaleString()}
-                  </td>
-
-                  {/* Entry→NDA rate */}
+                  {/* Entry→App rate */}
                   <td className="px-3 py-2.5">
                     <span
                       className="text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded"
@@ -243,7 +238,7 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                     )}
                   </td>
 
-                  {/* Cost / Worker */}
+                  {/* CPA */}
                   <td className="px-3 py-2.5">
                     {isOrganic ? (
                       <span
@@ -252,9 +247,9 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                       >
                         {'\u20AC'}0
                       </span>
-                    ) : costPerWorker !== null ? (
+                    ) : row.nda_signed > 0 ? (
                       <span className="text-[12px] font-bold tabular-nums" style={{ color: BRAND.blue }}>
-                        {formatEur(costPerWorker)}
+                        {formatEur(row.cost / row.nda_signed)}
                       </span>
                     ) : (
                       <span className="text-[11px]" style={{ color: BRAND.text3 }}>
@@ -283,9 +278,6 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
               <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums" style={{ color: BRAND.purple }}>
                 {totals.nda_signed.toLocaleString()}
               </td>
-              <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums" style={{ color: BRAND.blue }}>
-                {totals.doing_tasks.toLocaleString()}
-              </td>
               <td className="px-3 py-2.5">
                 <span className="text-[11px] font-semibold tabular-nums" style={{ color: BRAND.text2 }}>
                   {totals.wp_entry > 0 ? ((totals.nda_signed / totals.wp_entry) * 100).toFixed(1) : '0'}%
@@ -295,7 +287,7 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                 {formatEur(totals.cost)}
               </td>
               <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums" style={{ color: BRAND.blue }}>
-                {totals.doing_tasks > 0 ? formatEur(totals.cost / totals.doing_tasks) : '—'}
+                {totals.nda_signed > 0 ? formatEur(totals.cost / totals.nda_signed) : '—'}
               </td>
             </tr>
           </tfoot>

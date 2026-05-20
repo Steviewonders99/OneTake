@@ -62,21 +62,31 @@ export function DeepDiveClient({ initialProjects }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Detect funnel path type
-  const hasPaidSpend = (weeklyData?.current?.total_spend ?? 0) > 0;
+  // Weekly data for trends (must be before funnel/hero which reference it)
+  const weeks = (weeklyData?.weeks ?? []).map((w: any) => ({
+    week_start: w.week_start,
+    total_spend: w.total_spend ?? 0,
+    total_clicks: w.total_clicks ?? 0,
+    total_conversions: w.total_conversions ?? 0,
+    blended_cpa: w.blended_cpa,
+    paid_conversions: w.paid_conversions ?? 0,
+    organic_clicks: w.organic_clicks ?? 0,
+  }));
 
-  // Build funnel stages
+  // Detect funnel path type
+  const totalWeeklySpend = weeks.reduce((s: number, w: any) => s + w.total_spend, 0);
+  const hasPaidSpend = totalWeeklySpend > 0;
+
+  // Build adaptive funnel — only show stages with real data
   const funnelStages = funnelData?.totals ? [
-    { label: 'WP Entry', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
-    { label: 'Apply Click', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
-    { label: 'Signup', value: funnelData.totals.signup ?? 0, color: '#4F46E5' },
-    { label: 'MFA Setup', value: funnelData.totals.mfa_setup ?? 0, color: '#7C3AED' },
-    { label: 'Profile Created', value: funnelData.totals.profile_created ?? 0, color: '#9333EA' },
-    { label: 'NDA Signed', value: funnelData.totals.nda_signed ?? 0, color: '#A855F7' },
-    { label: 'Certification', value: funnelData.totals.certification ?? 0, color: '#DB2777' },
-    { label: 'Browsing Jobs', value: funnelData.totals.browsing_jobs ?? 0, color: '#6366F1' },
-    { label: 'Doing Tasks', value: funnelData.totals.doing_tasks ?? 0, color: '#0348B2' },
-  ].filter(s => s.value > 0 || s.label === 'WP Entry') : [];
+    { label: 'Job Page Views', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
+    { label: 'Apply Clicks', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
+    { label: 'Applications', value: funnelData.totals.nda_signed ?? 0, color: '#7C3AED' },
+    // Only show downstream stages if they have data (platform data not yet connected)
+    ...(funnelData.totals.signup > 0 ? [{ label: 'Signups', value: funnelData.totals.signup, color: '#4F46E5' }] : []),
+    ...(funnelData.totals.profile_created > 0 ? [{ label: 'Profile Created', value: funnelData.totals.profile_created, color: '#9333EA' }] : []),
+    ...(funnelData.totals.doing_tasks > 0 ? [{ label: 'Active Workers', value: funnelData.totals.doing_tasks, color: '#DB2777' }] : []),
+  ].filter(s => s.value > 0 || s.label === 'Job Page Views') : [];
 
   // Sources from funnel data (includes UTM detail for flyers, job boards, recruiters)
   const sources = (funnelData?.by_source ?? []).map((s: any) => ({
@@ -89,17 +99,6 @@ export function DeepDiveClient({ initialProjects }: Props) {
     nda_signed: s.nda_signed ?? 0,
     doing_tasks: s.doing_tasks ?? 0,
     cost: hasPaidSpend && (s.medium === 'paid' || s.medium === 'paidmedia') ? weeklyData?.weeks?.reduce((sum: number, w: any) => sum + (w.total_spend ?? 0), 0) ?? 0 : 0,
-  }));
-
-  // Weekly data for trends
-  const weeks = (weeklyData?.weeks ?? []).map((w: any) => ({
-    week_start: w.week_start,
-    total_spend: w.total_spend ?? 0,
-    total_clicks: w.total_clicks ?? 0,
-    total_conversions: w.total_conversions ?? 0,
-    blended_cpa: w.blended_cpa,
-    paid_conversions: w.paid_conversions ?? 0,
-    organic_clicks: w.organic_clicks ?? 0,
   }));
 
   // Paid metrics
@@ -146,7 +145,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
               {projectDetail && <span className="font-extralight"> — {projectDetail}</span>}
             </h1>
             <div className="text-[12px] mt-0.5" style={{ color: BRAND.text3 }}>
-              {(selected?.countries ?? []).length} locales · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
+              {(selected?.countries ?? []).length} countries · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
             </div>
           </div>
           <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
@@ -159,37 +158,46 @@ export function DeepDiveClient({ initialProjects }: Props) {
       </div>
 
       {/* Hero metrics strip */}
-      {funnelData?.totals && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          <div className="relative overflow-hidden rounded-2xl p-5 text-white"
-               style={{ background: BRAND.gradDeep, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-            <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">WP Entries</div>
-            <div className="text-[32px] font-black leading-none">{(funnelData.totals.wp_entry ?? 0).toLocaleString()}</div>
-          </div>
-          <div className="relative overflow-hidden rounded-2xl p-5 text-white"
-               style={{ background: BRAND.gradCool, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-            <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">NDA Signed</div>
-            <div className="text-[32px] font-black leading-none">{(funnelData.totals.nda_signed ?? 0).toLocaleString()}</div>
-            <div className="text-[11px] mt-1 opacity-70">{funnelData.rates?.wp_to_nda ?? 0}% of entries</div>
-          </div>
-          <div className="relative overflow-hidden rounded-2xl p-5 text-white"
-               style={{ background: BRAND.gradWarm, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-            <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Active Workers</div>
-            <div className="text-[32px] font-black leading-none">{(funnelData.totals.doing_tasks ?? 0).toLocaleString()}</div>
-            <div className="text-[11px] mt-1 opacity-70">{funnelData.rates?.wp_to_tasks ?? 0}% of entries</div>
-          </div>
-          <div className="relative overflow-hidden rounded-2xl p-5 text-white"
-               style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-            <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">
-              {hasPaidSpend ? 'Cost / Worker' : 'Entry → Worker Rate'}
+      {funnelData?.totals && (() => {
+        const t = funnelData.totals;
+        const wpEntry = t.wp_entry ?? 0;
+        const applyClicks = t.apply_click ?? 0;
+        const applications = t.nda_signed ?? 0;
+        const clickRate = wpEntry > 0 ? ((applyClicks / wpEntry) * 100).toFixed(1) : '0';
+        const convRate = applyClicks > 0 ? ((applications / applyClicks) * 100).toFixed(1) : '0';
+        return (
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            <div className="relative overflow-hidden rounded-2xl p-5 text-white"
+                 style={{ background: BRAND.gradDeep, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Job Page Views</div>
+              <div className="text-[32px] font-black leading-none">{wpEntry.toLocaleString()}</div>
+              <div className="text-[11px] mt-1 opacity-70">Unique visitors (first-touch)</div>
             </div>
-            <div className="text-[32px] font-black leading-none">
-              {hasPaidSpend && activeWorkers > 0 ? formatEur(totalSpend / activeWorkers) : `${funnelData.rates?.wp_to_tasks ?? 0}%`}
+            <div className="relative overflow-hidden rounded-2xl p-5 text-white"
+                 style={{ background: BRAND.gradCool, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Apply Clicks</div>
+              <div className="text-[32px] font-black leading-none">{applyClicks.toLocaleString()}</div>
+              <div className="text-[11px] mt-1 opacity-70">{clickRate}% click-through rate</div>
             </div>
-            {hasPaidSpend && <div className="text-[11px] mt-1 opacity-70">{formatEur(totalSpend)} total spend</div>}
+            <div className="relative overflow-hidden rounded-2xl p-5 text-white"
+                 style={{ background: BRAND.gradWarm, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Applications</div>
+              <div className="text-[32px] font-black leading-none">{applications.toLocaleString()}</div>
+              <div className="text-[11px] mt-1 opacity-70">{convRate}% conversion rate</div>
+            </div>
+            <div className="relative overflow-hidden rounded-2xl p-5 text-white"
+                 style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">
+                {hasPaidSpend ? 'Cost / Application' : 'Page → Application Rate'}
+              </div>
+              <div className="text-[32px] font-black leading-none">
+                {hasPaidSpend && applications > 0 ? formatEur(totalWeeklySpend / applications) : `${wpEntry > 0 ? ((applications / wpEntry) * 100).toFixed(1) : 0}%`}
+              </div>
+              {hasPaidSpend && <div className="text-[11px] mt-1 opacity-70">{formatEur(totalWeeklySpend)} total spend</div>}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Section 1: Channel Acquisition */}
       {sources.length > 0 && (
