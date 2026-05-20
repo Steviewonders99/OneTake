@@ -114,8 +114,26 @@ export function CommandCenterClient({ initialProjects }: Props) {
     (p.weekly ?? []).some(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end)
   );
 
-  // Countries from projects
-  const allCountries = [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))];
+  // Extract real countries from locale strings: "Arabic (Saudi Arabia)" → "Saudi Arabia", "US" → "US"
+  const countryPattern = /\(([^)]+)\)/;
+  const rawLocales = projects.flatMap(p => p.countries ?? []).filter(Boolean);
+  const extractedCountries = new Set<string>();
+  for (const loc of rawLocales) {
+    // Short codes (US, DE, FR, etc.)
+    if (loc.length <= 3 && loc === loc.toUpperCase()) { extractedCountries.add(loc); continue; }
+    // Extract from parentheses: "Arabic (Saudi Arabia)" → "Saudi Arabia"
+    const m = loc.match(countryPattern);
+    if (m) {
+      // May contain multiple: "Arabic (Saudi Arabia, Egypt, Jordan)"
+      for (const part of m[1].split(',')) {
+        const trimmed = part.trim();
+        if (trimmed.length > 2 && !/^(Latin|Bokmal|Cyrillic|Simplified|Traditional)$/i.test(trimmed)) {
+          extractedCountries.add(trimmed);
+        }
+      }
+    }
+  }
+  const allCountries = [...extractedCountries].sort();
 
   // Build chart data from real weekly summaries — attribute conversions to project's actual channels
   const allWeeks = projects

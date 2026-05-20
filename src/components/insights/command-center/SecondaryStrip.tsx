@@ -15,7 +15,7 @@ export function SecondaryStrip(props: SecondaryStripProps) {
   const items = [
     { num: String(props.projectCount), label: 'Tracked Projects' },
     { num: String(props.channelCount), label: 'Channel Types' },
-    { num: String(props.countryCount), label: 'Locales' },
+    { num: String(props.countryCount), label: 'Countries' },
     { num: formatEur(props.totalSpend), label: 'Total Ad Spend' },
     { num: String(props.unclassifiedCount), label: 'Unclassified Sources', color: props.unclassifiedCount > 0 ? BRAND.amber : undefined },
   ];
