@@ -211,6 +211,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
         projects={projects}
         selectedCountry={selectedCountry}
         onProjectSelect={(id) => setSelectedProject(id)}
+        dateRange={dateRangeV2}
       />
 
       <NarrativePanel
