@@ -265,8 +265,59 @@ async def trigger_sync(request: web.Request):
 
 
 async def get_ga4_funnel(request: web.Request):
-    """GA4 acquisition funnel: WP entry → profile → NDA per project."""
+    """GA4 acquisition funnel: WP entry → profile → NDA per project.
+    Optional ?start=YYYY-MM-DD&end=YYYY-MM-DD for date-filtered source breakdown.
+    """
+    from datetime import date as _date
     pid = request.match_info["id"]
+    start_str = request.query.get("start")
+    end_str = request.query.get("end")
+
+    # Date-filtered path: use ga4_organic_weekly which has source/medium per week
+    if start_str and end_str:
+        start = _date.fromisoformat(start_str)
+        end = _date.fromisoformat(end_str)
+        rows = await query(
+            "SELECT NULL as campaign_name, source, medium, "
+            "NULL as utm_campaign, NULL as utm_term, NULL as utm_content, "
+            "SUM(clicks) as wp_entry, 0 as apply_click, 0 as signup, 0 as mfa_setup, "
+            "0 as profile_created, SUM(conversions) as nda_signed, "
+            "0 as certification, 0 as browsing_jobs, 0 as doing_tasks "
+            "FROM ga4_organic_weekly WHERE project_id = $1::UUID "
+            "AND week_start >= $2 AND week_start <= $3 "
+            "GROUP BY source, medium ORDER BY SUM(clicks) DESC",
+            pid, start, end,
+        )
+        # Also get UTM detail in range
+        utm_detail = await query(
+            "SELECT source, medium, utm_content, utm_term, "
+            "SUM(wp_entry) as wp_entry, SUM(nda_signed) as nda_signed "
+            "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+            "AND (utm_content IS NOT NULL OR utm_term IS NOT NULL) "
+            "GROUP BY source, medium, utm_content, utm_term "
+            "ORDER BY SUM(nda_signed) DESC, SUM(wp_entry) DESC",
+            pid,
+        )
+        def range_total(key):
+            return sum(r.get(key, 0) or 0 for r in rows)
+        tw = range_total("wp_entry")
+        tn = range_total("nda_signed")
+        return web.json_response({
+            "by_source": rows,
+            "utm_detail": utm_detail,
+            "totals": {
+                "wp_entry": tw, "apply_click": range_total("apply_click"),
+                "signup": 0, "mfa_setup": 0, "profile_created": 0,
+                "nda_signed": tn, "certification": 0, "browsing_jobs": 0, "doing_tasks": 0,
+            },
+            "rates": {
+                "wp_to_nda": round(tn / tw * 100, 1) if tw > 0 else 0,
+                "wp_to_apply": 0, "wp_to_signup": 0, "wp_to_tasks": 0,
+                "nda_to_tasks": 0, "apply_to_nda": 0,
+            },
+        })
+
+    # All-time path (no date filter)
     # Per-source breakdown (exclude aggregate rows)
     rows = await query(
         "SELECT NULL as campaign_name, source, medium, "

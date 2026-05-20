@@ -44,7 +44,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     setLoading(true);
     try {
       const [funnelRes, weeklyRes, channelsRes, localesRes] = await Promise.all([
-        fetch(`/api/projects/${selectedId}/ga4-funnel`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`/api/projects/${selectedId}/ga4-funnel?start=${dateRangeV2.start}&end=${dateRangeV2.end}`).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(`/api/projects/${selectedId}/funnel?view=weekly`).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(`/api/projects/${selectedId}/channels`).then(r => r.ok ? r.json() : []).catch(() => []),
         fetch(`/api/projects/${selectedId}/locales`).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -236,7 +236,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
       {/* Section 1: Channel Acquisition — all-time first-touch attribution */}
       {sources.length > 0 && (
         <div className="mb-5">
-          <ChannelAcquisition sources={sources} dateLabel="All Time (first-touch)" />
+          <ChannelAcquisition sources={sources} dateLabel={dateRangeV2.preset ? (dateRangeV2.preset === 'all' ? 'All Time' : `Last ${dateRangeV2.preset} Days`) : 'Custom Range'} />
         </div>
       )}
 
