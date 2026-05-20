@@ -134,24 +134,55 @@ export function CommandCenterClient({ initialProjects }: Props) {
   }
   const allChannels = Array.from(allChannelSlugs);
 
-  // Filter weeks by selected date range, then format labels
+  // Filter by date range and choose daily vs weekly granularity
+  const isShortRange = dateRangeV2.preset === 7 || dateRangeV2.preset === 14;
   const filteredWeeks = Object.entries(allWeeks)
     .filter(([weekStart]) => weekStart >= dateRangeV2.start && weekStart <= dateRangeV2.end)
     .sort((a, b) => a[0].localeCompare(b[0]));
   const sortedWeeks = filteredWeeks.length > 0 ? filteredWeeks : Object.entries(allWeeks).sort((a, b) => a[0].localeCompare(b[0])).slice(-8);
-  const chartData: ChartWeek[] = sortedWeeks.length > 0
-    ? sortedWeeks.map(([weekStart, channels], i) => {
-        const d = new Date(weekStart + 'T00:00:00');
-        const today = new Date();
-        const weekEnd = new Date(d.getTime() + 6 * 86400000);
-        const label = (weekEnd >= today && d <= today)
-          ? 'This Week'
-          : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        return { week: label, ...channels } as ChartWeek;
-      })
-    : ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'This Week'].map(week => ({
+
+  const chartData: ChartWeek[] = (() => {
+    if (sortedWeeks.length === 0) {
+      return ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'This Week'].map(week => ({
         week, meta_paid: 0, linkedin_organic: 0, recruiter: 0,
       } as ChartWeek));
+    }
+
+    // For 7d/14d: expand weekly buckets into daily points
+    if (isShortRange) {
+      const days: ChartWeek[] = [];
+      const today = new Date();
+      const rangeStartDate = new Date(dateRangeV2.start + 'T00:00:00');
+
+      for (const [weekStart, channels] of sortedWeeks) {
+        const wsDate = new Date(weekStart + 'T00:00:00');
+        for (let d = 0; d < 7; d++) {
+          const dayDate = new Date(wsDate.getTime() + d * 86400000);
+          if (dayDate < rangeStartDate || dayDate > today) continue;
+          const isToday = dayDate.toDateString() === today.toDateString();
+          const label = isToday ? 'Today'
+            : dayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const dayRow: Record<string, number | string> = { week: label };
+          for (const [ch, val] of Object.entries(channels)) {
+            dayRow[ch] = Math.round((val as number) / 7);
+          }
+          days.push(dayRow as ChartWeek);
+        }
+      }
+      return days;
+    }
+
+    // For 30d+: keep weekly buckets
+    return sortedWeeks.map(([weekStart, channels]) => {
+      const d = new Date(weekStart + 'T00:00:00');
+      const todayDate = new Date();
+      const weekEnd = new Date(d.getTime() + 6 * 86400000);
+      const label = (weekEnd >= todayDate && d <= todayDate)
+        ? 'This Week'
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return { week: label, ...channels } as ChartWeek;
+    });
+  })();
 
   if (loading) {
     return (
