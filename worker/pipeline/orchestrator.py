@@ -90,19 +90,18 @@ async def run_pipeline(job: dict) -> None:
         (6, "Landing Page Generation", run_stage6),
     ]
 
-    # ── Organic pipeline: use organic Stage 3 + 4, skip 5 + 6 ──
+    # ── Organic pipeline: use organic Stage 3 + material generator Stage 4, skip 5 + 6 ──
     if job_type in ("generate", "generate_country"):
         try:
             from neon_client import get_intake_request as _get_request_mode
             _req_mode = await _get_request_mode(request_id)
             if _req_mode.get("pipeline_mode", "organic") == "organic":
                 from pipeline.stage3_organic_copy import run_stage3_organic
-                from pipeline.stage4_organic_compose import run_stage4_organic
                 stages = [
                     (1, "Strategic Intelligence", run_stage1),
                     (2, "Character-Driven Image Generation", run_stage2),
                     (3, "Organic Copy Generation", run_stage3_organic),
-                    (4, "Organic Composition", run_stage4_organic),
+                    (4, "Material Generation", _run_stage4_routed),
                 ]
                 logger.info("Running ORGANIC pipeline for request %s", request_id)
         except ImportError:
