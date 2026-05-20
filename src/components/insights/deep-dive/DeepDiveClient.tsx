@@ -133,21 +133,16 @@ export function DeepDiveClient({ initialProjects }: Props) {
     if (!expandable.has(s.source) || utmDetail.length === 0) return [s];
     const details = utmDetail.filter((d: any) => d.source === s.source && d.medium === s.medium);
     if (details.length === 0) return [s];
-    // Distribute parent's NDA across children by view share
-    const totalDetailViews = details.reduce((sum: number, d: any) => sum + (d.wp_entry ?? 0), 0);
-    const parentNda = s.nda_signed ?? 0;
-    return details.map((d: any) => {
-      const viewShare = totalDetailViews > 0 ? (d.wp_entry ?? 0) / totalDetailViews : 0;
-      return {
-        ...s,
-        source: d.utm_content || s.source,
-        medium: d.utm_term ? `${s.medium} (${d.utm_term})` : s.medium,
-        utm_content: d.utm_content,
-        utm_term: d.utm_term,
-        wp_entry: d.wp_entry ?? 0,
-        nda_signed: Math.round(parentNda * viewShare),
-      };
-    });
+    // Use real direct attribution data from UTM detail rows
+    return details.map((d: any) => ({
+      ...s,
+      source: d.utm_content || s.source,
+      medium: d.utm_term ? `${s.medium} (${d.utm_term})` : s.medium,
+      utm_content: d.utm_content,
+      utm_term: d.utm_term,
+      wp_entry: d.wp_entry ?? 0,
+      nda_signed: d.nda_signed ?? 0,
+    }));
   });
 
   // Campaigns (from channel links — uses range-filtered metrics)
