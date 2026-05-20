@@ -29,10 +29,21 @@ function daysAgo(n: number): string {
   return formatDate(d);
 }
 
+function startOfWeek(d: Date): Date {
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? 6 : day - 1; // Mon=0
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+}
+
 function presetToRange(preset: DateRangePreset): { start: string; end: string } {
   const end = formatDate(new Date());
   if (preset === 'all') return { start: '2025-01-01', end };
-  return { start: daysAgo(preset), end };
+  // Snap start to beginning of the week N days ago so we always get complete weeks
+  // 7d = this week + last week (2 weeks), 14d = ~2-3 weeks, 30d = ~4-5 weeks, 90d = ~13 weeks
+  const raw = new Date();
+  raw.setDate(raw.getDate() - preset);
+  const snapped = startOfWeek(raw);
+  return { start: formatDate(snapped), end };
 }
 
 function getPreviousPeriod(start: string, end: string): { start: string; end: string } {
