@@ -145,15 +145,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     }));
   });
 
-  // Campaigns (from channel links — uses range-filtered metrics)
-  const campaigns = channels.map((ch: any) => ({
-    campaignName: ch.external_name ?? ch.external_id ?? 'Unknown',
-    spend: rangeSpend,
-    impressions: rangeImpressions,
-    clicks: rangeClicksTotal,
-    conversions: rangeConv,
-    cpa: rangeConv > 0 ? rangeSpend / rangeConv : null,
-  }));
+  // (campaigns removed — replaced with Paid Summary section)
 
   // Project display name
   const projectName = selected?.display_name?.split('—')[0]?.trim() ?? selected?.codename ?? 'Select a project';
@@ -374,17 +366,41 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       )}
 
-      {/* Section 5: Campaign & Creative (paid only) — range-filtered spend */}
-      {rangeSpend > 0 && campaigns.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <CampaignTable campaigns={campaigns} />
-          <PaidMetrics
-            spend={rangeSpend}
-            impressions={rangeImpressions}
-            clicks={rangeClicksTotal}
-            ndaSigned={rangeConv}
-            activeWorkers={0}
-          />
+      {/* Section 5: Paid Summary (if project has spend) */}
+      {rangeSpend > 0 && (
+        <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
+             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center justify-center font-bold text-white text-[10px]"
+                 style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.rose }}>5</div>
+            <div className="text-sm font-bold" style={{ color: BRAND.text }}>Paid Performance Summary</div>
+          </div>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-[24px] font-extrabold" style={{ color: BRAND.text }}>{formatEur(rangeSpend)}</div>
+              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>Total Spend</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[24px] font-extrabold" style={{ color: BRAND.text }}>{rangeConv.toLocaleString()}</div>
+              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>
+                {isAidaForm ? 'Forms Completed' : 'NDA / MFA'}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-[24px] font-extrabold" style={{ color: BRAND.blue }}>
+                {rangeConv > 0 ? formatEur(rangeSpend / rangeConv) : '—'}
+              </div>
+              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>
+                {isAidaForm ? 'Cost / Form' : 'Cost / NDA'}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-[24px] font-extrabold" style={{ color: rangeSpend > 0 && rangeConv > 0 && (rangeSpend / rangeConv) < 38.5 ? BRAND.blue : BRAND.rose }}>
+                {rangeConv > 0 ? `${(38.5 / (rangeSpend / rangeConv)).toFixed(1)}x` : '—'}
+              </div>
+              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>ROAS</div>
+            </div>
+          </div>
         </div>
       )}
 
