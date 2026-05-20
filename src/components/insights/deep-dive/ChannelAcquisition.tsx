@@ -64,22 +64,22 @@ export function ChannelAcquisition({ sources }: ChannelAcquisitionProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_1fr] gap-6">
+      <div className="grid grid-cols-[38%_62%] gap-3">
         {/* LEFT — horizontal bars */}
-        <div className="flex flex-col gap-[7px]">
+        <div className="flex flex-col gap-[5px] pt-[30px]">
           {sorted.map((row) => {
             const pct = totalEntry > 0 ? (row.wp_entry / totalEntry) * 100 : 0;
             const widthPct = maxEntry > 0 ? Math.max((row.wp_entry / maxEntry) * 100, 4) : 4;
             return (
-              <div key={`${row.source}-${row.medium}`} className="flex items-center gap-2">
-                <div className="w-[80px] text-right text-[11px] font-medium shrink-0 truncate"
+              <div key={`${row.source}-${row.medium}`} className="flex items-center gap-1.5">
+                <div className="w-[70px] text-right text-[10px] font-medium shrink-0 truncate"
                      style={{ color: BRAND.text2 }} title={`${row.source} / ${row.medium}`}>
                   {displaySource(row.source)}
                 </div>
-                <div className="flex-1 h-[26px] rounded-md relative" style={{ background: BRAND.bgRaised }}>
-                  <div className="h-full rounded-md flex items-center justify-end px-2 transition-all duration-500"
-                       style={{ width: `${widthPct}%`, background: barColor(row.medium), minWidth: 52 }}>
-                    <span className="text-[10px] font-bold text-white whitespace-nowrap">
+                <div className="flex-1 h-[22px] rounded-md relative" style={{ background: BRAND.bgRaised }}>
+                  <div className="h-full rounded-md flex items-center justify-end px-1.5 transition-all duration-500"
+                       style={{ width: `${widthPct}%`, background: barColor(row.medium), minWidth: 44 }}>
+                    <span className="text-[9px] font-bold text-white whitespace-nowrap">
                       {row.wp_entry.toLocaleString()}{' '}
                       <span className="font-normal opacity-80">{pct.toFixed(0)}%</span>
                     </span>
