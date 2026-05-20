@@ -34,6 +34,35 @@ WP_APP_PASSWORD = os.environ.get("WP_APP_PASSWORD", "")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 
+def extract_countries_from_languages(languages: list[str]) -> list[str]:
+    """Extract real country names from WP ACF language strings.
+
+    Examples:
+        "Arabic (Saudi Arabia)" → ["Saudi Arabia"]
+        "Arabic (Saudi Arabia, Egypt, Jordan)" → ["Saudi Arabia", "Egypt", "Jordan"]
+        "English (Australia)" → ["Australia"]
+        "US" → ["US"]  (short codes kept as-is)
+        "French" → [] (no country info)
+    """
+    SKIP = {"Latin", "Bokmal", "Cyrillic", "Simplified", "Traditional"}
+    countries: set[str] = set()
+    for lang in languages:
+        lang = lang.strip()
+        if not lang:
+            continue
+        # Short country codes (US, DE, FR, etc.)
+        if len(lang) <= 3 and lang == lang.upper():
+            countries.add(lang)
+            continue
+        # Extract from parentheses
+        for match in re.finditer(r"\(([^)]+)\)", lang):
+            for part in match.group(1).split(","):
+                name = part.strip()
+                if len(name) > 2 and name not in SKIP:
+                    countries.add(name)
+    return sorted(countries)
+
+
 def extract_codename(title: str, slug: str) -> str:
     """Extract a codename from the job title or slug.
 
@@ -100,14 +129,15 @@ async def seed_to_db(jobs: list[dict]) -> int:
                     pass
             codename = extract_codename(title, slug)
 
-            # Extract countries from ACF fields if present
+            # Extract real country names from ACF language fields
             acf = job.get("acf", {}) or {}
-            countries: list[str] = []
+            raw_languages: list[str] = []
             apply_rows = acf.get("apply_job", []) or []
             for row in apply_rows:
                 lang = row.get("apply_language", "")
-                if lang and lang not in countries:
-                    countries.append(lang)
+                if lang and lang not in raw_languages:
+                    raw_languages.append(lang)
+            countries = extract_countries_from_languages(raw_languages)
 
             try:
                 project_id = await conn.fetchval(
