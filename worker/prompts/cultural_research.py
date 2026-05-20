@@ -683,6 +683,8 @@ _RESEARCH_SYSTEM_PROMPT = (
     "- ILO (International Labour Organization) — global labor data\n\n"
     "When citing data, include the SOURCE and YEAR (e.g., 'Pew 2024', 'Statista Q1 2025').\n\n"
     "RULES:\n"
+    "- You have web search access. USE IT for every query. Search for current data "
+    "rather than relying on training knowledge alone.\n"
     "- Return ONLY valid JSON with the exact keys requested.\n"
     "- Be specific — no vague generalizations. Cite numbers, platform names, "
     "specific cultural norms.\n"
@@ -742,6 +744,7 @@ async def _call_kimi(query: str, output_keys: list[str]) -> dict[str, Any]:
                     "messages": messages,
                     "temperature": 0.3,
                     "stream": False,
+                    "tools": [{"type": "web_search"}],
                 }
                 if provider_name == "NIM":
                     payload["chat_template_kwargs"] = {"thinking": False}
