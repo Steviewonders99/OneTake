@@ -78,17 +78,19 @@ export function DeepDiveClient({ initialProjects }: Props) {
   // Detect funnel path type
   const totalWeeklySpend = weeks.reduce((s: number, w: any) => s + w.total_spend, 0);
   const hasPaidSpend = totalWeeklySpend > 0;
+  const isAidaForm = (selected as any)?.funnel_type === 'aidaform';
 
-  // Build adaptive funnel — only show stages with real data
-  const funnelStages = funnelData?.totals ? [
+  // Build adaptive funnel — different stages for AidaForm vs Platform projects
+  const funnelStages = funnelData?.totals ? (isAidaForm ? [
+    { label: 'LP Page Views', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
+    { label: 'Apply Clicks', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
+    { label: 'Form Completed', value: funnelData.totals.nda_signed ?? 0, color: '#DB2777' },
+  ] : [
     { label: 'Job Page Views', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
     { label: 'Apply Clicks', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
-    { label: 'Applications', value: funnelData.totals.nda_signed ?? 0, color: '#7C3AED' },
-    // Only show downstream stages if they have data (platform data not yet connected)
     ...(funnelData.totals.signup > 0 ? [{ label: 'Signups', value: funnelData.totals.signup, color: '#4F46E5' }] : []),
-    ...(funnelData.totals.profile_created > 0 ? [{ label: 'Profile Created', value: funnelData.totals.profile_created, color: '#9333EA' }] : []),
-    ...(funnelData.totals.doing_tasks > 0 ? [{ label: 'Active Workers', value: funnelData.totals.doing_tasks, color: '#DB2777' }] : []),
-  ].filter(s => s.value > 0 || s.label === 'Job Page Views') : [];
+    { label: 'NDA / MFA Completed', value: funnelData.totals.nda_signed ?? 0, color: '#7C3AED' },
+  ]).filter(s => s.value > 0 || s.label.includes('Page Views')) : [];
 
   // Sources from funnel data (includes UTM detail for flyers, job boards, recruiters)
   const sources = (funnelData?.by_source ?? []).map((s: any) => ({
@@ -147,7 +149,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
               {projectDetail && <span className="font-extralight"> — {projectDetail}</span>}
             </h1>
             <div className="text-[12px] mt-0.5" style={{ color: BRAND.text3 }}>
-              {(selected?.countries ?? []).length} countries · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
+              {isAidaForm ? 'AidaForm funnel' : 'Platform funnel'} · {(selected?.countries ?? []).length} countries · {channels.length} channels · Since {selected?.wp_published_at?.split('T')[0] ?? '—'}
             </div>
           </div>
           <DateRangePicker value={dateRangeV2} onChange={setDateRangeV2} />
@@ -171,7 +173,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
           <div className="grid grid-cols-4 gap-3 mb-6">
             <div className="relative overflow-hidden rounded-2xl p-5 text-white"
                  style={{ background: BRAND.gradDeep, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Job Page Views</div>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">{isAidaForm ? 'LP Page Views' : 'Job Page Views'}</div>
               <div className="text-[32px] font-black leading-none">{wpEntry.toLocaleString()}</div>
               <div className="text-[11px] mt-1 opacity-70">Unique visitors (first-touch)</div>
             </div>
@@ -183,14 +185,16 @@ export function DeepDiveClient({ initialProjects }: Props) {
             </div>
             <div className="relative overflow-hidden rounded-2xl p-5 text-white"
                  style={{ background: BRAND.gradWarm, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">Applications</div>
+              <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">
+                {isAidaForm ? 'Forms Completed' : 'NDA / MFA Completed'}
+              </div>
               <div className="text-[32px] font-black leading-none">{applications.toLocaleString()}</div>
               <div className="text-[11px] mt-1 opacity-70">{convRate}% conversion rate</div>
             </div>
             <div className="relative overflow-hidden rounded-2xl p-5 text-white"
                  style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
               <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">
-                {hasPaidSpend ? 'Cost / Application' : 'Page → Application Rate'}
+                {hasPaidSpend ? (isAidaForm ? 'Cost / Form' : 'Cost / NDA') : 'Page → Conversion Rate'}
               </div>
               <div className="text-[32px] font-black leading-none">
                 {hasPaidSpend && applications > 0 ? formatEur(totalWeeklySpend / applications) : `${wpEntry > 0 ? ((applications / wpEntry) * 100).toFixed(1) : 0}%`}
