@@ -88,8 +88,8 @@ async def security_middleware(request: web.Request, handler):
     # Execute handler with error sanitization
     try:
         response = await handler(request)
-    except Exception:
-        # Never leak internal error details
+    except Exception as e:
+        logger.error("Request error: %s", e)
         return web.json_response({"error": "Internal server error"}, status=500)
 
     # Security headers
@@ -267,7 +267,7 @@ async def trigger_sync(request: web.Request):
 async def get_ga4_funnel(request: web.Request):
     """GA4 acquisition funnel: WP entry → profile → NDA per project."""
     pid = request.match_info["id"]
-    # Only use rows WITHOUT UTM detail for aggregates (UTM rows are sub-detail)
+    # Per-source breakdown (exclude aggregate rows)
     rows = await query(
         "SELECT NULL as campaign_name, source, medium, "
         "NULL as utm_campaign, NULL as utm_term, NULL as utm_content, "
@@ -278,7 +278,20 @@ async def get_ga4_funnel(request: web.Request):
         "SUM(doing_tasks) as doing_tasks "
         "FROM ga4_project_funnel WHERE project_id = $1::UUID "
         "AND utm_content IS NULL AND utm_term IS NULL AND utm_campaign IS NULL "
+        "AND source NOT IN ('all_campaigns', 'lp_entry') "
         "GROUP BY source, medium ORDER BY SUM(wp_entry) DESC, SUM(nda_signed) DESC",
+        pid,
+    )
+    # Totals from the aggregate row (or sum of per-source if no aggregate)
+    agg = await query(
+        "SELECT SUM(wp_entry) as wp_entry, SUM(apply_click) as apply_click, "
+        "SUM(signup) as signup, SUM(mfa_setup) as mfa_setup, "
+        "SUM(profile_created) as profile_created, SUM(nda_signed) as nda_signed, "
+        "SUM(certification) as certification, SUM(browsing_jobs) as browsing_jobs, "
+        "SUM(doing_tasks) as doing_tasks "
+        "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+        "AND source IN ('all_campaigns', 'lp_entry') "
+        "AND utm_content IS NULL AND utm_term IS NULL AND utm_campaign IS NULL",
         pid,
     )
     # Also fetch UTM detail rows (non-null utm_content or utm_term)
@@ -292,31 +305,34 @@ async def get_ga4_funnel(request: web.Request):
         pid,
     )
 
-    def total(key):
-        return sum(r.get(key, 0) or 0 for r in rows)
+    # Use aggregate row for totals (includes LP entry + campaign totals)
+    agg_row = agg[0] if agg else {}
+    def agg_total(key):
+        v = agg_row.get(key, 0)
+        return v if v else sum(r.get(key, 0) or 0 for r in rows)
 
-    tw = total("wp_entry")
+    tw = agg_total("wp_entry")
     return web.json_response({
         "by_source": rows,
         "utm_detail": utm_detail,
         "totals": {
             "wp_entry": tw,
-            "apply_click": total("apply_click"),
-            "signup": total("signup"),
-            "mfa_setup": total("mfa_setup"),
-            "profile_created": total("profile_created"),
-            "nda_signed": total("nda_signed"),
-            "certification": total("certification"),
-            "browsing_jobs": total("browsing_jobs"),
-            "doing_tasks": total("doing_tasks"),
+            "apply_click": agg_total("apply_click"),
+            "signup": agg_total("signup"),
+            "mfa_setup": agg_total("mfa_setup"),
+            "profile_created": agg_total("profile_created"),
+            "nda_signed": agg_total("nda_signed"),
+            "certification": agg_total("certification"),
+            "browsing_jobs": agg_total("browsing_jobs"),
+            "doing_tasks": agg_total("doing_tasks"),
         },
         "rates": {
-            "wp_to_apply": round(total("apply_click") / tw * 100, 1) if tw > 0 else 0,
-            "wp_to_signup": round(total("signup") / tw * 100, 1) if tw > 0 else 0,
-            "wp_to_nda": round(total("nda_signed") / tw * 100, 1) if tw > 0 else 0,
-            "wp_to_tasks": round(total("doing_tasks") / tw * 100, 1) if tw > 0 else 0,
-            "nda_to_tasks": round(total("doing_tasks") / total("nda_signed") * 100, 1) if total("nda_signed") > 0 else 0,
-            "apply_to_nda": round(total("nda_signed") / total("apply_click") * 100, 1) if total("apply_click") > 0 else 0,
+            "wp_to_apply": round(agg_total("apply_click") / tw * 100, 1) if tw > 0 else 0,
+            "wp_to_signup": round(agg_total("signup") / tw * 100, 1) if tw > 0 else 0,
+            "wp_to_nda": round(agg_total("nda_signed") / tw * 100, 1) if tw > 0 else 0,
+            "wp_to_tasks": round(agg_total("doing_tasks") / tw * 100, 1) if tw > 0 else 0,
+            "nda_to_tasks": round(agg_total("doing_tasks") / agg_total("nda_signed") * 100, 1) if agg_total("nda_signed") > 0 else 0,
+            "apply_to_nda": round(agg_total("nda_signed") / agg_total("apply_click") * 100, 1) if agg_total("apply_click") > 0 else 0,
         },
     })
 
