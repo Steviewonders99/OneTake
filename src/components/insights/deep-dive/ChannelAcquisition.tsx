@@ -13,6 +13,7 @@ interface SourceRow {
 
 interface ChannelAcquisitionProps {
   sources: SourceRow[];
+  dateLabel?: string;
 }
 
 const MEDIUM_COLOR: Record<string, string> = {
@@ -40,7 +41,7 @@ function barColor(medium: string): string {
   return MEDIUM_COLOR[medium.toLowerCase().replace(/[\s-]/g, '')] ?? BRAND.purple;
 }
 
-export function ChannelAcquisition({ sources }: ChannelAcquisitionProps) {
+export function ChannelAcquisition({ sources, dateLabel }: ChannelAcquisitionProps) {
   if (!sources || sources.length === 0) return null;
 
   const sorted = [...sources].sort((a, b) => b.wp_entry - a.wp_entry);
@@ -59,7 +60,7 @@ export function ChannelAcquisition({ sources }: ChannelAcquisitionProps) {
             How People Found This Project
           </div>
           <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
-            GA4 first-touch attribution · Unique users
+            GA4 first-touch attribution · Unique users{dateLabel ? ` · ${dateLabel}` : ''}
           </div>
         </div>
       </div>

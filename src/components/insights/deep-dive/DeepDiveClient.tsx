@@ -80,9 +80,11 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const hasPaidSpend = totalWeeklySpend > 0;
   const isAidaForm = (selected as any)?.funnel_type === 'aidaform';
 
-  // Build adaptive funnel — uses range-filtered conversions where available
+  // Range-filtered metrics from weekly summary
   const rangeConv = weeks.reduce((s: number, w: any) => s + (w.total_conversions ?? 0), 0);
   const rangeClicksTotal = weeks.reduce((s: number, w: any) => s + (w.total_clicks ?? 0), 0);
+  const rangeSpend = weeks.reduce((s: number, w: any) => s + (w.total_spend ?? 0), 0);
+  const rangeImpressions = weeks.reduce((s: number, w: any) => s + ((w as any).total_impressions ?? 0), 0);
   const ft = funnelData?.totals ?? {};
   const funnelViews = rangeClicksTotal > 0 ? rangeClicksTotal : (ft.wp_entry ?? 0);
   const funnelApply = ft.apply_click ?? 0;
@@ -110,7 +112,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
     apply_click: s.apply_click ?? 0,
     nda_signed: s.nda_signed ?? 0,
     doing_tasks: s.doing_tasks ?? 0,
-    cost: hasPaidSpend && (s.medium === 'paid' || s.medium === 'paidmedia') ? weeklyData?.weeks?.reduce((sum: number, w: any) => sum + (w.total_spend ?? 0), 0) ?? 0 : 0,
+    cost: rangeSpend > 0 && (s.medium === 'paid' || s.medium === 'paidmedia') ? rangeSpend : 0,
   }));
 
   // Replace generic "social/referral" and "job_board/referral" with UTM detail rows
@@ -133,22 +135,14 @@ export function DeepDiveClient({ initialProjects }: Props) {
     }));
   });
 
-  // Paid metrics
-  const currentWeek = weeklyData?.current;
-  const totalSpend = weeks.reduce((s: number, w: any) => s + w.total_spend, 0);
-  const totalConversions = funnelData?.totals?.nda_signed ?? 0;
-  const activeWorkers = funnelData?.totals?.doing_tasks ?? 0;
-  const totalImpressions = currentWeek?.total_impressions ?? 0;
-  const totalClicks = currentWeek?.total_clicks ?? 0;
-
-  // Campaigns (from weekly data channel breakdown — simplified)
+  // Campaigns (from channel links — uses range-filtered metrics)
   const campaigns = channels.map((ch: any) => ({
     campaignName: ch.external_name ?? ch.external_id ?? 'Unknown',
-    spend: totalSpend,
-    impressions: totalImpressions,
-    clicks: totalClicks,
-    conversions: totalConversions,
-    cpa: totalConversions > 0 ? totalSpend / totalConversions : null,
+    spend: rangeSpend,
+    impressions: rangeImpressions,
+    clicks: rangeClicksTotal,
+    conversions: rangeConv,
+    cpa: rangeConv > 0 ? rangeSpend / rangeConv : null,
   }));
 
   // Project display name
@@ -239,17 +233,17 @@ export function DeepDiveClient({ initialProjects }: Props) {
         );
       })()}
 
-      {/* Section 1: Channel Acquisition */}
+      {/* Section 1: Channel Acquisition — all-time first-touch attribution */}
       {sources.length > 0 && (
         <div className="mb-5">
-          <ChannelAcquisition sources={sources} />
+          <ChannelAcquisition sources={sources} dateLabel="All Time (first-touch)" />
         </div>
       )}
 
-      {/* Section 2: Funnel Waterfall */}
+      {/* Section 2: Funnel Waterfall — uses range-filtered data */}
       {funnelStages.length > 0 && <FunnelWaterfall stages={funnelStages} />}
 
-      {/* Section 3: Source Attribution */}
+      {/* Section 3: Source Attribution — all-time first-touch */}
       {sources.length > 0 && (
         <div className="mb-5">
           <SourceAttribution sources={sources} />
@@ -264,16 +258,16 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       )}
 
-      {/* Section 5: Campaign & Creative (paid only) */}
-      {hasPaidSpend && campaigns.length > 0 && (
+      {/* Section 5: Campaign & Creative (paid only) — range-filtered spend */}
+      {rangeSpend > 0 && campaigns.length > 0 && (
         <div className="grid grid-cols-2 gap-4 mb-5">
           <CampaignTable campaigns={campaigns} />
           <PaidMetrics
-            spend={totalSpend}
-            impressions={totalImpressions}
-            clicks={totalClicks}
-            ndaSigned={totalConversions}
-            activeWorkers={activeWorkers}
+            spend={rangeSpend}
+            impressions={rangeImpressions}
+            clicks={rangeClicksTotal}
+            ndaSigned={rangeConv}
+            activeWorkers={0}
           />
         </div>
       )}
