@@ -80,16 +80,24 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const hasPaidSpend = totalWeeklySpend > 0;
   const isAidaForm = (selected as any)?.funnel_type === 'aidaform';
 
-  // Build adaptive funnel — different stages for AidaForm vs Platform projects
-  const funnelStages = funnelData?.totals ? (isAidaForm ? [
-    { label: 'LP Page Views', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
-    { label: 'Apply Clicks', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
-    { label: 'Form Completed', value: funnelData.totals.nda_signed ?? 0, color: '#DB2777' },
+  // Build adaptive funnel — uses range-filtered conversions where available
+  const rangeConv = weeks.reduce((s: number, w: any) => s + (w.total_conversions ?? 0), 0);
+  const rangeClicksTotal = weeks.reduce((s: number, w: any) => s + (w.total_clicks ?? 0), 0);
+  const ft = funnelData?.totals ?? {};
+  const funnelViews = rangeClicksTotal > 0 ? rangeClicksTotal : (ft.wp_entry ?? 0);
+  const funnelApply = ft.apply_click ?? 0;
+  const funnelConv = rangeConv > 0 ? rangeConv : (ft.nda_signed ?? 0);
+  const funnelSignup = ft.signup ?? 0;
+
+  const funnelStages = (funnelViews > 0 || funnelConv > 0) ? (isAidaForm ? [
+    { label: 'LP Page Views', value: funnelViews, color: '#0348B2' },
+    { label: 'Apply Clicks', value: funnelApply, color: '#2563EB' },
+    { label: 'Form Completed', value: funnelConv, color: '#DB2777' },
   ] : [
-    { label: 'Job Page Views', value: funnelData.totals.wp_entry ?? 0, color: '#0348B2' },
-    { label: 'Apply Clicks', value: funnelData.totals.apply_click ?? 0, color: '#2563EB' },
-    ...(funnelData.totals.signup > 0 ? [{ label: 'Signups', value: funnelData.totals.signup, color: '#4F46E5' }] : []),
-    { label: 'NDA / MFA Completed', value: funnelData.totals.nda_signed ?? 0, color: '#7C3AED' },
+    { label: 'Job Page Views', value: funnelViews, color: '#0348B2' },
+    { label: 'Apply Clicks', value: funnelApply, color: '#2563EB' },
+    ...(funnelSignup > 0 ? [{ label: 'Signups', value: funnelSignup, color: '#4F46E5' }] : []),
+    { label: 'NDA / MFA Completed', value: funnelConv, color: '#7C3AED' },
   ]).filter(s => s.value > 0 || s.label.includes('Page Views')) : [];
 
   // Sources from funnel data — expand generic buckets (social, job_board) with UTM detail
@@ -181,14 +189,20 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       </div>
 
-      {/* Hero metrics strip */}
-      {funnelData?.totals && (() => {
-        const t = funnelData.totals;
-        const wpEntry = t.wp_entry ?? 0;
+      {/* Hero metrics strip — uses range-filtered weekly data for spend/conversions */}
+      {(funnelData?.totals || weeks.length > 0) && (() => {
+        // Range-filtered metrics from weekly summary
+        const rangeClicks = weeks.reduce((s: number, w: any) => s + (w.total_clicks ?? 0), 0);
+        const rangeConversions = weeks.reduce((s: number, w: any) => s + (w.total_conversions ?? 0), 0);
+        const rangeSpend = weeks.reduce((s: number, w: any) => s + (w.total_spend ?? 0), 0);
+
+        // Use range data if available, fall back to all-time GA4 funnel
+        const t = funnelData?.totals ?? {};
+        const wpEntry = rangeClicks > 0 ? rangeClicks : (t.wp_entry ?? 0);
         const applyClicks = t.apply_click ?? 0;
-        const applications = t.nda_signed ?? 0;
+        const applications = rangeConversions > 0 ? rangeConversions : (t.nda_signed ?? 0);
         const clickRate = wpEntry > 0 ? ((applyClicks / wpEntry) * 100).toFixed(1) : '0';
-        const convRate = applyClicks > 0 ? ((applications / applyClicks) * 100).toFixed(1) : '0';
+        const convRate = wpEntry > 0 ? ((applications / wpEntry) * 100).toFixed(1) : '0';
         return (
           <div className="grid grid-cols-4 gap-3 mb-6">
             <div className="relative overflow-hidden rounded-2xl p-5 text-white"
@@ -214,12 +228,12 @@ export function DeepDiveClient({ initialProjects }: Props) {
             <div className="relative overflow-hidden rounded-2xl p-5 text-white"
                  style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
               <div className="text-[9px] uppercase tracking-[0.14em] opacity-60 mb-1">
-                {hasPaidSpend ? (isAidaForm ? 'Cost / Form' : 'Cost / NDA') : 'Page → Conversion Rate'}
+                {rangeSpend > 0 ? (isAidaForm ? 'Cost / Form' : 'Cost / NDA') : 'Page → Conversion Rate'}
               </div>
               <div className="text-[32px] font-black leading-none">
-                {hasPaidSpend && applications > 0 ? formatEur(totalWeeklySpend / applications) : `${wpEntry > 0 ? ((applications / wpEntry) * 100).toFixed(1) : 0}%`}
+                {rangeSpend > 0 && applications > 0 ? formatEur(rangeSpend / applications) : `${wpEntry > 0 ? ((applications / wpEntry) * 100).toFixed(1) : 0}%`}
               </div>
-              {hasPaidSpend && <div className="text-[11px] mt-1 opacity-70">{formatEur(totalWeeklySpend)} total spend</div>}
+              {rangeSpend > 0 && <div className="text-[11px] mt-1 opacity-70">{formatEur(rangeSpend)} total spend</div>}
             </div>
           </div>
         );
