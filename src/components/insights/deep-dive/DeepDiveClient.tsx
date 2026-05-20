@@ -92,8 +92,8 @@ export function DeepDiveClient({ initialProjects }: Props) {
     { label: 'NDA / MFA Completed', value: funnelData.totals.nda_signed ?? 0, color: '#7C3AED' },
   ]).filter(s => s.value > 0 || s.label.includes('Page Views')) : [];
 
-  // Sources from funnel data (includes UTM detail for flyers, job boards, recruiters)
-  const sources = (funnelData?.by_source ?? []).map((s: any) => ({
+  // Sources from funnel data — expand generic buckets (social, job_board) with UTM detail
+  const rawSources = (funnelData?.by_source ?? []).map((s: any) => ({
     source: s.source ?? '(not set)',
     medium: s.medium ?? '(not set)',
     utm_content: s.utm_content ?? null,
@@ -104,6 +104,26 @@ export function DeepDiveClient({ initialProjects }: Props) {
     doing_tasks: s.doing_tasks ?? 0,
     cost: hasPaidSpend && (s.medium === 'paid' || s.medium === 'paidmedia') ? weeklyData?.weeks?.reduce((sum: number, w: any) => sum + (w.total_spend ?? 0), 0) ?? 0 : 0,
   }));
+
+  // Replace generic "social/referral" and "job_board/referral" with UTM detail rows
+  const utmDetail = (funnelData?.utm_detail ?? []) as any[];
+  const expandable = new Set(['social', 'job_board']);
+  const sources = rawSources.flatMap((s: any) => {
+    if (!expandable.has(s.source) || utmDetail.length === 0) return [s];
+    // Find UTM detail rows for this source
+    const details = utmDetail.filter((d: any) => d.source === s.source && d.medium === s.medium);
+    if (details.length === 0) return [s];
+    // Replace the generic row with specific detail rows
+    return details.map((d: any) => ({
+      ...s,
+      source: d.utm_content || s.source,
+      medium: d.utm_term ? `${s.medium} (${d.utm_term})` : s.medium,
+      utm_content: d.utm_content,
+      utm_term: d.utm_term,
+      wp_entry: d.wp_entry ?? 0,
+      nda_signed: d.nda_signed ?? 0,
+    }));
+  });
 
   // Paid metrics
   const currentWeek = weeklyData?.current;
