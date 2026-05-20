@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Download, Image, LayoutDashboard, Megaphone } from "lucide-react";
+import { ArrowLeft, BarChart3, Download, ExternalLink, FileText, Image, LayoutDashboard, Megaphone } from "lucide-react";
 import { getRecruiterStatus } from "@/lib/format";
 import CreativeLibrary from "./CreativeLibrary";
 import LinkBuilderBar from "./LinkBuilderBar";
@@ -44,7 +44,18 @@ export default function RecruiterWorkspace({
   const isRejected = request.status === "rejected";
 
   const approvedAssets = useMemo(
-    () => assets.filter((a) => a.asset_type === "composed_creative" && a.evaluation_passed === true && a.blob_url),
+    () =>
+      assets.filter(
+        (a) =>
+          (a.asset_type === "composed_creative" || a.asset_type === "base_creative") &&
+          a.evaluation_passed === true &&
+          a.blob_url
+      ),
+    [assets]
+  );
+
+  const assetSheet = useMemo(
+    () => assets.find((a) => a.asset_type === "asset_sheet" && a.blob_url) ?? null,
     [assets]
   );
 
@@ -162,7 +173,33 @@ export default function RecruiterWorkspace({
                 <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA", overflow: "hidden" }}>
                   <div style={{ padding: "14px 18px", borderBottom: "1px solid #E8E8EA", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Creative Library</span>
-                    <span style={{ fontSize: 11, color: "#8A8A8E" }}>{approvedAssets.length} approved</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {assetSheet && (
+                        <a
+                          href={assetSheet.blob_url!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            padding: "5px 12px",
+                            borderRadius: 9999,
+                            background: "#32373C",
+                            color: "#FFFFFF",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            textDecoration: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <FileText size={12} />
+                          Asset Sheet
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
+                      <span style={{ fontSize: 11, color: "#8A8A8E" }}>{approvedAssets.length} approved</span>
+                    </div>
                   </div>
                   <CreativeLibrary
                     requestId={request.id}

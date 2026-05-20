@@ -38,7 +38,13 @@ export default function CreativeLibrary({
   onAssetSelect,
 }: CreativeLibraryProps) {
   const approvedAssets = useMemo(
-    () => assets.filter((a) => a.asset_type === "composed_creative" && a.evaluation_passed === true && a.blob_url),
+    () =>
+      assets.filter(
+        (a) =>
+          (a.asset_type === "composed_creative" || a.asset_type === "base_creative") &&
+          a.evaluation_passed === true &&
+          a.blob_url
+      ),
     [assets]
   );
 
