@@ -277,17 +277,35 @@ async def get_ga4_funnel(request: web.Request):
     if start_str and end_str:
         start = _date.fromisoformat(start_str)
         end = _date.fromisoformat(end_str)
-        rows = await query(
-            "SELECT NULL as campaign_name, source, medium, "
-            "NULL as utm_campaign, NULL as utm_term, NULL as utm_content, "
-            "SUM(clicks) as wp_entry, 0 as apply_click, 0 as signup, 0 as mfa_setup, "
-            "0 as profile_created, SUM(conversions) as nda_signed, "
-            "0 as certification, 0 as browsing_jobs, 0 as doing_tasks "
+        # Date-filtered views + conversions from organic weekly
+        range_rows = await query(
+            "SELECT source, medium, SUM(clicks) as wp_entry, SUM(conversions) as nda_signed "
             "FROM ga4_organic_weekly WHERE project_id = $1::UUID "
             "AND week_start >= $2 AND week_start <= $3 "
             "GROUP BY source, medium ORDER BY SUM(clicks) DESC",
             pid, start, end,
         )
+        # All-time apply_click + signup per source (not in organic weekly)
+        alltime_sources = await query(
+            "SELECT source, medium, SUM(apply_click) as apply_click, SUM(signup) as signup "
+            "FROM ga4_project_funnel WHERE project_id = $1::UUID "
+            "AND source NOT IN ('all_campaigns', 'lp_entry') "
+            "AND utm_content IS NULL AND utm_term IS NULL AND utm_campaign IS NULL "
+            "GROUP BY source, medium",
+            pid,
+        )
+        at_map = {(r["source"], r["medium"]): r for r in alltime_sources}
+        # Merge: date-filtered views/NDA + all-time apply/signup
+        rows = []
+        for r in range_rows:
+            at = at_map.get((r["source"], r["medium"]), {})
+            rows.append({
+                "campaign_name": None, "source": r["source"], "medium": r["medium"],
+                "utm_campaign": None, "utm_term": None, "utm_content": None,
+                "wp_entry": r["wp_entry"], "apply_click": at.get("apply_click", 0) or 0,
+                "signup": at.get("signup", 0) or 0, "mfa_setup": 0, "profile_created": 0,
+                "nda_signed": r["nda_signed"], "certification": 0, "browsing_jobs": 0, "doing_tasks": 0,
+            })
         # Also get UTM detail in range
         utm_detail = await query(
             "SELECT source, medium, utm_content, utm_term, "
