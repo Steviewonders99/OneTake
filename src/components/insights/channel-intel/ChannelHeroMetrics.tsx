@@ -14,6 +14,7 @@ interface ChannelHeroMetricsProps {
   impressions?: number;
   clicks?: number;
   cpa?: number;
+  landingPages?: number;
 }
 
 function formatNum(n: number): string {
@@ -35,7 +36,7 @@ function formatRoas(cost: number, conversions: number): string {
 }
 
 export function ChannelHeroMetrics(props: ChannelHeroMetricsProps) {
-  const { sessions, conversions, convRate, cost, isPaid, cpa, impressions, clicks } = props;
+  const { sessions, conversions, convRate, cost, isPaid, cpa, impressions, clicks, landingPages } = props;
 
   const paidItems = [
     { num: formatNum(sessions), label: 'Sessions' },
@@ -49,7 +50,7 @@ export function ChannelHeroMetrics(props: ChannelHeroMetricsProps) {
     { num: formatNum(sessions), label: 'Sessions' },
     { num: formatNum(conversions), label: 'Conversions' },
     { num: formatPct(convRate), label: 'Conv Rate' },
-    { num: clicks != null ? formatNum(clicks) : '--', label: 'Landing Pages' },
+    { num: landingPages != null ? formatNum(landingPages) : (clicks != null ? formatNum(clicks) : '--'), label: 'Landing Pages' },
     { num: formatEur(cost), label: 'Cost' },
   ];
 

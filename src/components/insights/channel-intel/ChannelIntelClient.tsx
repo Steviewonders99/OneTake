@@ -225,6 +225,7 @@ export function ChannelIntelClient({ initialProjects }: Props) {
           impressions={heroData.impressions}
           clicks={heroData.clicks}
           cpa={heroData.cpa}
+          landingPages={heroData.landingPages}
         />
       )}
 

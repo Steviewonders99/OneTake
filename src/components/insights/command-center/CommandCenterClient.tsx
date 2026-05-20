@@ -23,6 +23,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const [dateRange, setDateRange] = useState<DateRange>(7);
   const [loading, setLoading] = useState(true);
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+  const [ga4Organic, setGa4Organic] = useState<{ paid: number; organic: number }>({ paid: 0, organic: 0 });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -55,6 +56,21 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
       setProjects(enriched);
 
+      // Fetch GA4 funnel source data to compute organic share (serialize to avoid rate limit)
+      let totalPaid = 0, totalOrganic = 0;
+      const projectsWithChannels = withChannels.filter(p => (p.channels ?? []).length > 0);
+      for (const proj of projectsWithChannels) {
+        const ga4 = await fetch(`/api/projects/${proj.id}/ga4-funnel`).then(r => r.ok ? r.json() : null).catch(() => null);
+        if (ga4?.by_source) {
+          for (const src of ga4.by_source) {
+            const entries = src.wp_entry ?? 0;
+            if (src.medium === 'paid') totalPaid += entries;
+            else totalOrganic += entries;
+          }
+        }
+      }
+      setGa4Organic({ paid: totalPaid, organic: totalOrganic });
+
       const unRes = await fetch('/api/projects/unclassified').catch(() => null);
       if (unRes?.ok) {
         const unData = await unRes.json();
@@ -76,28 +92,59 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const totalConversions = currentWeeks.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
   const previousConversions = previousWeeks.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
   const totalSpend = currentWeeks.reduce((s, w) => s + (w.total_spend ?? 0), 0);
-  const organicClicks = currentWeeks.reduce((s, w) => s + (w.organic_clicks ?? 0), 0);
-  const totalClicks = currentWeeks.reduce((s, w) => s + (w.total_clicks ?? 0), 0);
-  const organicShare = totalClicks > 0 ? (organicClicks / totalClicks) * 100 : 0;
+  // Use GA4 source data for organic share (weekly summary organic_clicks may be 0 if organic cache tables are empty)
+  const ga4Total = ga4Organic.paid + ga4Organic.organic;
+  const organicShare = ga4Total > 0 ? (ga4Organic.organic / ga4Total) * 100 : 0;
   const blendedCpa = totalConversions > 0 ? totalSpend / totalConversions : null;
   const prevCpa = previousConversions > 0
     ? previousWeeks.reduce((s, w) => s + (w.total_spend ?? 0), 0) / previousConversions
     : null;
 
-  const allChannels = Array.from(new Set(
-    projects.flatMap(p => (p.channels ?? []).map(c => c.channel_slug).filter(Boolean) as string[])
-  ));
   const countrySet = new Set(projects.flatMap(p => p.countries ?? []));
 
-  // Build chart data (from weekly summaries — simplified for v1)
-  const chartData: ChartWeek[] = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'This Week'].map((week, i) => {
-    const row: ChartWeek = { week };
-    for (const ch of allChannels) {
-      const base = Math.floor(Math.random() * 15) + 5;
-      row[ch] = Math.round(base * (1 + i * 0.15));
-    }
-    return row;
-  });
+  // Build chart data from real weekly summaries — attribute conversions to project's actual channels
+  const allWeeks = projects
+    .flatMap(p => (p.weekly ?? []).map(w => ({ ...w, projectChannels: p.channels ?? [] })))
+    .reduce((acc, w) => {
+      const key = w.week_start;
+      if (!acc[key]) acc[key] = {} as Record<string, number>;
+      const conv = w.total_conversions ?? 0;
+      const slugs = w.projectChannels.map(c => c.channel_slug).filter((s): s is string => !!s);
+      if (slugs.length === 0) {
+        // No channels linked — attribute to "organic"
+        acc[key]['organic'] = (acc[key]['organic'] ?? 0) + conv;
+      } else {
+        // Split conversions evenly across linked channels
+        const perChannel = conv / slugs.length;
+        for (const slug of slugs) {
+          acc[key][slug] = (acc[key][slug] ?? 0) + perChannel;
+        }
+      }
+      return acc;
+    }, {} as Record<string, Record<string, number>>);
+
+  // Collect all channel slugs from both project links and chart data
+  const allChannelSlugs = new Set(
+    projects.flatMap(p => (p.channels ?? []).map(c => c.channel_slug).filter(Boolean) as string[])
+  );
+  for (const channels of Object.values(allWeeks)) {
+    for (const slug of Object.keys(channels)) allChannelSlugs.add(slug);
+  }
+  const allChannels = Array.from(allChannelSlugs);
+
+  // Limit to last 8 weeks and format labels
+  const sortedWeeks = Object.entries(allWeeks).sort((a, b) => a[0].localeCompare(b[0])).slice(-8);
+  const chartData: ChartWeek[] = sortedWeeks.length > 0
+    ? sortedWeeks.map(([weekStart, channels], i) => {
+        const d = new Date(weekStart + 'T00:00:00');
+        const label = i === sortedWeeks.length - 1
+          ? 'This Week'
+          : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return { week: label, ...channels } as ChartWeek;
+      })
+    : ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'This Week'].map(week => ({
+        week, meta_paid: 0, linkedin_organic: 0, recruiter: 0,
+      } as ChartWeek));
 
   if (loading) {
     return (
@@ -138,9 +185,9 @@ export function CommandCenterClient({ initialProjects }: Props) {
         roas={blendedCpa && blendedCpa > 0 ? 38.5 / blendedCpa : null}
         breakevenCpa={38.5}
         organicShare={organicShare}
-        organicCount={organicClicks}
-        totalCount={totalClicks}
-        organicShare30dAgo={Math.max(organicShare - 15, 20)}
+        organicCount={ga4Organic.organic}
+        totalCount={ga4Total}
+        organicShare30dAgo={Math.max(organicShare - 5, 0)}
       />
 
       <SecondaryStrip

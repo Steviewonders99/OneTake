@@ -22,7 +22,11 @@ interface Props {
 }
 
 export function DeepDiveClient({ initialProjects }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(initialProjects[0]?.id ?? null);
+  // Default to Centaurus or first project with channel data (not alphabetical first)
+  const defaultProject = initialProjects.find(p => p.codename === 'centaurus')
+    ?? initialProjects.find(p => p.display_name?.toLowerCase().includes('centaurus'))
+    ?? initialProjects[0];
+  const [selectedId, setSelectedId] = useState<string | null>(defaultProject?.id ?? null);
   const [dateRange, setDateRange] = useState<DateRange>(30);
   const [selectedLocale, setSelectedLocale] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

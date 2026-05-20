@@ -49,7 +49,7 @@ pool: asyncpg.Pool | None = None
 # ── Rate limiting (in-memory, per-IP) ────────────────────────────
 _rate_limiter: dict[str, list[float]] = {}
 RATE_LIMIT_WINDOW = 60  # seconds
-RATE_LIMIT_MAX = 120     # requests per window
+RATE_LIMIT_MAX = 300     # requests per window (raised for dashboard bulk loads)
 
 def _check_rate_limit(ip: str) -> bool:
     """Returns True if request is allowed, False if rate limited."""

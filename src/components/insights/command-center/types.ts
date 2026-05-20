@@ -27,6 +27,7 @@ export const CHANNEL_COLORS: Record<string, string> = {
   reddit_paid: '#818CF8', organic_search: '#C084FC', google_paid: '#4F46E5',
   tiktok_paid: '#7E22CE', linkedin_jobs: '#6D28D9', influencer: '#BE185D',
   referral: '#9333EA', direct: '#A1A1AA', monster: '#8B5CF6',
+  organic: '#818CF8', social_referral: '#A78BFA', job_board: '#C084FC', email: '#F472B6',
 };
 
 export const CHANNEL_DISPLAY: Record<string, string> = {
@@ -36,6 +37,7 @@ export const CHANNEL_DISPLAY: Record<string, string> = {
   reddit_paid: 'Reddit Ads', organic_search: 'Organic Search', google_paid: 'Google Ads',
   tiktok_paid: 'TikTok Ads', linkedin_jobs: 'LinkedIn Jobs', influencer: 'Influencer',
   referral: 'Referral', direct: 'Direct', monster: 'Monster',
+  organic: 'Organic', social_referral: 'Social Referral', job_board: 'Job Boards', email: 'Email',
 };
 
 export const PILL_CLASSES: Record<string, string> = {

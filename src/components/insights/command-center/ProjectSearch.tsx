@@ -38,7 +38,7 @@ export function ProjectSearch({ projects, selectedId, onSelect, showAllOption = 
     <div ref={ref} className="relative min-w-[280px]">
       <input
         type="text"
-        placeholder={selected ? `${selected.codename} — ${selected.display_name.split('—')[1]?.trim() ?? ''}` : '🔍 Search projects...'}
+        placeholder={selected ? (selected.display_name?.split('—')[0]?.trim() || selected.codename) : '🔍 Search projects...'}
         value={query}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
@@ -73,9 +73,11 @@ export function ProjectSearch({ projects, selectedId, onSelect, showAllOption = 
                 p.id === selectedId ? 'bg-[#F5F3FF]' : ''
               }`}
             >
-              <span className="text-[13px] font-semibold" style={{ color: BRAND.text }}>{p.codename}</span>
+              <span className="text-[13px] font-semibold" style={{ color: BRAND.text }}>
+                {p.display_name?.split('—')[0]?.trim() || p.codename}
+              </span>
               <span className="text-[10px] ml-2" style={{ color: BRAND.text3 }}>
-                {p.display_name.split('—')[1]?.trim() ?? ''} · {(p.countries ?? []).length} countries
+                {p.display_name?.split('—')[1]?.trim() ?? ''}{(p.countries ?? []).length > 0 && ` · ${(p.countries ?? []).length} locales`}
               </span>
             </button>
           ))}
