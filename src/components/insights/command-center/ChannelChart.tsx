@@ -117,7 +117,8 @@ export function ChannelChart({ data, allChannels, dateRange }: ChannelChartProps
           />
           <YAxis {...AXIS_STYLE} width={40} />
           <Tooltip contentStyle={TOOLTIP_STYLE.contentStyle} itemStyle={TOOLTIP_STYLE.itemStyle}
-            labelStyle={TOOLTIP_STYLE.labelStyle} cursor={TOOLTIP_STYLE.cursor} />
+            labelStyle={TOOLTIP_STYLE.labelStyle} cursor={TOOLTIP_STYLE.cursor}
+            formatter={(value: number) => Math.round(value).toLocaleString()} />
           {visibleChannels.map(ch => (
             <Area key={ch} type="monotone" dataKey={ch} name={getLabel(ch)} stackId="1"
               stroke={getColor(ch)} fill={getColor(ch)}

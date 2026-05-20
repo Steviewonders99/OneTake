@@ -16,46 +16,10 @@ interface HeaderProps {
   onDateRangeV2Change: (value: DateRangeValue) => void;
 }
 
-// Extract real country names from locale strings like "English (Australia)" → "Australia"
-function extractCountries(locales: string[]): string[] {
-  const countries = new Set<string>();
-  const countryPatterns = [
-    // Direct country names
-    /^(Australia|Bulgaria|Canada|Chile|China|Colombia|Croatia|Egypt|Finland|France|Germany|Greece|India|Ireland|Israel|Italy|Japan|Korea|Malaysia|Mexico|Morocco|New Zealand|Norway|Poland|Portugal|Romania|Russia|Singapore|South Africa|Spain|Sweden|Thailand|Turkey|UAE|USA|United Kingdom|Vietnam|Hong Kong|Brazil|Netherlands|Czech Republic)$/i,
-    // "English (Australia)" pattern
-    /\(([^)]+)\)/,
-    // "English - Australia" pattern
-    /- ([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*$/,
-  ];
-
-  for (const locale of locales) {
-    // Try direct match first
-    if (countryPatterns[0].test(locale)) {
-      countries.add(locale);
-      continue;
-    }
-    // Try parenthetical
-    const parenMatch = locale.match(countryPatterns[1]);
-    if (parenMatch) {
-      const inner = parenMatch[1].trim();
-      // Skip language-only matches like "Latin" or "Bokmal"
-      if (inner.length > 2 && !inner.includes('(') && !/^(Latin|Bokmal|Cyrillic|Simplified|Traditional)$/i.test(inner)) {
-        countries.add(inner);
-      }
-    }
-    // Try dash pattern
-    const dashMatch = locale.match(countryPatterns[2]);
-    if (dashMatch && dashMatch[1].length > 2) {
-      countries.add(dashMatch[1]);
-    }
-  }
-  return Array.from(countries).sort();
-}
 
 export function CommandCenterHeader(props: HeaderProps) {
   const { projects, selectedProject, selectedCountry } = props;
-  const allLocales = Array.from(new Set(projects.flatMap(p => p.countries ?? [])));
-  const allCountries = extractCountries(allLocales);
+  const allCountries = [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))].sort();
   const selected = selectedProject ? projects.find(p => p.id === selectedProject) : null;
 
   const projectCount = projects.length;

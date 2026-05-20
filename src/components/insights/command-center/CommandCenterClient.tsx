@@ -130,7 +130,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
         acc[key]['organic'] = (acc[key]['organic'] ?? 0) + conv;
       } else {
         // Split conversions evenly across linked channels
-        const perChannel = conv / slugs.length;
+        const perChannel = Math.round(conv / slugs.length);
         for (const slug of slugs) {
           acc[key][slug] = (acc[key][slug] ?? 0) + perChannel;
         }
