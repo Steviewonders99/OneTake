@@ -44,10 +44,10 @@ WP_PUBLISH_STATUS = os.environ.get("WP_PUBLISH_STATUS", "draft")  # "draft" for 
 # ---------------------------------------------------------------------------
 NVIDIA_NIM_API_KEY = os.environ.get("NVIDIA_NIM_API_KEY", "")
 NVIDIA_NIM_BASE_URL = os.environ.get("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NVIDIA_NIM_MODEL = os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.5")
+NVIDIA_NIM_MODEL = os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.6")
 NVIDIA_NIM_REASONING_MODEL = os.environ.get("NVIDIA_NIM_REASONING_MODEL", "qwen/qwen3.5-397b-a17b")
-NVIDIA_NIM_CREATIVE_MODEL = os.environ.get("NVIDIA_NIM_CREATIVE_MODEL", "google/gemma-3-27b-it")
-NVIDIA_NIM_DESIGN_MODEL = os.environ.get("NVIDIA_NIM_DESIGN_MODEL", "z-ai/glm5")
+NVIDIA_NIM_CREATIVE_MODEL = os.environ.get("NVIDIA_NIM_CREATIVE_MODEL", "google/gemma-4-31b-it")
+NVIDIA_NIM_DESIGN_MODEL = os.environ.get("NVIDIA_NIM_DESIGN_MODEL", "z-ai/glm-5.1")
 
 # ---------------------------------------------------------------------------
 # Image Generation — OpenAI direct (primary) or OpenRouter (fallback)
@@ -100,7 +100,7 @@ COMPOSE_CONCURRENCY = int(os.environ.get("COMPOSE_CONCURRENCY", "15"))  # Paid O
 # Supported: "design_agent", "reference_layout_agent", or legacy compose_v3 fallback.
 STAGE4_ENGINE = os.environ.get("STAGE4_ENGINE", "design_agent")
 CREATIVE_DIRECTOR_MODEL = os.environ.get("CREATIVE_DIRECTOR_MODEL", "qwen/qwen3.5-397b-a17b")
-CREATIVE_DIRECTOR_FALLBACK = os.environ.get("CREATIVE_DIRECTOR_FALLBACK", "google/gemma-3-27b-it")
+CREATIVE_DIRECTOR_FALLBACK = os.environ.get("CREATIVE_DIRECTOR_FALLBACK", "google/gemma-4-31b-it")
 BATCH_VQA_MODEL = os.environ.get("BATCH_VQA_MODEL", "google/gemma-4-31b-it")
 
 # ---------------------------------------------------------------------------

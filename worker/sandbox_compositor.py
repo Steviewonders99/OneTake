@@ -66,7 +66,7 @@ OPENROUTER_MODELS = [
     ("z-ai/glm-5.1", "GLM-5.1 (paid)"),
     ("z-ai/glm-5", "GLM-5 (paid)"),
     ("minimax/minimax-m2.7", "MiniMax M2.7 (paid)"),
-    ("moonshotai/kimi-k2.5", "Kimi K2.5 (paid)"),
+    ("moonshotai/kimi-k2.6", "Kimi K2.5 (paid)"),
     ("minimax/minimax-m2.5:free", "MiniMax M2.5 (free)"),
     ("z-ai/glm-4.5-air:free", "GLM-4.5-air (free)"),
 ]

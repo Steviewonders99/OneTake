@@ -245,7 +245,7 @@ C. SHAPE OVERLAY: Solid shape on photo corner. Text inside shape.
         providers.append(("NIM-GLM5", f"{NVIDIA_NIM_BASE_URL}/chat/completions", nim_key, NVIDIA_NIM_DESIGN_MODEL))
         # Get a DIFFERENT key for fallback
         fallback_key = get_nim_key() or nim_key
-        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", fallback_key, "moonshotai/kimi-k2.5"))
+        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", fallback_key, "moonshotai/kimi-k2.6"))
 
     import asyncio
     content = ""

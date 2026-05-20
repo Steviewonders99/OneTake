@@ -738,7 +738,7 @@ async def _call_kimi(query: str, output_keys: list[str]) -> dict[str, Any]:
         try:
             async with httpx.AsyncClient(timeout=180) as client:
                 payload = {
-                    "model": "moonshotai/kimi-k2.5",
+                    "model": "moonshotai/kimi-k2.6",
                     "messages": messages,
                     "temperature": 0.3,
                     "stream": False,

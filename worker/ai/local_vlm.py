@@ -81,7 +81,7 @@ async def analyze_image(
                     "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
                 }, json={
-                    "model": "moonshotai/kimi-k2.5",
+                    "model": "moonshotai/kimi-k2.6",
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": 0.2,
@@ -147,7 +147,7 @@ async def analyze_image_url(
                     "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
                 }, json={
-                    "model": "moonshotai/kimi-k2.5",
+                    "model": "moonshotai/kimi-k2.6",
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": 0.2,

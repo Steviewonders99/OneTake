@@ -161,7 +161,7 @@ async def generate_copy(
     providers = []
     if NVIDIA_NIM_API_KEY:
         providers.append(("NIM-Gemma27B", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_CREATIVE_MODEL))
-        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.5"))
+        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.6"))
 
     for provider_name, url, key, model in providers:
         try:
