@@ -399,6 +399,18 @@ async def get_locales(request: web.Request):
     return web.json_response(rows)
 
 
+async def get_country_performance(request: web.Request):
+    """Per-country funnel performance: views, apply clicks, applications."""
+    pid = request.match_info["id"]
+    rows = await query(
+        "SELECT country, page_views, apply_clicks, applications "
+        "FROM project_country_performance WHERE project_id = $1::UUID "
+        "ORDER BY page_views DESC",
+        pid,
+    )
+    return web.json_response(rows)
+
+
 async def refresh_view(request: web.Request):
     try:
         await execute("REFRESH MATERIALIZED VIEW project_weekly_summary")
@@ -436,6 +448,7 @@ def create_app() -> web.Application:
     app.router.add_get("/projects/{id}/ga4-funnel", get_ga4_funnel)
     app.router.add_get("/projects/{id}/locales", get_locales)
     app.router.add_get("/projects/{id}/channels", get_channels)
+    app.router.add_get("/projects/{id}/countries", get_country_performance)
     app.router.add_post("/pages/normalize", normalize_pages)
     app.router.add_post("/projects/sync", trigger_sync)
     app.router.add_post("/refresh", refresh_view)
