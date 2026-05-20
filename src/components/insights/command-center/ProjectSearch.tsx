@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Search } from 'lucide-react';
 import type { Project } from '@/lib/types/projects';
 import { BRAND } from './types';
 
@@ -36,13 +37,14 @@ export function ProjectSearch({ projects, selectedId, onSelect, showAllOption = 
 
   return (
     <div ref={ref} className="relative min-w-[280px]">
+      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: BRAND.text3 }} />
       <input
         type="text"
-        placeholder={selected ? (selected.display_name?.split('—')[0]?.trim() || selected.codename) : '🔍 Search projects...'}
+        placeholder={selected ? (selected.display_name?.split('—')[0]?.trim() || selected.codename) : 'Search projects...'}
         value={query}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className="w-full px-3.5 py-2.5 border rounded-[10px] text-[13px] font-medium bg-white appearance-none"
+        className="w-full pl-8 pr-3.5 py-2.5 border rounded-[10px] text-[13px] font-medium bg-white appearance-none"
         style={{
           color: BRAND.text, borderColor: BRAND.border,
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
