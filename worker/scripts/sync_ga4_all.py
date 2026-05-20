@@ -90,10 +90,8 @@ def build_campaign_resolver(projects: list[dict]) -> callable:
 async def run_ga4_report(client, dimensions: list[str], metrics: list[str],
                          dim_filter=None, order_by=None, limit=500) -> list[dict]:
     """Run a GA4 Data API report."""
-    from google.analytics.data_v1beta import BetaAnalyticsDataClient
     from google.analytics.data_v1beta.types import (
         RunReportRequest, DateRange, Dimension, Metric,
-        FilterExpression, Filter, OrderBy,
     )
 
     dims = [Dimension(name=d) for d in dimensions]
@@ -131,9 +129,10 @@ async def main():
     try:
         from google.analytics.data_v1beta import BetaAnalyticsDataClient
         from google.analytics.data_v1beta.types import (
-            FilterExpression, Filter, FilterExpressionList,
-            StringFilter, InListFilter, OrderBy,
+            FilterExpression, Filter, FilterExpressionList, OrderBy,
         )
+        StringFilter = Filter.StringFilter
+        InListFilter = Filter.InListFilter
         client = BetaAnalyticsDataClient()
         logger.info("GA4 client initialized")
     except Exception as e:
@@ -154,14 +153,14 @@ async def main():
         not_expression=FilterExpression(
             filter=Filter(
                 field_name="firstUserCampaignName",
-                in_list_filter=InListFilter(values=["(organic)", "(direct)", "(referral)", "(not set)"])
+                in_list_filter=Filter.InListFilter(values=["(organic)", "(direct)", "(referral)", "(not set)"])
             )
         )
     )
     event_filter = FilterExpression(
         filter=Filter(
             field_name="eventName",
-            in_list_filter=InListFilter(values=["page_view", "apply_click", "sign_up", "purchase"])
+            in_list_filter=Filter.InListFilter(values=["page_view", "apply_click", "sign_up", "purchase"])
         )
     )
     combined = FilterExpression(
@@ -198,14 +197,14 @@ async def main():
     social_filter = FilterExpression(
         filter=Filter(
             field_name="firstUserSource",
-            in_list_filter=InListFilter(values=["social", "job_board"])
+            in_list_filter=Filter.InListFilter(values=["social", "job_board"])
         )
     )
     utm_not_set = FilterExpression(
         not_expression=FilterExpression(
             filter=Filter(
                 field_name="firstUserManualAdContent",
-                string_filter=StringFilter(match_type=StringFilter.MatchType.EXACT, value="(not set)")
+                string_filter=Filter.StringFilter(match_type=Filter.StringFilter.MatchType.EXACT, value="(not set)")
             )
         )
     )
@@ -259,7 +258,7 @@ async def main():
     page_filter = FilterExpression(
         filter=Filter(
             field_name="pagePath",
-            string_filter=StringFilter(match_type=StringFilter.MatchType.BEGINS_WITH, value="/jobs/")
+            string_filter=Filter.StringFilter(match_type=Filter.StringFilter.MatchType.BEGINS_WITH, value="/jobs/")
         )
     )
     page_rows = await run_ga4_report(
