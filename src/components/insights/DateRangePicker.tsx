@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { CalendarDays, ArrowLeftRight } from 'lucide-react';
 import { BRAND } from './command-center/types';
 import type { DateRangePreset, DateRangeValue } from './command-center/types';
 
@@ -106,7 +107,7 @@ export function DateRangePicker({ value, onChange, showCompare = true }: Props) 
             className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
               !value.preset ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
             }`}>
-            {!value.preset ? formatLabel(value.start, value.end) : '📅'}
+            {!value.preset ? formatLabel(value.start, value.end) : <CalendarDays size={14} />}
           </button>
         </div>
 
@@ -118,7 +119,7 @@ export function DateRangePicker({ value, onChange, showCompare = true }: Props) 
                 ? 'bg-[#F5F3FF] text-[#7C3AED] border-[#7C3AED]/20'
                 : 'bg-transparent text-[#9CA3AF] border-transparent hover:text-[#4B5563]'
             }`}>
-            {comparing ? '⟷ Comparing' : 'Compare'}
+            <ArrowLeftRight size={12} className="inline mr-1" />{comparing ? 'Comparing' : 'Compare'}
           </button>
         )}
       </div>

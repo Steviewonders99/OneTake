@@ -49,10 +49,10 @@ export function HeroMetrics(props: HeroMetricsProps) {
     },
     {
       gradient: BRAND.gradWarm,
-      eyebrow: 'Organic Share of Applications',
+      eyebrow: 'Non-Paid Acquisition Share',
       number: `${Math.round(props.organicShare)}%`,
-      delta: `${props.organicCount} of ${props.totalCount} at zero ad spend`,
-      benchmark: `vs ${Math.round(props.organicShare30dAgo)}% organic 30 days ago`,
+      delta: `${props.organicCount.toLocaleString()} of ${props.totalCount.toLocaleString()} at zero ad spend`,
+      benchmark: `vs ${Math.round(props.organicShare30dAgo)}% non-paid 30 days ago`,
     },
   ];
 
