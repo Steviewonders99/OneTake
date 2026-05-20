@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Project, ProjectWeeklySummary } from '@/lib/types/projects';
-import type { ProjectWithFunnel, ChartWeek, DateRange, DateRangeValue } from './types';
+import type { ProjectWithFunnel, ChartWeek, DateRangeValue } from './types';
 import { TOP_CHANNELS } from './types';
 import { computeAction } from './utils';
 import { CommandCenterHeader } from './CommandCenterHeader';
@@ -21,11 +21,9 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const [projects, setProjects] = useState<ProjectWithFunnel[]>(initialProjects as ProjectWithFunnel[]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange>(7);
   const [dateRangeV2, setDateRangeV2] = useState<DateRangeValue>(defaultDateRange(30));
   const [loading, setLoading] = useState(true);
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
-  const [ga4Organic, setGa4Organic] = useState<{ paid: number; organic: number }>({ paid: 0, organic: 0 });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -57,34 +55,6 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
       setProjects(enriched);
 
-      // Compute organic share from weekly summary data (no extra API calls needed)
-      // Organic = projects with organic clicks, Paid = projects with paid spend
-      let totalPaid = 0, totalOrganic = 0;
-      for (const proj of enriched) {
-        for (const w of (proj.weekly ?? [])) {
-          totalPaid += (w as any).paid_clicks ?? 0;
-          totalOrganic += (w as any).organic_clicks ?? 0;
-        }
-      }
-      // If weekly doesn't have the breakdown, fetch GA4 for a sample of top projects
-      if (totalPaid === 0 && totalOrganic === 0) {
-        const topProjects = enriched
-          .filter(p => (p.weekly ?? []).length > 0)
-          .sort((a, b) => ((b.weekly?.[0] as any)?.total_conversions ?? 0) - ((a.weekly?.[0] as any)?.total_conversions ?? 0))
-          .slice(0, 10);
-        for (const proj of topProjects) {
-          const ga4 = await fetch(`/api/projects/${proj.id}/ga4-funnel`).then(r => r.ok ? r.json() : null).catch(() => null);
-          if (ga4?.by_source) {
-            for (const src of ga4.by_source) {
-              const entries = src.wp_entry ?? 0;
-              if (src.medium === 'paid') totalPaid += entries;
-              else totalOrganic += entries;
-            }
-          }
-        }
-      }
-      setGa4Organic({ paid: totalPaid, organic: totalOrganic });
-
       const unRes = await fetch('/api/projects/unclassified').catch(() => null);
       if (unRes?.ok) {
         const unData = await unRes.json();
@@ -99,28 +69,40 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Aggregate metrics — current week for hero, all weeks for portfolio totals
-  const currentWeeks = projects.map(p => p.weekly?.[0]).filter(Boolean) as ProjectWeeklySummary[];
-  const previousWeeks = projects.map(p => p.weekly?.[1]).filter(Boolean) as ProjectWeeklySummary[];
-  const allWeeklyData = projects.flatMap(p => p.weekly ?? []) as ProjectWeeklySummary[];
+  // ── Filter ALL weekly data by selected date range ──────────────
+  const rangeWeekly = (projects.flatMap(p => p.weekly ?? []) as ProjectWeeklySummary[])
+    .filter(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end);
 
-  const totalConversions = currentWeeks.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
+  // Current = most recent week in range, Previous = second most recent
+  const weekStarts = [...new Set(rangeWeekly.map(w => w.week_start))].sort().reverse();
+  const currentWeekStart = weekStarts[0] ?? null;
+  const previousWeekStart = weekStarts[1] ?? null;
+  const currentWeeks = currentWeekStart ? rangeWeekly.filter(w => w.week_start === currentWeekStart) : [];
+  const previousWeeks = previousWeekStart ? rangeWeekly.filter(w => w.week_start === previousWeekStart) : [];
+
+  // All metrics derived from rangeWeekly (respects date picker)
+  const totalConversions = rangeWeekly.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
   const previousConversions = previousWeeks.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
-  // Use all-time spend for portfolio CPA (current week may have 0 paid data)
-  const allTimeSpend = allWeeklyData.reduce((s, w) => s + (w.total_spend ?? 0), 0);
-  const allTimeConversions = allWeeklyData.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
-  const totalSpend = allTimeSpend;
-  // Use GA4 source data for organic share (weekly summary organic_clicks may be 0 if organic cache tables are empty)
-  const ga4Total = ga4Organic.paid + ga4Organic.organic;
-  const organicShare = ga4Total > 0 ? (ga4Organic.organic / ga4Total) * 100 : 0;
-  const blendedCpa = allTimeConversions > 0 ? allTimeSpend / allTimeConversions : null;
-  const prevCpa = previousConversions > 0
-    ? previousWeeks.reduce((s, w) => s + (w.total_spend ?? 0), 0) / previousConversions
-    : null;
+  const currentConversions = currentWeeks.reduce((s, w) => s + (w.total_conversions ?? 0), 0);
+  const totalSpend = rangeWeekly.reduce((s, w) => s + (w.total_spend ?? 0), 0);
+  const totalClicks = rangeWeekly.reduce((s, w) => s + (w.total_clicks ?? 0), 0);
+  const blendedCpa = totalConversions > 0 ? totalSpend / totalConversions : null;
+  const prevWeekSpend = previousWeeks.reduce((s, w) => s + (w.total_spend ?? 0), 0);
+  const prevCpa = previousConversions > 0 ? prevWeekSpend / previousConversions : null;
 
-  // Count projects with any weekly data as "tracked"
-  const projectsWithData = projects.filter(p => (p.weekly ?? []).length > 0);
-  const countrySet = new Set(projects.flatMap(p => p.countries ?? []));
+  // Organic share from weekly paid_clicks vs organic_clicks (in range)
+  const rangePaidClicks = rangeWeekly.reduce((s, w) => s + ((w as any).paid_clicks ?? 0), 0);
+  const rangeOrganicClicks = rangeWeekly.reduce((s, w) => s + ((w as any).organic_clicks ?? 0), 0);
+  const organicTotal = rangePaidClicks + rangeOrganicClicks;
+  const organicShare = organicTotal > 0 ? (rangeOrganicClicks / organicTotal) * 100 : 0;
+
+  // Tracked projects = those with data in range
+  const projectsWithData = projects.filter(p =>
+    (p.weekly ?? []).some(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end)
+  );
+
+  // Countries from projects
+  const allCountries = [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))];
 
   // Build chart data from real weekly summaries — attribute conversions to project's actual channels
   const allWeeks = projects
@@ -195,32 +177,30 @@ export function CommandCenterClient({ initialProjects }: Props) {
         projects={projects}
         selectedProject={selectedProject}
         selectedCountry={selectedCountry}
-        dateRange={dateRange}
         onProjectChange={setSelectedProject}
         onCountryChange={setSelectedCountry}
-        onDateRangeChange={setDateRange}
         dateRangeV2={dateRangeV2}
         onDateRangeV2Change={setDateRangeV2}
       />
 
       <HeroMetrics
-        totalConversions={totalConversions}
+        totalConversions={currentConversions}
         previousConversions={previousConversions}
-        avg30dConversions={Math.round(totalConversions * 0.8)}
+        avg30dConversions={Math.round(totalConversions / Math.max(weekStarts.length, 1))}
         blendedCpa={blendedCpa}
         previousCpa={prevCpa}
         roas={blendedCpa && blendedCpa > 0 ? 38.5 / blendedCpa : null}
         breakevenCpa={38.5}
         organicShare={organicShare}
-        organicCount={ga4Organic.organic}
-        totalCount={ga4Total}
+        organicCount={rangeOrganicClicks}
+        totalCount={organicTotal}
         organicShare30dAgo={Math.max(organicShare - 5, 0)}
       />
 
       <SecondaryStrip
-        projectCount={projectsWithData.length || projects.filter(p => (p.channels ?? []).length > 0).length}
+        projectCount={projectsWithData.length}
         channelCount={allChannels.length || 2}
-        countryCount={countrySet.size || projectsWithData.reduce((s, p) => s + (p.countries?.length ?? 0), 0)}
+        countryCount={allCountries.length}
         totalSpend={totalSpend}
         unclassifiedCount={unclassifiedCount}
       />

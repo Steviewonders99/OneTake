@@ -1,7 +1,7 @@
 'use client';
 
 import type { Project } from '@/lib/types/projects';
-import type { DateRange, DateRangeValue } from './types';
+import type { DateRangeValue } from './types';
 import { BRAND } from './types';
 import { ProjectSearch } from './ProjectSearch';
 import { DateRangePicker } from '../DateRangePicker';
@@ -10,12 +10,10 @@ interface HeaderProps {
   projects: Project[];
   selectedProject: string | null;
   selectedCountry: string | null;
-  dateRange: DateRange;
   onProjectChange: (id: string | null) => void;
   onCountryChange: (country: string | null) => void;
-  onDateRangeChange: (range: DateRange) => void;
-  dateRangeV2?: DateRangeValue;
-  onDateRangeV2Change?: (value: DateRangeValue) => void;
+  dateRangeV2: DateRangeValue;
+  onDateRangeV2Change: (value: DateRangeValue) => void;
 }
 
 // Extract real country names from locale strings like "English (Australia)" → "Australia"
@@ -55,7 +53,7 @@ function extractCountries(locales: string[]): string[] {
 }
 
 export function CommandCenterHeader(props: HeaderProps) {
-  const { projects, selectedProject, selectedCountry, dateRange } = props;
+  const { projects, selectedProject, selectedCountry } = props;
   const allLocales = Array.from(new Set(projects.flatMap(p => p.countries ?? [])));
   const allCountries = extractCountries(allLocales);
   const selected = selectedProject ? projects.find(p => p.id === selectedProject) : null;
@@ -83,18 +81,7 @@ export function CommandCenterHeader(props: HeaderProps) {
         </div>
 
         {/* Date range picker */}
-        {props.dateRangeV2 && props.onDateRangeV2Change ? (
-          <DateRangePicker value={props.dateRangeV2} onChange={props.onDateRangeV2Change} />
-        ) : (
-          <div className="flex gap-0.5 bg-[#F6F7FB] rounded-lg p-[3px]">
-            {([7, 14, 30, 90] as DateRange[]).map(d => (
-              <button key={d} onClick={() => props.onDateRangeChange(d)}
-                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  dateRange === d ? 'bg-[#111827] text-white' : 'text-[#9CA3AF] hover:text-[#4B5563]'
-                }`}>{d}d</button>
-            ))}
-          </div>
-        )}
+        <DateRangePicker value={props.dateRangeV2} onChange={props.onDateRangeV2Change} />
       </div>
 
       {/* Filter row */}
