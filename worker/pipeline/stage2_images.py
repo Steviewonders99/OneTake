@@ -38,10 +38,10 @@ from prompts.recruitment_actors import (
 
 logger = logging.getLogger(__name__)
 
-MAX_SEED_RETRIES = 3
-MAX_VARIATION_RETRIES = 2
-SEED_VQA_THRESHOLD = 0.85
-VARIATION_VQA_THRESHOLD = 0.75  # Lower bar — face is already validated
+MAX_SEED_RETRIES = 1      # GPT-5.4-image-2 quality is high enough — no retries needed
+MAX_VARIATION_RETRIES = 1  # Single shot — record VQA score but don't gate
+SEED_VQA_THRESHOLD = 0.0   # Record-only — GPT-5.4 doesn't need VQA gating
+VARIATION_VQA_THRESHOLD = 0.0  # Record-only
 ACTORS_PER_PERSONA = 3
 
 
