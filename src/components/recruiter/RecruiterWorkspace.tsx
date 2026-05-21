@@ -173,7 +173,7 @@ export default function RecruiterWorkspace({
       </div>
 
       {/* Tab content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px", overflowX: "hidden" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px" }}>
         {activeTab === "creatives" && (
           <>
             <StatsRow approvedCount={approvedAssets.length} channelCount={channelCount} summary={summary} />

@@ -27,7 +27,7 @@ const COUNTRY_FLAG: Record<string, string> = {
 };
 
 export default function ChannelStrategy({ assets }: ChannelStrategyProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const countryBoards = useMemo(() => {
     const map = new Map<string, Set<string>>();
