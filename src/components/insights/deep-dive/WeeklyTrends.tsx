@@ -64,13 +64,19 @@ export function WeeklyTrends({ weeks }: WeeklyTrendsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('spend_cpa');
 
   const chartData = useMemo(() => {
-    return weeks.map((w, i) => {
-      const shortLabel = w.week_start.slice(-5); // "05-11"
-      const isLast = i === weeks.length - 1;
+    // Sort oldest → newest (ASC) for left-to-right timeline
+    const sorted = [...weeks].sort((a, b) => a.week_start.localeCompare(b.week_start));
+    const today = new Date();
+    return sorted.map((w, i) => {
+      const d = new Date(w.week_start + 'T00:00:00');
+      const weekEnd = new Date(d.getTime() + 6 * 86400000);
+      const isCurrentWeek = weekEnd >= today && d <= today;
+      const label = isCurrentWeek ? 'This Week'
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return {
-        week: isLast ? 'This Week' : shortLabel,
-        spend: w.total_spend,
-        cpa: w.blended_cpa,
+        week: label,
+        spend: Math.round(w.total_spend),
+        cpa: w.blended_cpa ? Math.round(w.blended_cpa * 100) / 100 : null,
         conversions: w.total_conversions,
         paid: w.paid_conversions,
         organic: w.organic_clicks,
