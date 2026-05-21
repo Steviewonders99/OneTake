@@ -1,5 +1,11 @@
 'use client';
 
+import { type ReactNode } from 'react';
+import { FaFacebook, FaLinkedin, FaReddit, FaTiktok, FaYoutube, FaHandshake, FaFlipboard } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+import { SiGoogleads, SiBrevo, SiIndeed, SiNextdoor } from 'react-icons/si';
+import { Search } from 'lucide-react';
+import { RiRobot2Fill, RiMailLine, RiGlobalLine, RiMegaphoneLine, RiUserSearchLine } from 'react-icons/ri';
 import { BRAND } from '../command-center/types';
 
 interface SourceRow {
@@ -20,21 +26,36 @@ const MEDIUM_COLOR: Record<string, string> = {
   cpc: BRAND.blue, paid: BRAND.blue, paidsocial: BRAND.blue,
   social: BRAND.purple, organic: BRAND.purple,
   job_board: BRAND.amber, email: BRAND.pink, referral: BRAND.rose,
-  flyer: '#A855F7', '(none)': '#6B7280',
+  flyer: '#A855F7', '(none)': '#6B7280', unattributed: '#9CA3AF',
 };
 
-// Clean display name for source
-function displaySource(source: string): string {
-  const map: Record<string, string> = {
-    'facebook': 'Facebook', 'google': 'Google', '(direct)': 'Direct',
-    'social': 'Social', 'bing': 'Bing', 'paid_media': 'Paid Media',
-    'chatgpt.com': 'ChatGPT', 'brevo': 'Brevo Email',
-    'oneforma.com': 'OneForma', 'Flyers': 'Flyers', 'job_board': 'Job Board',
-    't.co': 'Twitter/X', 'linkedin.com': 'LinkedIn', 'LinkedIn': 'LinkedIn',
-    'Handshake': 'Handshake', 'youtube.com': 'YouTube',
-    'gemini.google.com': 'Gemini', 'reddit.com': 'Reddit',
-  };
-  return map[source] ?? source;
+interface ChannelMeta { label: string; icon: ReactNode; color: string }
+
+function getChannelMeta(source: string): ChannelMeta {
+  const s = source.toLowerCase();
+  if (s === 'facebook' || s === 'fb') return { label: 'Facebook', icon: <FaFacebook size={14} />, color: '#1877F2' };
+  if (s.includes('linkedin')) return { label: s.includes('inmail') ? 'LinkedIn InMail' : s.includes('post') ? 'LinkedIn Post' : 'LinkedIn', icon: <FaLinkedin size={14} />, color: '#0A66C2' };
+  if (s === 'google' || s === 'google_organic') return { label: 'Google', icon: <SiGoogleads size={13} />, color: '#4285F4' };
+  if (s === 'bing') return { label: 'Bing', icon: <Search size={13} />, color: '#008373' };
+  if (s.includes('reddit')) return { label: 'Reddit', icon: <FaReddit size={14} />, color: '#FF4500' };
+  if (s.includes('tiktok')) return { label: 'TikTok', icon: <FaTiktok size={13} />, color: '#000000' };
+  if (s.includes('youtube')) return { label: 'YouTube', icon: <FaYoutube size={14} />, color: '#FF0000' };
+  if (s.includes('twitter') || s === 't.co') return { label: 'X / Twitter', icon: <FaXTwitter size={13} />, color: '#000000' };
+  if (s.includes('chatgpt')) return { label: 'ChatGPT', icon: <RiRobot2Fill size={14} />, color: '#10A37F' };
+  if (s.includes('gemini')) return { label: 'Gemini', icon: <RiRobot2Fill size={14} />, color: '#8E75B2' };
+  if (s === 'brevo' || s === 'brevo email' || s === 'sendinblue') return { label: 'Brevo Email', icon: <SiBrevo size={13} />, color: '#0B996E' };
+  if (s === 'email') return { label: 'Email', icon: <RiMailLine size={14} />, color: BRAND.pink };
+  if (s === 'handshake') return { label: 'Handshake', icon: <FaHandshake size={14} />, color: '#FF7A59' };
+  if (s === 'indeed') return { label: 'Indeed', icon: <SiIndeed size={13} />, color: '#2164F3' };
+  if (s === 'career_builder') return { label: 'CareerBuilder', icon: <RiUserSearchLine size={14} />, color: '#6A0DAD' };
+  if (s === 'nextdoor') return { label: 'Nextdoor', icon: <SiNextdoor size={13} />, color: '#8ED500' };
+  if (s === 'paid_media') return { label: 'Paid Media', icon: <RiMegaphoneLine size={14} />, color: BRAND.blue };
+  if (s === 'flyers') return { label: 'Flyers', icon: <FaFlipboard size={13} />, color: '#E12828' };
+  if (s === '(direct)') return { label: 'Direct', icon: <RiGlobalLine size={14} />, color: '#6B7280' };
+  if (s === '(other)') return { label: 'Other / Direct', icon: <RiGlobalLine size={14} />, color: '#9CA3AF' };
+  if (s === 'internal' || s === 'oneforma.com' || s === 'on-site') return { label: 'Internal', icon: <RiGlobalLine size={14} />, color: '#6B7280' };
+  if (s === '(not set)') return { label: '(not set)', icon: <RiGlobalLine size={14} />, color: '#D1D5DB' };
+  return { label: source, icon: <RiGlobalLine size={14} />, color: BRAND.purple };
 }
 
 function barColor(medium: string): string {
@@ -52,16 +73,12 @@ export function ChannelAcquisition({ sources, dateLabel }: ChannelAcquisitionPro
   return (
     <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)', fontFamily: "'Roboto', system-ui, sans-serif" }}>
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="flex items-center justify-center font-bold text-white text-[10px]"
-             style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.blue }}>1</div>
-        <div>
-          <div className="text-sm font-bold leading-tight" style={{ color: BRAND.text }}>
-            How People Found This Project
-          </div>
-          <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
-            GA4 first-touch attribution · Unique users{dateLabel ? ` · ${dateLabel}` : ''}
-          </div>
+      <div className="mb-5">
+        <div className="text-sm font-bold leading-tight" style={{ color: BRAND.text }}>
+          How People Found This Project
+        </div>
+        <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
+          GA4 first-touch attribution · Unique users{dateLabel ? ` · ${dateLabel}` : ''}
         </div>
       </div>
 
