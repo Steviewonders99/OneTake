@@ -1,10 +1,150 @@
 "use client";
 
 import { useState } from "react";
-import { DollarSign, X } from "lucide-react";
+import { DollarSign, X, UserPlus, Users, Search } from "lucide-react";
 import CountryQuotaTable from "./CountryQuotaTable";
 import type { CountryQuota } from "@/lib/types";
 import type { LocaleLink } from "./LocaleLinksUpload";
+
+interface RecruiterEntry {
+  name: string;
+  email: string;
+  role: "lead" | "recruiter";
+  regions: string[];
+}
+
+// Demo recruiter directory — will be replaced by Azure AD lookup
+const RECRUITER_DIRECTORY: RecruiterEntry[] = [
+  { name: "Steven Junop", email: "steven.junop@centific.com", role: "lead", regions: [] },
+  { name: "Jennifer Martinez", email: "jennifer.martinez@centific.com", role: "recruiter", regions: [] },
+  { name: "Priya Patel", email: "priya.patel@centific.com", role: "recruiter", regions: ["India", "Singapore"] },
+  { name: "James Wilson", email: "james.wilson@centific.com", role: "recruiter", regions: ["United Kingdom", "Ireland"] },
+  { name: "Sarah Chen", email: "sarah.chen@centific.com", role: "recruiter", regions: ["Australia", "New Zealand", "Singapore"] },
+  { name: "David Okafor", email: "david.okafor@centific.com", role: "recruiter", regions: ["South Africa"] },
+  { name: "Maria Silva", email: "maria.silva@centific.com", role: "recruiter", regions: ["Brazil", "Mexico"] },
+  { name: "Tom Anderson", email: "tom.anderson@centific.com", role: "lead", regions: [] },
+];
+
+function RecruiterAssignment({ value, onChange }: { value: RecruiterEntry[]; onChange: (v: RecruiterEntry[]) => void }) {
+  const [search, setSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const assignedEmails = new Set(value.map(r => r.email));
+  const filtered = RECRUITER_DIRECTORY.filter(r =>
+    !assignedEmails.has(r.email) &&
+    (r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const addRecruiter = (r: RecruiterEntry) => {
+    onChange([...value, r]);
+    setSearch("");
+    setShowDropdown(false);
+  };
+
+  const removeRecruiter = (email: string) => {
+    onChange(value.filter(r => r.email !== email));
+  };
+
+  const toggleRole = (email: string) => {
+    onChange(value.map(r => r.email === email ? { ...r, role: r.role === "lead" ? "recruiter" : "lead" } : r));
+  };
+
+  return (
+    <div>
+      {/* Assigned list */}
+      {value.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+          {value.map((r) => (
+            <div key={r.email} style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+              borderRadius: 10, border: "1px solid #E8E8EA", background: "#FFFFFF",
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 9999, background: r.role === "lead" ? "#EEF2FF" : "#F3F4F6",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: 700, color: r.role === "lead" ? "#6D28D9" : "#6B7280",
+              }}>
+                {r.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A" }}>{r.name}</div>
+                <div style={{ fontSize: 11, color: "#8A8A8E" }}>{r.email}</div>
+              </div>
+              <button type="button" onClick={() => toggleRole(r.email)}
+                style={{
+                  padding: "3px 10px", borderRadius: 9999, fontSize: 10, fontWeight: 600,
+                  border: "1px solid", cursor: "pointer", fontFamily: "inherit",
+                  borderColor: r.role === "lead" ? "#6D28D9" : "#E5E5E5",
+                  background: r.role === "lead" ? "#EEF2FF" : "#FFFFFF",
+                  color: r.role === "lead" ? "#6D28D9" : "#8A8A8E",
+                }}>
+                {r.role === "lead" ? "Lead" : "Recruiter"}
+              </button>
+              {r.regions.length > 0 && (
+                <div style={{ display: "flex", gap: 3 }}>
+                  {r.regions.slice(0, 2).map(reg => (
+                    <span key={reg} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 9999, background: "#F3F4F6", color: "#6B7280" }}>
+                      {reg}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <button type="button" onClick={() => removeRecruiter(r.email)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#D1D5DB", padding: 2 }}>
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search + add */}
+      <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, border: "1px solid #E5E5E5", background: "#FFFFFF" }}>
+          <Search size={14} style={{ color: "#8A8A8E" }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setShowDropdown(true); }}
+            onFocus={() => setShowDropdown(true)}
+            placeholder="Search by name or email..."
+            style={{ flex: 1, border: "none", outline: "none", fontSize: 13, fontFamily: "inherit", background: "transparent" }}
+          />
+          <span style={{ fontSize: 10, color: "#B0B0B0" }}>Azure AD</span>
+        </div>
+        {showDropdown && search.length > 0 && filtered.length > 0 && (
+          <div style={{
+            position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
+            background: "#FFFFFF", borderRadius: 10, border: "1px solid #E5E5E5",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)", zIndex: 10, maxHeight: 200, overflowY: "auto",
+          }}>
+            {filtered.map((r) => (
+              <button key={r.email} type="button" onClick={() => addRecruiter(r)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, width: "100%",
+                  padding: "8px 12px", border: "none", background: "none",
+                  cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#F7F7F8"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>
+                <UserPlus size={14} style={{ color: "#6D28D9" }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A" }}>{r.name}</div>
+                  <div style={{ fontSize: 11, color: "#8A8A8E" }}>{r.email}</div>
+                </div>
+                {r.regions.length > 0 && (
+                  <span style={{ marginLeft: "auto", fontSize: 10, color: "#8A8A8E" }}>
+                    {r.regions.join(", ")}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface StepDetailsProps {
   formData: Record<string, unknown>;
@@ -417,6 +557,20 @@ export default function StepDetails({ formData, onChange, confidenceFlags, local
             />
           </div>
         </div>
+      </div>
+
+      {/* Assign Recruiters */}
+      <div style={{ borderTop: "1px solid #E5E5E5", marginTop: 36, paddingTop: 32 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1A1A1A", marginBottom: 4 }}>
+          Assign Recruiters
+        </h3>
+        <p style={{ fontSize: 12, color: "#8A8A8E", marginBottom: 16 }}>
+          Select team members who will receive access to this project's deliverables. When Azure AD is connected, this will auto-populate from your org directory.
+        </p>
+        <RecruiterAssignment
+          value={(formData.assigned_recruiters as RecruiterEntry[] | undefined) ?? []}
+          onChange={(recruiters) => set("assigned_recruiters", recruiters, formData, onChange)}
+        />
       </div>
 
       {/* Country Quotas & Demographics */}
