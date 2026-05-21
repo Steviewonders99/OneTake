@@ -212,6 +212,117 @@ Return structured JSON with the requested keys. Include a "sources" array with
 Be specific to the region and demographic. Generic global answers are useless."""
 ```
 
+## Phase 2: Organic Channel Recommendations for Recruiters
+
+### Problem
+
+The cultural research already collects rich channel data (`platform_reality`, `demographic_channel_map`, `professional_community`) but this data is buried in the brief JSON. Recruiters never see a clear "post here, in this order, with this copy" recommendation.
+
+Meanwhile Stage 3 Organic hardcodes job portals to Indeed, LinkedIn Jobs, and Glassdoor — missing locale-specific boards (Seek in AU, Naukri in India, JobStreet in SG, etc.) that the cultural research already identified.
+
+### Solution
+
+Add a **Channel Recommendation Engine** that:
+
+1. **Extracts channel intelligence** from cultural research (`platform_reality`, `demographic_channel_map`, `professional_community`)
+2. **Researches locale-specific job boards** via web search (e.g., "best job boards Singapore 2026", "remote work platforms India")
+3. **Generates a prioritized channel plan** per locale — ranked by relevance to the project
+4. **Produces recruiter-facing recommendations** saved as a new asset type
+
+### Channel Plan Output (per locale)
+
+```json
+{
+  "locale": "Singapore",
+  "recommended_channels": [
+    {
+      "rank": 1,
+      "channel": "LinkedIn",
+      "type": "social",
+      "why": "85% of Singapore professionals active, strong for contract work",
+      "action": "Post as sponsored job + organic company page post",
+      "copy_asset_id": "uuid-of-linkedin-copy"
+    },
+    {
+      "rank": 2,
+      "channel": "JobStreet",
+      "type": "job_board",
+      "why": "Dominant job board in SG/MY, 2M monthly users",
+      "action": "Post as contract/freelance listing",
+      "copy_asset_id": "uuid-of-jobstreet-copy"
+    },
+    {
+      "rank": 3,
+      "channel": "Reddit r/singapore",
+      "type": "community",
+      "why": "Active 900K members, remote work posts get engagement",
+      "action": "Organic post in weekly jobs thread",
+      "copy_asset_id": null
+    }
+  ],
+  "avoid": [
+    {"channel": "TikTok", "reason": "Low professional trust for job recruitment in SG"}
+  ],
+  "posting_sequence": "LinkedIn first (Mon AM), JobStreet same day, Reddit mid-week",
+  "sources": [...]
+}
+```
+
+### New Asset Type
+
+- `channel_recommendation` — one per locale, contains the prioritized channel plan
+- Saved to `generated_assets` with `asset_type: "channel_recommendation"`, `platform: "all"`, `format: "json"`
+
+### Stage 3 Organic Updates
+
+**Dynamic job portal list** — replace hardcoded `JOB_PORTALS = ["indeed", "linkedin_jobs", "glassdoor"]` with locale-specific portals from the channel recommendation:
+
+```python
+# Current (hardcoded):
+JOB_PORTALS = ["indeed", "linkedin_jobs", "glassdoor"]
+
+# New (dynamic from channel recommendations):
+async def _get_locale_portals(request_id: str, locale: str) -> list[str]:
+    """Get recommended job portals for this locale from channel recommendations."""
+    recommendations = await get_assets(request_id, asset_type="channel_recommendation")
+    for rec in recommendations:
+        content = rec.get("content", {})
+        if content.get("locale") == locale:
+            return [ch["channel"] for ch in content.get("recommended_channels", [])
+                    if ch.get("type") == "job_board"]
+    return ["indeed", "linkedin_jobs", "glassdoor"]  # fallback
+```
+
+### Recruiter View Integration
+
+The recruiter workspace shows a new **"Channel Strategy"** section per locale:
+- Ranked list of recommended channels with reasons
+- Link to the generated copy for each channel
+- Posting sequence recommendation
+- Channels to avoid with reasons
+
+This replaces the current generic "Assets & Creatives" tab with actionable intelligence.
+
+### Implementation Sequence
+
+1. Add `channel_research` dimension to cultural research (web-grounded)
+2. Build channel recommendation generator (runs after cultural research in Stage 1)
+3. Save as `channel_recommendation` assets in Neon
+4. Update Stage 3 Organic to read locale-specific portals from recommendations
+5. Update recruiter view to display channel strategy section
+
+### Files Changed
+
+| Action | File | Change |
+|--------|------|--------|
+| Modify | `worker/prompts/cultural_research.py` | Add `channel_research` dimension with web search queries |
+| Create | `worker/pipeline/channel_recommender.py` | Synthesize cultural research → prioritized channel plan |
+| Modify | `worker/pipeline/stage1_intelligence.py` | Call channel recommender after cultural research |
+| Modify | `worker/pipeline/stage3_organic_copy.py` | Dynamic job portal list from channel recommendations |
+| Modify | `src/components/recruiter/RecruiterWorkspace.tsx` | Display channel strategy section |
+
+---
+
 ## Success Criteria
 
 1. Cultural research returns `sources` array with real URLs
@@ -219,18 +330,18 @@ Be specific to the region and demographic. Generic global answers are useless.""
 3. Platform usage data reflects 2026 reality, not 2024 training data
 4. Total research time for 7 locales < 5 minutes (parallel + web search)
 5. No increase in parse errors (JSON output format unchanged except `sources` addition)
+6. Channel recommendations include locale-specific job boards (not just Indeed/LinkedIn/Glassdoor)
+7. Recruiter sees a clear "post here, in this order" action plan per locale
+8. Stage 3 generates copy for locale-specific portals, not just the hardcoded 3
 
 ## Implementation Estimate
 
-**Option A (Kimi web search tool):** ~30 min
-- Add `tools` to payload: 2 lines
-- Update system prompt: 1 block
-- Add `sources` to output_keys: 12 additions
-- Test with one locale
+**Phase 1 — Web Search (already shipped):** Done
+- Added `tools: [{type: "web_search"}]` to Kimi payload
+- Updated system prompt for web grounding
 
-**Option B (dedicated search API):** ~2 hours
-- Build search query generator per dimension
-- Wire up search API client
-- Build snippet injection into prompts
-- Add caching layer
-- Test with one locale
+**Phase 2 — Channel Recommendations:** ~2-3 hours
+- Channel research dimension: 30 min
+- Channel recommender module: 1 hour
+- Stage 3 dynamic portals: 30 min
+- Recruiter view update: 30 min
