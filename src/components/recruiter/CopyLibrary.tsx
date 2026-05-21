@@ -28,16 +28,15 @@ const PLATFORM_LABELS: Record<string, string> = {
   twitter: "Twitter/X",
 };
 
-function CopyCard({ asset }: { asset: GeneratedAsset }) {
+function CopyCard({ asset, onOpen }: { asset: GeneratedAsset; onOpen: () => void }) {
   const [copied, setCopied] = useState<string | null>(null);
   const content = (asset.content ?? {}) as Record<string, unknown>;
 
   const headline = String(content.headline ?? content.overlay_headline ?? "");
   const subheadline = String(content.full_description ?? content.body_text ?? content.subheadline ?? "");
   const cta = String(content.cta_text ?? content.cta ?? "");
-  const actorName = String(content.actor_name ?? "");
-  const pillar = String(content.pillar ?? "");
   const lang = asset.language ?? "";
+  const country = String(content.country ?? (asset as Record<string, unknown>).country ?? "");
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -45,16 +44,27 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
     setTimeout(() => setCopied(null), 1500);
   };
 
+  // Truncate body for card preview
+  const previewBody = subheadline.length > 150 ? subheadline.slice(0, 150) + "..." : subheadline;
+
   return (
-    <div style={{
-      background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA",
-      padding: 16, display: "flex", flexDirection: "column", gap: 10,
-    }}>
+    <div
+      onClick={onOpen}
+      style={{
+        background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA",
+        padding: 16, display: "flex", flexDirection: "column", gap: 10,
+        cursor: "pointer", transition: "all 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#6D28D9"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(109,40,217,0.06)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E8E8EA"; e.currentTarget.style.boxShadow = "none"; }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <Globe size={11} style={{ color: "#8A8A8E" }} />
           <span style={{ fontSize: 11, color: "#8A8A8E" }}>{lang}</span>
+          {country && <span style={{ fontSize: 10, color: "#B0B0B0", marginLeft: 4 }}>{country}</span>}
         </div>
+        <span style={{ fontSize: 10, color: "#6D28D9", fontWeight: 600 }}>Click to expand</span>
       </div>
 
       {headline && (
@@ -89,7 +99,7 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
               display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8,
             }}
           >
-            <span>{subheadline}</span>
+            <span>{previewBody}</span>
             {copied === "body" ? <Check size={13} color="#059669" style={{ flexShrink: 0, marginTop: 2 }} /> : <Copy size={13} color="#8A8A8E" style={{ flexShrink: 0, marginTop: 2 }} />}
           </div>
         </div>
@@ -121,6 +131,7 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
 export default function CopyLibrary({ assets }: CopyLibraryProps) {
   const [activeCountry, setActiveCountry] = useState<string>("all");
   const [activeType, setActiveType] = useState<"social" | "portal">("social");
+  const [editAsset, setEditAsset] = useState<GeneratedAsset | null>(null);
 
   const allCopy = useMemo(
     () => assets.filter((a) =>
@@ -257,8 +268,168 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
       {/* Copy cards */}
       <div style={{ padding: 16, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
         {filtered.map((asset) => (
-          <CopyCard key={asset.id} asset={asset} />
+          <CopyCard key={asset.id} asset={asset} onOpen={() => setEditAsset(asset)} />
         ))}
+      </div>
+
+      {/* Edit Modal */}
+      {editAsset && <CopyEditModal asset={editAsset} onClose={() => setEditAsset(null)} />}
+    </div>
+  );
+}
+
+/* ─── Full Copy Edit Modal ─── */
+
+function CopyEditModal({ asset, onClose }: { asset: GeneratedAsset; onClose: () => void }) {
+  const content = (asset.content ?? {}) as Record<string, unknown>;
+  const [title, setTitle] = useState(String(content.headline ?? content.overlay_headline ?? ""));
+  const [body, setBody] = useState(String(content.full_description ?? content.body_text ?? content.subheadline ?? ""));
+  const [cta, setCta] = useState(String(content.cta_text ?? content.cta ?? ""));
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const platform = String(content.portal_name ?? content.actor_name ?? asset.platform ?? "");
+  const country = String(content.country ?? (asset as Record<string, unknown>).country ?? "");
+  const lang = asset.language ?? "";
+
+  const handleCopyAll = () => {
+    const full = `${title}\n\n${body}\n\nCTA: ${cta}`;
+    navigator.clipboard.writeText(full);
+    setCopied("all");
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = {
+        ...content,
+        headline: title,
+        overlay_headline: title,
+        full_description: body,
+        body_text: body,
+        subheadline: body.slice(0, 200),
+        cta_text: cta,
+        cta: cta,
+      };
+      await fetch(`/api/assets/${asset.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: updated }),
+      });
+      onClose();
+    } catch {
+      // silent
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}
+      onClick={onClose}>
+      <div style={{ background: "#FFFFFF", borderRadius: 16, maxWidth: 720, width: "100%", margin: 16, maxHeight: "90vh", overflow: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}
+        onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #E8E8EA", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1A1A1A", margin: 0 }}>{platform}</h2>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              {country && <span style={{ fontSize: 11, color: "#8A8A8E" }}>{country}</span>}
+              {lang && <span style={{ fontSize: 11, color: "#B0B0B0" }}>{lang}</span>}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={handleCopyAll}
+              style={{
+                padding: "6px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                border: "1px solid #E5E5E5", background: "#FFFFFF", cursor: "pointer", fontFamily: "inherit",
+                color: copied === "all" ? "#059669" : "#6B7280", display: "flex", alignItems: "center", gap: 4,
+              }}>
+              {copied === "all" ? <Check size={12} /> : <Copy size={12} />}
+              {copied === "all" ? "Copied!" : "Copy All"}
+            </button>
+            <button type="button" onClick={onClose}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#8A8A8E", padding: 4 }}>
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Title */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: "#8A8A8E", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "block" }}>
+              Job Title / Headline
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 10,
+                border: "1px solid #E5E5E5", fontSize: 15, fontWeight: 600,
+                fontFamily: "inherit", outline: "none",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#6D28D9"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; }}
+            />
+          </div>
+
+          {/* Body */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: "#8A8A8E", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "block" }}>
+              Full Description
+            </label>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              style={{
+                width: "100%", minHeight: 320, padding: "12px 14px", borderRadius: 10,
+                border: "1px solid #E5E5E5", fontSize: 13, lineHeight: 1.7,
+                fontFamily: "inherit", resize: "vertical", outline: "none",
+                whiteSpace: "pre-wrap",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#6D28D9"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; }}
+            />
+            <div style={{ fontSize: 11, color: "#B0B0B0", marginTop: 4, textAlign: "right" }}>
+              {body.length} characters
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: "#8A8A8E", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "block" }}>
+              Call to Action
+            </label>
+            <input
+              type="text"
+              value={cta}
+              onChange={(e) => setCta(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 10,
+                border: "1px solid #E5E5E5", fontSize: 14, fontWeight: 600,
+                fontFamily: "inherit", outline: "none",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#6D28D9"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "16px 24px", borderTop: "1px solid #E8E8EA", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button type="button" onClick={onClose}
+            style={{ padding: "8px 20px", borderRadius: 9999, border: "1px solid #E5E5E5", background: "#FFFFFF", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#6B7280" }}>
+            Cancel
+          </button>
+          <button type="button" onClick={handleSave} disabled={saving}
+            style={{ padding: "8px 20px", borderRadius: 9999, background: "#32373C", color: "#FFFFFF", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
       </div>
     </div>
   );
