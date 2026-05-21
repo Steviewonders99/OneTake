@@ -79,6 +79,7 @@ export default function MessagingAccordion({ brief }: MessagingAccordionProps) {
         borderRadius: 12,
         overflow: "hidden",
         marginBottom: 16,
+        background: "#FFFFFF",
       }}
     >
       {/* Trigger button */}
