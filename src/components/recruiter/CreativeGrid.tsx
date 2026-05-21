@@ -95,9 +95,10 @@ export default function CreativeGrid({ assets, selectedAssetId, onSelect }: Crea
         const personaName = getPersonaName(asset);
 
         return (
-          <button
+          <div
             key={asset.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect(asset)}
             onMouseEnter={() => setHoveredId(asset.id)}
             onMouseLeave={() => setHoveredId(null)}
@@ -278,7 +279,7 @@ export default function CreativeGrid({ assets, selectedAssetId, onSelect }: Crea
                 )}
               </div>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>
