@@ -669,6 +669,24 @@ export default function IntakeDetailPage({
               </LiveSection>
             )}
 
+            {/* ═══ Recruiter Workspace — creatives, copy, UTM links (organic campaigns) ═══ */}
+            {isOrganic && (role === "admin" || role === "designer" || role === null) && (
+              <LiveSection
+                id="section-recruiter-workspace"
+                title="Recruiter Workspace"
+                subtitle={`${assets.filter(a => a.asset_type === 'base_image').length} images · ${assets.filter(a => a.asset_type === 'copy').length} copy variants`}
+                accentColor="#6D28D9"
+                visible
+              >
+                <RecruiterWorkspace
+                  request={request}
+                  brief={brief}
+                  assets={assets}
+                  pipelineRuns={pipelineRuns}
+                />
+              </LiveSection>
+            )}
+
             {/* ═══ Organic Materials — job posts, social, flyers ═══ */}
             {(role === "admin" || role === "designer" || role === null) && (
               <LiveSection
