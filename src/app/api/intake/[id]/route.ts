@@ -9,7 +9,13 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const ctx = await getAuthContext();
+  // Demo bypass — remove after presentation
+  const url = new URL(_request.url);
+  const isDemo = url.searchParams.get('demo') === 'true';
+
+  const ctx = isDemo
+    ? { userId: 'demo', role: 'admin' as const, email: 'demo@oneforma.com' }
+    : await getAuthContext();
 
   if (!ctx) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });

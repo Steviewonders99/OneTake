@@ -113,10 +113,13 @@ export default function IntakeDetailPage({
       setLoading(true);
       setError(null);
 
-      // Dev-only: ?role=recruiter override for UI testing
+      // Dev-only: ?role=recruiter or ?demo=true override for UI testing
       const params = new URLSearchParams(window.location.search);
+      const isDemo = params.get("demo") === "true";
       const roleOverride = params.get("role") as UserRole | null;
-      if (roleOverride) { setRole(roleOverride); } else {
+      if (isDemo) {
+        setRole("admin");
+      } else if (roleOverride) { setRole(roleOverride); } else {
         try {
           const meRes = await fetch("/api/auth/me");
           if (meRes.ok) {
@@ -130,7 +133,9 @@ export default function IntakeDetailPage({
       }
 
       // Fetch request details
-      const reqRes = await fetch(`/api/intake/${id}`);
+      const demoQ = isDemo ? "?demo=true" : "";
+      const demoAmp = isDemo ? "&demo=true" : "";
+      const reqRes = await fetch(`/api/intake/${id}${demoQ}`);
       if (!reqRes.ok) throw new Error("Request not found");
       const request = await reqRes.json();
 

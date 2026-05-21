@@ -48,7 +48,7 @@ export default function RecruiterWorkspace({
     () =>
       assets.filter(
         (a) =>
-          (a.asset_type === "composed_creative" || a.asset_type === "base_creative") &&
+          (a.asset_type === "composed_creative" || a.asset_type === "base_creative" || a.asset_type === "base_image") &&
           a.evaluation_passed === true &&
           a.blob_url
       ),

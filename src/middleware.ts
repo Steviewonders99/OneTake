@@ -12,6 +12,10 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Demo bypass — skip auth when ?demo=true (remove after presentation)
+  const url = new URL(request.url);
+  if (url.searchParams.get("demo") === "true") return;
+
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
