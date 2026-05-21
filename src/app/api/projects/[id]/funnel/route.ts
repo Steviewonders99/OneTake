@@ -11,7 +11,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Use proxy when available (Azure PG via Container App)
   if (isProxyEnabled()) {
-    const data = await proxyGetFunnel(id, view);
+    const extra = req.nextUrl.searchParams.toString().replace(/view=[^&]*&?/, '').replace(/&$/, '');
+    const data = await proxyGetFunnel(id, view, extra);
     return NextResponse.json(data);
   }
 

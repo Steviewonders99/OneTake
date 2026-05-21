@@ -48,8 +48,8 @@ export async function proxyGetProject(id: string) {
   return proxyFetch(`/projects/${id}`);
 }
 
-export async function proxyGetFunnel(id: string, view = 'weekly') {
-  return proxyFetch(`/projects/${id}/funnel?view=${view}`);
+export async function proxyGetFunnel(id: string, view = 'weekly', extraParams = '') {
+  return proxyFetch(`/projects/${id}/funnel?view=${view}${extraParams ? '&' + extraParams : ''}`);
 }
 
 export async function proxyGetChannels(id: string) {
