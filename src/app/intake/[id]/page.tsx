@@ -518,16 +518,13 @@ export default function IntakeDetailPage({
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
-                <StatusBadge status={request.status} />
-                <UrgencyBadge urgency={request.urgency} />
-                <PipelineModeBadge mode={pipelineMode === 'full' ? 'full' : 'organic'} />
                 {isOrganic && role === "admin" && (
                   <div style={{ display: "flex", background: "#F3F4F6", borderRadius: 9999, padding: 2 }}>
                     <button
                       type="button"
                       onClick={() => setViewMode("marketing")}
                       style={{
-                        padding: "4px 12px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                        padding: "5px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
                         background: viewMode === "marketing" ? "#32373C" : "transparent",
                         color: viewMode === "marketing" ? "#fff" : "#6B7280",
                         border: "none", cursor: "pointer", fontFamily: "inherit",
@@ -539,7 +536,7 @@ export default function IntakeDetailPage({
                       type="button"
                       onClick={() => setViewMode("recruiter")}
                       style={{
-                        padding: "4px 12px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                        padding: "5px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
                         background: viewMode === "recruiter" ? "#32373C" : "transparent",
                         color: viewMode === "recruiter" ? "#fff" : "#6B7280",
                         border: "none", cursor: "pointer", fontFamily: "inherit",
@@ -548,28 +545,6 @@ export default function IntakeDetailPage({
                       Recruiter
                     </button>
                   </div>
-                )}
-                {canEdit && (
-                  <EditMode
-                    requestId={request.id}
-                    campaignTitle={request.title}
-                    allAssetIds={allAssetIds}
-                    onEditComplete={() => window.location.reload()}
-                  />
-                )}
-                {canUpgradeToPaid && (
-                  <button
-                    onClick={handleRequestPaid}
-                    disabled={actionLoading === "paid"}
-                    className="btn-primary flex items-center gap-2 cursor-pointer"
-                  >
-                    {actionLoading === "paid" ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <TrendingUp size={16} />
-                    )}
-                    Request Paid Media
-                  </button>
                 )}
               </div>
             </div>

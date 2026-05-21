@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Download, ExternalLink, FileText, Image, LayoutDashboard, Megaphone } from "lucide-react";
+import { ArrowLeft, BarChart3, Download, ExternalLink, FileText, Image, LayoutDashboard, Megaphone, TrendingUp } from "lucide-react";
 import { getRecruiterStatus } from "@/lib/format";
 import CreativeLibrary from "./CreativeLibrary";
 import LinkBuilderBar from "./LinkBuilderBar";
@@ -154,11 +154,31 @@ export default function RecruiterWorkspace({
 
       {/* Tab bar — sticky */}
       <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E8E8EA", position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", display: "flex", gap: 0 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", gap: 0 }}>
           <TabButton active={activeTab === "creatives"} onClick={() => setActiveTab("creatives")} icon={<Image size={14} />} label="Assets & Creatives" />
           <TabButton active={activeTab === "organic"} onClick={() => setActiveTab("organic")} icon={<Megaphone size={14} />} label="Organic" />
           <TabButton active={activeTab === "dashboard"} onClick={() => setActiveTab("dashboard")} icon={<LayoutDashboard size={14} />} label="Dashboard" />
           <TabButton active={activeTab === "analytics"} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={14} />} label="My Analytics" />
+          {request.pipeline_mode === "organic" && (request.status === "review" || request.status === "approved") && (
+            <div style={{ marginLeft: "auto", padding: "8px 0" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  fetch(`/api/intake/${request.id}/request-paid`, { method: "POST" });
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 16px", borderRadius: 9999,
+                  background: "linear-gradient(135deg, #0693E3, #9B51E0)",
+                  color: "#FFFFFF", fontSize: 12, fontWeight: 600,
+                  border: "none", cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                <TrendingUp size={13} />
+                Request Paid Campaign
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
