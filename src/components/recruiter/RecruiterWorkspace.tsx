@@ -152,7 +152,7 @@ export default function RecruiterWorkspace({
       <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E8E8EA", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", gap: 0 }}>
           <TabButton active={activeTab === "creatives"} onClick={() => setActiveTab("creatives")} icon={<Image size={14} />} label="Assets & Creatives" />
-          <TabButton active={activeTab === "organic"} onClick={() => setActiveTab("organic")} icon={<Megaphone size={14} />} label="Organic" />
+          {/* Organic tab hidden — not needed for recruiter view */}
           <TabButton active={activeTab === "dashboard"} onClick={() => setActiveTab("dashboard")} icon={<LayoutDashboard size={14} />} label="Dashboard" />
           <TabButton active={activeTab === "analytics"} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={14} />} label="My Analytics" />
           {request.pipeline_mode === "organic" && (request.status === "review" || request.status === "approved") && (
