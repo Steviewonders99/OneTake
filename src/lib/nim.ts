@@ -7,7 +7,6 @@
  */
 
 const NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const NIM_MODEL_PRIMARY = "moonshotai/kimi-k2.5";
 const NIM_MODEL_FALLBACK = "google/gemma-4-31b-it";
 
 export async function callNIM(
@@ -17,51 +16,44 @@ export async function callNIM(
   const nimKey = process.env.NVIDIA_NIM_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-  // Try NIM Kimi K2.5 first (fastest for extraction)
-  if (nimKey) {
+  // OpenRouter primary — reliable, no 429 risk
+  if (openrouterKey) {
     try {
-      const result = await nimCall(nimKey, NIM_MODEL_PRIMARY, systemPrompt, userPrompt);
-      if (result) return result;
-    } catch (err) {
-      console.warn("[NIM] Kimi K2.5 failed, trying Gemma 4 fallback:", (err as Error).message?.slice(0, 100));
-    }
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openrouterKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "moonshotai/kimi-k2.6",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.3,
+        }),
+        signal: AbortSignal.timeout(60_000),
+      });
 
-    // Fallback: NIM Gemma 4 31B
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content ?? "";
+        if (content.length > 10) return content;
+      }
+    } catch (err) {
+      console.warn("[callNIM] OpenRouter failed, trying NIM:", (err as Error).message?.slice(0, 100));
+    }
+  }
+
+  // Fallback: NIM Gemma 4
+  if (nimKey) {
     try {
       const result = await nimCall(nimKey, NIM_MODEL_FALLBACK, systemPrompt, userPrompt);
       if (result) return result;
     } catch (err) {
-      console.warn("[NIM] Gemma 4 fallback failed:", (err as Error).message?.slice(0, 100));
+      console.warn("[callNIM] NIM Gemma 4 failed:", (err as Error).message?.slice(0, 100));
     }
-  }
-
-  // Last resort: OpenRouter
-  if (openrouterKey) {
-    console.info("[NIM] Falling back to OpenRouter Kimi K2.5");
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openrouterKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "moonshotai/kimi-k2.5",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.3,
-      }),
-      signal: AbortSignal.timeout(30_000),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter error: ${response.status} ${error.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content ?? "";
   }
 
   throw new Error("No LLM API keys configured (NVIDIA_NIM_API_KEY or OPENROUTER_API_KEY)");

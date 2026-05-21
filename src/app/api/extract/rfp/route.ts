@@ -179,18 +179,18 @@ async function extractTextFromFile(file: File, systemPrompt: string): Promise<{ 
 }
 
 async function callLLMForExtraction(systemPrompt: string, userPrompt: string): Promise<string> {
-  // Try NIM K2.5 first (free), fallback to OpenRouter
-  const nimKey = process.env.NVIDIA_NIM_API_KEY;
-  if (nimKey) {
+  // OpenRouter primary — reliable, no 429 risk for demo
+  const orKey = process.env.OPENROUTER_API_KEY;
+  if (orKey) {
     try {
-      const resp = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${nimKey}`,
+          'Authorization': `Bearer ${orKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'moonshotai/kimi-k2.5',
+          model: 'moonshotai/kimi-k2.6',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
@@ -203,12 +203,12 @@ async function callLLMForExtraction(systemPrompt: string, userPrompt: string): P
         const data = await resp.json();
         const content = data.choices?.[0]?.message?.content ?? '';
         if (content.length > 10) {
-          console.log('[extract/rfp] Used NIM K2.5 for extraction');
+          console.log('[extract/rfp] Used OpenRouter Kimi K2.6 for extraction');
           return content;
         }
       }
     } catch (e) {
-      console.warn('[extract/rfp] NIM K2.5 failed, falling back to OpenRouter:', e);
+      console.warn('[extract/rfp] OpenRouter failed, falling back to NIM:', e);
     }
   }
 
