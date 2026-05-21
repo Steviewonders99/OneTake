@@ -157,11 +157,10 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    # Model cascade: OpenRouter primary (NIM is unreliable this morning)
-    # TODO: restore NIM-first when free tier stabilizes
+    # Model cascade: OpenRouter Kimi (reliable) → NIM Kimi (free, flaky)
     providers = []
     if OPENROUTER_API_KEY:
-        providers.append(("OpenRouter-Gemma", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY, NVIDIA_NIM_CREATIVE_MODEL, 180))
+        providers.append(("OpenRouter-Kimi", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY, "moonshotai/kimi-k2.6", 180))
     if NVIDIA_NIM_API_KEY:
         providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.6", 60))
 
@@ -189,7 +188,7 @@ async def generate_copy(
             return result
 
         except Exception as e:
-            logger.warning("generate_copy via %s failed: %s", provider_name, e)
+            logger.warning("generate_copy via %s failed: %r", provider_name, e)
             continue
 
     raise RuntimeError("All LLM providers failed for generate_copy")
