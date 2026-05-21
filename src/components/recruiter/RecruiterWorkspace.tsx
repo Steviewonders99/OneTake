@@ -139,7 +139,7 @@ export default function RecruiterWorkspace({
   }
 
   return (
-    <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", background: "#F7F7F8" }}>
+    <div style={{ flex: 1, background: "#F7F7F8", maxWidth: "100%" }}>
 
       {/* Tab bar — sticky */}
       <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E8E8EA", position: "sticky", top: 0, zIndex: 50 }}>
@@ -222,7 +222,7 @@ export default function RecruiterWorkspace({
                 </div>
               </div>
               {/* Right column — sticky link builder */}
-              <div style={{ position: "sticky", top: 56, alignSelf: "start", maxHeight: "calc(100vh - 72px)", overflowY: "auto", minWidth: 0, overflow: "hidden" }}>
+              <div style={{ position: "sticky", top: 56, alignSelf: "start", maxHeight: "calc(100vh - 72px)", overflowY: "auto", minWidth: 0 }}>
                 <LinkBuilderBar
                   requestId={request.id}
                   campaignSlug={request.campaign_slug}
