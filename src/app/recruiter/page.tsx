@@ -108,7 +108,7 @@ export default function RecruiterDashboard() {
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
           {[
-            { label: "Active Campaigns", value: activeCampaigns.length, icon: <FolderOpen size={18} />, color: "#6D28D9" },
+            { label: "Active Projects", value: activeCampaigns.length, icon: <FolderOpen size={18} />, color: "#6D28D9" },
             { label: "Total Creatives", value: totalImages, icon: <Image size={18} />, color: "#0693E3" },
             { label: "Copy Variants", value: totalCopy, icon: <FileText size={18} />, color: "#059669" },
             { label: "Target Regions", value: totalRegions, icon: <Globe size={18} />, color: "#EA580C" },
@@ -136,7 +136,7 @@ export default function RecruiterDashboard() {
           <div style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1A1A1A", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircle2 size={16} style={{ color: "#059669" }} />
-              Active Campaigns
+              Active Projects
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
               {activeCampaigns.map((c) => (
