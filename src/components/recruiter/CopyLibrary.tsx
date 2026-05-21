@@ -8,6 +8,11 @@ interface CopyLibraryProps {
   assets: GeneratedAsset[];
 }
 
+const LOCALE_REVERSE: Record<string, string> = {
+  "United Kingdom": "en-GB", "Australia": "en-AU", "India": "en-IN",
+  "New Zealand": "en-NZ", "South Africa": "en-ZA", "Ireland": "en-IE", "Singapore": "en-SG",
+};
+
 const PLATFORM_LABELS: Record<string, string> = {
   linkedin: "LinkedIn",
   linkedin_feed: "LinkedIn",
@@ -127,28 +132,60 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
 }
 
 export default function CopyLibrary({ assets }: CopyLibraryProps) {
-  const copyAssets = useMemo(
-    () => assets.filter((a) => a.asset_type === "copy" && a.evaluation_passed === true),
+  const [activeCountry, setActiveCountry] = useState<string>("all");
+  const [activeType, setActiveType] = useState<"social" | "portal">("social");
+
+  const allCopy = useMemo(
+    () => assets.filter((a) =>
+      (a.asset_type === "copy" || a.asset_type === "job_portal_copy") &&
+      a.evaluation_passed === true
+    ),
     [assets],
   );
 
+  const socialCopy = useMemo(() => allCopy.filter(a => a.asset_type === "copy"), [allCopy]);
+  const portalCopy = useMemo(() => allCopy.filter(a => a.asset_type === "job_portal_copy"), [allCopy]);
+
+  const activeCopy = activeType === "social" ? socialCopy : portalCopy;
+
+  // Get unique countries from portal copy
+  const countries = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of portalCopy) {
+      const content = (a.content ?? {}) as Record<string, unknown>;
+      const country = String(content.country ?? a.country ?? "");
+      if (country) set.add(country);
+    }
+    return Array.from(set).sort();
+  }, [portalCopy]);
+
+  // Filter by country
+  const countryFiltered = useMemo(() => {
+    if (activeCountry === "all") return activeCopy;
+    return activeCopy.filter(a => {
+      const content = (a.content ?? {}) as Record<string, unknown>;
+      return String(content.country ?? a.country ?? "") === activeCountry ||
+        a.language === LOCALE_REVERSE[activeCountry];
+    });
+  }, [activeCopy, activeCountry]);
+
   const platforms = useMemo(() => {
     const map = new Map<string, GeneratedAsset[]>();
-    for (const a of copyAssets) {
+    for (const a of countryFiltered) {
       const key = a.platform ?? "other";
       const list = map.get(key) ?? [];
       list.push(a);
       map.set(key, list);
     }
     return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [copyAssets]);
+  }, [countryFiltered]);
 
   const [activePlatform, setActivePlatform] = useState<string | null>(null);
 
   // Auto-select first platform
   const selected = activePlatform ?? platforms[0]?.[0] ?? null;
 
-  if (copyAssets.length === 0) return null;
+  if (allCopy.length === 0) return null;
 
   const filtered = platforms.find(([k]) => k === selected)?.[1] ?? [];
 
@@ -157,8 +194,42 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
       background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA",
       overflow: "hidden",
     }}>
+      {/* Type toggle + country filter */}
+      <div style={{ padding: "12px 18px", borderBottom: "1px solid #E8E8EA", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        {/* Social / Portal toggle */}
+        <div style={{ display: "flex", background: "#F3F4F6", borderRadius: 9999, padding: 2 }}>
+          <button type="button" onClick={() => { setActiveType("social"); setActivePlatform(null); }}
+            style={{ padding: "4px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 600,
+              background: activeType === "social" ? "#32373C" : "transparent",
+              color: activeType === "social" ? "#fff" : "#6B7280",
+              border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+            Social ({socialCopy.length})
+          </button>
+          <button type="button" onClick={() => { setActiveType("portal"); setActivePlatform(null); }}
+            style={{ padding: "4px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 600,
+              background: activeType === "portal" ? "#32373C" : "transparent",
+              color: activeType === "portal" ? "#fff" : "#6B7280",
+              border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+            Job Portals ({portalCopy.length})
+          </button>
+        </div>
+        {/* Country filter */}
+        {activeType === "portal" && countries.length > 0 && (
+          <select
+            value={activeCountry}
+            onChange={(e) => { setActiveCountry(e.target.value); setActivePlatform(null); }}
+            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 8, border: "1px solid #E5E5E5",
+              background: "#FFFFFF", color: "#1A1A1A", cursor: "pointer", fontFamily: "inherit" }}>
+            <option value="all">All Countries ({portalCopy.length})</option>
+            {countries.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
       <div style={{
-        padding: "14px 18px", borderBottom: "1px solid #E8E8EA",
+        padding: "10px 18px 0", borderBottom: "1px solid #E8E8EA",
         display: "flex", alignItems: "center", gap: 8,
       }}>
         <MessageSquare size={14} style={{ color: "#6D28D9" }} />
