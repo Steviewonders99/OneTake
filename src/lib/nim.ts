@@ -26,7 +26,7 @@ export async function callNIM(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "moonshotai/kimi-k2.6",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
