@@ -504,6 +504,27 @@ async def get_country_performance(request: web.Request):
     return web.json_response(rows)
 
 
+async def get_portfolio_countries(request: web.Request):
+    """Aggregate country performance across all projects — for Command Center country slicer."""
+    rows = await query(
+        "SELECT country, count(DISTINCT project_id) as projects, "
+        "SUM(page_views) as page_views, SUM(apply_clicks) as apply_clicks, "
+        "SUM(applications) as applications "
+        "FROM project_country_performance "
+        "GROUP BY country ORDER BY SUM(page_views) DESC",
+    )
+    # Also return which project_ids are in each country for filtering
+    mapping = await query(
+        "SELECT country, array_agg(DISTINCT project_id::TEXT) as project_ids "
+        "FROM project_country_performance "
+        "GROUP BY country",
+    )
+    country_projects = {r["country"]: r["project_ids"] for r in mapping}
+    for r in rows:
+        r["project_ids"] = country_projects.get(r["country"], [])
+    return web.json_response(rows)
+
+
 async def refresh_view(request: web.Request):
     try:
         await execute("REFRESH MATERIALIZED VIEW project_weekly_summary")
@@ -542,6 +563,7 @@ def create_app() -> web.Application:
     app.router.add_get("/projects/{id}/locales", get_locales)
     app.router.add_get("/projects/{id}/channels", get_channels)
     app.router.add_get("/projects/{id}/countries", get_country_performance)
+    app.router.add_get("/countries", get_portfolio_countries)
     app.router.add_get("/projects/{id}/paid", get_paid_summary)
     app.router.add_post("/pages/normalize", normalize_pages)
     app.router.add_post("/projects/sync", trigger_sync)

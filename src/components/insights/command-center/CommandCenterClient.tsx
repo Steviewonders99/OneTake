@@ -25,6 +25,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const [loading, setLoading] = useState(true);
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
   const [dailyRows, setDailyRows] = useState<any[]>([]);
+  const [countryData, setCountryData] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -68,10 +69,16 @@ export function CommandCenterClient({ initialProjects }: Props) {
       }
       setDailyRows(daily);
 
-      const unRes = await fetch('/api/projects/unclassified').catch(() => null);
+      const [unRes, countriesRes] = await Promise.all([
+        fetch('/api/projects/unclassified').catch(() => null),
+        fetch('/api/countries').catch(() => null),
+      ]);
       if (unRes?.ok) {
         const unData = await unRes.json();
         setUnclassifiedCount(unData.items?.length ?? 0);
+      }
+      if (countriesRes?.ok) {
+        setCountryData(await countriesRes.json());
       }
     } catch (e) {
       console.error('Failed to load command center data', e);
@@ -82,9 +89,12 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── Filter by country (if selected), then by date range ──────────
-  const countryFiltered = selectedCountry
-    ? projects.filter(p => (p.countries ?? []).includes(selectedCountry))
+  // ── Filter by country using GA4 real traffic data ──────────────
+  const countryProjectIds = selectedCountry
+    ? new Set((countryData.find((c: any) => c.country === selectedCountry)?.project_ids ?? []) as string[])
+    : null;
+  const countryFiltered = countryProjectIds
+    ? projects.filter(p => countryProjectIds.has(p.id))
     : projects;
   const rangeWeekly = (countryFiltered.flatMap(p => p.weekly ?? []) as ProjectWeeklySummary[])
     .filter(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end);
@@ -117,8 +127,10 @@ export function CommandCenterClient({ initialProjects }: Props) {
     (p.weekly ?? []).some(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end)
   );
 
-  // Countries — from ALL projects (not filtered, so dropdown always shows all options)
-  const allCountries = [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))].sort();
+  // Countries from GA4 real traffic data (not WP locales)
+  const allCountries = countryData.length > 0
+    ? countryData.map((c: any) => c.country).sort()
+    : [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))].sort();
 
   // Build chart data from real weekly summaries — attribute conversions to project's actual channels
   const allWeeks = countryFiltered
