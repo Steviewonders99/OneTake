@@ -33,7 +33,7 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
   const content = (asset.content ?? {}) as Record<string, unknown>;
 
   const headline = String(content.headline ?? content.overlay_headline ?? "");
-  const subheadline = String(content.subheadline ?? content.body_text ?? "");
+  const subheadline = String(content.full_description ?? content.body_text ?? content.subheadline ?? "");
   const cta = String(content.cta_text ?? content.cta ?? "");
   const actorName = String(content.actor_name ?? "");
   const pillar = String(content.pillar ?? "");
