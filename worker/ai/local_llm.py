@@ -157,10 +157,10 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    # Model cascade: NIM (free) → OpenRouter (paid fallback)
+    # Model cascade: Kimi NIM (free) → OpenRouter (paid fallback)
+    # NOTE: Gemma NIM skipped — consistently timing out (May 2026)
     providers = []
     if NVIDIA_NIM_API_KEY:
-        providers.append(("NIM-Gemma27B", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_CREATIVE_MODEL, 60))
         providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.6", 60))
     if OPENROUTER_API_KEY:
         providers.append(("OpenRouter-Gemma", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY, NVIDIA_NIM_CREATIVE_MODEL, 180))
