@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Copy, Check, Globe, MessageSquare } from "lucide-react";
+import { Copy, Check, Globe, MessageSquare, X } from "lucide-react";
 import type { GeneratedAsset } from "@/lib/types";
 
 interface CopyLibraryProps {
