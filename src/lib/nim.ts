@@ -32,8 +32,9 @@ export async function callNIM(
             { role: "user", content: userPrompt },
           ],
           temperature: 0.3,
+          max_tokens: 15000,
         }),
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(120_000),
       });
 
       if (response.ok) {
