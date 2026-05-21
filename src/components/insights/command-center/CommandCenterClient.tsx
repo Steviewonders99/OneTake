@@ -82,8 +82,11 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── Filter ALL weekly data by selected date range ──────────────
-  const rangeWeekly = (projects.flatMap(p => p.weekly ?? []) as ProjectWeeklySummary[])
+  // ── Filter by country (if selected), then by date range ──────────
+  const countryFiltered = selectedCountry
+    ? projects.filter(p => (p.countries ?? []).includes(selectedCountry))
+    : projects;
+  const rangeWeekly = (countryFiltered.flatMap(p => p.weekly ?? []) as ProjectWeeklySummary[])
     .filter(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end);
 
   // Current = most recent week in range, Previous = second most recent
@@ -109,16 +112,16 @@ export function CommandCenterClient({ initialProjects }: Props) {
   const organicTotal = rangePaidClicks + rangeOrganicClicks;
   const organicShare = organicTotal > 0 ? (rangeOrganicClicks / organicTotal) * 100 : 0;
 
-  // Tracked projects = those with data in range
-  const projectsWithData = projects.filter(p =>
+  // Tracked projects = those with data in range (from country-filtered set)
+  const projectsWithData = countryFiltered.filter(p =>
     (p.weekly ?? []).some(w => w.week_start >= dateRangeV2.start && w.week_start <= dateRangeV2.end)
   );
 
-  // Countries — already extracted as real country names by the WP sync script
+  // Countries — from ALL projects (not filtered, so dropdown always shows all options)
   const allCountries = [...new Set(projects.flatMap(p => p.countries ?? []).filter(Boolean))].sort();
 
   // Build chart data from real weekly summaries — attribute conversions to project's actual channels
-  const allWeeks = projects
+  const allWeeks = countryFiltered
     .flatMap(p => (p.weekly ?? []).map(w => ({ ...w, projectChannels: p.channels ?? [] })))
     .reduce((acc, w) => {
       const key = w.week_start;
@@ -140,7 +143,7 @@ export function CommandCenterClient({ initialProjects }: Props) {
 
   // Collect all channel slugs from both project links and chart data
   const allChannelSlugs = new Set(
-    projects.flatMap(p => (p.channels ?? []).map(c => c.channel_slug).filter(Boolean) as string[])
+    countryFiltered.flatMap(p => (p.channels ?? []).map(c => c.channel_slug).filter(Boolean) as string[])
   );
   for (const channels of Object.values(allWeeks)) {
     for (const slug of Object.keys(channels)) allChannelSlugs.add(slug);
