@@ -1,48 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 
-export async function GET(req: NextRequest) {
-  const user = await requireAuth();
-  const sql = getDb();
-  const rawRecruiterId = req.nextUrl.searchParams.get('recruiterId');
-  const recruiterId = rawRecruiterId === 'self' ? user.userId : rawRecruiterId;
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const recruiterId = url.searchParams.get('recruiterId');
 
-  const creativePerf = recruiterId
-    ? await sql`
-        SELECT
-          ga.id as asset_id,
-          ga.asset_type,
-          ga.platform,
-          ga.blob_url,
-          ga.evaluation_score,
-          ga.evaluation_passed,
-          COALESCE(SUM(tl.click_count), 0)::int as total_clicks,
-          COUNT(tl.id)::int as link_count
-        FROM generated_assets ga
-        LEFT JOIN tracked_links tl ON tl.asset_id = ga.id AND tl.recruiter_clerk_id = ${recruiterId}
-        WHERE ga.asset_type IN ('composed_creative', 'carousel_panel', 'base_image')
-        GROUP BY ga.id, ga.asset_type, ga.platform, ga.blob_url, ga.evaluation_score, ga.evaluation_passed
+  try {
+    const sql = getDb();
+
+    let rows;
+    if (recruiterId) {
+      rows = await sql`
+        SELECT asset_id, utm_content as platform, sum(click_count) as total_clicks
+        FROM tracked_links
+        WHERE recruiter_clerk_id = ${recruiterId} AND asset_id IS NOT NULL
+        GROUP BY asset_id, utm_content
         ORDER BY total_clicks DESC
-        LIMIT 20
-      `
-    : await sql`
-        SELECT
-          ga.id as asset_id,
-          ga.asset_type,
-          ga.platform,
-          ga.blob_url,
-          ga.evaluation_score,
-          ga.evaluation_passed,
-          COALESCE(SUM(tl.click_count), 0)::int as total_clicks,
-          COUNT(tl.id)::int as link_count
-        FROM generated_assets ga
-        LEFT JOIN tracked_links tl ON tl.asset_id = ga.id
-        WHERE ga.asset_type IN ('composed_creative', 'carousel_panel', 'base_image')
-        GROUP BY ga.id, ga.asset_type, ga.platform, ga.blob_url, ga.evaluation_score, ga.evaluation_passed
-        ORDER BY total_clicks DESC
-        LIMIT 20
+        LIMIT 10
       `;
+    } else {
+      rows = await sql`
+        SELECT asset_id, utm_content as platform, sum(click_count) as total_clicks
+        FROM tracked_links
+        WHERE asset_id IS NOT NULL
+        GROUP BY asset_id, utm_content
+        ORDER BY total_clicks DESC
+        LIMIT 10
+      `;
+    }
 
-  return NextResponse.json({ creatives: creativePerf });
+    return Response.json({
+      creatives: rows.map((r: Record<string, unknown>) => ({
+        asset_id: r.asset_id,
+        platform: r.platform,
+        total_clicks: Number(r.total_clicks),
+      })),
+    });
+  } catch (error) {
+    console.error('[creative-performance] error:', error);
+    return Response.json({ creatives: [] });
+  }
 }

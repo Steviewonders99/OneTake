@@ -1,35 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 
-export async function GET(req: NextRequest) {
-  const user = await requireAuth();
-  const sql = getDb();
-  const rawRecruiterId = req.nextUrl.searchParams.get('recruiterId');
-  const recruiterId = rawRecruiterId === 'self' ? user.userId : rawRecruiterId;
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const recruiterId = url.searchParams.get('recruiterId');
 
-  const [bySource, byMedium, byCampaign, bySourceMedium, totalRow] = recruiterId
-    ? await Promise.all([
-        sql`SELECT utm_source, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links WHERE recruiter_clerk_id = ${recruiterId} GROUP BY utm_source ORDER BY clicks DESC`,
-        sql`SELECT utm_medium, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links WHERE recruiter_clerk_id = ${recruiterId} GROUP BY utm_medium ORDER BY clicks DESC`,
-        sql`SELECT utm_campaign, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links WHERE recruiter_clerk_id = ${recruiterId} GROUP BY utm_campaign ORDER BY clicks DESC LIMIT 15`,
-        sql`SELECT utm_source, utm_medium, SUM(click_count)::int as clicks FROM tracked_links WHERE recruiter_clerk_id = ${recruiterId} GROUP BY utm_source, utm_medium ORDER BY clicks DESC LIMIT 20`,
-        sql`SELECT COALESCE(SUM(click_count), 0)::int as total_clicks, COUNT(*)::int as total_links FROM tracked_links WHERE recruiter_clerk_id = ${recruiterId}`,
-      ])
-    : await Promise.all([
-        sql`SELECT utm_source, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links GROUP BY utm_source ORDER BY clicks DESC`,
-        sql`SELECT utm_medium, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links GROUP BY utm_medium ORDER BY clicks DESC`,
-        sql`SELECT utm_campaign, SUM(click_count)::int as clicks, COUNT(*)::int as link_count FROM tracked_links GROUP BY utm_campaign ORDER BY clicks DESC LIMIT 15`,
-        sql`SELECT utm_source, utm_medium, SUM(click_count)::int as clicks FROM tracked_links GROUP BY utm_source, utm_medium ORDER BY clicks DESC LIMIT 20`,
-        sql`SELECT COALESCE(SUM(click_count), 0)::int as total_clicks, COUNT(*)::int as total_links FROM tracked_links`,
-      ]);
+  try {
+    const sql = getDb();
 
-  return NextResponse.json({
-    total_clicks: totalRow[0]?.total_clicks ?? 0,
-    total_links: totalRow[0]?.total_links ?? 0,
-    by_source: bySource,
-    by_medium: byMedium,
-    by_campaign: byCampaign,
-    source_medium_matrix: bySourceMedium,
-  });
+    let rows;
+    if (recruiterId) {
+      rows = await sql`
+        SELECT utm_source, sum(click_count) as clicks, count(*) as links
+        FROM tracked_links
+        WHERE recruiter_clerk_id = ${recruiterId}
+        GROUP BY utm_source
+        ORDER BY clicks DESC
+      `;
+    } else {
+      rows = await sql`
+        SELECT utm_source, sum(click_count) as clicks, count(*) as links
+        FROM tracked_links
+        GROUP BY utm_source
+        ORDER BY clicks DESC
+      `;
+    }
+
+    const total_clicks = rows.reduce((s: number, r: Record<string, unknown>) => s + Number(r.clicks), 0);
+    const total_links = rows.reduce((s: number, r: Record<string, unknown>) => s + Number(r.links), 0);
+
+    return Response.json({
+      total_clicks,
+      total_links,
+      by_source: rows.map((r: Record<string, unknown>) => ({
+        utm_source: r.utm_source,
+        clicks: Number(r.clicks),
+      })),
+    });
+  } catch (error) {
+    console.error('[utm-funnel] error:', error);
+    return Response.json({ total_clicks: 0, total_links: 0, by_source: [] });
+  }
 }
