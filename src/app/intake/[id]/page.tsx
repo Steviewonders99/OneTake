@@ -586,7 +586,7 @@ export default function IntakeDetailPage({
           )}
 
           {/* Marketing view mode — full admin pipeline view */}
-          {viewMode === "marketing" && <>
+          <div style={{ display: viewMode === "marketing" ? "block" : "none" }}>
           {/* Sticky Pipeline Nav */}
           <PipelineNav
             stages={[
@@ -1076,7 +1076,7 @@ export default function IntakeDetailPage({
           />
         )}
       </div>
-      </>}
+      </div>
     </AppShell>
   );
 }
