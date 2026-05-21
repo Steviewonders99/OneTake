@@ -15,8 +15,6 @@ interface GSCKeywordsPanelProps {
 }
 
 export function GSCKeywordsPanel({ keywords }: GSCKeywordsPanelProps) {
-  if (keywords.length === 0) return null;
-
   return (
     <div className="bg-white rounded-2xl border border-black/[0.08] overflow-hidden"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -30,38 +28,58 @@ export function GSCKeywordsPanel({ keywords }: GSCKeywordsPanelProps) {
           Google Search Console
         </span>
       </div>
-      <table className="w-full border-collapse text-[12px]">
-        <thead>
-          <tr className="bg-[#F6F7FB] border-b border-black/[0.08]">
-            <th className="text-left px-3.5 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Query</th>
-            <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Clicks</th>
-            <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Impressions</th>
-            <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>CTR</th>
-            <th className="text-right px-3.5 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Position</th>
-          </tr>
-        </thead>
-        <tbody>
-          {keywords.slice(0, 10).map((kw, i) => (
-            <tr key={kw.query} className="border-b border-black/[0.03] hover:bg-[#FAFAFF] transition-colors">
-              <td className="px-3.5 py-2.5" style={{ fontWeight: i < 3 ? 600 : 400, color: i < 3 ? BRAND.text : BRAND.text2 }}>
-                {kw.query}
-              </td>
-              <td className="text-right px-3 py-2.5" style={{ fontWeight: i < 3 ? 700 : 400 }}>
-                {kw.clicks.toLocaleString()}
-              </td>
-              <td className="text-right px-3 py-2.5" style={{ color: BRAND.text3 }}>
-                {kw.impressions >= 1000 ? `${(kw.impressions / 1000).toFixed(0)}K` : kw.impressions.toLocaleString()}
-              </td>
-              <td className="text-right px-3 py-2.5" style={{ color: kw.ctr > 10 ? BRAND.blue : BRAND.text2, fontWeight: kw.ctr > 10 ? 600 : 400 }}>
-                {kw.ctr.toFixed(1)}%
-              </td>
-              <td className="text-right px-3.5 py-2.5">
-                {kw.position.toFixed(1)}
-              </td>
+
+      {keywords.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3"
+               style={{ background: '#EFF6FF' }}>
+            <span className="text-[16px] font-bold" style={{ color: BRAND.blue }}>G</span>
+          </div>
+          <div className="text-[13px] font-semibold mb-1" style={{ color: BRAND.text }}>
+            Connect Google Search Console
+          </div>
+          <div className="text-[11px] leading-relaxed max-w-[220px] mx-auto" style={{ color: BRAND.text3 }}>
+            Add the service account to GSC to see which keywords drive organic traffic, impressions, CTR, and avg position.
+          </div>
+          <div className="mt-3 text-[10px] font-mono px-2 py-1.5 rounded-md inline-block"
+               style={{ background: '#F6F7FB', color: BRAND.text2 }}>
+            sc-domain:oneforma.com
+          </div>
+        </div>
+      ) : (
+        <table className="w-full border-collapse text-[12px]">
+          <thead>
+            <tr className="bg-[#F6F7FB] border-b border-black/[0.08]">
+              <th className="text-left px-3.5 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Query</th>
+              <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Clicks</th>
+              <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Impressions</th>
+              <th className="text-right px-3 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>CTR</th>
+              <th className="text-right px-3.5 py-2 text-[9px] uppercase tracking-[0.1em] font-semibold" style={{ color: BRAND.text3 }}>Position</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {keywords.slice(0, 10).map((kw, i) => (
+              <tr key={kw.query} className="border-b border-black/[0.03] hover:bg-[#FAFAFF] transition-colors">
+                <td className="px-3.5 py-2.5" style={{ fontWeight: i < 3 ? 600 : 400, color: i < 3 ? BRAND.text : BRAND.text2 }}>
+                  {kw.query}
+                </td>
+                <td className="text-right px-3 py-2.5" style={{ fontWeight: i < 3 ? 700 : 400 }}>
+                  {kw.clicks.toLocaleString()}
+                </td>
+                <td className="text-right px-3 py-2.5" style={{ color: BRAND.text3 }}>
+                  {kw.impressions >= 1000 ? `${(kw.impressions / 1000).toFixed(0)}K` : kw.impressions.toLocaleString()}
+                </td>
+                <td className="text-right px-3 py-2.5" style={{ color: kw.ctr > 10 ? BRAND.blue : BRAND.text2, fontWeight: kw.ctr > 10 ? 600 : 400 }}>
+                  {kw.ctr.toFixed(1)}%
+                </td>
+                <td className="text-right px-3.5 py-2.5">
+                  {kw.position.toFixed(1)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

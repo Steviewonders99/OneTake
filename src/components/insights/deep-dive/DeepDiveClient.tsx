@@ -293,7 +293,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
       {/* Section 3: Source Attribution — all-time first-touch */}
       {sources.length > 0 && (
         <div className="mb-5">
-          <SourceAttribution sources={sources} />
+          <SourceAttribution sources={sources} projectId={selectedId} dateStart={dateRangeV2.start} dateEnd={dateRangeV2.end} />
         </div>
       )}
 

@@ -41,8 +41,8 @@ const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
     },
     {
       title: "Analytics",
+      titleHref: "/insights",
       links: [
-        { href: "/insights", label: "Insights", Icon: BarChart3 },
         { href: "/insights/command-center", label: "Command Center", Icon: Target },
         { href: "/insights/deep-dive", label: "Deep Dive", Icon: Zap },
         { href: "/insights/channel-intel", label: "Channel Intel", Icon: Radio },
@@ -75,8 +75,8 @@ const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
     },
     {
       title: "Analytics",
+      titleHref: "/insights",
       links: [
-        { href: "/insights", label: "Insights", Icon: BarChart3 },
         { href: "/insights/command-center", label: "Command Center", Icon: Target },
         { href: "/insights/deep-dive", label: "Deep Dive", Icon: Zap },
         { href: "/insights/channel-intel", label: "Channel Intel", Icon: Radio },
@@ -109,11 +109,13 @@ const DEFAULT_NAV: { title: string; links: NavItem[] }[] = [
 
 function NavSection({
   title,
+  titleHref,
   links,
   pathname,
   collapsed,
 }: {
   title: string;
+  titleHref?: string;
   links: NavItem[];
   pathname: string;
   collapsed: boolean;
@@ -121,16 +123,31 @@ function NavSection({
   return (
     <div className="mb-5">
       {!collapsed && (
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 px-3">
-          {title}
-        </p>
+        titleHref ? (
+          <Link href={titleHref}
+                className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5 px-3 transition-colors cursor-pointer hover:text-[var(--foreground)]"
+                style={{ color: pathname === titleHref ? 'var(--foreground)' : 'var(--muted-foreground)' }}>
+            {title}
+          </Link>
+        ) : (
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 px-3">
+            {title}
+          </p>
+        )
       )}
       <div className="space-y-0.5">
         {links.map((link) => {
+          // Exact match for parent routes that have children (e.g. /insights)
+          // to avoid both parent and child showing as active
+          const hasChildren = links.some(
+            (other) => other.href !== link.href && other.href.startsWith(link.href + "/")
+          );
           const isActive =
             link.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(link.href);
+              : hasChildren
+                ? pathname === link.href
+                : pathname.startsWith(link.href);
           return (
             <Link
               key={link.href}
@@ -276,6 +293,7 @@ export default function Sidebar() {
             <NavSection
               key={section.title}
               title={section.title}
+              titleHref={(section as any).titleHref}
               links={section.links}
               pathname={pathname}
               collapsed={collapsed}

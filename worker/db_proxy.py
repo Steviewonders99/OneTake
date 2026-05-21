@@ -544,6 +544,159 @@ async def refresh_view(request: web.Request):
         return web.json_response({"ok": False, "error": str(e)[:200]}, status=500)
 
 
+async def get_meta_organic_posts(request: web.Request):
+    """Meta organic posts — FB or IG with engagement metrics."""
+    platform = request.query.get("platform", "")  # facebook | instagram
+    limit = min(int(request.query.get("limit", "30")), 100)
+    sort = request.query.get("sort", "engagement")  # engagement | reach | published_at
+
+    order_col = {
+        "engagement": "COALESCE(engagement,0)",
+        "reach": "COALESCE(reach,0)",
+        "published_at": "published_at",
+        "likes": "COALESCE(likes,0)",
+        "saves": "COALESCE(saves,0)",
+    }.get(sort, "COALESCE(engagement,0)")
+
+    where = "WHERE 1=1"
+    params: list = []
+    if platform:
+        params.append(platform)
+        where += f" AND platform = ${len(params)}"
+
+    params.append(limit)
+    rows = await query(
+        f"SELECT post_id, platform, post_type, post_url, "
+        f"LEFT(post_text, 200) as post_text, published_at, "
+        f"COALESCE(impressions,0) as impressions, COALESCE(reach,0) as reach, "
+        f"COALESCE(engagement,0) as engagement, COALESCE(likes,0) as likes, "
+        f"COALESCE(comments,0) as comments, COALESCE(shares,0) as shares, "
+        f"COALESCE(saves,0) as saves, COALESCE(clicks,0) as clicks, "
+        f"COALESCE(video_views,0) as video_views, "
+        f"COALESCE(engagement_rate,0) as engagement_rate "
+        f"FROM meta_organic_cache {where} "
+        f"ORDER BY {order_col} DESC LIMIT ${len(params)}",
+        *params,
+    )
+    # Also provide summary stats
+    summary = await query(
+        f"SELECT COUNT(*) as total_posts, "
+        f"COALESCE(SUM(impressions),0) as total_impressions, "
+        f"COALESCE(SUM(reach),0) as total_reach, "
+        f"COALESCE(SUM(engagement),0) as total_engagement, "
+        f"COALESCE(SUM(likes),0) as total_likes, "
+        f"COALESCE(SUM(comments),0) as total_comments, "
+        f"COALESCE(SUM(shares),0) as total_shares, "
+        f"COALESCE(SUM(saves),0) as total_saves "
+        f"FROM meta_organic_cache {where.replace(f' LIMIT ${len(params)}', '')}",
+        *params[:-1] if platform else [],
+    )
+    return web.json_response({
+        "posts": rows,
+        "summary": summary[0] if summary else {},
+    })
+
+
+async def get_meta_ads_detail(request: web.Request):
+    """Meta ads at campaign or adset level with full metrics."""
+    level = request.query.get("level", "campaign")  # campaign | adset
+    limit = min(int(request.query.get("limit", "30")), 100)
+
+    if level == "adset":
+        rows = await query(
+            "SELECT campaign_name, adset_id, adset_name, "
+            "SUM(COALESCE(impressions,0)) as impressions, "
+            "SUM(COALESCE(clicks,0)) as clicks, "
+            "SUM(COALESCE(conversions,0)) as conversions, "
+            "SUM(COALESCE(spend,0))::FLOAT as spend "
+            "FROM meta_ads_cache "
+            "GROUP BY campaign_name, adset_id, adset_name "
+            "ORDER BY SUM(COALESCE(spend,0)) DESC LIMIT $1",
+            limit,
+        )
+    else:
+        rows = await query(
+            "SELECT campaign_name, "
+            "COUNT(DISTINCT adset_id) as adsets, COUNT(DISTINCT ad_id) as ads, "
+            "SUM(COALESCE(impressions,0)) as impressions, "
+            "SUM(COALESCE(clicks,0)) as clicks, "
+            "SUM(COALESCE(conversions,0)) as conversions, "
+            "SUM(COALESCE(spend,0))::FLOAT as spend "
+            "FROM meta_ads_cache "
+            "GROUP BY campaign_name "
+            "ORDER BY SUM(COALESCE(spend,0)) DESC LIMIT $1",
+            limit,
+        )
+
+    # Computed metrics per row
+    for r in rows:
+        imp = r.get("impressions", 0) or 0
+        cl = r.get("clicks", 0) or 0
+        sp = r.get("spend", 0) or 0
+        cv = r.get("conversions", 0) or 0
+        r["cpm"] = round(sp / imp * 1000, 2) if imp > 0 else 0
+        r["ctr"] = round(cl / imp * 100, 2) if imp > 0 else 0
+        r["cpc"] = round(sp / cl, 2) if cl > 0 else 0
+        r["cpa"] = round(sp / cv, 2) if cv > 0 else 0
+
+    return web.json_response(rows)
+
+
+async def get_organic_landing_pages(request: web.Request):
+    """Top organic landing pages from GA4 (sessions, conversions by page path)."""
+    source = request.query.get("source", "")
+    limit = min(int(request.query.get("limit", "30")), 100)
+
+    where = "WHERE 1=1"
+    params: list = []
+    if source:
+        params.append(source)
+        where += f" AND source = ${len(params)}"
+
+    params.append(limit)
+    rows = await query(
+        f"SELECT page_path, source, sessions, users, conversions "
+        f"FROM ga4_organic_landing_pages {where} "
+        f"ORDER BY sessions DESC LIMIT ${len(params)}",
+        *params,
+    )
+    return web.json_response(rows)
+
+
+async def get_gsc_keywords(request: web.Request):
+    """Top GSC keywords: clicks, impressions, ctr, position."""
+    from datetime import date as _date
+    start = _date.fromisoformat(request.query.get("start", "2026-01-01"))
+    end = _date.fromisoformat(request.query.get("end", "2099-12-31"))
+    limit = min(int(request.query.get("limit", "50")), 200)
+
+    rows = await query(
+        "SELECT query, SUM(clicks) as clicks, SUM(impressions) as impressions, "
+        "ROUND(AVG(ctr)::NUMERIC * 100, 1) as ctr, ROUND(AVG(position)::NUMERIC, 1) as position "
+        "FROM gsc_daily_cache WHERE date >= $1 AND date <= $2 "
+        "GROUP BY query ORDER BY SUM(clicks) DESC LIMIT $3",
+        start, end, limit,
+    )
+    return web.json_response(rows)
+
+
+async def get_gsc_pages(request: web.Request):
+    """Top GSC landing pages: clicks, impressions, ctr, position."""
+    from datetime import date as _date
+    start = _date.fromisoformat(request.query.get("start", "2026-01-01"))
+    end = _date.fromisoformat(request.query.get("end", "2099-12-31"))
+    limit = min(int(request.query.get("limit", "50")), 200)
+
+    rows = await query(
+        "SELECT page, SUM(clicks) as clicks, SUM(impressions) as impressions, "
+        "ROUND(AVG(ctr)::NUMERIC * 100, 1) as ctr, ROUND(AVG(position)::NUMERIC, 1) as position "
+        "FROM gsc_daily_cache WHERE date >= $1 AND date <= $2 "
+        "GROUP BY page ORDER BY SUM(clicks) DESC LIMIT $3",
+        start, end, limit,
+    )
+    return web.json_response(rows)
+
+
 # ── App Setup ────────────────────────────────────────────────────
 
 async def on_startup(app: web.Application):
@@ -576,6 +729,11 @@ def create_app() -> web.Application:
     app.router.add_get("/projects/{id}/countries", get_country_performance)
     app.router.add_get("/countries", get_portfolio_countries)
     app.router.add_get("/projects/{id}/paid", get_paid_summary)
+    app.router.add_get("/meta/organic-posts", get_meta_organic_posts)
+    app.router.add_get("/meta/ads", get_meta_ads_detail)
+    app.router.add_get("/ga4/landing-pages", get_organic_landing_pages)
+    app.router.add_get("/gsc/keywords", get_gsc_keywords)
+    app.router.add_get("/gsc/pages", get_gsc_pages)
     app.router.add_post("/pages/normalize", normalize_pages)
     app.router.add_post("/projects/sync", trigger_sync)
     app.router.add_post("/refresh", refresh_view)

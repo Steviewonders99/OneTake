@@ -184,3 +184,34 @@ export function getChannelInfo(slug: string) {
 }
 
 export { CHANNEL_GROUPS };
+
+/** Map a GA4 source/medium pair to the best-matching channel slug. */
+export function sourceToChannelSlug(source: string, medium: string): string | null {
+  const s = source.toLowerCase();
+  const m = medium.toLowerCase();
+  const isPaid = ['cpc', 'paid', 'paidsocial', 'paidmedia', 'paid_media'].includes(m);
+
+  if (s === 'google' && !isPaid) return 'google_organic';
+  if (s === 'google' && isPaid) return 'google_paid';
+  if (['facebook', 'fb'].some(k => s.includes(k)) && isPaid) return 'meta_paid';
+  if (['facebook', 'fb'].some(k => s.includes(k)) && !isPaid) return 'meta_organic_fb';
+  if (s === 'meta' && isPaid) return 'meta_paid';
+  if (s === 'meta') return 'meta_organic_fb';
+  if (['instagram', 'l.instagram.com'].some(k => s.includes(k))) return 'meta_organic_ig';
+  if (s === 'ig' && isPaid) return 'meta_paid';
+  if (s === 'ig') return 'meta_organic_ig';
+  if (s.includes('linkedin') && m === 'job_board') return 'linkedin_jobs';
+  if (s.includes('linkedin')) return 'linkedin_organic';
+  if (s === 'social') return 'linkedin_organic';
+  if (s.includes('chatgpt')) return 'chatgpt';
+  if (s.includes('gemini')) return 'gemini';
+  if (s.includes('indeed')) return 'indeed';
+  if (s.includes('handshake')) return 'handshake';
+  if (s.includes('glassdoor')) return 'glassdoor';
+  if (['twitter', 't.co', 'x.com'].some(k => s.includes(k))) return 'twitter';
+  if (s.includes('youtube')) return 'youtube';
+  if (s.includes('reddit')) return 'reddit';
+  if (s.includes('brevo') || s.includes('sendinblue') || m === 'email') return 'brevo_email';
+  if (s.includes('tiktok')) return 'meta_paid'; // closest match
+  return null;
+}

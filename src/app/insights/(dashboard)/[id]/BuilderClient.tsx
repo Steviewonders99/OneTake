@@ -8,6 +8,7 @@ import { DashboardNav } from '@/components/insights/DashboardNav';
 import { WidgetPalette } from '@/components/insights/WidgetPalette';
 import { DashboardGrid } from '@/components/insights/DashboardGrid';
 import { WidgetConfigPanel } from '@/components/insights/WidgetConfigPanel';
+import { DashboardAiChat } from '@/components/insights/DashboardAiChat';
 import type { DashboardLayoutData } from '@/components/insights/types';
 
 function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: boolean }) {
@@ -37,6 +38,7 @@ function BuilderInner({ dashboardId, canEdit }: { dashboardId: string; canEdit: 
         </div>
         {state.isEditMode && canEdit && state.selectedWidgetId && <WidgetConfigPanel />}
       </div>
+      {canEdit && <DashboardAiChat />}
     </div>
   );
 }

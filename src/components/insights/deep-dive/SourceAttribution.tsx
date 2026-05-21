@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { BRAND } from '../command-center/types';
 import { formatEur } from '../command-center/utils';
 import { getChannelMeta } from '../channelIcons';
+import { sourceToChannelSlug } from '../channel-intel/ChannelSearch';
 
 /* ─── types ─────────────────────────────────────────────────────────── */
 
@@ -21,6 +23,9 @@ interface SourceRow {
 
 interface SourceAttributionProps {
   sources: SourceRow[];
+  projectId?: string | null;
+  dateStart?: string;
+  dateEnd?: string;
 }
 
 /* ─── channel icon + colour from source string ──────────────────────── */
@@ -64,7 +69,8 @@ function channelMeta(source: string, medium: string): { color: string; letter: s
 
 type SortKey = 'source' | 'views' | 'apply' | 'apps' | 'rate' | 'cost' | 'cpa';
 
-export function SourceAttribution({ sources }: SourceAttributionProps) {
+export function SourceAttribution({ sources, projectId, dateStart, dateEnd }: SourceAttributionProps) {
+  const router = useRouter();
   const [sortBy, setSortBy] = useState<SortKey>('views');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -164,19 +170,36 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                   className="border-t border-black/[0.04]"
                   style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}
                 >
-                  {/* Channel with brand icon */}
+                  {/* Channel with brand icon — clickable → Channel Intel */}
                   <td className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span style={{ color: meta.color }} className="shrink-0">{meta.icon}</span>
-                      <div>
-                        <span className="text-[11px] font-medium" style={{ color: BRAND.text }}>
-                          {meta.label}
-                        </span>
-                        <span className="text-[10px] ml-1" style={{ color: BRAND.text3 }}>
-                          / {row.medium}
-                        </span>
-                      </div>
-                    </div>
+                    {(() => {
+                      const slug = sourceToChannelSlug(row.source, row.medium);
+                      const handleClick = slug ? () => {
+                        const params = new URLSearchParams();
+                        params.set('channel', slug);
+                        if (projectId) params.set('project', projectId);
+                        if (dateStart) params.set('start', dateStart);
+                        if (dateEnd) params.set('end', dateEnd);
+                        router.push(`/insights/channel-intel?${params.toString()}`);
+                      } : undefined;
+                      return (
+                        <div
+                          className={`flex items-center gap-2 ${slug ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                          onClick={handleClick}
+                          title={slug ? `View in Channel Intelligence` : undefined}
+                        >
+                          <span style={{ color: meta.color }} className="shrink-0">{meta.icon}</span>
+                          <div>
+                            <span className="text-[11px] font-medium" style={{ color: slug ? BRAND.blue : BRAND.text, textDecoration: slug ? 'underline' : 'none', textDecorationColor: 'rgba(37,99,235,0.3)', textUnderlineOffset: '2px' }}>
+                              {meta.label}
+                            </span>
+                            <span className="text-[10px] ml-1" style={{ color: BRAND.text3 }}>
+                              / {row.medium}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   {/* UTM Detail (content = job board name, term = recruiter ID) */}

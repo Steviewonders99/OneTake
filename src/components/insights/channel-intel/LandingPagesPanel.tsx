@@ -37,7 +37,7 @@ export function LandingPagesPanel({ pages }: LandingPagesPanelProps) {
             Top Landing Pages
           </h3>
           <span className="text-[10px]" style={{ color: BRAND.text3 }}>
-            GA4 + page normalizer
+            Google Search Console
           </span>
         </div>
       </div>

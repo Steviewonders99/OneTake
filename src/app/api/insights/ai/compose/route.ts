@@ -6,26 +6,72 @@ import { getDb } from '@/lib/db';
 import type { DashboardLayoutData, WidgetType, GridLayoutItem, WidgetInstance } from '@/components/insights/types';
 
 // ---------------------------------------------------------------------------
-// Widget catalog — simplified for LLM (no component references)
+// Widget catalog — ALL 43 widgets, grouped for LLM context
+// Auto-derived from widgetRegistry.ts. LLM sees descriptions only, never data.
 // ---------------------------------------------------------------------------
 const WIDGET_CATALOG = [
-  { type: 'paid-kpi', label: 'Paid KPIs', description: 'Spend, impressions, clicks, conversions, CPA, CTR', config: '{ days: number }', size: '12x2' },
-  { type: 'organic-kpi', label: 'Organic KPIs', description: 'Impressions, reach, engagement, clicks, followers, eng rate', config: '{ days: number }', size: '12x2' },
-  { type: 'campaign-funnel', label: 'Campaign Funnel', description: 'Full funnel: spend → sessions → signups → completions with CVR and channel breakdown', config: '{ days: number, campaign?: string }', size: '12x8' },
-  { type: 'paid-platform-compare', label: 'Paid Platform Comparison', description: 'Spend by platform over time', config: '{ days: number }', size: '6x4' },
-  { type: 'organic-platform-compare', label: 'Organic Platform Comparison', description: 'Engagement by platform over time', config: '{ days: number }', size: '6x4' },
-  { type: 'paid-campaign-detail', label: 'Campaign Detail Table', description: 'Campaign-level spend, impressions, clicks, conversions, CPA', config: '{ days: number, platform?: string }', size: '12x5' },
-  { type: 'organic-top-posts', label: 'Top Organic Posts', description: 'Ranked posts by engagement with pipeline/manual attribution', config: '{ days: number, platform?: string }', size: '12x5' },
-  { type: 'organic-attribution', label: 'Pipeline vs Manual', description: 'AI-generated vs manual content comparison', config: '{ days: number }', size: '6x4' },
-  { type: 'organic-account-growth', label: 'Account Growth', description: 'Follower count trends per platform', config: '{ days: number }', size: '6x4' },
-  { type: 'gsc-performance', label: 'GSC Performance', description: 'Search queries, pages, clicks, position trends', config: '{ days: number }', size: '6x5' },
-  { type: 'campaign-roi', label: 'Campaign Link ROI', description: 'Per-campaign tracked links and click performance', config: '{ days: number }', size: '6x4' },
-  { type: 'utm-funnel', label: 'UTM Funnel', description: 'Clicks by source, medium, campaign', config: '{ days: number }', size: '6x4' },
-  { type: 'recruiter-leaderboard', label: 'Recruiter Leaderboard', description: 'Ranked recruiters by clicks', config: '{ days: number }', size: '6x4' },
-  { type: 'kpi-cards', label: 'Pipeline KPIs', description: 'Total campaigns, approved, generating, sent', config: '{}', size: '12x2' },
-  { type: 'pipeline-overview', label: 'Pipeline Status', description: 'Campaign distribution by stage', config: '{}', size: '6x4' },
-  { type: 'campaign-timeline', label: 'Campaign Timeline', description: 'Recent campaigns with status', config: '{}', size: '12x4' },
-  { type: 'ga4-traffic', label: 'GA4 Traffic', description: 'Sessions, sources, devices', config: '{ days: number }', size: '6x4' },
+  // ── Paid Media (10) ─────────────────────────────────────────
+  { type: 'paid-kpi', label: 'Paid KPIs', description: 'Headline spend, impressions, clicks, conversions, CPA, CTR across all paid platforms', config: '{ days: number }', size: '12x2' },
+  { type: 'paid-platform-compare', label: 'Paid Platform Comparison', description: 'Spend by platform over time — Meta, Reddit, LinkedIn, Google, TikTok', config: '{ days: number }', size: '6x4' },
+  { type: 'paid-campaign-detail', label: 'Campaign Detail Table', description: 'Campaign-level spend, impressions, clicks, conversions, CPA breakdown', config: '{ days: number, platform?: string }', size: '12x5' },
+  { type: 'campaign-funnel', label: 'Project Funnel', description: 'Full funnel: ad spend → sessions → sign-ups → completions. Cross-channel, per campaign', config: '{ days: number, campaign?: string }', size: '12x8' },
+  { type: 'funnel-visualization', label: 'Visual Funnel', description: 'Tapered funnel: sessions → sign-ups → completions with drop-off rates and CVR', config: '{ days: number }', size: '6x8' },
+  { type: 'channel-attribution', label: 'Channel Attribution', description: 'Sessions, sign-ups, completions and CVR by traffic source and medium', config: '{ days: number }', size: '6x6' },
+  { type: 'top-campaign-spend', label: 'Top Campaigns by Spend', description: 'Top 10 campaigns ranked by ad spend with impressions and clicks', config: '{ days: number }', size: '6x6' },
+  { type: 'creative-gallery', label: 'Creative Gallery', description: 'Ad creative images with performance metrics — see what works', config: '{ days: number }', size: '12x8' },
+  { type: 'category-breakdown', label: 'Project Categories', description: 'Performance by project type: Data Collection, Language, Evaluation, Onsite', config: '{ days: number }', size: '12x6' },
+  { type: 'recruitment-attribution', label: 'Recruitment Attribution', description: 'Form completions by traffic source + city with W1 vs W2 and CPA trends', config: '{ days: number }', size: '12x8' },
+
+  // ── Organic Social (6) ──────────────────────────────────────
+  { type: 'organic-kpi', label: 'Organic KPIs', description: 'Impressions, reach, engagement, follower delta across Facebook, Instagram, LinkedIn, Reddit', config: '{ days: number }', size: '12x2' },
+  { type: 'organic-platform-compare', label: 'Organic Platform Comparison', description: 'Engagement by platform over time — Facebook, Instagram, LinkedIn, Reddit', config: '{ days: number }', size: '6x4' },
+  { type: 'organic-top-posts', label: 'Top Organic Posts', description: 'Ranked posts by engagement with content type classification and pipeline attribution', config: '{ days: number, platform?: string }', size: '12x5' },
+  { type: 'organic-attribution', label: 'Pipeline vs Manual', description: 'AI-generated vs manually posted content performance comparison', config: '{ days: number }', size: '6x4' },
+  { type: 'organic-account-growth', label: 'Account Growth', description: 'Follower count trends per platform over time', config: '{ days: number }', size: '6x4' },
+  { type: 'gsc-performance', label: 'GSC Performance', description: 'Google Search Console: top queries, pages, click/impression trends, avg position', config: '{ days: number }', size: '6x5' },
+
+  // ── Pipeline & Operations (8) ───────────────────────────────
+  { type: 'kpi-cards', label: 'Pipeline KPIs', description: 'Total campaigns, approved, generating, sent to agency', config: '{}', size: '12x2' },
+  { type: 'pipeline-overview', label: 'Pipeline Status', description: 'Campaign distribution by pipeline stage (donut/bar chart)', config: '{}', size: '6x4' },
+  { type: 'campaign-timeline', label: 'Campaign Timeline', description: 'Recent campaigns with status, progress, and timeline', config: '{}', size: '12x4' },
+  { type: 'urgency-breakdown', label: 'Urgency Breakdown', description: 'Urgent vs standard vs pipeline campaign distribution', config: '{}', size: '4x3' },
+  { type: 'recent-activity', label: 'Recent Activity', description: 'Latest campaign updates, approvals, and pipeline events feed', config: '{}', size: '12x4' },
+  { type: 'worker-health', label: 'Worker Health', description: 'Compute job status, success/failure rates, avg processing time', config: '{}', size: '6x3' },
+  { type: 'pipeline-performance', label: 'Pipeline Performance', description: 'Stage durations and success/failure rates across the pipeline', config: '{}', size: '12x4' },
+  { type: 'region-map', label: 'Region Distribution', description: 'Campaign target regions breakdown — geographic distribution', config: '{}', size: '6x4' },
+
+  // ── UTM & Link Analytics (6) ────────────────────────────────
+  { type: 'click-analytics', label: 'Click Overview', description: 'Total clicks, tracked links, and recruiter count', config: '{ days: number }', size: '6x4' },
+  { type: 'utm-funnel', label: 'UTM Breakdown', description: 'Clicks by UTM source, medium, and campaign — full drill-down', config: '{ days: number }', size: '6x4' },
+  { type: 'recruiter-leaderboard', label: 'Recruiter Leaderboard', description: 'Ranked recruiters by clicks, links created, and active campaigns', config: '{ days: number }', size: '6x4' },
+  { type: 'campaign-roi', label: 'Campaign Link ROI', description: 'Per-campaign tracked links and total click performance', config: '{ days: number }', size: '12x4' },
+  { type: 'source-heatmap', label: 'Source x Medium Heatmap', description: 'Heatmap grid of clicks by UTM source and medium combinations', config: '{ days: number }', size: '6x5' },
+  { type: 'link-builder', label: 'Quick Link Builder', description: 'Create UTM tracked links without leaving the dashboard', config: '{}', size: '6x3' },
+
+  // ── AudienceIQ & Behavioral (10) ────────────────────────────
+  { type: 'contributor-funnel', label: 'Contributor Funnel', description: 'Clicks → signups → active → quality threshold conversion funnel', config: '{ days: number }', size: '12x4' },
+  { type: 'quality-by-channel', label: 'Quality by Channel', description: 'Average contributor quality score per UTM source', config: '{ days: number }', size: '6x4' },
+  { type: 'retention-curve', label: 'Retention Curve', description: 'Contributor retention by campaign over 30/60/90 days', config: '{ days: number }', size: '6x4' },
+  { type: 'skill-distribution', label: 'Skill Distribution', description: 'Declared skills vs actual CRM contributor skills — divergence chart', config: '{}', size: '6x4' },
+  { type: 'targeting-vs-reality', label: 'Targeting vs Reality', description: 'Side-by-side: declared ICP regions/languages/skills vs CRM actuals', config: '{}', size: '12x5' },
+  { type: 'drift-radar', label: 'Drift Radar', description: 'Four-ring audience drift visualization with severity indicators', config: '{}', size: '6x5' },
+  { type: 'audience-health', label: 'Audience Health Score', description: 'Health score gauge (0-100) with actionable issue detection', config: '{}', size: '6x5' },
+  { type: 'ga4-traffic', label: 'GA4 Traffic', description: 'Sessions, traffic sources, and device breakdown from Google Analytics', config: '{ days: number }', size: '6x4' },
+  { type: 'gsc-queries', label: 'Search Queries', description: 'Top search queries driving traffic from Google Search Console', config: '{ days: number }', size: '6x4' },
+  { type: 'platform-audiences', label: 'Platform Audiences', description: 'Multi-platform ad audience overview — Google, Meta, LinkedIn, TikTok', config: '{}', size: '12x4' },
+
+  // ── HIE Behavioral (3) ──────────────────────────────────────
+  { type: 'hie-heatmap', label: 'Click Heatmap', description: 'Click density grid for tracked landing pages', config: '{ url?: string }', size: '6x5' },
+  { type: 'hie-scrollmap', label: 'Scroll Depth Map', description: 'Scroll depth distribution with milestone annotations', config: '{ url?: string }', size: '6x4' },
+  { type: 'hie-form-friction', label: 'CRO Diagnostics', description: 'Scroll cliffs, CTA weakness, form friction analysis', config: '{ url?: string }', size: '12x4' },
+
+  // ── Assets & Creative (2) ───────────────────────────────────
+  { type: 'asset-gallery', label: 'Asset Summary', description: 'Generated assets by type and platform with pass rates', config: '{}', size: '6x4' },
+  { type: 'creative-performance', label: 'Creative Performance', description: 'Which creatives drive the most clicks — asset-to-click correlation', config: '{ days: number }', size: '12x4' },
+
+  // ── Utility (2) ─────────────────────────────────────────────
+  { type: 'master-filter', label: 'Campaign Filter', description: 'Master campaign selector — all widgets on the dashboard respond to this filter', config: '{}', size: '3x6' },
+  { type: 'text-note', label: 'Text Note', description: 'Add custom text annotations or notes to the dashboard', config: '{ text?: string }', size: '6x3' },
 ] as const;
 
 const VALID_WIDGET_TYPES = new Set<string>(WIDGET_CATALOG.map((w) => w.type));

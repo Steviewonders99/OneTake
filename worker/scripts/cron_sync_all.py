@@ -104,8 +104,23 @@ async def step_link_intakes():
     await pool.close()
 
 
+async def step_sync_gsc():
+    """Step 5: Sync Google Search Console data."""
+    pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=3)
+    sys.path.insert(0, str(Path(__file__).parent.parent / "platforms"))
+    from gsc_client import GscSyncClient
+    client = GscSyncClient(pool)
+    if not client.is_connected():
+        logger.info("    GSC: skipped (no credentials)")
+        await pool.close()
+        return
+    result = await client.sync(days=30)
+    logger.info("    GSC: %d rows synced, %d errors", result["rows"], len(result["errors"]))
+    await pool.close()
+
+
 async def step_refresh_view():
-    """Step 5: Refresh materialized view."""
+    """Step 6: Refresh materialized view."""
     pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=3)
     async with pool.acquire() as conn:
         await conn.execute("REFRESH MATERIALIZED VIEW project_weekly_summary")
@@ -128,7 +143,8 @@ async def main():
     results.append(await run_step("2. Sync locale links", step_sync_locale_links()))
     results.append(await run_step("3. Sync GA4 funnel", step_sync_ga4_funnel()))
     results.append(await run_step("4. Link intakes", step_link_intakes()))
-    results.append(await run_step("5. Refresh mat. view", step_refresh_view()))
+    results.append(await run_step("5. Sync GSC", step_sync_gsc()))
+    results.append(await run_step("6. Refresh mat. view", step_refresh_view()))
 
     total_ms = int((time.time() - t0) * 1000)
     ok = sum(1 for r in results if r["status"] == "ok")

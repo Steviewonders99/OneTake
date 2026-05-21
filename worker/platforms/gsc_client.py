@@ -84,8 +84,19 @@ class GscSyncClient:
     # ------------------------------------------------------------------
 
     def is_connected(self) -> bool:
-        """True when both service_account_json and property_url are present."""
-        return bool(self.service_account_json and self.property_url)
+        """True when property_url is present and we have some form of auth."""
+        if not self.property_url:
+            return False
+        # Service account JSON takes priority, but ADC also works
+        if self.service_account_json:
+            return True
+        # Check if ADC is available
+        try:
+            import google.auth
+            google.auth.default(scopes=GSC_SCOPES)
+            return True
+        except Exception:
+            return False
 
     async def sync(self, days: int = 7) -> dict:
         """Fetch recent GSC rows and upsert into gsc_daily_cache.
@@ -154,12 +165,13 @@ class GscSyncClient:
     # ------------------------------------------------------------------
 
     async def _get_access_token(self) -> str:
-        """Obtain a Google OAuth2 access token using the service account key.
+        """Obtain a Google OAuth2 access token.
 
-        Requires google-auth (pip install google-auth). Raises ImportError
-        with a clear message if the library is not installed.
+        Tries service account JSON first, falls back to Application Default
+        Credentials (gcloud auth application-default login).
         """
         try:
+            import google.auth
             import google.auth.transport.requests  # type: ignore
             from google.oauth2 import service_account  # type: ignore
         except ImportError as exc:
@@ -168,19 +180,23 @@ class GscSyncClient:
                 "Install it with: pip install google-auth"
             ) from exc
 
-        # service_account_json may be a JSON string or a file path
-        sa_json = self.service_account_json.strip()
-        if sa_json.startswith("{"):
-            sa_info = json.loads(sa_json)
+        credentials = None
+
+        # Try service account JSON first
+        sa_json = (self.service_account_json or "").strip()
+        if sa_json:
+            if sa_json.startswith("{"):
+                sa_info = json.loads(sa_json)
+            else:
+                with open(sa_json) as fh:
+                    sa_info = json.load(fh)
+            credentials = service_account.Credentials.from_service_account_info(
+                sa_info, scopes=GSC_SCOPES
+            )
         else:
-            with open(sa_json) as fh:
-                sa_info = json.load(fh)
+            # Fall back to Application Default Credentials
+            credentials, _ = google.auth.default(scopes=GSC_SCOPES)
 
-        credentials = service_account.Credentials.from_service_account_info(
-            sa_info, scopes=GSC_SCOPES
-        )
-
-        # Refresh to obtain an access token synchronously (lightweight)
         request = google.auth.transport.requests.Request()
         credentials.refresh(request)
         return credentials.token  # type: ignore[return-value]
