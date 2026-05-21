@@ -210,11 +210,12 @@ export function DeepDiveClient({ initialProjects }: Props) {
 
   return (
     <div className="p-8 w-full" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-[24px] tracking-tight" style={{ color: BRAND.text }}>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-[#f7f7f8] pb-4 pt-1 -mx-8 px-8"
+           style={{ backdropFilter: 'blur(8px)', background: 'rgba(247,247,248,0.92)' }}>
+        <div className="flex justify-between items-center mb-3">
+          <div className="min-w-0">
+            <h1 className="text-[24px] tracking-tight truncate" style={{ color: BRAND.text }}>
               <span className="font-extrabold">{projectName}</span>
               {projectDetail && <span className="font-extralight"> — {projectDetail}</span>}
             </h1>
@@ -224,10 +225,8 @@ export function DeepDiveClient({ initialProjects }: Props) {
           </div>
           <DateRangePicker value={dateRangeV2} onChange={(v: DateRangeValue) => { setDateRangeV2(v); setFetchKey(k => k + 1); }} />
         </div>
-        <div className="flex gap-3 items-center">
-          <div style={{ flex: 1, maxWidth: 320 }}>
-            <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
-          </div>
+        <div style={{ maxWidth: 320 }}>
+          <ProjectSearch projects={initialProjects} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
       </div>
 
