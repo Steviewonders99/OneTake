@@ -6,7 +6,9 @@ import type { ExtractionResult } from '@/lib/types';
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  const t0 = Date.now();
   const { userId } = await auth();
+  console.log(`[extract/paste] auth: ${Date.now() - t0}ms`);
 
   if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,52 +18,48 @@ export async function POST(request: Request) {
     const body = await request.json();
     const text = body.text;
 
-    if (!text || typeof text !== 'string') {
-      return Response.json(
-        { error: 'Missing or invalid "text" field in request body' },
-        { status: 400 }
-      );
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return Response.json({ error: 'Missing or empty text' }, { status: 400 });
     }
 
-    if (text.trim().length === 0) {
-      return Response.json(
-        { error: 'Text content cannot be empty' },
-        { status: 400 }
-      );
-    }
-
-    // Build the system prompt with all active schemas
+    // Build system prompt (DB query for schemas)
+    const t1 = Date.now();
     const systemPrompt = await buildExtractionSystemPrompt();
+    console.log(`[extract/paste] schema: ${Date.now() - t1}ms, prompt: ${systemPrompt.length} chars`);
 
-    // Call Gemma 4 via NIM for extraction (free, fast)
-    // Falls back to Kimi K2.5 on NIM, then OpenRouter as last resort
+    // Call LLM
+    const t2 = Date.now();
     const rawResponse = await callNIM(
       systemPrompt,
-      `Please analyze the following project description or RFP text and extract structured data:\n\n${text}`
+      `Analyze this project description and extract structured data. Be generous with inference — fill in reasonable defaults for fields you can guess from context. It is better to provide a draft value than to leave it blank.\n\n${text}`
     );
+    console.log(`[extract/paste] LLM: ${Date.now() - t2}ms, response: ${rawResponse.length} chars`);
 
-    // Parse the JSON response
+    // Parse JSON — aggressively strip markdown fences and surrounding text
     let extraction: ExtractionResult;
     try {
-      // Strip potential markdown code fences
-      const cleaned = rawResponse.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+      let cleaned = rawResponse;
+      // Strip markdown code fences
+      cleaned = cleaned.replace(/^```(?:json)?\s*/gm, '').replace(/\s*```\s*$/gm, '').trim();
+      // If response starts with text before JSON, extract just the JSON
+      const jsonStart = cleaned.indexOf('{');
+      const jsonEnd = cleaned.lastIndexOf('}');
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        cleaned = cleaned.slice(jsonStart, jsonEnd + 1);
+      }
       extraction = JSON.parse(cleaned) as ExtractionResult;
     } catch {
+      console.error('[extract/paste] JSON parse failed. Raw:', rawResponse.slice(0, 300));
       return Response.json(
-        {
-          error: 'Failed to parse extraction result from AI',
-          raw_response: rawResponse,
-        },
-        { status: 502 }
+        { error: 'Failed to parse extraction result from AI', raw_response: rawResponse.slice(0, 500) },
+        { status: 502 },
       );
     }
 
+    console.log(`[extract/paste] total: ${Date.now() - t0}ms, type: ${extraction.detected_task_type}`);
     return Response.json({ extraction });
   } catch (error) {
-    console.error('[api/extract/paste] Extraction failed:', error);
-    return Response.json(
-      { error: 'Failed to extract from pasted text' },
-      { status: 500 }
-    );
+    console.error('[extract/paste] failed:', error);
+    return Response.json({ error: 'Failed to extract from pasted text' }, { status: 500 });
   }
 }
