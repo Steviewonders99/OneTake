@@ -38,6 +38,7 @@ export function DeepDiveClient({ initialProjects }: Props) {
   const [channels, setChannels] = useState<any[]>([]);
   const [locales, setLocales] = useState<any[]>([]);
   const [countryPerf, setCountryPerf] = useState<any[]>([]);
+  const [paidData, setPaidData] = useState<any>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
   const selected = selectedId ? initialProjects.find(p => p.id === selectedId) : null;
@@ -55,13 +56,15 @@ export function DeepDiveClient({ initialProjects }: Props) {
       fetch(`/api/projects/${selectedId}/channels`).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`/api/projects/${selectedId}/locales`).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`/api/projects/${selectedId}/countries`).then(r => r.ok ? r.json() : []).catch(() => []),
-    ]).then(([funnelRes, weeklyRes, channelsRes, localesRes, countryRes]) => {
+      fetch(`/api/projects/${selectedId}/paid?start=${start}&end=${end}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([funnelRes, weeklyRes, channelsRes, localesRes, countryRes, paidRes]) => {
       if (cancelled) return;
       setFunnelData(funnelRes);
       setWeeklyData(weeklyRes);
       setChannels(channelsRes);
       setLocales(localesRes);
       setCountryPerf(countryRes);
+      setPaidData(paidRes);
     }).catch(e => {
       console.error('Failed to load deep dive data', e);
     }).finally(() => {
@@ -366,41 +369,65 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       )}
 
-      {/* Section 5: Paid Summary (if project has spend) */}
-      {rangeSpend > 0 && (
+      {/* Section 5: Paid Performance (from Meta/Reddit/Google Ads APIs) */}
+      {paidData?.totals && paidData.totals.spend > 0 && (
         <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div className="flex items-center gap-2.5 mb-5">
             <div className="flex items-center justify-center font-bold text-white text-[10px]"
                  style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.rose }}>5</div>
-            <div className="text-sm font-bold" style={{ color: BRAND.text }}>Paid Performance Summary</div>
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-[24px] font-extrabold" style={{ color: BRAND.text }}>{formatEur(rangeSpend)}</div>
-              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>Total Spend</div>
-            </div>
-            <div className="text-center">
-              <div className="text-[24px] font-extrabold" style={{ color: BRAND.text }}>{rangeConv.toLocaleString()}</div>
-              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>
-                {isAidaForm ? 'Forms Completed' : 'NDA / MFA'}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-[24px] font-extrabold" style={{ color: BRAND.blue }}>
-                {rangeConv > 0 ? formatEur(rangeSpend / rangeConv) : '—'}
-              </div>
-              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>
-                {isAidaForm ? 'Cost / Form' : 'Cost / NDA'}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-[24px] font-extrabold" style={{ color: rangeSpend > 0 && rangeConv > 0 && (rangeSpend / rangeConv) < 38.5 ? BRAND.blue : BRAND.rose }}>
-                {rangeConv > 0 ? `${(38.5 / (rangeSpend / rangeConv)).toFixed(1)}x` : '—'}
-              </div>
-              <div className="text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: BRAND.text3 }}>ROAS</div>
+            <div>
+              <div className="text-sm font-bold" style={{ color: BRAND.text }}>Paid Campaign Performance</div>
+              <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>Meta Ads API · Date-filtered</div>
             </div>
           </div>
+          {/* Summary metrics strip */}
+          <div className="grid grid-cols-6 gap-3 mb-5">
+            {[
+              { label: 'Impressions', value: paidData.totals.impressions.toLocaleString() },
+              { label: 'Clicks', value: paidData.totals.clicks.toLocaleString() },
+              { label: 'Spend', value: formatEur(paidData.totals.spend) },
+              { label: 'CPM', value: formatEur(paidData.totals.cpm) },
+              { label: 'CPC', value: formatEur(paidData.totals.cpc) },
+              { label: 'CTR', value: `${paidData.totals.ctr}%` },
+            ].map(m => (
+              <div key={m.label} className="bg-[#F6F7FB] rounded-xl px-3 py-3 text-center">
+                <div className="text-[18px] font-extrabold" style={{ color: BRAND.text }}>{m.value}</div>
+                <div className="text-[8px] uppercase tracking-[0.1em] mt-0.5" style={{ color: BRAND.text3 }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Per-campaign table */}
+          {paidData.campaigns?.length > 0 && (
+            <div className="overflow-hidden rounded-xl border border-black/[0.06]">
+              <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: BRAND.bgRaised }}>
+                    {['Campaign', 'Impressions', 'Clicks', 'Spend', 'CTR', 'CPC', 'CPA'].map(h => (
+                      <th key={h} className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
+                          style={{ color: BRAND.text3 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paidData.campaigns.map((c: any, i: number) => (
+                    <tr key={c.campaign} className="border-t border-black/[0.04]"
+                        style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
+                      <td className="px-3 py-2.5 text-[11px] font-medium" style={{ color: BRAND.text }}>{c.campaign}</td>
+                      <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.impressions?.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.clicks?.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-[12px] font-semibold tabular-nums">{formatEur(c.spend)}</td>
+                      <td className="px-3 py-2.5 text-[11px] tabular-nums">{c.ctr}%</td>
+                      <td className="px-3 py-2.5 text-[11px] tabular-nums">{formatEur(c.cpc)}</td>
+                      <td className="px-3 py-2.5 text-[11px] font-bold tabular-nums" style={{ color: c.cpa > 0 && c.cpa < 38.5 ? BRAND.blue : BRAND.rose }}>
+                        {c.cpa > 0 ? formatEur(c.cpa) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

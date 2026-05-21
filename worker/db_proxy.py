@@ -430,6 +430,59 @@ async def get_locales(request: web.Request):
     return web.json_response(rows)
 
 
+async def get_paid_summary(request: web.Request):
+    """Paid campaign metrics from NDM: impressions, clicks, spend, CPM, CTR, CPC, CPA."""
+    from datetime import date as _date
+    pid = request.match_info["id"]
+    start_str = request.query.get("start")
+    end_str = request.query.get("end")
+
+    where_date = ""
+    params = [pid]
+    if start_str and end_str:
+        start = _date.fromisoformat(start_str)
+        end = _date.fromisoformat(end_str)
+        where_date = " AND date >= $2 AND date <= $3"
+        params.extend([start, end])
+
+    rows = await query(
+        f"SELECT channel as campaign, "
+        f"SUM(impressions) as impressions, SUM(clicks) as clicks, "
+        f"SUM(spend)::FLOAT as spend, SUM(conversions) as conversions "
+        f"FROM normalized_daily_metrics WHERE project_id = $1::UUID{where_date} "
+        f"GROUP BY channel ORDER BY SUM(spend) DESC",
+        *params,
+    )
+
+    total_imp = sum(r.get("impressions", 0) or 0 for r in rows)
+    total_clicks = sum(r.get("clicks", 0) or 0 for r in rows)
+    total_spend = sum(r.get("spend", 0) or 0 for r in rows)
+    total_conv = sum(r.get("conversions", 0) or 0 for r in rows)
+
+    # Add computed metrics per campaign
+    for r in rows:
+        imp = r.get("impressions", 0) or 0
+        cl = r.get("clicks", 0) or 0
+        sp = r.get("spend", 0) or 0
+        cv = r.get("conversions", 0) or 0
+        r["cpm"] = round(sp / imp * 1000, 2) if imp > 0 else 0
+        r["ctr"] = round(cl / imp * 100, 2) if imp > 0 else 0
+        r["cpc"] = round(sp / cl, 2) if cl > 0 else 0
+        r["cpa"] = round(sp / cv, 2) if cv > 0 else 0
+
+    return web.json_response({
+        "campaigns": rows,
+        "totals": {
+            "impressions": total_imp, "clicks": total_clicks,
+            "spend": round(total_spend, 2), "conversions": total_conv,
+            "cpm": round(total_spend / total_imp * 1000, 2) if total_imp > 0 else 0,
+            "ctr": round(total_clicks / total_imp * 100, 2) if total_imp > 0 else 0,
+            "cpc": round(total_spend / total_clicks, 2) if total_clicks > 0 else 0,
+            "cpa": round(total_spend / total_conv, 2) if total_conv > 0 else 0,
+        },
+    })
+
+
 async def get_country_performance(request: web.Request):
     """Per-country funnel performance: views, apply clicks, applications."""
     pid = request.match_info["id"]
@@ -480,6 +533,7 @@ def create_app() -> web.Application:
     app.router.add_get("/projects/{id}/locales", get_locales)
     app.router.add_get("/projects/{id}/channels", get_channels)
     app.router.add_get("/projects/{id}/countries", get_country_performance)
+    app.router.add_get("/projects/{id}/paid", get_paid_summary)
     app.router.add_post("/pages/normalize", normalize_pages)
     app.router.add_post("/projects/sync", trigger_sync)
     app.router.add_post("/refresh", refresh_view)
