@@ -130,7 +130,17 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
     [assets],
   );
 
-  const socialCopy = useMemo(() => allCopy.filter(a => a.asset_type === "copy"), [allCopy]);
+  // Hide platforms with no useful copy (empty body or pipeline-generated stubs)
+  const HIDDEN_PLATFORMS = new Set(["telegram_card", "Transparent job boards", "facebook_stories"]);
+
+  const socialCopy = useMemo(() => allCopy.filter(a => {
+    if (a.asset_type !== "copy") return false;
+    if (HIDDEN_PLATFORMS.has(a.platform ?? "")) return false;
+    const content = (a.content ?? {}) as Record<string, unknown>;
+    const body = String(content.full_description ?? content.body_text ?? content.subheadline ?? "");
+    return body.length > 50; // Skip stubs with no real content
+  }), [allCopy]);
+
   const portalCopy = useMemo(() => allCopy.filter(a => a.asset_type === "job_portal_copy"), [allCopy]);
 
   const activeCopy = activeType === "social" ? socialCopy : portalCopy;
