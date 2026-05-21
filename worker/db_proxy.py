@@ -458,10 +458,21 @@ async def get_paid_summary(request: web.Request):
     total_clicks = sum(r.get("clicks", 0) or 0 for r in rows)
     total_spend = sum(r.get("spend", 0) or 0 for r in rows)
     # Use GA4 conversions (real) instead of NDM conversions (Meta-reported, often inflated)
-    ga4_conv_row = await query(
-        "SELECT nda_signed FROM ga4_project_funnel WHERE project_id = $1::UUID AND source = 'all_campaigns'",
-        pid,
-    )
+    # Date-filtered: use ga4_organic_weekly if dates provided, else all-time ga4_project_funnel
+    if start_str and end_str:
+        from datetime import date as _date2
+        s2 = _date2.fromisoformat(start_str)
+        e2 = _date2.fromisoformat(end_str)
+        ga4_conv_row = await query(
+            "SELECT SUM(conversions) as nda_signed FROM ga4_organic_weekly "
+            "WHERE project_id = $1::UUID AND week_start >= $2 AND week_start <= $3",
+            pid, s2, e2,
+        )
+    else:
+        ga4_conv_row = await query(
+            "SELECT nda_signed FROM ga4_project_funnel WHERE project_id = $1::UUID AND source = 'all_campaigns'",
+            pid,
+        )
     ga4_conv = ga4_conv_row[0].get("nda_signed", 0) if ga4_conv_row else 0
     real_conv = ga4_conv if ga4_conv > 0 else sum(r.get("conversions", 0) or 0 for r in rows)
 
