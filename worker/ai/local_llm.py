@@ -157,15 +157,17 @@ async def generate_copy(
         {"role": "user", "content": user_prompt},
     ]
 
-    # Model cascade: Gemma 27B (creative) → Kimi K2.5 (fallback) — NIM only, no paid APIs
+    # Model cascade: NIM (free) → OpenRouter (paid fallback)
     providers = []
     if NVIDIA_NIM_API_KEY:
-        providers.append(("NIM-Gemma27B", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_CREATIVE_MODEL))
-        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.6"))
+        providers.append(("NIM-Gemma27B", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, NVIDIA_NIM_CREATIVE_MODEL, 60))
+        providers.append(("NIM-Kimi", f"{NVIDIA_NIM_BASE_URL}/chat/completions", NVIDIA_NIM_API_KEY, "moonshotai/kimi-k2.6", 60))
+    if OPENROUTER_API_KEY:
+        providers.append(("OpenRouter-Gemma", "https://openrouter.ai/api/v1/chat/completions", OPENROUTER_API_KEY, NVIDIA_NIM_CREATIVE_MODEL, 180))
 
-    for provider_name, url, key, model in providers:
+    for provider_name, url, key, model, timeout_s in providers:
         try:
-            async with httpx.AsyncClient(timeout=600) as client:
+            async with httpx.AsyncClient(timeout=timeout_s) as client:
                 payload = {
                     "model": model,
                     "messages": messages,
