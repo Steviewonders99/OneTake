@@ -102,6 +102,7 @@ export default function IntakeDetailPage({
   const [changesNote, setChangesNote] = useState("");
   const [showChangesModal, setShowChangesModal] = useState(false);
   const [computeJob, setComputeJob] = useState<ComputeJob | null>(null);
+  const [viewMode, setViewMode] = useState<"marketing" | "recruiter">("marketing");
   const [allComputeJobs, setAllComputeJobs] = useState<ComputeJob[]>([]);
   const [activeAssetTab, setActiveAssetTab] = useState<'characters' | 'elements' | 'composed' | 'mockups'>('characters');
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
@@ -520,6 +521,34 @@ export default function IntakeDetailPage({
                 <StatusBadge status={request.status} />
                 <UrgencyBadge urgency={request.urgency} />
                 <PipelineModeBadge mode={pipelineMode === 'full' ? 'full' : 'organic'} />
+                {isOrganic && role === "admin" && (
+                  <div style={{ display: "flex", background: "#F3F4F6", borderRadius: 9999, padding: 2 }}>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("marketing")}
+                      style={{
+                        padding: "4px 12px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                        background: viewMode === "marketing" ? "#32373C" : "transparent",
+                        color: viewMode === "marketing" ? "#fff" : "#6B7280",
+                        border: "none", cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      Marketing
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("recruiter")}
+                      style={{
+                        padding: "4px 12px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                        background: viewMode === "recruiter" ? "#32373C" : "transparent",
+                        color: viewMode === "recruiter" ? "#fff" : "#6B7280",
+                        border: "none", cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      Recruiter
+                    </button>
+                  </div>
+                )}
                 {canEdit && (
                   <EditMode
                     requestId={request.id}
@@ -546,6 +575,18 @@ export default function IntakeDetailPage({
             </div>
           </div>
 
+          {/* Recruiter view mode — full RecruiterWorkspace */}
+          {viewMode === "recruiter" && isOrganic && (
+            <RecruiterWorkspace
+              request={request}
+              brief={brief}
+              assets={assets}
+              pipelineRuns={pipelineRuns}
+            />
+          )}
+
+          {/* Marketing view mode — full admin pipeline view */}
+          {viewMode === "marketing" && <>
           {/* Sticky Pipeline Nav */}
           <PipelineNav
             stages={[
@@ -1035,6 +1076,7 @@ export default function IntakeDetailPage({
           />
         )}
       </div>
+      </>}
     </AppShell>
   );
 }
