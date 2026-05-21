@@ -51,19 +51,6 @@ function CopyCard({ asset }: { asset: GeneratedAsset }) {
       padding: 16, display: "flex", flexDirection: "column", gap: 10,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A" }}>{actorName}</span>
-          {pillar && (
-            <span style={{
-              fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5,
-              padding: "2px 8px", borderRadius: 9999,
-              background: pillar === "earn" ? "#ECFDF5" : "#EEF2FF",
-              color: pillar === "earn" ? "#059669" : "#4F46E5",
-            }}>
-              {pillar}
-            </span>
-          )}
-        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <Globe size={11} style={{ color: "#8A8A8E" }} />
           <span style={{ fontSize: 11, color: "#8A8A8E" }}>{lang}</span>
@@ -151,13 +138,13 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
   // Get unique countries from portal copy
   const countries = useMemo(() => {
     const set = new Set<string>();
-    for (const a of portalCopy) {
+    for (const a of allCopy) {
       const content = (a.content ?? {}) as Record<string, unknown>;
-      const country = String(content.country ?? a.country ?? "");
-      if (country) set.add(country);
+      const country = String(content.country ?? (a as Record<string, unknown>).country ?? "");
+      if (country && country !== "undefined") set.add(country);
     }
     return Array.from(set).sort();
-  }, [portalCopy]);
+  }, [allCopy]);
 
   // Filter by country
   const countryFiltered = useMemo(() => {
@@ -214,7 +201,7 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
           </button>
         </div>
         {/* Country filter */}
-        {activeType === "portal" && countries.length > 0 && (
+        {countries.length > 0 && (
           <select
             value={activeCountry}
             onChange={(e) => { setActiveCountry(e.target.value); setActivePlatform(null); }}
