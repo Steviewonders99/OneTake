@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, BarChart3, Download, ExternalLink, FileText, Image, LayoutDashboard, Megaphone, TrendingUp, PlusCircle, Pencil } from "lucide-react";
 import RevisionModal from "@/components/RevisionModal";
+import RequestAssetsModal from "./RequestAssetsModal";
 import { getRecruiterStatus } from "@/lib/format";
 import CreativeLibrary from "./CreativeLibrary";
 import LinkBuilderBar from "./LinkBuilderBar";
@@ -273,50 +274,13 @@ export default function RecruiterWorkspace({
         />
       )}
 
-      {/* Request New Assets Modal */}
+      {/* Request New Assets Modal — structured form */}
       {showRequestModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}
-          onClick={() => setShowRequestModal(false)}>
-          <div style={{ background: "#FFFFFF", borderRadius: 16, padding: 32, maxWidth: 520, width: "100%", margin: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}
-            onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: "#1A1A1A" }}>Request New Assets</h2>
-            <p style={{ fontSize: 13, color: "#8A8A8E", marginBottom: 20 }}>Describe what you need — new images, copy for additional platforms, different messaging, or updated creatives.</p>
-            <textarea
-              id="asset-request-textarea"
-              placeholder="e.g., I need 3 new images for the India market showing office environments, plus copy for Naukri and TimesJobs..."
-              style={{
-                width: "100%", minHeight: 120, padding: 14, borderRadius: 10,
-                border: "1px solid #E5E5E5", fontSize: 14, fontFamily: "inherit",
-                resize: "vertical", outline: "none",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#6D28D9"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; }}
-            />
-            <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
-              <button type="button" onClick={() => setShowRequestModal(false)}
-                style={{ padding: "8px 20px", borderRadius: 9999, border: "1px solid #E5E5E5", background: "#FFFFFF", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#6B7280" }}>
-                Cancel
-              </button>
-              <button type="button"
-                onClick={async () => {
-                  const textarea = document.getElementById("asset-request-textarea") as HTMLTextAreaElement;
-                  const feedback = textarea?.value ?? "";
-                  if (!feedback.trim()) return;
-                  try {
-                    await fetch(`/api/generate/${request.id}`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ feedback }),
-                    });
-                    setShowRequestModal(false);
-                  } catch { /* silent */ }
-                }}
-                style={{ padding: "8px 20px", borderRadius: 9999, background: "#32373C", color: "#FFFFFF", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-                Submit Request
-              </button>
-            </div>
-          </div>
-        </div>
+        <RequestAssetsModal
+          requestId={request.id}
+          campaignTitle={request.title}
+          onClose={() => setShowRequestModal(false)}
+        />
       )}
     </div>
   );
