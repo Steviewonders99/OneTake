@@ -16,6 +16,7 @@ interface HeroMetricsProps {
   organicCount: number;
   totalCount: number;
   organicShare30dAgo?: number;
+  datePreset?: number | string;
 }
 
 export function HeroMetrics(props: HeroMetricsProps) {
@@ -29,7 +30,7 @@ export function HeroMetrics(props: HeroMetricsProps) {
   const cards = [
     {
       gradient: BRAND.gradDeep,
-      eyebrow: 'Total Applications This Week',
+      eyebrow: `Total Applications — ${props.datePreset === 'all' ? 'All Time' : props.datePreset ? `Last ${props.datePreset} Days` : 'Selected Range'}`,
       number: props.totalConversions.toLocaleString(),
       delta: convDelta !== null
         ? `${convDelta > 0 ? '↑' : '↓'} ${Math.abs(Math.round(convDelta))}% vs last week (${props.previousConversions})`

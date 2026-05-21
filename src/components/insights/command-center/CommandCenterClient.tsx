@@ -234,9 +234,10 @@ export function CommandCenterClient({ initialProjects }: Props) {
       />
 
       <HeroMetrics
-        totalConversions={currentConversions}
+        totalConversions={totalConversions}
         previousConversions={previousConversions}
         avg30dConversions={Math.round(totalConversions / Math.max(weekStarts.length, 1))}
+        datePreset={dateRangeV2.preset}
         blendedCpa={blendedCpa}
         previousCpa={prevCpa}
         roas={blendedCpa && blendedCpa > 0 ? 38.5 / blendedCpa : null}
