@@ -378,7 +378,8 @@ export default function IntakeDetailPage({
     (role === 'lead_recruiter' || role === 'admin');
 
   // Recruiter sees a simplified read-only view
-  if (role === "recruiter") {
+  // Admin also sees recruiter workspace for organic campaigns (unified view)
+  if (role === "recruiter" || (role === "admin" && isOrganic)) {
     return (
       <AppShell>
         <RecruiterWorkspace
