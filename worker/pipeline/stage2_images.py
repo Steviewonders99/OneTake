@@ -592,9 +592,12 @@ async def _generate_validated_image(
             mild_count = sum(1 for w in mild_positive if w in raw)
             neg_count = sum(1 for w in negative if w in raw)
 
-            if neg_count > 0:
+            if neg_count > pos_count + mild_count and neg_count >= 3:
                 qa_score = 0.40
-                logger.info("VQA prose: %d negative signals — score %.2f", neg_count, qa_score)
+                logger.info("VQA prose: %d negative vs %d positive — score %.2f", neg_count, pos_count + mild_count, qa_score)
+            elif neg_count > 0 and pos_count == 0:
+                qa_score = 0.55
+                logger.info("VQA prose: %d negative, no positives — score %.2f", neg_count, qa_score)
             elif pos_count >= 3:
                 qa_score = 0.92  # Strong positive = high confidence pass
                 logger.info("VQA prose: %d strong positive signals — score %.2f", pos_count, qa_score)
