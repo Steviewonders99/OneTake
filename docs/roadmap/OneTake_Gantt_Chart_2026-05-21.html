@@ -1367,6 +1367,47 @@
 </table>
 </div>
 
+<!-- WEEK FILTER -->
+<div style="display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; align-items: center;">
+  <span style="font-size: 11px; font-weight: 700; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 8px;">Jump to week:</span>
+  <button onclick="filterWeek('all')" class="week-btn active" id="btn-all" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #32373C; background: #32373C; color: #fff; cursor: pointer; font-family: inherit;">All Weeks</button>
+  <button onclick="filterWeek(1)" class="week-btn" id="btn-w1" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W1</button>
+  <button onclick="filterWeek(2)" class="week-btn" id="btn-w2" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W2</button>
+  <button onclick="filterWeek(3)" class="week-btn" id="btn-w3" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W3</button>
+  <button onclick="filterWeek(4)" class="week-btn" id="btn-w4" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W4</button>
+  <button onclick="filterWeek(5)" class="week-btn" id="btn-w5" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W5</button>
+  <button onclick="filterWeek(6)" class="week-btn" id="btn-w6" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W6</button>
+  <button onclick="filterWeek(7)" class="week-btn" id="btn-w7" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #0348B2; background: #EEF2FF; color: #0348B2; cursor: pointer; font-family: inherit;">W7 (Current)</button>
+  <button onclick="filterWeek(8)" class="week-btn" id="btn-w8" style="padding: 5px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid #E5E5E5; background: #fff; color: #6B7280; cursor: pointer; font-family: inherit;">W8</button>
+</div>
+
+<!-- STAKEHOLDERS -->
+<div style="background: #FAFAFA; border: 1px solid #F0F0F0; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;">
+  <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #737373; margin-bottom: 10px;">Stakeholders & Responsibilities</div>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+    <div style="font-size: 12px;">
+      <div style="font-weight: 700; color: #1A1A1A;">Steven Junop</div>
+      <div style="color: #737373; font-size: 11px;">Digital Marketing Manager</div>
+      <div style="color: #0348B2; font-size: 10px; margin-top: 2px;">Pipeline, Analytics, Recruiter Portal, Tracking</div>
+    </div>
+    <div style="font-size: 12px;">
+      <div style="font-weight: 700; color: #1A1A1A;">Jennifer Martinez</div>
+      <div style="color: #737373; font-size: 11px;">Marketing Coordinator</div>
+      <div style="color: #0348B2; font-size: 10px; margin-top: 2px;">Campaign Ops, Recruiter Enablement, QA</div>
+    </div>
+    <div style="font-size: 12px;">
+      <div style="font-weight: 700; color: #1A1A1A;">Michael Chen</div>
+      <div style="color: #737373; font-size: 11px;">Engineering (China Team)</div>
+      <div style="color: #0348B2; font-size: 10px; margin-top: 2px;">Azure Migration, CI/CD, Infrastructure</div>
+    </div>
+    <div style="font-size: 12px;">
+      <div style="font-weight: 700; color: #1A1A1A;">Design Team</div>
+      <div style="color: #737373; font-size: 11px;">Creative Production</div>
+      <div style="color: #0348B2; font-size: 10px; margin-top: 2px;">Figma Composition, Brand Assets, Creative QA</div>
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <div class="footer">
   <div style="display: flex; align-items: center; gap: 8px;">
@@ -1375,7 +1416,7 @@
     <span>OneForma / Centific</span>
   </div>
   <div>
-    Generated May 21, 2026 &middot; Steven Junop &middot; Digital Marketing Manager &middot; 53+ features across 6 tracks
+    Generated May 21, 2026 &middot; Steven Junop &middot; Digital Marketing Manager &middot; 68+ features across 7 tracks
   </div>
 </div>
 
@@ -1428,7 +1469,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
   positionLine();
   window.addEventListener('resize', positionLine);
+
+  // Collapse all tracks by default — cleaner overview
+  var tracks = ['pipeline', 'tracking', 'enablement', 'integrations', 'analytics', 'registry', 'recruiter'];
+  tracks.forEach(function(t) { toggleTrack(t); });
 });
+
+// Week filter — highlight columns for selected week
+function filterWeek(week) {
+  // Reset all buttons
+  document.querySelectorAll('.week-btn').forEach(function(btn) {
+    btn.style.background = '#fff';
+    btn.style.color = '#6B7280';
+    btn.style.borderColor = '#E5E5E5';
+  });
+
+  if (week === 'all') {
+    document.getElementById('btn-all').style.background = '#32373C';
+    document.getElementById('btn-all').style.color = '#fff';
+    document.getElementById('btn-all').style.borderColor = '#32373C';
+    // Show all week columns
+    var allCols = document.querySelectorAll('.gantt th, .gantt td');
+    allCols.forEach(function(el) { el.style.opacity = '1'; });
+    // Expand all tracks
+    ['pipeline', 'tracking', 'enablement', 'integrations', 'analytics', 'registry', 'recruiter'].forEach(function(t) {
+      var rows = document.querySelectorAll('.track-' + t);
+      rows.forEach(function(r) { r.style.display = 'table-row'; });
+      var chev = document.getElementById('chevron-' + t);
+      if (chev) chev.innerHTML = '\u25BC';
+    });
+  } else {
+    var btnId = 'btn-w' + week;
+    var btn = document.getElementById(btnId);
+    if (btn) {
+      btn.style.background = '#0348B2';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#0348B2';
+    }
+    // Dim non-selected week columns (visual only, keeps layout stable)
+    var headerCells = document.querySelectorAll('.gantt-header-row th.week-col');
+    headerCells.forEach(function(th, idx) {
+      var weekIdx = idx + 1;
+      var allInWeek = [];
+      // Find all cells in this column group
+      var opacity = weekIdx === week ? '1' : '0.25';
+      th.style.opacity = opacity;
+    });
+    // Expand all tracks to show the week's work
+    ['pipeline', 'tracking', 'enablement', 'integrations', 'analytics', 'registry', 'recruiter'].forEach(function(t) {
+      var rows = document.querySelectorAll('.track-' + t);
+      rows.forEach(function(r) { r.style.display = 'table-row'; });
+      var chev = document.getElementById('chevron-' + t);
+      if (chev) chev.innerHTML = '\u25BC';
+    });
+  }
+}
 </script>
 
 </body>
