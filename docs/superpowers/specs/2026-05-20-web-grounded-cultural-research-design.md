@@ -345,3 +345,74 @@ This replaces the current generic "Assets & Creatives" tab with actionable intel
 - Channel recommender module: 1 hour
 - Stage 3 dynamic portals: 30 min
 - Recruiter view update: 30 min
+
+## Phase 3: Applicant Tracking + UTM Attribution (Post-Demo Wire-Up)
+
+### Problem
+
+Recruiter Dashboard and My Analytics tabs show tracked link clicks but NOT applicants driven by those links. Clicks ≠ conversions. Recruiters need to see: "My LinkedIn link drove 43 applicants" not just "43 clicks."
+
+### Solution
+
+Wire UTM parameters through the full funnel: tracked link click → landing page / WP job post → application submit → match back to UTM source.
+
+### Data Flow
+
+```
+Recruiter generates UTM link → /r/{slug} redirect (click counted)
+                              → LP or WP job post (UTM params in URL)
+                              → User submits application (GTM fires conversion event)
+                              → GA4 attributes conversion to UTM source/medium/content
+                              → Nightly sync pulls GA4 conversion data into tracked_links.applicants
+```
+
+### Schema Changes
+
+**`tracked_links` table — add columns:**
+- `applicants` (int, default 0) — conversions attributed to this link
+- `nda_signed` (int, default 0) — applicants who completed NDA
+- `active_contributors` (int, default 0) — applicants who started doing tasks
+
+### API Changes
+
+**`GET /api/tracked-links`** — include `applicants` in response
+- Dashboard shows: clicks, applicants, CVR (applicants/clicks)
+- My Analytics shows: my links → my applicants → my conversion rate
+
+### Dashboard Enhancements
+
+**Stats row adds:**
+- Total Applicants (sum of applicants across all links)
+- Campaign CVR (total applicants / total clicks)
+- Top Converting Channel (highest applicants)
+
+**My Analytics adds:**
+- My Applicants (applicants from recruiter's links only)
+- My CVR vs team average
+- "Applicants Driven" leaderboard
+
+### Implementation
+
+1. Add `applicants`, `nda_signed`, `active_contributors` columns to `tracked_links`
+2. Build GA4 conversion sync job (nightly cron via worker)
+3. Match GA4 conversions to tracked_links via UTM params
+4. Update Dashboard + My Analytics components to show applicant data
+5. Add CVR calculation (applicants / clicks × 100)
+
+### WP REST API Auto-Update (from Request Assets Modal)
+
+When recruiter requests WP/LP edit:
+1. Parse edit request (section + details)
+2. `GET /wp-json/wp/v2/pages?slug=motto` → get page ID
+3. LLM rewrites the specified section with the requested changes
+4. `PUT /wp-json/wp/v2/pages/{id}` → update content
+5. Notify recruiter: "Job post updated — changes are live"
+
+### Excel Locale Expansion (from Request Assets Modal)
+
+When recruiter uploads Excel with new locales:
+1. Parse Excel → extract locale, language, country, apply_url columns
+2. Create `generate_country` compute jobs per new locale
+3. Worker runs organic pipeline per locale (research → personas → images → copy)
+4. Update WP job post with new locale links section
+5. Notify recruiter: "3 new locales added — content generating"
