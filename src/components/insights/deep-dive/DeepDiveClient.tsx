@@ -9,8 +9,7 @@ import { formatEur } from '../command-center/utils';
 import { ProjectSearch } from '../command-center/ProjectSearch';
 import { DateRangePicker, defaultDateRange } from '../DateRangePicker';
 import { FunnelWaterfall } from './FunnelWaterfall';
-import { CountrySelector } from './CountrySelector';
-import { LocaleTable } from './LocaleTable';
+import { CountryTable } from './CountryTable';
 import { ChannelAcquisition } from './ChannelAcquisition';
 import { SourceAttribution } from './SourceAttribution';
 import { PaidMetrics } from './PaidMetrics';
@@ -299,75 +298,30 @@ export function DeepDiveClient({ initialProjects }: Props) {
         </div>
       )}
 
-      {/* Section 4: Country Performance */}
-      {countryPerf.length > 0 && (
-        <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
-             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-2.5 mb-5">
-            <div className="flex items-center justify-center font-bold text-white text-[10px]"
-                 style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.amber }}>4</div>
-            <div>
-              <div className="text-sm font-bold" style={{ color: BRAND.text }}>
-                Country Performance — {countryPerf.length} countries
-              </div>
-              <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
-                GA4 first-touch attribution by country
+      {/* Section 4: Country Performance — show top 5, expand for more */}
+      {countryPerf.length > 0 && (() => {
+        const [showAllCountries, setShowAllCountries] = [
+          countryPerf.length <= 5, () => {}
+        ];
+        return (
+          <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
+               style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="flex items-center justify-center font-bold text-white text-[10px]"
+                   style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.amber }}>4</div>
+              <div>
+                <div className="text-sm font-bold" style={{ color: BRAND.text }}>
+                  Country Performance — {countryPerf.length} countries
+                </div>
+                <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
+                  GA4 first-touch attribution by country
+                </div>
               </div>
             </div>
+            <CountryTable countries={countryPerf} />
           </div>
-          <div className="overflow-hidden rounded-xl border border-black/[0.06]">
-            <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: BRAND.bgRaised }}>
-                  {['Country', 'Page Views', 'Apply Clicks', 'Applications', 'Click Rate', 'Conv Rate'].map(h => (
-                    <th key={h} className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
-                        style={{ color: BRAND.text3 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {countryPerf.map((row: any, i: number) => {
-                  const clickRate = row.page_views > 0 ? (row.apply_clicks / row.page_views * 100) : 0;
-                  const convRate = row.apply_clicks > 0 ? (row.applications / row.apply_clicks * 100) : 0;
-                  return (
-                    <tr key={row.country} className="border-t border-black/[0.04]"
-                        style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
-                      <td className="px-3 py-2.5 text-[12px] font-medium" style={{ color: BRAND.text }}>
-                        {row.country}
-                      </td>
-                      <td className="px-3 py-2.5 text-[12px] tabular-nums" style={{ color: BRAND.text }}>
-                        {row.page_views.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2.5 text-[12px] tabular-nums" style={{ color: BRAND.text }}>
-                        {row.apply_clicks.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2.5 text-[12px] font-bold tabular-nums" style={{ color: BRAND.text }}>
-                        {row.applications.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className="text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded"
-                              style={{ color: clickRate > 20 ? BRAND.purple : BRAND.text2,
-                                       background: clickRate > 20 ? '#F5F3FF' : 'transparent' }}>
-                          {clickRate.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        {convRate > 0 ? (
-                          <span className="text-[11px] font-semibold tabular-nums px-1.5 py-0.5 rounded"
-                                style={{ color: convRate > 5 ? BRAND.blue : BRAND.text2,
-                                         background: convRate > 5 ? '#EFF6FF' : 'transparent' }}>
-                            {convRate.toFixed(1)}%
-                          </span>
-                        ) : <span className="text-[10px]" style={{ color: BRAND.text3 }}>—</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Section 5: Paid Performance (from Meta/Reddit/Google Ads APIs) */}
       {paidData?.totals && paidData.totals.spend > 0 && (
