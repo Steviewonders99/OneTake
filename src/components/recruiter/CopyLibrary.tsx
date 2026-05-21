@@ -234,7 +234,7 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
       }}>
         <MessageSquare size={14} style={{ color: "#6D28D9" }} />
         <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Copy Library</span>
-        <span style={{ fontSize: 11, color: "#8A8A8E" }}>{copyAssets.length} variants</span>
+        <span style={{ fontSize: 11, color: "#8A8A8E" }}>{allCopy.length} variants</span>
       </div>
 
       {/* Platform tabs */}
