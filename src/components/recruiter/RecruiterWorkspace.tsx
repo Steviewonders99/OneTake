@@ -9,6 +9,7 @@ import LinkBuilderBar from "./LinkBuilderBar";
 import DashboardTab from "./DashboardTab";
 import OrganicTab from "./OrganicTab";
 import MessagingAccordion from "./MessagingAccordion";
+import CopyLibrary from "./CopyLibrary";
 import { StatsRow } from "./StatsRow";
 import { MyAnalyticsTab } from "./MyAnalyticsTab";
 import type {
@@ -170,6 +171,7 @@ export default function RecruiterWorkspace({
               {/* Left column */}
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <MessagingAccordion brief={brief} />
+                <CopyLibrary assets={assets} />
                 <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA", overflow: "hidden" }}>
                   <div style={{ padding: "14px 18px", borderBottom: "1px solid #E8E8EA", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Creative Library</span>
