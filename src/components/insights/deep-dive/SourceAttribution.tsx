@@ -120,22 +120,9 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
       }}
     >
       {/* ── header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 mb-5">
-        <div
-          className="flex items-center justify-center font-bold text-white text-[10px]"
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: 5,
-            background: BRAND.purple,
-          }}
-        >
-          3
-        </div>
-        <div>
-          <div className="text-sm font-bold leading-tight" style={{ color: BRAND.text }}>
-            Channel-Level Funnel Comparison
-          </div>
+      <div className="mb-5">
+        <div className="text-sm font-bold leading-tight" style={{ color: BRAND.text }}>
+          Channel-Level Funnel Comparison
         </div>
       </div>
 

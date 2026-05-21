@@ -94,12 +94,6 @@ export function WeeklyTrends({ weeks }: WeeklyTrendsProps) {
       {/* Header */}
       <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-3">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0"
-            style={{ background: BRAND.pink }}
-          >
-            6
-          </div>
           <h3 className="text-sm font-bold" style={{ color: BRAND.text }}>
             Performance Over Time
           </h3>

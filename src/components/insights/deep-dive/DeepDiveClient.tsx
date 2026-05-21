@@ -306,16 +306,12 @@ export function DeepDiveClient({ initialProjects }: Props) {
         return (
           <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="flex items-center justify-center font-bold text-white text-[10px]"
-                   style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.amber }}>4</div>
-              <div>
-                <div className="text-sm font-bold" style={{ color: BRAND.text }}>
-                  Country Performance — {countryPerf.length} countries
-                </div>
-                <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
-                  GA4 first-touch attribution by country
-                </div>
+            <div className="mb-5">
+              <div className="text-sm font-bold" style={{ color: BRAND.text }}>
+                Country Performance — {countryPerf.length} countries
+              </div>
+              <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>
+                GA4 first-touch attribution by country
               </div>
             </div>
             <CountryTable countries={countryPerf} />
@@ -327,13 +323,9 @@ export function DeepDiveClient({ initialProjects }: Props) {
       {paidData?.totals && paidData.totals.spend > 0 && (
         <div className="bg-white rounded-2xl border border-black/[0.08] p-6 mb-5"
              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-2.5 mb-5">
-            <div className="flex items-center justify-center font-bold text-white text-[10px]"
-                 style={{ width: 20, height: 20, borderRadius: 5, background: BRAND.rose }}>5</div>
-            <div>
-              <div className="text-sm font-bold" style={{ color: BRAND.text }}>Paid Campaign Performance</div>
-              <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>Meta Ads API · Date-filtered</div>
-            </div>
+          <div className="mb-5">
+            <div className="text-sm font-bold" style={{ color: BRAND.text }}>Paid Campaign Performance</div>
+            <div className="text-[10px] mt-0.5" style={{ color: BRAND.text3 }}>Meta Ads API · Date-filtered</div>
           </div>
           {/* Summary metrics strip */}
           <div className="grid grid-cols-6 gap-3 mb-5">

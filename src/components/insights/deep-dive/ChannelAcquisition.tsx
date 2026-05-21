@@ -88,15 +88,17 @@ export function ChannelAcquisition({ sources, dateLabel }: ChannelAcquisitionPro
           {sorted.filter(r => r.wp_entry > 0).map((row) => {
             const pct = totalEntry > 0 ? (row.wp_entry / totalEntry) * 100 : 0;
             const widthPct = maxEntry > 0 ? Math.max((row.wp_entry / maxEntry) * 100, 3) : 3;
+            const meta = getChannelMeta(row.source);
             return (
               <div key={`${row.source}-${row.medium}`} className="flex items-center gap-2">
-                <div className="w-[90px] text-right text-[11px] font-medium shrink-0 truncate"
-                     style={{ color: BRAND.text2 }} title={`${row.source} / ${row.medium}`}>
-                  {displaySource(row.source)}
+                <div className="w-[130px] flex items-center gap-1.5 justify-end text-[11px] font-medium shrink-0 truncate"
+                     style={{ color: meta.color }} title={`${row.source} / ${row.medium}`}>
+                  {meta.icon}
+                  <span>{meta.label}</span>
                 </div>
                 <div className="flex-1 h-[24px] rounded-md relative" style={{ background: BRAND.bgRaised }}>
                   <div className="h-full rounded-md flex items-center justify-end px-2 transition-all duration-500"
-                       style={{ width: `${widthPct}%`, background: barColor(row.medium), minWidth: 52 }}>
+                       style={{ width: `${widthPct}%`, background: meta.color, minWidth: 52 }}>
                     <span className="text-[10px] font-bold text-white whitespace-nowrap">
                       {row.wp_entry.toLocaleString()}{' '}
                       <span className="font-normal opacity-80">{pct.toFixed(0)}%</span>
@@ -122,17 +124,21 @@ export function ChannelAcquisition({ sources, dateLabel }: ChannelAcquisitionPro
             <tbody>
               {sorted.map((row, i) => {
                 const cvr = row.wp_entry > 0 ? ((row.nda_signed / row.wp_entry) * 100) : 0;
+                const meta = getChannelMeta(row.source);
                 return (
                   <tr key={`${row.source}-${row.medium}-tbl`}
                       className="border-t border-black/[0.04]"
                       style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
                     <td className="px-3 py-2">
-                      <span className="text-[11px] font-medium" style={{ color: BRAND.text2 }}>
-                        {displaySource(row.source)}
-                      </span>
-                      <span className="text-[10px] ml-1" style={{ color: BRAND.text3 }}>
-                        / {row.medium}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span style={{ color: meta.color }}>{meta.icon}</span>
+                        <span className="text-[11px] font-medium" style={{ color: BRAND.text }}>
+                          {meta.label}
+                        </span>
+                        <span className="text-[10px]" style={{ color: BRAND.text3 }}>
+                          / {row.medium}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-[12px] tabular-nums" style={{ color: BRAND.text }}>
                       {row.wp_entry.toLocaleString()}
