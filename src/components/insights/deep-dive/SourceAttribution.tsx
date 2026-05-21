@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { BRAND } from '../command-center/types';
 import { formatEur } from '../command-center/utils';
 
@@ -60,10 +61,32 @@ function channelMeta(source: string, medium: string): { color: string; letter: s
 
 /* ─── component ─────────────────────────────────────────────────────── */
 
+type SortKey = 'source' | 'views' | 'apply' | 'apps' | 'rate' | 'cost' | 'cpa';
+
 export function SourceAttribution({ sources }: SourceAttributionProps) {
+  const [sortBy, setSortBy] = useState<SortKey>('views');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortBy === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(key); setSortDir('desc'); }
+  };
+
   if (!sources || sources.length === 0) return null;
 
-  const sorted = [...sources].sort((a, b) => b.wp_entry - a.wp_entry);
+  const sorted = [...sources].sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    switch (sortBy) {
+      case 'source': return dir * a.source.localeCompare(b.source);
+      case 'views': return dir * (a.wp_entry - b.wp_entry);
+      case 'apply': return dir * (a.apply_click - b.apply_click);
+      case 'apps': return dir * (a.nda_signed - b.nda_signed);
+      case 'rate': return dir * ((a.wp_entry > 0 ? a.nda_signed / a.wp_entry : 0) - (b.wp_entry > 0 ? b.nda_signed / b.wp_entry : 0));
+      case 'cost': return dir * (a.cost - b.cost);
+      case 'cpa': return dir * ((a.nda_signed > 0 ? a.cost / a.nda_signed : 999999) - (b.nda_signed > 0 ? b.cost / b.nda_signed : 999999));
+      default: return 0;
+    }
+  });
 
   // Totals
   const totals = sorted.reduce(
@@ -121,13 +144,22 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
         <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: BRAND.bgRaised }}>
-              {['Channel', 'Detail', 'Page Views', 'Apply Clicks', 'Applications', 'Entry→App', 'Cost', 'CPA'].map((h) => (
-                <th
-                  key={h}
-                  className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
-                  style={{ color: BRAND.text3 }}
-                >
-                  {h}
+              {([
+                { label: 'Channel', key: 'source' as SortKey },
+                { label: 'Detail', key: null },
+                { label: 'Page Views', key: 'views' as SortKey },
+                { label: 'Apply Clicks', key: 'apply' as SortKey },
+                { label: 'Applications', key: 'apps' as SortKey },
+                { label: 'Entry→App', key: 'rate' as SortKey },
+                { label: 'Cost', key: 'cost' as SortKey },
+                { label: 'CPA', key: 'cpa' as SortKey },
+              ]).map(col => (
+                <th key={col.label}
+                    className={`text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5 ${col.key ? 'cursor-pointer hover:text-[#4B5563]' : ''}`}
+                    style={{ color: sortBy === col.key ? BRAND.purple : BRAND.text3 }}
+                    onClick={() => col.key && toggleSort(col.key)}>
+                  {col.label}
+                  {sortBy === col.key && <span className="ml-0.5">{sortDir === 'desc' ? '↓' : '↑'}</span>}
                 </th>
               ))}
             </tr>

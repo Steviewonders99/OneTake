@@ -457,28 +457,37 @@ async def get_paid_summary(request: web.Request):
     total_imp = sum(r.get("impressions", 0) or 0 for r in rows)
     total_clicks = sum(r.get("clicks", 0) or 0 for r in rows)
     total_spend = sum(r.get("spend", 0) or 0 for r in rows)
-    total_conv = sum(r.get("conversions", 0) or 0 for r in rows)
+    # Use GA4 conversions (real) instead of NDM conversions (Meta-reported, often inflated)
+    ga4_conv_row = await query(
+        "SELECT nda_signed FROM ga4_project_funnel WHERE project_id = $1::UUID AND source = 'all_campaigns'",
+        pid,
+    )
+    ga4_conv = ga4_conv_row[0].get("nda_signed", 0) if ga4_conv_row else 0
+    real_conv = ga4_conv if ga4_conv > 0 else sum(r.get("conversions", 0) or 0 for r in rows)
 
-    # Add computed metrics per campaign
+    # Add computed metrics per campaign (use NDM for media metrics, GA4 for CPA)
     for r in rows:
         imp = r.get("impressions", 0) or 0
         cl = r.get("clicks", 0) or 0
         sp = r.get("spend", 0) or 0
-        cv = r.get("conversions", 0) or 0
         r["cpm"] = round(sp / imp * 1000, 2) if imp > 0 else 0
         r["ctr"] = round(cl / imp * 100, 2) if imp > 0 else 0
         r["cpc"] = round(sp / cl, 2) if cl > 0 else 0
-        r["cpa"] = round(sp / cv, 2) if cv > 0 else 0
+        # CPA uses GA4 conversions proportional to spend share
+        share = sp / total_spend if total_spend > 0 else 0
+        camp_conv = round(real_conv * share)
+        r["conversions"] = camp_conv
+        r["cpa"] = round(sp / camp_conv, 2) if camp_conv > 0 else 0
 
     return web.json_response({
         "campaigns": rows,
         "totals": {
             "impressions": total_imp, "clicks": total_clicks,
-            "spend": round(total_spend, 2), "conversions": total_conv,
+            "spend": round(total_spend, 2), "conversions": real_conv,
             "cpm": round(total_spend / total_imp * 1000, 2) if total_imp > 0 else 0,
             "ctr": round(total_clicks / total_imp * 100, 2) if total_imp > 0 else 0,
             "cpc": round(total_spend / total_clicks, 2) if total_clicks > 0 else 0,
-            "cpa": round(total_spend / total_conv, 2) if total_conv > 0 else 0,
+            "cpa": round(total_spend / real_conv, 2) if real_conv > 0 else 0,
         },
     })
 
