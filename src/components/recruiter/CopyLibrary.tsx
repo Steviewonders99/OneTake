@@ -187,7 +187,7 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
       </div>
 
       {/* Copy cards */}
-      <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ padding: 16, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
         {filtered.map((asset) => (
           <CopyCard key={asset.id} asset={asset} />
         ))}

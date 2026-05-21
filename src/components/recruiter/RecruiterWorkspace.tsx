@@ -139,18 +139,7 @@ export default function RecruiterWorkspace({
   }
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: "#F7F7F8" }}>
-      {/* Gradient bar */}
-      <div style={{ height: 2, background: "linear-gradient(135deg, #7C3AED, #6D28D9)" }} />
-
-      {/* Header */}
-      <HeaderBar
-        request={request}
-        statusInfo={statusInfo}
-        showDownloadAll
-        approvedCount={approvedAssets.length}
-        onDownloadAll={handleDownloadAll}
-      />
+    <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", background: "#F7F7F8" }}>
 
       {/* Tab bar — sticky */}
       <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E8E8EA", position: "sticky", top: 0, zIndex: 50 }}>
@@ -183,13 +172,13 @@ export default function RecruiterWorkspace({
       </div>
 
       {/* Tab content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px", overflowX: "hidden" }}>
         {activeTab === "creatives" && (
           <>
             <StatsRow approvedCount={approvedAssets.length} channelCount={channelCount} summary={summary} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 18, alignItems: "start" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(0, 320px)", gap: 18, alignItems: "start" }}>
               {/* Left column */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0, overflow: "hidden" }}>
                 <MessagingAccordion brief={brief} />
                 <CopyLibrary assets={assets} />
                 <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E8E8EA", overflow: "hidden" }}>
@@ -233,7 +222,7 @@ export default function RecruiterWorkspace({
                 </div>
               </div>
               {/* Right column — sticky link builder */}
-              <div style={{ position: "sticky", top: 56, alignSelf: "start", maxHeight: "calc(100vh - 72px)", overflowY: "auto" }}>
+              <div style={{ position: "sticky", top: 56, alignSelf: "start", maxHeight: "calc(100vh - 72px)", overflowY: "auto", minWidth: 0, overflow: "hidden" }}>
                 <LinkBuilderBar
                   requestId={request.id}
                   campaignSlug={request.campaign_slug}
