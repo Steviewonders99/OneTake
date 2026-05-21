@@ -224,7 +224,7 @@ export default function RecruiterWorkspace({
                 </div>
               </div>
               {/* Right column — sticky link builder */}
-              <div style={{ position: "sticky", top: 0, alignSelf: "start", maxHeight: "100vh", overflowY: "auto", minWidth: 0 }}>
+              <div style={{ position: "sticky", top: 16, alignSelf: "start", maxHeight: "calc(100vh - 32px)", overflowY: "auto", minWidth: 0, marginTop: 8 }}>
                 <LinkBuilderBar
                   requestId={request.id}
                   campaignSlug={request.campaign_slug}
