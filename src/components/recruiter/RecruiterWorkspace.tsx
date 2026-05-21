@@ -225,7 +225,7 @@ export default function RecruiterWorkspace({
           </>
         )}
         {activeTab === "organic" && (
-          <OrganicTab assets={assets} />
+          <OrganicTab assets={assets} brief={brief} />
         )}
         {activeTab === "dashboard" && <DashboardTab requestId={request.id} />}
         {activeTab === "analytics" && <MyAnalyticsTab requestId={request.id} recruiterId={request.created_by} />}
