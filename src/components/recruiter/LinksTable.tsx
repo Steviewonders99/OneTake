@@ -157,15 +157,20 @@ export default function LinksTable({ links }: Props) {
   }, [page, totalPages]);
 
   return (
-    <div>
+    <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E8E8EA", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "14px 18px", borderBottom: "1px solid #E8E8EA" }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>All Tracked Links</span>
+      </div>
       {/* Toolbar */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 10,
-          padding: "14px 18px",
+          padding: "10px 18px",
           borderBottom: "1px solid #E5E5E5",
+          background: "#FAFAFA",
         }}
       >
         {/* Search input */}
