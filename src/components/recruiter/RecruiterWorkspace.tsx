@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, BarChart3, Download, ExternalLink, FileText, Image, LayoutDashboard, Megaphone, TrendingUp, PlusCircle, Pencil } from "lucide-react";
 import RevisionModal from "@/components/RevisionModal";
 import RequestAssetsModal from "./RequestAssetsModal";
+import PaidMediaModal from "./PaidMediaModal";
 import { getRecruiterStatus } from "@/lib/format";
 import CreativeLibrary from "./CreativeLibrary";
 import LinkBuilderBar from "./LinkBuilderBar";
@@ -42,6 +43,7 @@ export default function RecruiterWorkspace({
   const [selectedAsset, setSelectedAsset] = useState<GeneratedAsset | null>(null);
   const [revisionAsset, setRevisionAsset] = useState<GeneratedAsset | null>(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showPaidModal, setShowPaidModal] = useState(false);
   const [recruiterInitials, setRecruiterInitials] = useState<string>("??");
   const [summary, setSummary] = useState<TrackedLinksSummary | null>(null);
 
@@ -157,9 +159,7 @@ export default function RecruiterWorkspace({
             <div style={{ marginLeft: "auto", padding: "8px 0" }}>
               <button
                 type="button"
-                onClick={() => {
-                  fetch(`/api/intake/${request.id}/request-paid`, { method: "POST" });
-                }}
+                onClick={() => setShowPaidModal(true)}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "6px 16px", borderRadius: 9999,
@@ -280,6 +280,16 @@ export default function RecruiterWorkspace({
           requestId={request.id}
           campaignTitle={request.title}
           onClose={() => setShowRequestModal(false)}
+        />
+      )}
+
+      {/* Paid Media Campaign Modal */}
+      {showPaidModal && (
+        <PaidMediaModal
+          requestId={request.id}
+          campaignTitle={request.title}
+          targetRegions={(request.target_regions as string[]) ?? []}
+          onClose={() => setShowPaidModal(false)}
         />
       )}
     </div>
