@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BRAND } from '../command-center/types';
 import { formatEur } from '../command-center/utils';
+import { getChannelMeta } from '../channelIcons';
 
 /* ─── types ─────────────────────────────────────────────────────────── */
 
@@ -153,9 +154,8 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
           </thead>
           <tbody>
             {sorted.map((row, i) => {
-              const meta = channelMeta(row.source, row.medium);
+              const meta = getChannelMeta(row.source);
               const ndaRate = row.wp_entry > 0 ? (row.nda_signed / row.wp_entry) * 100 : 0;
-              const costPerWorker = row.doing_tasks > 0 ? row.cost / row.doing_tasks : null;
               const isOrganic = row.cost === 0;
 
               return (
@@ -164,25 +164,13 @@ export function SourceAttribution({ sources }: SourceAttributionProps) {
                   className="border-t border-black/[0.04]"
                   style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}
                 >
-                  {/* Channel with icon */}
+                  {/* Channel with brand icon */}
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="flex items-center justify-center font-bold text-white shrink-0"
-                        style={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: 5,
-                          background: meta.color,
-                          fontSize: meta.letter.length > 1 ? 7 : 9,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {meta.letter}
-                      </div>
+                      <span style={{ color: meta.color }} className="shrink-0">{meta.icon}</span>
                       <div>
                         <span className="text-[11px] font-medium" style={{ color: BRAND.text }}>
-                          {row.source}
+                          {meta.label}
                         </span>
                         <span className="text-[10px] ml-1" style={{ color: BRAND.text3 }}>
                           / {row.medium}
