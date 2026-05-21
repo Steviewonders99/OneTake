@@ -57,9 +57,19 @@ interface ProjectTableProps {
   dateRange?: DateRangeValue;
 }
 
+type SortKey = 'name' | 'spend' | 'clicks' | 'conversions' | 'cpa' | 'wow';
+
 export function ProjectTable({ projects, selectedCountry, onProjectSelect, dateRange }: ProjectTableProps) {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('conversions');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortBy === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(key); setSortDir('desc'); }
+  };
 
   const filtered = selectedCountry
     ? projects.filter(p => (p.countries ?? []).includes(selectedCountry))
@@ -91,7 +101,25 @@ export function ProjectTable({ projects, selectedCountry, onProjectSelect, dateR
     return { proj, spend, clicks, conversions, cpa, wowPct, pills, weekCount: inRange.length };
   });
 
-  const sorted = [...aggregated].sort((a, b) => b.conversions - a.conversions);
+  // Search filter
+  const searched = search
+    ? aggregated.filter(a => a.proj.display_name.toLowerCase().includes(search.toLowerCase()) ||
+                             a.proj.codename.toLowerCase().includes(search.toLowerCase()))
+    : aggregated;
+
+  // Sort
+  const sorted = [...searched].sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    switch (sortBy) {
+      case 'name': return dir * a.proj.codename.localeCompare(b.proj.codename);
+      case 'spend': return dir * (a.spend - b.spend);
+      case 'clicks': return dir * (a.clicks - b.clicks);
+      case 'conversions': return dir * (a.conversions - b.conversions);
+      case 'cpa': return dir * ((a.cpa ?? 999999) - (b.cpa ?? 999999));
+      case 'wow': return dir * ((a.wowPct ?? 0) - (b.wowPct ?? 0));
+      default: return 0;
+    }
+  });
   const visible = showAll ? sorted : sorted.slice(0, 5);
   const remaining = sorted.length - 5;
 
@@ -103,19 +131,38 @@ export function ProjectTable({ projects, selectedCountry, onProjectSelect, dateR
   return (
     <div className="bg-white rounded-2xl border border-black/[0.08] overflow-hidden mb-5"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-      <div className="px-6 py-4 border-b border-black/[0.04] flex justify-between items-center">
-        <h3 className="text-sm font-bold" style={{ color: BRAND.text }}>All Projects — {rangeLabel}</h3>
-        <span className="text-[10px] uppercase tracking-[0.06em]" style={{ color: BRAND.text3 }}>
-          Paid + organic + email + physical + recruiter · All channels unified
+      <div className="px-6 py-4 border-b border-black/[0.04] flex justify-between items-center gap-4">
+        <h3 className="text-sm font-bold shrink-0" style={{ color: BRAND.text }}>All Projects — {rangeLabel}</h3>
+        <input
+          type="text" placeholder="Filter projects..." value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="px-3 py-1.5 border rounded-lg text-[12px] bg-white w-48"
+          style={{ color: BRAND.text, borderColor: BRAND.border }}
+        />
+        <span className="text-[10px] uppercase tracking-[0.06em] shrink-0" style={{ color: BRAND.text3 }}>
+          {sorted.length} projects · All channels unified
         </span>
       </div>
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-[#F6F7FB] border-b border-black/[0.08]">
-            {['Project', 'Channels', 'Spend', 'Clicks', 'Applications', 'CPA', 'WoW', 'Action'].map((h, i) => (
-              <th key={h} className={`px-4 py-2.5 text-[9px] uppercase tracking-[0.1em] font-semibold ${
-                i >= 2 && i <= 6 ? 'text-right' : i === 7 ? 'text-center' : 'text-left'
-              }`} style={{ color: BRAND.text3 }}>{h}</th>
+            {([
+              { label: 'Project', key: 'name' as SortKey, align: 'text-left' },
+              { label: 'Channels', key: null, align: 'text-left' },
+              { label: 'Spend', key: 'spend' as SortKey, align: 'text-right' },
+              { label: 'Clicks', key: 'clicks' as SortKey, align: 'text-right' },
+              { label: 'Applications', key: 'conversions' as SortKey, align: 'text-right' },
+              { label: 'CPA', key: 'cpa' as SortKey, align: 'text-right' },
+              { label: 'WoW', key: 'wow' as SortKey, align: 'text-right' },
+              { label: 'Action', key: null, align: 'text-center' },
+            ]).map(col => (
+              <th key={col.label}
+                  className={`px-4 py-2.5 text-[9px] uppercase tracking-[0.1em] font-semibold ${col.align} ${col.key ? 'cursor-pointer hover:text-[#4B5563]' : ''}`}
+                  style={{ color: sortBy === col.key ? BRAND.purple : BRAND.text3 }}
+                  onClick={() => col.key && toggleSort(col.key)}>
+                {col.label}
+                {sortBy === col.key && <span className="ml-0.5">{sortDir === 'desc' ? '↓' : '↑'}</span>}
+              </th>
             ))}
           </tr>
         </thead>
