@@ -142,7 +142,7 @@ export default function IntakeDetailPage({
       // Fetch pipeline status
       let pipelineRuns: PipelineRun[] = [];
       try {
-        const pipeRes = await fetch(`/api/generate/${id}`);
+        const pipeRes = await fetch(`/api/generate/${id}${demoQ}`);
         if (pipeRes.ok) {
           const pipeData = await pipeRes.json();
           pipelineRuns = pipeData.pipeline_runs || [];
@@ -157,7 +157,7 @@ export default function IntakeDetailPage({
       let assets: GeneratedAsset[] = [];
 
       try {
-        const briefRes = await fetch(`/api/generate/${id}/brief`);
+        const briefRes = await fetch(`/api/generate/${id}/brief${demoQ}`);
         if (briefRes.ok) {
           const briefData = await briefRes.json();
           brief = briefData.brief || null;
@@ -167,7 +167,7 @@ export default function IntakeDetailPage({
       }
 
       try {
-        const actorsRes = await fetch(`/api/generate/${id}/actors`);
+        const actorsRes = await fetch(`/api/generate/${id}/actors${demoQ}`);
         if (actorsRes.ok) {
           const actorsData = await actorsRes.json();
           actors = actorsData.actors || [];
@@ -177,7 +177,7 @@ export default function IntakeDetailPage({
       }
 
       try {
-        const assetsRes = await fetch(`/api/generate/${id}/images`);
+        const assetsRes = await fetch(`/api/generate/${id}/images${demoQ}`);
         if (assetsRes.ok) {
           const assetsData = await assetsRes.json();
           assets = assetsData.assets || [];
@@ -188,7 +188,7 @@ export default function IntakeDetailPage({
 
       let campaignStrategies: CampaignStrategy[] = [];
       try {
-        const stratRes = await fetch(`/api/generate/${id}/strategy`);
+        const stratRes = await fetch(`/api/generate/${id}/strategy${demoQ}`);
         if (stratRes.ok) {
           const stratData = await stratRes.json();
           campaignStrategies = stratData.strategies || [];
