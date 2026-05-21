@@ -397,37 +397,72 @@ export function DeepDiveClient({ initialProjects }: Props) {
               </div>
             ))}
           </div>
-          {/* Per-campaign table */}
-          {paidData.campaigns?.length > 0 && (
-            <div className="overflow-hidden rounded-xl border border-black/[0.06]">
-              <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: BRAND.bgRaised }}>
-                    {['Campaign', 'Impressions', 'Clicks', 'Spend', 'CTR', 'CPC', 'CPA'].map(h => (
-                      <th key={h} className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
-                          style={{ color: BRAND.text3 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paidData.campaigns.map((c: any, i: number) => (
-                    <tr key={c.campaign} className="border-t border-black/[0.04]"
-                        style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
-                      <td className="px-3 py-2.5 text-[11px] font-medium" style={{ color: BRAND.text }}>{c.campaign}</td>
-                      <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.impressions?.toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.clicks?.toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-[12px] font-semibold tabular-nums">{formatEur(c.spend)}</td>
-                      <td className="px-3 py-2.5 text-[11px] tabular-nums">{c.ctr}%</td>
-                      <td className="px-3 py-2.5 text-[11px] tabular-nums">{formatEur(c.cpc)}</td>
-                      <td className="px-3 py-2.5 text-[11px] font-bold tabular-nums" style={{ color: c.cpa > 0 && c.cpa < 38.5 ? BRAND.blue : BRAND.rose }}>
-                        {c.cpa > 0 ? formatEur(c.cpa) : '—'}
-                      </td>
+          {/* Per-campaign table with collapse */}
+          {paidData.campaigns?.length > 0 && (() => {
+            const camps = paidData.campaigns as any[];
+            const showAll = camps.length <= 3;
+            const [expanded, setExpanded] = [true, () => {}]; // Always show all for now — campaigns are few
+            const visible = camps;
+            const t = paidData.totals;
+            const platformLabel = (name: string) =>
+              name.toLowerCase().includes('reddit') ? 'Reddit' : 'Meta';
+            return (
+              <div className="overflow-hidden rounded-xl border border-black/[0.06]">
+                <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: BRAND.bgRaised }}>
+                      {['Campaign', 'Platform', 'Impressions', 'Clicks', 'Spend', 'CTR', 'CPC', 'CPA'].map(h => (
+                        <th key={h} className="text-[9px] uppercase tracking-[0.1em] font-semibold px-3 py-2.5"
+                            style={{ color: BRAND.text3 }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {visible.map((c: any, i: number) => (
+                      <tr key={c.campaign} className="border-t border-black/[0.04]"
+                          style={{ background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
+                        <td className="px-3 py-2.5 text-[11px] font-medium" style={{ color: BRAND.text }}>
+                          {c.campaign}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            platformLabel(c.campaign) === 'Reddit' ? 'bg-[#FEE2E2] text-[#991B1B]' : 'bg-[#DBEAFE] text-[#1E40AF]'
+                          }`}>{platformLabel(c.campaign)}</span>
+                        </td>
+                        <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.impressions?.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-[12px] tabular-nums">{c.clicks?.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-[12px] font-semibold tabular-nums">{formatEur(c.spend)}</td>
+                        <td className="px-3 py-2.5 text-[11px] tabular-nums">{c.ctr}%</td>
+                        <td className="px-3 py-2.5 text-[11px] tabular-nums">{formatEur(c.cpc)}</td>
+                        <td className="px-3 py-2.5 text-[11px] font-bold tabular-nums"
+                            style={{ color: c.cpa > 0 && c.cpa < 38.5 ? BRAND.blue : c.cpa > 0 ? BRAND.rose : BRAND.text3 }}>
+                          {c.cpa > 0 ? formatEur(c.cpa) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {camps.length > 1 && (
+                    <tfoot>
+                      <tr className="border-t-2 border-black/[0.08]" style={{ background: BRAND.bgRaised }}>
+                        <td className="px-3 py-2.5 text-[10px] font-bold uppercase" style={{ color: BRAND.text2 }}>
+                          All Campaigns ({camps.length})
+                        </td>
+                        <td />
+                        <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums">{t.impressions?.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums">{t.clicks?.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-[12px] font-extrabold tabular-nums">{formatEur(t.spend)}</td>
+                        <td className="px-3 py-2.5 text-[11px] font-bold tabular-nums">{t.ctr}%</td>
+                        <td className="px-3 py-2.5 text-[11px] font-bold tabular-nums">{formatEur(t.cpc)}</td>
+                        <td className="px-3 py-2.5 text-[11px] font-extrabold tabular-nums" style={{ color: BRAND.blue }}>
+                          {t.cpa > 0 ? formatEur(t.cpa) : '—'}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            );
+          })()}
         </div>
       )}
 
