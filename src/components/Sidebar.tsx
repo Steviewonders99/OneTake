@@ -19,6 +19,7 @@ import {
   Target,
   Zap,
   Radio,
+  Megaphone,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
@@ -45,6 +46,12 @@ const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
         { href: "/insights/command-center", label: "Command Center", Icon: Target },
         { href: "/insights/deep-dive", label: "Deep Dive", Icon: Zap },
         { href: "/insights/channel-intel", label: "Channel Intel", Icon: Radio },
+      ],
+    },
+    {
+      title: "Recruiter",
+      links: [
+        { href: "/recruiter", label: "Recruiter View", Icon: Megaphone },
       ],
     },
     {
