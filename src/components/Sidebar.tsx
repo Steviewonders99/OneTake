@@ -30,7 +30,7 @@ interface NavItem {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
-const ROLE_NAV: Record<string, { title: string; links: NavItem[] }[]> = {
+const ROLE_NAV: Record<string, { title: string; titleHref?: string; links: NavItem[] }[]> = {
   admin: [
     {
       title: "Pipeline",

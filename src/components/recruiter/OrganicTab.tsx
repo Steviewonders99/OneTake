@@ -112,22 +112,22 @@ export default function OrganicTab({ assets, brief }: OrganicTabProps) {
                       <span style={{ fontSize: 12, color: "#8A8A8E" }}>
                         {String(persona.archetype ?? persona.matched_tier ?? "")}
                       </span>
-                      {persona.motivations && (
+                      {persona.motivations ? (
                         <div style={{ fontSize: 12, color: "#555" }}>
                           <span style={{ fontWeight: 600 }}>Motivations:</span>{" "}
-                          {Array.isArray(persona.motivations)
+                          {String(Array.isArray(persona.motivations)
                             ? (persona.motivations as string[]).join(", ")
-                            : String(persona.motivations)}
+                            : persona.motivations)}
                         </div>
-                      )}
-                      {persona.best_channels && (
+                      ) : null}
+                      {persona.best_channels ? (
                         <div style={{ fontSize: 12, color: "#555" }}>
                           <span style={{ fontWeight: 600 }}>Best channels:</span>{" "}
-                          {Array.isArray(persona.best_channels)
+                          {String(Array.isArray(persona.best_channels)
                             ? (persona.best_channels as string[]).join(", ")
-                            : String(persona.best_channels)}
+                            : persona.best_channels)}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   ))}
                 </div>

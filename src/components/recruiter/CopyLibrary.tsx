@@ -36,7 +36,7 @@ function CopyCard({ asset, onOpen }: { asset: GeneratedAsset; onOpen: () => void
   const subheadline = String(content.full_description ?? content.body_text ?? content.subheadline ?? "");
   const cta = String(content.cta_text ?? content.cta ?? "");
   const lang = asset.language ?? "";
-  const country = String(content.country ?? (asset as Record<string, unknown>).country ?? "");
+  const country = String(content.country ?? (asset as unknown as Record<string, unknown>).country ?? "");
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -161,7 +161,7 @@ export default function CopyLibrary({ assets }: CopyLibraryProps) {
     const set = new Set<string>();
     for (const a of allCopy) {
       const content = (a.content ?? {}) as Record<string, unknown>;
-      const country = String(content.country ?? (a as Record<string, unknown>).country ?? "");
+      const country = String(content.country ?? (a as unknown as Record<string, unknown>).country ?? "");
       if (country && country !== "undefined") set.add(country);
     }
     return Array.from(set).sort();
@@ -289,7 +289,7 @@ function CopyEditModal({ asset, onClose }: { asset: GeneratedAsset; onClose: () 
   const [copied, setCopied] = useState<string | null>(null);
 
   const platform = String(content.portal_name ?? content.actor_name ?? asset.platform ?? "");
-  const country = String(content.country ?? (asset as Record<string, unknown>).country ?? "");
+  const country = String(content.country ?? (asset as unknown as Record<string, unknown>).country ?? "");
   const lang = asset.language ?? "";
 
   const handleCopyAll = () => {

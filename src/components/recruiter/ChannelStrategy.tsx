@@ -34,7 +34,7 @@ export default function ChannelStrategy({ assets }: ChannelStrategyProps) {
     for (const a of assets) {
       if (a.asset_type !== "job_portal_copy") continue;
       const content = (a.content ?? {}) as Record<string, unknown>;
-      const country = String(content.country ?? (a as Record<string, unknown>).country ?? "");
+      const country = String(content.country ?? (a as unknown as Record<string, unknown>).country ?? "");
       const platform = String(content.portal_name ?? a.platform ?? "");
       if (!country || !platform) continue;
       if (!map.has(country)) map.set(country, new Set());

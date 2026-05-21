@@ -55,7 +55,7 @@ export default function RecruiterDashboard() {
             task_type: r.task_type,
             created_at: r.created_at,
             target_regions: (r.target_regions as string[]) ?? [],
-            pipeline_mode: (r as Record<string, unknown>).pipeline_mode as string ?? "organic",
+            pipeline_mode: (r as unknown as Record<string, unknown>).pipeline_mode as string ?? "organic",
             imageCount,
             copyCount,
           });
