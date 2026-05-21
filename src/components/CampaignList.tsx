@@ -141,14 +141,14 @@ export default function CampaignList({
         <div className="relative">
           <Search
             size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#737373] pointer-events-none"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a3a3a3] pointer-events-none"
           />
           <input
             type="text"
             placeholder="Search campaigns..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-base pl-8 py-2 text-sm"
+            className="input-base pl-9 py-2.5 text-sm"
           />
         </div>
       </div>

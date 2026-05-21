@@ -30,8 +30,8 @@ export async function requireRole(
 
   const userRole = await getUserRole(userId, email);
 
-  // If no role record exists, default to 'viewer' for now
-  const role = (userRole?.role as UserRole) ?? 'viewer';
+  // New signups default to recruiter — full analytics access
+  const role = (userRole?.role as UserRole) ?? 'recruiter';
 
   if (!allowedRoles.includes(role)) {
     throw new Error('Forbidden');
