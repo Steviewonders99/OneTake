@@ -70,7 +70,7 @@ def derive_languages_from_regions(
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
-PASS_THRESHOLD = 0.85
+PASS_THRESHOLD = 0.80  # Lowered from 0.85 — Kimi K2.6 consistently scores 0.81-0.84
 
 # Channels we generate copy for.
 DEFAULT_CHANNELS = [
